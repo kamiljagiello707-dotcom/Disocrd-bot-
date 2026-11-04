@@ -1,0 +1,783 @@
+<!doctype html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>NightShop Tickets</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;800;900&family=Instrument+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: fixed WebGL night sky behind a single reading column; the hero ticket is a real 3D object that the demo below re-prints. */
+:root{
+  --night:#090c1b;
+  --night-2:#10142d;
+  --night-3:#171c3d;
+  --line:#272d57;
+  --ink:#ece9f7;
+  --muted:#9c9ec4;
+  --moon:#f2c86a;
+  --moon-deep:#c99a35;
+  --violet:#8b5cf6;
+  --violet-soft:#c4b5fd;
+  --ok:#22c55e;
+  --danger:#ef4444;
+  /* Discord mock palette */
+  --dc-bg:#313338;--dc-embed:#2b2d31;--dc-deep:#1e1f22;--dc-side:#2b2d31;--dc-text:#dbdee1;--dc-dim:#949ba4;--dc-blurple:#5865f2;--dc-green:#248046;--dc-red:#da373c;--dc-grey:#4e5058;--dc-mention:rgba(88,101,242,.3);--dc-mention-ink:#c9cdfb;
+  --f-display:"Big Shoulders Display","Arial Narrow",Impact,sans-serif;
+  --f-body:"Instrument Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{background:var(--night);color:var(--ink);font-family:var(--f-body);font-size:16px;line-height:1.55;overflow-x:hidden}
+#sky{position:fixed;inset:0;width:100%;height:100%;z-index:0;display:block}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--night)}
+.page{position:relative;z-index:1}
+.wrap{max-width:1160px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+a{color:inherit}
+:focus-visible{outline:2px solid var(--moon);outline-offset:3px;border-radius:4px}
+
+/* nav */
+nav{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);background:rgba(9,12,27,.62);border-bottom:1px solid rgba(39,45,87,.6)}
+nav .wrap{display:flex;align-items:center;gap:24px;padding-block:14px}
+.logo{display:flex;align-items:center;gap:10px;font-family:var(--f-display);font-weight:800;font-size:24px;letter-spacing:.02em;text-decoration:none;text-transform:uppercase}
+.logo svg{width:26px;height:26px}
+.logo span{color:var(--moon)}
+nav .links{display:flex;gap:22px;margin-left:auto;font-size:14px;color:var(--muted)}
+nav .links a{text-decoration:none}
+nav .links a:hover{color:var(--ink)}
+.btn{display:inline-flex;align-items:center;gap:8px;font:600 15px/1 var(--f-body);padding:13px 20px;border-radius:999px;text-decoration:none;border:1px solid transparent;cursor:pointer;transition:transform .2s,background .2s,border-color .2s}
+.btn:hover{transform:translateY(-2px)}
+.btn-moon{background:var(--moon);color:#1a1405}
+.btn-moon:hover{background:#f7d688}
+.btn-ghost{border-color:var(--line);color:var(--ink);background:rgba(16,20,45,.6)}
+.btn-ghost:hover{border-color:var(--violet)}
+nav .btn{padding:10px 16px;font-size:14px}
+
+/* hero */
+.hero{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);align-items:center;min-height:620px;padding-block:56px 40px}
+.hero-copy{max-width:560px}
+.eyebrow{font:600 12px/1 var(--f-mono);letter-spacing:.14em;text-transform:uppercase;color:var(--moon);display:flex;align-items:center;gap:10px}
+.eyebrow::before{content:"";width:28px;height:1px;background:var(--moon)}
+h1{font-family:var(--f-display);font-weight:900;text-transform:uppercase;font-size:clamp(56px,8.4vw,112px);line-height:.88;letter-spacing:-.005em;margin:20px 0 22px;text-wrap:balance}
+h1 em{font-style:normal;color:var(--moon);display:block}
+.lede{font-size:18px;color:var(--muted);max-width:46ch;margin:0 0 30px}
+.cta{display:flex;flex-wrap:wrap;gap:12px}
+.stub-line{margin-top:34px;display:flex;flex-wrap:wrap;gap:8px 20px;font:400 13px/1.4 var(--f-mono);color:var(--muted)}
+.stub-line b{color:var(--ink);font-weight:600}
+.hero-hint{justify-self:end;align-self:end;font:400 12px/1.4 var(--f-mono);color:var(--muted);opacity:.8}
+
+/* sections */
+section{padding-block:72px}
+.sec-head{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,6fr);gap:24px 48px;align-items:end;margin-bottom:40px}
+h2{font-family:var(--f-display);font-weight:800;text-transform:uppercase;font-size:clamp(40px,5.4vw,68px);line-height:.92;margin:12px 0 0;text-wrap:balance}
+.sec-head p{color:var(--muted);margin:0;max-width:52ch}
+.panel{background:rgba(16,20,45,.82);border:1px solid var(--line);border-radius:18px;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+
+/* demo */
+.demo{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:20px;align-items:start}
+.dc{background:var(--dc-bg);border-radius:12px;overflow:hidden;display:grid;grid-template-columns:200px minmax(0,1fr);min-height:600px;box-shadow:0 30px 80px -20px rgba(0,0,0,.7),0 0 0 1px rgba(255,255,255,.04);font-family:"gg sans","Noto Sans",Helvetica,Arial,sans-serif;color:var(--dc-text);font-size:15px;position:relative}
+.dc-side{background:var(--dc-side);padding:12px 8px;display:flex;flex-direction:column;gap:2px;min-width:0}
+.dc-server{font-weight:700;color:#fff;padding:6px 8px 12px;border-bottom:1px solid var(--dc-deep);margin-bottom:8px;font-size:15px}
+.dc-cat{font-size:11px;font-weight:700;color:var(--dc-dim);text-transform:uppercase;letter-spacing:.02em;padding:10px 8px 4px}
+.dc-ch{display:flex;align-items:center;gap:6px;padding:6px 8px;border-radius:4px;color:var(--dc-dim);cursor:pointer;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border:0;background:none;text-align:left;font-family:inherit}
+.dc-ch:hover{background:rgba(255,255,255,.04);color:var(--dc-text)}
+.dc-ch.on{background:rgba(255,255,255,.08);color:#fff}
+.dc-ch .h{opacity:.6}
+.dc-ch.new{animation:pop .5s ease}
+@keyframes pop{0%{transform:translateX(-12px);opacity:.3}100%{transform:none;opacity:1}}
+.dc-main{display:flex;flex-direction:column;min-width:0}
+.dc-top{padding:12px 16px;border-bottom:1px solid var(--dc-deep);font-weight:600;color:#fff;display:flex;gap:6px;align-items:center}
+.dc-top .h{color:var(--dc-dim)}
+.dc-feed{padding:16px;display:flex;flex-direction:column;gap:14px;overflow:auto;max-height:640px}
+.msg{display:flex;gap:14px;animation:fadein .35s ease}
+@keyframes fadein{from{opacity:.2;transform:translateY(6px)}to{opacity:1;transform:none}}
+.av{width:40px;height:40px;border-radius:50%;flex:none;background:radial-gradient(circle at 35% 35%,#fbe7b0,var(--moon) 40%,var(--moon-deep));display:grid;place-items:center}
+.av.user{background:linear-gradient(135deg,#5865f2,#8b5cf6)}
+.mbody{min-width:0;flex:1}
+.mname{color:var(--violet-soft);font-weight:600}
+.mname.u{color:#fff}
+.tag{background:var(--dc-blurple);color:#fff;font-size:10px;padding:1px 4px;border-radius:3px;margin-left:4px;vertical-align:2px;font-weight:600}
+.mtime{color:var(--dc-dim);font-size:12px;margin-left:6px}
+.embed{background:var(--dc-embed);border-left:4px solid var(--violet);border-radius:4px;padding:10px 16px 14px 12px;margin-top:4px;max-width:480px}
+.embed.green{border-left-color:var(--ok)}.embed.red{border-left-color:var(--danger)}
+.e-author{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;color:#fff;margin:2px 0 6px}
+.e-author i{width:20px;height:20px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#fbe7b0,var(--moon) 45%,var(--moon-deep))}
+.e-title{font-weight:700;color:#fff;margin-bottom:6px}
+.e-desc{font-size:14px;line-height:1.45;white-space:pre-wrap;overflow-wrap:anywhere}
+.e-q{border-left:4px solid var(--dc-grey);padding-left:10px;display:block}
+.e-f{font-weight:600;color:#fff;font-size:14px;margin-top:8px}
+.e-pre{background:var(--dc-deep);border-radius:4px;padding:7px;margin-top:4px;font:13px/1.4 var(--f-mono);overflow-wrap:anywhere}
+.e-foot{font-size:12px;color:#b5bac1;margin-top:10px;display:flex;align-items:center;gap:6px}
+.e-foot i{width:16px;height:16px;border-radius:50%;background:var(--moon)}
+.dc code{background:var(--dc-deep);padding:1px 4px;border-radius:3px;font:13px var(--f-mono)}
+.mention{background:var(--dc-mention);color:var(--dc-mention-ink);border-radius:3px;padding:0 2px}
+.eph{font-size:12px;color:var(--dc-dim);margin-top:4px}
+.sel{position:relative;max-width:480px;margin-top:8px}
+.sel-btn{width:100%;background:var(--dc-deep);border:1px solid var(--dc-deep);border-radius:4px;padding:11px 12px;color:var(--dc-dim);display:flex;justify-content:space-between;cursor:pointer;font:inherit;font-size:14px;text-align:left}
+.sel-btn:hover{border-color:#000}
+.sel-list{position:absolute;left:0;right:0;top:calc(100% + 4px);background:var(--dc-embed);border:1px solid var(--dc-deep);border-radius:4px;z-index:3;box-shadow:0 8px 24px rgba(0,0,0,.5)}
+.sel-opt{display:flex;gap:10px;align-items:center;padding:8px 12px;cursor:pointer;width:100%;background:none;border:0;color:inherit;font:inherit;text-align:left}
+.sel-opt:hover,.sel-opt:focus-visible{background:#35373c}
+.sel-opt b{color:#fff;font-weight:500;display:block;font-size:14px}
+.sel-opt small{color:var(--dc-dim);font-size:12px}
+.btns{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap}
+.b{padding:7px 16px;border-radius:4px;color:#fff;font:500 14px/1.2 inherit;font-family:inherit;border:0;cursor:pointer;transition:filter .15s}
+.b:hover{filter:brightness(1.12)}
+.b:disabled{opacity:.5;cursor:not-allowed;filter:none}
+.b-red{background:var(--dc-red)}.b-green{background:var(--dc-green)}.b-grey{background:var(--dc-grey)}.b-blue{background:var(--dc-blurple)}
+.modal-back{position:absolute;inset:0;background:rgba(0,0,0,.6);display:grid;place-items:center;z-index:4;padding:16px;animation:fadein .2s}
+.modal{background:var(--dc-bg);border-radius:8px;padding:18px;width:min(440px,100%);box-shadow:0 10px 40px rgba(0,0,0,.6)}
+.modal h4{margin:0 0 6px;color:#fff;font-size:18px}
+.modal label{display:block;font-size:12px;font-weight:700;color:#b5bac1;text-transform:uppercase;margin:12px 0 6px}
+.modal label .req{color:#f23f43}
+.modal input,.modal textarea{width:100%;background:var(--dc-deep);border:0;border-radius:4px;padding:10px;color:var(--dc-text);font:14px inherit;font-family:inherit;resize:none}
+.modal .act{display:flex;justify-content:flex-end;gap:10px;margin-top:16px}
+.modal .act .b-link{background:none;color:#fff}
+.file{background:var(--dc-embed);border:1px solid var(--dc-deep);border-radius:6px;padding:10px;display:flex;gap:10px;align-items:center;max-width:360px;margin-top:6px;font-size:14px}
+.file b{color:#00a8fc;font-weight:500}
+
+.steps{padding:22px;position:sticky;top:90px}
+.steps h3{font:800 26px/1 var(--f-display);text-transform:uppercase;margin:0 0 14px}
+.steps ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:2px;counter-reset:s}
+.steps li{counter-increment:s;display:grid;grid-template-columns:34px minmax(0,1fr);gap:10px;padding:10px 8px;border-radius:10px;color:var(--muted);font-size:14px;transition:background .25s,color .25s}
+.steps li::before{content:counter(s,decimal-leading-zero);font:600 12px/22px var(--f-mono);color:var(--line);transition:color .25s}
+.steps li.on{background:rgba(242,200,106,.09);color:var(--ink)}
+.steps li.on::before,.steps li.done::before{color:var(--moon)}
+.steps li.done{color:var(--ink)}
+.steps .reset{margin-top:16px;width:100%;justify-content:center}
+
+/* features as torn ticket rows */
+.feats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:0}
+.feat{padding:28px 26px 30px;border-right:1px dashed var(--line);border-bottom:1px dashed var(--line);min-width:0}
+.feat:nth-child(3n){border-right:0}
+.feat:nth-last-child(-n+3){border-bottom:0}
+.feat .k{font:600 12px/1 var(--f-mono);color:var(--moon);letter-spacing:.1em;text-transform:uppercase}
+.feat h3{font:800 28px/1 var(--f-display);text-transform:uppercase;margin:12px 0 10px;letter-spacing:.01em}
+.feat p{margin:0;color:var(--muted);font-size:15px}
+
+/* commands */
+.cmds{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:20px}
+.cmd-list{padding:8px 0}
+.cmd{display:grid;grid-template-columns:minmax(0,190px) minmax(0,1fr) auto;gap:16px;align-items:center;padding:16px 22px;border-bottom:1px solid var(--line)}
+.cmd:last-child{border-bottom:0}
+.cmd code{font:600 14px var(--f-mono);color:var(--moon);overflow-wrap:anywhere}
+.cmd span{color:var(--muted);font-size:14px}
+.who{font:600 11px/1 var(--f-mono);text-transform:uppercase;letter-spacing:.08em;padding:5px 8px;border-radius:999px;border:1px solid var(--line);color:var(--muted);white-space:nowrap}
+.who.staff{border-color:rgba(139,92,246,.5);color:var(--violet-soft)}
+.who.admin{border-color:rgba(242,200,106,.5);color:var(--moon)}
+.install{padding:22px;display:flex;flex-direction:column;gap:16px;min-width:0}
+.install h3{font:800 26px/1 var(--f-display);text-transform:uppercase;margin:0}
+.code{position:relative;background:#060815;border:1px solid var(--line);border-radius:12px;padding:16px 18px;font:13px/1.8 var(--f-mono);overflow-x:auto;color:#c9cbe6;white-space:pre}
+.code .c{color:#5f6391}
+.code .p{color:var(--moon)}
+.copy{position:absolute;top:10px;right:10px;font:600 12px var(--f-mono);background:var(--night-3);border:1px solid var(--line);color:var(--ink);border-radius:8px;padding:6px 10px;cursor:pointer}
+.copy:hover{border-color:var(--moon)}
+.install ul{margin:0;padding-left:18px;color:var(--muted);font-size:14px;display:flex;flex-direction:column;gap:6px}
+.install ul code{font:13px var(--f-mono);color:var(--ink)}
+
+/* final */
+.final{text-align:left;padding:48px clamp(22px,5vw,64px);display:grid;grid-template-columns:minmax(0,1fr) auto;gap:28px;align-items:center;position:relative;overflow:hidden}
+.final::after{content:"";position:absolute;right:-60px;top:-60px;width:240px;height:240px;border-radius:50%;background:radial-gradient(circle,rgba(242,200,106,.28),transparent 70%);pointer-events:none}
+.final h2{font-size:clamp(40px,6vw,76px)}
+.final p{color:var(--muted);margin:14px 0 0;max-width:50ch}
+footer{padding-block:36px 48px;color:var(--muted);font:13px var(--f-mono);display:flex;flex-wrap:wrap;gap:12px;justify-content:space-between}
+
+@media (max-width:960px){
+  .hero{grid-template-columns:minmax(0,1fr);min-height:0;padding-top:min(78vw,400px)}
+  .hero-hint{display:none}
+  .sec-head{grid-template-columns:minmax(0,1fr)}
+  .demo{grid-template-columns:minmax(0,1fr)}
+  .steps{position:static}
+  .feats{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .feat:nth-child(3n){border-right:1px dashed var(--line)}
+  .feat:nth-child(2n){border-right:0}
+  .feat:nth-last-child(-n+3){border-bottom:1px dashed var(--line)}
+  .feat:nth-last-child(-n+2){border-bottom:0}
+  .cmds{grid-template-columns:minmax(0,1fr)}
+  .final{grid-template-columns:minmax(0,1fr)}
+}
+@media (max-width:640px){
+  nav .links{display:none}
+  nav .btn{margin-left:auto}
+  .dc{grid-template-columns:minmax(0,1fr);min-height:520px}
+  .dc-side{display:none}
+  .dc-feed{padding:12px}
+  .av{width:34px;height:34px}
+  .msg{gap:10px}
+  .feats{grid-template-columns:minmax(0,1fr)}
+  .feat{border-right:0!important;border-bottom:1px dashed var(--line)!important}
+  .feat:last-child{border-bottom:0!important}
+  .cmd{grid-template-columns:minmax(0,1fr) auto;padding:14px 16px}
+  .cmd span{grid-column:1/-1;grid-row:2}
+  section{padding-block:52px}
+}
+@media (prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+  *,*::before,*::after{animation:none!important;transition:none!important}
+}
+</style>
+
+<canvas id="sky" aria-hidden="true"></canvas>
+
+<div class="page">
+<nav>
+  <div class="wrap">
+    <a class="logo" href="#top" aria-label="NightShop Tickets">
+      <svg viewBox="0 0 32 32" aria-hidden="true"><path d="M21 4a12 12 0 1 0 7 21A13 13 0 0 1 21 4z" fill="#f2c86a"/></svg>
+      Night<span>Shop</span>
+    </a>
+    <div class="links">
+      <a href="#demo">Demo</a>
+      <a href="#funkcje">Funkcje</a>
+      <a href="#komendy">Komendy</a>
+      <a href="#instalacja">Instalacja</a>
+    </div>
+    <a class="btn btn-ghost" href="https://github.com/kamiljagiello707-dotcom/Disocrd-bot-/tree/claude/discord-bot-tickets-ldljd0">Kod źródłowy</a>
+  </div>
+</nav>
+
+<header class="wrap hero" id="top">
+  <div class="hero-copy">
+    <div class="eyebrow">Bot ticketów · discord.js v14</div>
+    <h1>Każdy klient<em>z własnym biletem</em></h1>
+    <p class="lede">NightShop otwiera prywatny kanał dla każdego zamówienia, zbiera dane z formularza i po zamknięciu wysyła klientowi transkrypt z prośbą o ocenę.</p>
+    <div class="cta">
+      <a class="btn btn-moon" href="#demo">Wypróbuj demo</a>
+      <a class="btn btn-ghost" href="#instalacja">Zainstaluj w 4 krokach</a>
+    </div>
+    <div class="stub-line">
+      <span><b>5</b> kategorii</span>
+      <span><b>#0001</b> numeracja</span>
+      <span><b>.txt</b> transkrypty</span>
+      <span><b>1–5 ⭐</b> oceny</span>
+    </div>
+  </div>
+  <div class="hero-hint">przeciągnij lub porusz kursorem, żeby obrócić bilet</div>
+</header>
+
+<section id="demo">
+  <div class="wrap">
+    <div class="sec-head">
+      <div><div class="eyebrow">Na żywo</div><h2>Otwórz ticket jak klient</h2></div>
+      <p>To symulacja serwera z prawdziwymi tekstami bota. Wybierz kategorię z menu, wyślij formularz, przejmij ticket jako obsługa i zamknij go. Bilet w tle drukuje się na nowo z Twoim numerem.</p>
+    </div>
+    <div class="demo">
+      <div class="dc" id="dc">
+        <aside class="dc-side" id="dc-side">
+          <div class="dc-server">🌙 NightShop</div>
+          <div class="dc-cat">Informacje</div>
+          <button class="dc-ch" type="button" disabled><span class="h">#</span>📢・ogłoszenia</button>
+          <button class="dc-ch on" type="button" data-ch="panel"><span class="h">#</span>🎫・tickety</button>
+          <div class="dc-cat">Tickety</div>
+          <div id="dc-tickets"></div>
+          <div class="dc-cat">Administracja</div>
+          <button class="dc-ch" type="button" data-ch="logs"><span class="h">#</span>📜・logi-ticketów</button>
+          <div class="dc-cat">Prywatne</div>
+          <button class="dc-ch" type="button" data-ch="dm"><span class="h">@</span>NightShop (DM)</button>
+        </aside>
+        <div class="dc-main">
+          <div class="dc-top"><span class="h" id="dc-top-h">#</span><span id="dc-top-name">🎫・tickety</span></div>
+          <div class="dc-feed" id="feed" aria-live="polite"></div>
+        </div>
+      </div>
+      <div class="panel steps">
+        <h3>Droga ticketu</h3>
+        <ol id="steps">
+          <li data-s="0">Klient wybiera kategorię z menu panelu</li>
+          <li data-s="1">Wypełnia formularz z pytaniami tej kategorii</li>
+          <li data-s="2">Bot tworzy prywatny kanał i oznacza obsługę</li>
+          <li data-s="3">Ktoś z obsługi klika Przejmij</li>
+          <li data-s="4">Zamknięcie z potwierdzeniem, transkrypt trafia na logi</li>
+          <li data-s="5">Klient dostaje DM i ocenia obsługę</li>
+        </ol>
+        <button class="btn btn-ghost reset" type="button" id="reset">Zacznij od nowa</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="funkcje">
+  <div class="wrap">
+    <div class="sec-head">
+      <div><div class="eyebrow">W zestawie</div><h2>Wszystko, czego potrzebuje sklep</h2></div>
+      <p>Bez bazy danych i bez panelu w przeglądarce. Stan ticketu bot zapisuje w temacie kanału, a całą konfigurację zmieniasz w jednym pliku <code style="font-family:var(--f-mono);color:var(--ink)">config.js</code>.</p>
+    </div>
+    <div class="panel feats">
+      <div class="feat"><div class="k">Panel</div><h3>Menu kategorii</h3><p>Zakup, Pomoc, Reklamacja, Partnerstwo i Odbiór nagrody. Każda z własną emotką i opisem, dodasz kolejne w configu.</p></div>
+      <div class="feat"><div class="k">Formularz</div><h3>Pytania przed startem</h3><p>Do pięciu pól na kategorię. Odpowiedzi lądują w pierwszej wiadomości ticketu, więc obsługa od razu wie, o co chodzi.</p></div>
+      <div class="feat"><div class="k">Uprawnienia</div><h3>Prywatny kanał</h3><p>Kanał w stylu <code style="font-family:var(--f-mono)">🛒・zakup-nick</code> widzi tylko klient, bot i role supportu. Limit otwartych ticketów na osobę.</p></div>
+      <div class="feat"><div class="k">Obsługa</div><h3>Przejmij i dodaj</h3><p>Przycisk Przejmij pokazuje, kto prowadzi rozmowę. Komendami dodasz lub usuniesz osobę i zmienisz nazwę kanału.</p></div>
+      <div class="feat"><div class="k">Archiwum</div><h3>Transkrypty .txt</h3><p>Pełny zapis rozmowy z embedami i załącznikami trafia na kanał logów oraz do wiadomości prywatnej klienta.</p></div>
+      <div class="feat"><div class="k">Opinie</div><h3>Oceny 1–5 gwiazdek</h3><p>Po zamknięciu klient ocenia obsługę jednym kliknięciem w DM. Każda ocena pojawia się na logach z numerem ticketu.</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="komendy">
+  <div class="wrap">
+    <div class="sec-head">
+      <div><div class="eyebrow">Komendy</div><h2>Pięć komend i gotowe</h2></div>
+      <p>Komendy rejestrują się same przy starcie bota. Działają tylko tam, gdzie mają sens: komendy <code style="font-family:var(--f-mono);color:var(--ink)">/ticket</code> wyłącznie w kanale ticketu.</p>
+    </div>
+    <div class="cmds" id="instalacja">
+      <div class="panel cmd-list">
+        <div class="cmd"><code>/panel</code><span>Wysyła panel ticketów na bieżący kanał</span><em class="who admin">admin</em></div>
+        <div class="cmd"><code>/ticket dodaj</code><span>Dodaje osobę do ticketu</span><em class="who staff">obsługa</em></div>
+        <div class="cmd"><code>/ticket usun</code><span>Usuwa osobę z ticketu (poza właścicielem)</span><em class="who staff">obsługa</em></div>
+        <div class="cmd"><code>/ticket nazwa</code><span>Zmienia nazwę kanału ticketu</span><em class="who staff">obsługa</em></div>
+        <div class="cmd"><code>/ticket zamknij</code><span>Zamyka ticket z opcjonalnym powodem</span><em class="who">klient i obsługa</em></div>
+      </div>
+      <div class="panel install">
+        <h3>Instalacja</h3>
+        <div class="code" id="code"><button class="copy" type="button" id="copy">Kopiuj</button><span class="c"># 1. pobierz kod i zależności</span>
+<span class="p">$</span> git clone -b claude/discord-bot-tickets-ldljd0 \
+    https://github.com/kamiljagiello707-dotcom/Disocrd-bot-.git
+<span class="p">$</span> cd Disocrd-bot- &amp;&amp; npm install
+<span class="c"># 2. token i ID w pliku .env</span>
+<span class="p">$</span> cp .env.example .env
+<span class="c"># 3. uzupełnij src/config.js, potem start</span>
+<span class="p">$</span> npm start</div>
+        <ul>
+          <li>W panelu deweloperskim włącz <code>Server Members Intent</code>.</li>
+          <li>W <code>config.js</code> wpisz ID kategorii, kanału logów i ról supportu.</li>
+          <li>Rola bota musi stać wyżej niż role obsługi.</li>
+          <li>Na wybranym kanale wpisz <code>/panel</code>.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="panel final">
+      <div>
+        <div class="eyebrow">Node.js 18+</div>
+        <h2>Twój sklep nie śpi. Tickety też nie.</h2>
+        <p>Kod jest otwarty, a nazwę, kolor, baner i kategorie zmienisz bez programowania.</p>
+      </div>
+      <div class="cta">
+        <a class="btn btn-moon" href="https://github.com/kamiljagiello707-dotcom/Disocrd-bot-/tree/claude/discord-bot-tickets-ldljd0">Pobierz z GitHuba</a>
+        <a class="btn btn-ghost" href="#demo">Jeszcze raz demo</a>
+      </div>
+    </div>
+    <footer><span>NightShop ✦ System ticketów</span><span>discord.js v14 · MIT</span></footer>
+  </div>
+</section>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(() => {
+/* ================= dane demo ================= */
+const CATS = [
+  { id:'zakup', label:'Zakup', emoji:'🛒', desc:'Chcesz coś kupić? Kliknij tutaj!',
+    q:[['Co chcesz kupić?','Konto Premium 30 dni',1],['Metoda płatności','BLIK',1],['Ilość','1',0]] },
+  { id:'pomoc', label:'Pomoc', emoji:'🆘', desc:'Masz problem lub pytanie? Pomożemy!',
+    q:[['Opisz swój problem','Nie dostałem maila z kodem po zakupie.',1,1]] },
+  { id:'reklamacja', label:'Reklamacja', emoji:'⚠️', desc:'Coś nie działa z zamówieniem?',
+    q:[['Numer / opis zamówienia','#0042, klucz do gry',1],['Co jest nie tak?','Klucz pokazuje, że był już użyty.',1,1]] },
+  { id:'partnerstwo', label:'Partnerstwo', emoji:'🤝', desc:'Chcesz nawiązać współpracę?',
+    q:[['Link do serwera','https://discord.gg/przyklad',1],['Ilość osób na serwerze','850',1],['Twoja propozycja','Wymiana ogłoszeń raz w tygodniu.',0,1]] },
+  { id:'nagroda', label:'Odbiór nagrody', emoji:'🎁', desc:'Wygrałeś konkurs? Odbierz nagrodę!',
+    q:[['Jaki konkurs wygrałeś?','Giveaway 01.11',1]] },
+];
+const LINE = '━━━━━━━━━━━━━━━━━━━━━━━━━━';
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+let ticketNo = 1;
+
+/* ================= 3D ================= */
+const canvas = document.getElementById('sky');
+let printTicket = () => {};
+if (window.THREE) {
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias:true, alpha:false });
+  renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+  renderer.setClearColor(0x090c1b, 1);
+  const scene = new THREE.Scene();
+  scene.fog = new THREE.FogExp2(0x090c1b, 0.035);
+  const camera = new THREE.PerspectiveCamera(40, 1, 0.1, 200);
+  camera.position.set(0, 0, 9);
+
+  scene.add(new THREE.AmbientLight(0x6b6fb0, 0.55));
+  const key = new THREE.DirectionalLight(0xffffff, 0.8); key.position.set(-3, 4, 6); scene.add(key);
+  const moonLight = new THREE.PointLight(0xf2c86a, 1.6, 30); scene.add(moonLight);
+  const violetLight = new THREE.PointLight(0x8b5cf6, 1.2, 20); violetLight.position.set(-5, -2, 3); scene.add(violetLight);
+
+  // gwiazdy
+  const starGeo = new THREE.BufferGeometry();
+  const N = 1800, pos = new Float32Array(N*3), col = new Float32Array(N*3);
+  for (let i=0;i<N;i++){
+    pos[i*3]=(Math.random()-.5)*80; pos[i*3+1]=(Math.random()-.5)*60; pos[i*3+2]=-Math.random()*60-4;
+    const warm = Math.random()<.18; col[i*3]=warm?1:.8; col[i*3+1]=warm?.85:.82; col[i*3+2]=warm?.55:1;
+  }
+  starGeo.setAttribute('position', new THREE.BufferAttribute(pos,3));
+  starGeo.setAttribute('color', new THREE.BufferAttribute(col,3));
+  const dot = document.createElement('canvas'); dot.width=dot.height=32;
+  const dg = dot.getContext('2d'); const rg = dg.createRadialGradient(16,16,0,16,16,16);
+  rg.addColorStop(0,'rgba(255,255,255,1)'); rg.addColorStop(.3,'rgba(255,255,255,.6)'); rg.addColorStop(1,'rgba(255,255,255,0)');
+  dg.fillStyle=rg; dg.fillRect(0,0,32,32);
+  const stars = new THREE.Points(starGeo, new THREE.PointsMaterial({ size:.22, map:new THREE.CanvasTexture(dot), vertexColors:true, transparent:true, depthWrite:false }));
+  scene.add(stars);
+
+  // księżyc
+  const mc = document.createElement('canvas'); mc.width=512; mc.height=256;
+  const mg = mc.getContext('2d'); mg.fillStyle='#e9d6a4'; mg.fillRect(0,0,512,256);
+  for (let i=0;i<140;i++){ const r=Math.random()*18+3; mg.fillStyle=`rgba(${150+Math.random()*40|0},${125+Math.random()*30|0},80,${Math.random()*.35+.1})`; mg.beginPath(); mg.arc(Math.random()*512,Math.random()*256,r,0,7); mg.fill(); }
+  const moon = new THREE.Mesh(new THREE.SphereGeometry(1.6,48,48), new THREE.MeshStandardMaterial({ map:new THREE.CanvasTexture(mc), emissive:0xf2c86a, emissiveIntensity:.55, roughness:1 }));
+  scene.add(moon);
+  const glowC = document.createElement('canvas'); glowC.width=glowC.height=256;
+  const gg = glowC.getContext('2d'); const gr = gg.createRadialGradient(128,128,40,128,128,128);
+  gr.addColorStop(0,'rgba(242,200,106,.55)'); gr.addColorStop(1,'rgba(242,200,106,0)'); gg.fillStyle=gr; gg.fillRect(0,0,256,256);
+  const glow = new THREE.Sprite(new THREE.SpriteMaterial({ map:new THREE.CanvasTexture(glowC), transparent:true, depthWrite:false }));
+  glow.scale.set(9,9,1); scene.add(glow);
+
+  // kształt biletu z wycięciami
+  const W=3.2, H=1.8, R=.14, NR=.17;
+  function ticketShape(px){
+    const s = new THREE.Shape(), x0=-W/2, x1=W/2, y0=-H/2, y1=H/2;
+    s.moveTo(x0+R,y0);
+    s.lineTo(px-NR,y0); s.absarc(px,y0,NR,Math.PI,0,true);
+    s.lineTo(x1-R,y0); s.quadraticCurveTo(x1,y0,x1,y0+R);
+    s.lineTo(x1,y1-R); s.quadraticCurveTo(x1,y1,x1-R,y1);
+    s.lineTo(px+NR,y1); s.absarc(px,y1,NR,0,Math.PI,true);
+    s.lineTo(x0+R,y1); s.quadraticCurveTo(x0,y1,x0,y1-R);
+    s.lineTo(x0,y0+R); s.quadraticCurveTo(x0,y0,x0+R,y0);
+    return s;
+  }
+  const PX = .78;
+  function mapUV(tex){ tex.repeat.set(1/W,1/H); tex.offset.set(.5,.5); tex.anisotropy = renderer.capabilities.getMaxAnisotropy(); return tex; }
+
+  const TW=1280, TH=720, sx = (PX+W/2)/W*TW;
+  function drawFront(ctx, cat, no){
+    const g = ctx.createLinearGradient(0,0,TW,TH); g.addColorStop(0,'#1a1f47'); g.addColorStop(1,'#0d1029');
+    ctx.fillStyle=g; ctx.fillRect(0,0,TW,TH);
+    // poświata
+    const rg = ctx.createRadialGradient(sx*.35,TH*.2,10,sx*.35,TH*.2,700); rg.addColorStop(0,'rgba(139,92,246,.35)'); rg.addColorStop(1,'rgba(139,92,246,0)');
+    ctx.fillStyle=rg; ctx.fillRect(0,0,sx,TH);
+    // stub złoty
+    const sg = ctx.createLinearGradient(sx,0,TW,TH); sg.addColorStop(0,'#f6d480'); sg.addColorStop(1,'#c99a35');
+    ctx.fillStyle=sg; ctx.fillRect(sx,0,TW-sx,TH);
+    // perforacja
+    ctx.strokeStyle='rgba(9,12,27,.85)'; ctx.lineWidth=6; ctx.setLineDash([16,16]);
+    ctx.beginPath(); ctx.moveTo(sx,40); ctx.lineTo(sx,TH-40); ctx.stroke(); ctx.setLineDash([]);
+    // ramka
+    ctx.strokeStyle='rgba(242,200,106,.55)'; ctx.lineWidth=3; ctx.strokeRect(46,46,sx-92,TH-92);
+    ctx.fillStyle='#f2c86a'; ctx.font='600 30px "JetBrains Mono", monospace'; ctx.textBaseline='alphabetic';
+    ctx.fillText('NIGHTSHOP ✦ SYSTEM TICKETÓW', 90, 130);
+    ctx.fillStyle='#ece9f7'; ctx.font='900 170px "Big Shoulders Display", Impact, sans-serif';
+    ctx.fillText('TICKET', 84, 330);
+    ctx.fillStyle='#f2c86a'; ctx.fillText('#'+String(no).padStart(4,'0'), 84, 490);
+    ctx.font='52px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif'; ctx.fillText(cat.emoji, 90, 600);
+    ctx.fillStyle='#ece9f7'; ctx.font='600 44px "Instrument Sans", sans-serif'; ctx.fillText(cat.label.toUpperCase(), 160, 598);
+    ctx.fillStyle='#9c9ec4'; ctx.font='400 26px "JetBrains Mono", monospace'; ctx.fillText('┃ prywatny kanał ➜ obsługa', 90, 640);
+    // stub tekst
+    ctx.save(); ctx.translate(sx+(TW-sx)/2, TH/2); ctx.rotate(-Math.PI/2);
+    ctx.fillStyle='#1a1405'; ctx.textAlign='center';
+    ctx.font='900 92px "Big Shoulders Display", Impact, sans-serif'; ctx.fillText('WSTĘP', 0, -40);
+    ctx.font='600 30px "JetBrains Mono", monospace'; ctx.fillText('1 KLIENT · 1 KANAŁ', 0, 10);
+    ctx.restore();
+    // kod kreskowy
+    ctx.fillStyle='#1a1405'; let x = sx+40, seed = no*9301;
+    while (x < TW-40){ seed=(seed*9301+49297)%233280; const w = 3+ (seed%7); ctx.fillRect(x, TH-110, w, 70); x += w + 4 + (seed%5); }
+  }
+  function drawBack(ctx, no){
+    ctx.fillStyle='#10142d'; ctx.fillRect(0,0,TW,TH);
+    const bx = TW - sx; // stub po lewej z tyłu
+    const sg = ctx.createLinearGradient(0,0,bx,TH); sg.addColorStop(0,'#c99a35'); sg.addColorStop(1,'#f6d480');
+    ctx.fillStyle=sg; ctx.fillRect(0,0,bx,TH);
+    ctx.strokeStyle='rgba(9,12,27,.85)'; ctx.lineWidth=6; ctx.setLineDash([16,16]);
+    ctx.beginPath(); ctx.moveTo(bx,40); ctx.lineTo(bx,TH-40); ctx.stroke(); ctx.setLineDash([]);
+    ctx.fillStyle='#1a1405'; ctx.font='900 120px "Big Shoulders Display", Impact, sans-serif'; ctx.textAlign='center';
+    ctx.fillText('🌙', bx/2, TH/2+40);
+    ctx.textAlign='left';
+    ctx.fillStyle='#ece9f7'; ctx.font='800 72px "Big Shoulders Display", Impact, sans-serif';
+    ctx.fillText('OCEŃ OBSŁUGĘ', bx+70, 200);
+    ctx.font='64px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif'; ctx.fillText('⭐⭐⭐⭐⭐', bx+70, 310);
+    ctx.fillStyle='#9c9ec4'; ctx.font='400 30px "JetBrains Mono", monospace';
+    ['🔒 Zamknij', '🙋 Przejmij', '📄 Transkrypt'].forEach((t,i)=>ctx.fillText(t, bx+70, 420+i*56));
+    ctx.fillStyle='#f2c86a'; ctx.font='600 28px "JetBrains Mono", monospace';
+    ctx.fillText('TICKET #'+String(no).padStart(4,'0'), bx+70, TH-70);
+  }
+
+  const frontC = document.createElement('canvas'); frontC.width=TW; frontC.height=TH;
+  const backC = document.createElement('canvas'); backC.width=TW; backC.height=TH;
+  const frontTex = mapUV(new THREE.CanvasTexture(frontC));
+  const backTex = mapUV(new THREE.CanvasTexture(backC));
+  let curCat = CATS[0], curNo = 1;
+  function repaint(){ drawFront(frontC.getContext('2d'), curCat, curNo); drawBack(backC.getContext('2d'), curNo); frontTex.needsUpdate = backTex.needsUpdate = true; }
+  repaint();
+  if (document.fonts) document.fonts.ready.then(repaint);
+
+  const DEPTH = .07;
+  const ticket = new THREE.Group();
+  const body = new THREE.Mesh(
+    new THREE.ExtrudeGeometry(ticketShape(PX), { depth:DEPTH, bevelEnabled:true, bevelSize:.015, bevelThickness:.015, bevelSegments:2, curveSegments:24 }),
+    new THREE.MeshStandardMaterial({ color:0xc99a35, metalness:.6, roughness:.35 })
+  );
+  body.position.z = -DEPTH/2; ticket.add(body);
+  const front = new THREE.Mesh(new THREE.ShapeGeometry(ticketShape(PX),24), new THREE.MeshStandardMaterial({ map:frontTex, roughness:.45, metalness:.15 }));
+  front.position.z = DEPTH/2 + .017; ticket.add(front);
+  const back = new THREE.Mesh(new THREE.ShapeGeometry(ticketShape(-PX),24), new THREE.MeshStandardMaterial({ map:backTex, roughness:.5, metalness:.1 }));
+  back.rotation.y = Math.PI; back.position.z = -DEPTH/2 - .017; ticket.add(back);
+  scene.add(ticket);
+
+  // małe bilety kategorii krążące wokół
+  const minis = CATS.map((c, i) => {
+    const mcv = document.createElement('canvas'); mcv.width=512; mcv.height=288;
+    const x = mcv.getContext('2d');
+    const paint = () => {
+      x.fillStyle = i%2 ? '#171c3d' : '#1f1747'; x.fillRect(0,0,512,288);
+      x.fillStyle='#f2c86a'; x.fillRect(388,0,124,288);
+      x.font='90px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif'; x.fillText(c.emoji, 40, 150);
+      x.fillStyle='#ece9f7'; x.font='800 64px "Big Shoulders Display", Impact, sans-serif'; x.fillText(c.label.toUpperCase().slice(0,11), 40, 240);
+    };
+    paint(); if (document.fonts) document.fonts.ready.then(()=>{ paint(); tex.needsUpdate = true; });
+    const tex = new THREE.CanvasTexture(mcv);
+    tex.repeat.set(1/W,1/H); tex.offset.set(.5,.5);
+    const m = new THREE.Mesh(new THREE.ShapeGeometry(ticketShape(PX),12), new THREE.MeshStandardMaterial({ map:tex, side:THREE.DoubleSide, roughness:.6, transparent:true, opacity:.9 }));
+    m.scale.setScalar(.34);
+    m.userData = { a: i/CATS.length*Math.PI*2, r: 3.9 + (i%2)*.6, y: (i-2)*.32, s: .18 + i*.02 };
+    scene.add(m); return m;
+  });
+
+  // interakcja
+  let mx=0, my=0, dragX=0, dragY=0, dragging=false, lx=0, ly=0, spin=0;
+  addEventListener('pointermove', e => {
+    mx = e.clientX/innerWidth*2-1; my = e.clientY/innerHeight*2-1;
+    if (dragging){ dragX += (e.clientX-lx)*.01; dragY += (e.clientY-ly)*.006; lx=e.clientX; ly=e.clientY; }
+  });
+  const hero = document.getElementById('top');
+  hero.addEventListener('pointerdown', e => { if (e.target.closest('a,button')) return; dragging=true; lx=e.clientX; ly=e.clientY; });
+  addEventListener('pointerup', () => dragging=false);
+
+  printTicket = (cat, no) => { curCat = cat; curNo = no; repaint(); spin = Math.PI*2; };
+
+  let vw=1, vh=1, layout = { x:0, y:0, s:1 };
+  function resize(){
+    vw = innerWidth; vh = innerHeight;
+    renderer.setSize(vw, vh, false);
+    camera.aspect = vw/vh; camera.updateProjectionMatrix();
+    const visH = 2*Math.tan(THREE.MathUtils.degToRad(20))*9, visW = visH*camera.aspect;
+    if (vw > 960) layout = { x: visW*.23, y: -.1, s: Math.min(1.25, visW/12) };
+    else { const s = Math.min(1, visW/4.2); layout = { x: 0, y: visH/2 - (Math.min(vw*.78,400)*.5 + 70)/vh*visH, s }; }
+    moon.position.set(vw > 960 ? visW*.62 : -visW*.5, visH*.62, -16);
+    glow.position.copy(moon.position);
+    moonLight.position.set(moon.position.x*.4, moon.position.y*.4, 2);
+  }
+  addEventListener('resize', resize); resize();
+
+  const clock = new THREE.Clock();
+  let rotY = 0, rotX = 0;
+  function frame(){
+    const t = clock.getElapsedTime(), dt = Math.min(clock.getDelta(), .05);
+    const scrollP = scrollY / vh;
+    const visH = 2*Math.tan(THREE.MathUtils.degToRad(20))*9;
+    // bilet przewija się razem z heroem (lekki paralaks) i obraca
+    ticket.position.set(layout.x, layout.y + scrollP*visH*.75, 0);
+    ticket.scale.setScalar(layout.s);
+    const targetY = (reduce ? 0 : Math.sin(t*.5)*.35) + mx*.45 + dragX + scrollP*2.2;
+    const targetX = (reduce ? 0 : Math.cos(t*.4)*.12) + my*.25 + dragY;
+    rotY += (targetY + spinAcc - rotY)*.08;
+    rotX += (targetX - rotX)*.08;
+    ticket.rotation.set(rotX, rotY, -.08 + (reduce?0:Math.sin(t*.7)*.04));
+    if (!reduce) ticket.position.y += Math.sin(t*1.1)*.06;
+    minis.forEach((m,i) => {
+      const d = m.userData; const a = d.a + (reduce?0:t*d.s);
+      m.position.set(ticket.position.x + Math.cos(a)*d.r*layout.s, ticket.position.y + d.y*layout.s + Math.sin(a*1.3)*.25, Math.sin(a)*1.4 - 2.2);
+      m.rotation.set(Math.sin(t+i)*.3, Math.sin(a)*.7, Math.cos(t*.8+i)*.2);
+      m.scale.setScalar(.34*layout.s);
+    });
+    stars.rotation.y = mx*.03 + (reduce?0:t*.004);
+    stars.rotation.x = my*.02;
+    stars.position.y = scrollP*1.2;
+    camera.position.x += (mx*.3 - camera.position.x)*.04;
+    camera.position.y += (-my*.2 - camera.position.y)*.04;
+    camera.lookAt(0, 0, 0);
+    renderer.render(scene, camera);
+    requestAnimationFrame(frame);
+  }
+  // obrót po wydrukowaniu nowego biletu
+  let spinAcc = 0;
+  const _print = printTicket;
+  printTicket = (cat, no) => { _print(cat, no); if (!reduce) spinAcc += Math.PI*2; };
+  frame();
+}
+
+/* ================= demo Discord ================= */
+const feed = document.getElementById('feed');
+const ticketsBox = document.getElementById('dc-tickets');
+const side = document.getElementById('dc-side');
+const topName = document.getElementById('dc-top-name');
+const topH = document.getElementById('dc-top-h');
+const stepsEl = [...document.querySelectorAll('#steps li')];
+const views = { panel: [], logs: [], dm: [] };
+let current = 'panel', state = {};
+
+function el(tag, cls, html){ const e = document.createElement(tag); if (cls) e.className = cls; if (html != null) e.innerHTML = html; return e; }
+function esc(s){ return String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+const now = () => new Date().toLocaleTimeString('pl-PL',{hour:'2-digit',minute:'2-digit'});
+function botMsg(inner, opts={}){
+  const m = el('div','msg');
+  m.append(el('div','av','<span aria-hidden="true">🌙</span>'));
+  const b = el('div','mbody', `<span class="mname">NightShop</span><span class="tag">BOT</span><span class="mtime">Dzisiaj o ${now()}</span>`);
+  if (typeof inner === 'string') b.insertAdjacentHTML('beforeend', inner); else inner.forEach(n => b.append(n));
+  m.append(b); return m;
+}
+function embed({ color='', author, title, desc, fields=[], foot=true }){
+  return `<div class="embed ${color}">${author?`<div class="e-author"><i></i>${author}</div>`:''}${title?`<div class="e-title">${title}</div>`:''}${desc?`<div class="e-desc">${desc}</div>`:''}${fields.map(f=>`<div class="e-f">➜ ${esc(f[0])}</div><div class="e-pre">${esc(f[1]||'Brak')}</div>`).join('')}${foot?`<div class="e-foot"><i></i>NightShop ✦ System ticketów • Dzisiaj o ${now()}</div>`:''}</div>`;
+}
+function setStep(n){ stepsEl.forEach((li,i)=>{ li.classList.toggle('on', i===n); li.classList.toggle('done', i<n); }); }
+
+function show(view){
+  current = view;
+  feed.innerHTML = '';
+  (views[view] || []).forEach(n => feed.append(n));
+  side.querySelectorAll('.dc-ch').forEach(b => b.classList.toggle('on', b.dataset.ch === view));
+  const names = { panel:'🎫・tickety', logs:'📜・logi-ticketów', dm:'NightShop' };
+  topName.textContent = names[view] || state.channelName;
+  topH.textContent = view === 'dm' ? '@' : '#';
+  feed.scrollTop = feed.scrollHeight;
+}
+function push(view, node){ (views[view] ||= []).push(node); if (current === view){ feed.append(node); feed.scrollTop = feed.scrollHeight; } }
+
+function buildPanel(){
+  const list = CATS.map(c => `${c.emoji} <b>${c.label}</b> ➜ ${c.desc}`).join('\n');
+  const html = embed({ author:'NightShop ✦ Tickety', title:'🎫 ┃ Stwórz ticket',
+    desc:`✦ Witaj w <b>NightShop</b>!\nPotrzebujesz pomocy lub chcesz złożyć zamówienie?\nWybierz odpowiednią kategorię z menu poniżej. 👇\n\n${LINE}\n📂 <b>Dostępne kategorie:</b>\n<span class="e-q">${list}</span>${LINE}\n\n📌 <b>Zasady:</b>\n<span class="e-q">・ Nie twórz ticketów bez powodu\n・ Nie oznaczaj administracji\n・ Bądź kulturalny wobec obsługi</span>\n⏰ <b>Czas odpowiedzi:</b> zazwyczaj do <code>15 minut</code>` });
+  const sel = el('div','sel');
+  const btn = el('button','sel-btn','<span>📩 Wybierz kategorię ticketu...</span><span aria-hidden="true">⌄</span>');
+  btn.type = 'button'; btn.setAttribute('aria-haspopup','listbox'); btn.setAttribute('aria-expanded','false');
+  const listEl = el('div','sel-list'); listEl.hidden = true; listEl.setAttribute('role','listbox');
+  CATS.forEach(c => {
+    const o = el('button','sel-opt',`<span aria-hidden="true">${c.emoji}</span><span><b>${c.label}</b><small>${c.desc}</small></span>`);
+    o.type='button'; o.setAttribute('role','option');
+    o.onclick = () => { listEl.hidden = true; btn.setAttribute('aria-expanded','false'); openModal(c); };
+    listEl.append(o);
+  });
+  btn.onclick = () => { listEl.hidden = !listEl.hidden; btn.setAttribute('aria-expanded', String(!listEl.hidden)); };
+  sel.append(btn, listEl);
+  const wrap = el('div', null, html); wrap.append(sel);
+  return botMsg([wrap]);
+}
+
+function openModal(cat){
+  if (state.open){ push('panel', botMsg(`<div class="embed red"><div class="e-desc">❌ ┃ Masz już otwarty ticket: <span class="mention">#${esc(state.channelName)}</span></div></div><div class="eph">👁 Tylko ty możesz to zobaczyć</div>`)); return; }
+  setStep(1);
+  const back = el('div','modal-back');
+  const form = el('form','modal');
+  form.innerHTML = `<h4>${cat.emoji} ${cat.label} ┃ NightShop</h4>` + cat.q.map((q,i)=>`<label for="dq${i}">${esc(q[0])}${q[2]?' <span class="req">*</span>':''}</label>${q[3]?`<textarea id="dq${i}" rows="3">${esc(q[1])}</textarea>`:`<input id="dq${i}" value="${esc(q[1])}">`}`).join('') +
+    `<div class="act"><button type="button" class="b b-link">Anuluj</button><button type="submit" class="b b-blue">Wyślij</button></div>`;
+  back.append(form);
+  document.getElementById('dc').append(back);
+  form.querySelector('input,textarea').focus();
+  form.querySelector('.b-link').onclick = () => { back.remove(); setStep(0); };
+  form.onsubmit = e => {
+    e.preventDefault();
+    const answers = cat.q.map((q,i) => [q[0], form.querySelector('#dq'+i).value.trim()]);
+    back.remove(); createTicket(cat, answers);
+  };
+}
+
+function createTicket(cat, answers){
+  const no = ticketNo++;
+  const num = String(no).padStart(4,'0');
+  state = { open:true, cat, no:num, channelName:`${cat.emoji}・${cat.id}-ty`, claimed:false };
+  printTicket(cat, no);
+  push('panel', botMsg(`<div class="embed green"><div class="e-desc">✅ ┃ Twój ticket został utworzony ➜ <span class="mention">#${esc(state.channelName)}</span></div></div><div class="eph">👁 Tylko ty możesz to zobaczyć</div>`));
+  push('logs', botMsg(embed({ color:'green', title:'📥 ┃ Ticket otwarty', desc:`<span class="e-q">👤 <b>Użytkownik:</b> <span class="mention">@ty</span> <code>(123456789012345678)</code>\n📂 <b>Kategoria:</b> <code>${cat.label}</code>\n🔢 <b>Numer:</b> <code>#${num}</code>\n💬 <b>Kanał:</b> <span class="mention">#${esc(state.channelName)}</span></span>` })));
+  const ch = el('button','dc-ch new',`<span class="h">#</span>${esc(state.channelName)}`);
+  ch.type='button'; ch.dataset.ch = 't'+num; ch.onclick = () => show('t'+num);
+  ticketsBox.append(ch);
+  state.view = 't'+num; views[state.view] = [];
+  const claimedLine = () => state.claimed ? '<span class="mention">@Obsługa</span>' : '<code>Nikt</code>';
+  const mainEmbed = el('div');
+  const renderMain = () => { mainEmbed.innerHTML = embed({ author:`ty ✦ Ticket #${num}`, title:`${cat.emoji} ┃ ${cat.label}`,
+    desc:`👋 Cześć <span class="mention">@ty</span>!\nDziękujemy za kontakt z <b>NightShop</b>.\nObsługa odpowie najszybciej jak to możliwe. ⏳\n\n${LINE}\n👤 <b>Użytkownik:</b> <span class="mention">@ty</span>\n📂 <b>Kategoria:</b> <code>${cat.label}</code>\n🔢 <b>Numer:</b> <code>#${num}</code>\n🙋 <b>Przejęty przez:</b> ${claimedLine()}\n${LINE}`, fields:answers }); };
+  renderMain();
+  const row = el('div','btns');
+  const bClose = el('button','b b-red','🔒 Zamknij'); bClose.type='button';
+  const bClaim = el('button','b b-green','🙋 Przejmij'); bClaim.type='button';
+  const bTr = el('button','b b-grey','📄 Transkrypt'); bTr.type='button';
+  row.append(bClose, bClaim, bTr);
+  const ping = el('div',null,'<span class="mention">@ty</span> <span class="mention">@Support</span>');
+  push(state.view, botMsg([ping, mainEmbed, row]));
+  setTimeout(() => { show(state.view); setStep(2); setTimeout(()=>setStep(3), 900); }, 650);
+
+  bClaim.onclick = () => {
+    state.claimed = true; renderMain(); bClaim.disabled = true; bClaim.textContent = '🙋 Przejęty';
+    push(state.view, botMsg(`<div class="embed"><div class="e-desc">🙋 ┃ <span class="mention">@Obsługa</span> przejął ten ticket i zaraz Ci pomoże!</div></div>`));
+    setStep(4);
+  };
+  bTr.onclick = () => push(state.view, botMsg(`<div class="embed green"><div class="e-desc">✅ ┃ Oto transkrypt ticketu 📄</div></div><div class="file">📄 <span><b>transkrypt-${esc(state.channelName)}.txt</b><br><small style="color:var(--dc-dim)">2.1 KB</small></span></div><div class="eph">👁 Tylko ty możesz to zobaczyć</div>`));
+  bClose.onclick = () => {
+    if (state.closing) return;
+    const r = el('div','btns');
+    const yes = el('button','b b-red','✅ Tak, zamknij'); yes.type='button';
+    const no2 = el('button','b b-grey','✖️ Anuluj'); no2.type='button';
+    r.append(yes, no2);
+    const q = botMsg([el('div',null,'<div class="embed red"><div class="e-desc">❓ ┃ Czy na pewno chcesz <b>zamknąć</b> ten ticket?</div></div>'), r]);
+    push(state.view, q);
+    no2.onclick = () => { q.remove(); views[state.view] = views[state.view].filter(n => n !== q); };
+    yes.onclick = () => { r.remove(); closeTicket(ch, [bClose,bClaim,bTr]); };
+  };
+}
+
+function closeTicket(chBtn, btns){
+  state.closing = true; btns.forEach(b => b.disabled = true);
+  const cd = el('div',null);
+  let s = 5;
+  const paint = () => cd.innerHTML = `<div class="embed red"><div class="e-desc">🔒 ┃ Ticket zostanie zamknięty za <code>${s} sekund</code>...\n<span class="e-q">📝 <b>Powód:</b> Brak</span></div></div>`;
+  paint(); push(state.view, botMsg([cd]));
+  const it = setInterval(() => {
+    s--; paint();
+    if (s <= 0){
+      clearInterval(it);
+      const { cat, no, channelName } = state;
+      chBtn.remove(); delete views[state.view];
+      push('logs', botMsg(embed({ color:'red', title:'📤 ┃ Ticket zamknięty', desc:`<span class="e-q">👤 <b>Właściciel:</b> <span class="mention">@ty</span>\n📂 <b>Kategoria:</b> <code>${cat.label}</code>\n🔢 <b>Numer:</b> <code>#${no}</code>\n🙋 <b>Przejęty przez:</b> ${state.claimed?'<span class="mention">@Obsługa</span>':'<code>Nikt</code>'}\n🔒 <b>Zamknięty przez:</b> <span class="mention">@ty</span>\n📝 <b>Powód:</b> Brak</span>` }) + `<div class="file">📄 <span><b>transkrypt-${esc(channelName)}.txt</b><br><small style="color:var(--dc-dim)">2.1 KB</small></span></div>`));
+      const dmWrap = el('div', null, embed({ author:'NightShop ✦ Ticket zamknięty', desc:`🔒 Twój ticket <b>#${no}</b> na serwerze <b>NightShop</b> został zamknięty.\n\n<span class="e-q">📝 <b>Powód:</b> Brak\n🔒 <b>Zamknął:</b> ty</span>${LINE}\n⭐ <b>Oceń obsługę!</b> Kliknij ile gwiazdek nam dajesz:` }));
+      const stars = el('div','btns');
+      [1,2,3,4,5].forEach(n => {
+        const b = el('button', 'b ' + (n>=4?'b-green':n===3?'b-blue':'b-grey'), '⭐'.repeat(n)); b.type='button';
+        b.onclick = () => {
+          stars.replaceWith(el('div','embed',`<div class="e-desc">💜 Dziękujemy za ocenę: ${'⭐'.repeat(n)}</div>`));
+          push('logs', botMsg(embed({ title:'⭐ ┃ Nowa ocena', desc:`<span class="e-q">👤 <b>Użytkownik:</b> <span class="mention">@ty</span>\n🔢 <b>Ticket:</b> <code>#${no}</code>\n⭐ <b>Ocena:</b> ${'⭐'.repeat(n)} <code>(${n}/5)</code></span>` })));
+          setStep(6);
+        };
+        stars.append(b);
+      });
+      push('dm', botMsg([dmWrap, stars, el('div','file',`📄 <span><b>transkrypt-${esc(channelName)}.txt</b><br><small style="color:var(--dc-dim)">2.1 KB</small></span>`)]));
+      state = {};
+      show('dm'); setStep(5);
+    }
+  }, reduce ? 300 : 1000);
+}
+
+side.querySelectorAll('.dc-ch[data-ch]').forEach(b => b.onclick = () => show(b.dataset.ch));
+function reset(){
+  state = {}; views.panel = [buildPanel()]; views.logs = []; views.dm = [];
+  Object.keys(views).forEach(k => { if (k.startsWith('t')) delete views[k]; });
+  ticketsBox.innerHTML = '';
+  document.querySelectorAll('.modal-back').forEach(n => n.remove());
+  show('panel'); setStep(0);
+}
+document.getElementById('reset').onclick = reset;
+reset();
+
+/* kopiowanie */
+document.getElementById('copy').onclick = async (e) => {
+  const btn = e.currentTarget;
+  const text = [...document.getElementById('code').childNodes].filter(n => n !== btn).map(n => n.textContent).join('')
+    .split('\n').filter(l => !l.trim().startsWith('#')).map(l => l.replace(/^\$ /,'')).join('\n').trim();
+  try { await navigator.clipboard.writeText(text); btn.textContent = 'Skopiowano'; }
+  catch { const r = document.createRange(); r.selectNodeContents(document.getElementById('code')); const s = getSelection(); s.removeAllRanges(); s.addRange(r); btn.textContent = 'Zaznaczono'; }
+  setTimeout(() => document.getElementById('copy').textContent = 'Kopiuj', 1800);
+};
+})();
+</script>
+
+</html>

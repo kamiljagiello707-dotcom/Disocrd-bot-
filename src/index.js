@@ -29,6 +29,7 @@ const {
   FileBuilder,
 } = require('discord.js');
 const config = require('./config');
+const { renderHtml } = require('./transcript');
 
 const client = new Client({
   intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.GuildMembers],
@@ -263,14 +264,7 @@ async function createTicket(interaction, category, answers) {
 }
 
 // ───────────── transkrypt ─────────────
-function flattenComponents(comps, out = []) {
-  for (const c of comps || []) {
-    if (c.content) out.push(c.content);
-    if (c.components) flattenComponents(c.components, out);
-  }
-  return out;
-}
-async function buildTranscript(channel) {
+async function buildTranscript(channel, { ticket = getTicket(channel.id), closedBy = null, reason = null } = {}) {
   let all = [];
   let before;
   while (all.length < 2000) {
@@ -281,24 +275,9 @@ async function buildTranscript(channel) {
     if (batch.size < 100) break;
   }
   all.reverse();
-  const lines = [
-    `╭─ ${config.shopName} ${S} Transkrypt ticketu`,
-    `│ Kanał: #${channel.name}`,
-    `│ Data:  ${new Date().toLocaleString('pl-PL')}`,
-    `╰─ Wiadomości: ${all.length}`,
-    '',
-  ];
-  for (const m of all) {
-    let content = m.content || '';
-    for (const e of m.embeds) content += `\n  [embed] ${e.title || ''} ${e.description || ''}`;
-    const v2 = flattenComponents(m.components?.map((c) => c.toJSON?.() ?? c));
-    if (v2.length) content += '\n  ' + v2.join('\n  ');
-    for (const a of m.attachments.values()) content += `\n  [załącznik] ${a.url}`;
-    lines.push(`[${m.createdAt.toLocaleString('pl-PL')}] ${m.author.tag}: ${content}`);
-  }
-  return Buffer.from(lines.join('\n'), 'utf8');
+  return Buffer.from(renderHtml({ channel, messages: all, ticket, closedBy, reason }), 'utf8');
 }
-const transcriptName = (channel) => `transkrypt-${channel.id}.txt`;
+const transcriptName = (channel) => `transkrypt-${channel.id}.html`;
 const transcriptFile = (buf, channel) => new AttachmentBuilder(buf, { name: transcriptName(channel) });
 
 // ───────────── zamykanie ─────────────
@@ -335,7 +314,7 @@ async function closeTicket(interaction, reason = 'Brak') {
     flags: V2,
   });
 
-  const buf = await buildTranscript(channel);
+  const buf = await buildTranscript(channel, { ticket: t, closedBy: interaction.user.username, reason });
   const summary =
     `> 👥 ${S} **Właściciel:** <@${t.ownerId}> \`(${t.ownerId})\`\n` +
     `> ${cat?.emoji || '🎫'} ${S} **Kategoria:** \`${cat?.label || t.categoryId}\`\n` +
@@ -370,7 +349,7 @@ async function closeTicket(interaction, reason = 'Brak') {
       rows: [stars],
     });
     await owner.send({ components: [dm], files: bannerFiles(), flags: V2 }).catch(() => {});
-    await owner.send({ content: `📄 ${S} Transkrypt ticketu **#${t.number}**`, files: [transcriptFile(buf, channel)] }).catch(() => {});
+    await owner.send({ content: `📄 ${S} Transkrypt ticketu **#${t.number}** (otwórz plik w przeglądarce)`, files: [transcriptFile(buf, channel)] }).catch(() => {});
   }
 
   delete db.tickets[channel.id];

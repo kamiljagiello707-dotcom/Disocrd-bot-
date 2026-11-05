@@ -7,7 +7,7 @@ Bot ticketów do Discorda (discord.js v14) w nowym układzie wiadomości Discord
 - 📝 Formularz (modal) z pytaniami dla każdej kategorii
 - 🔐 Prywatny kanał `||🛒ˈzamówienie•nick` widoczny tylko dla klienta i obsługi
 - 📁 Menu **Wybierz akcję ticketa**: Przejmij, Przypomnij klientowi, Dodaj/Usuń osobę, Transkrypt, Zamknij, Zamknij z powodem
-- 📤 Logi otwarcia/zamknięcia z transkryptem `.txt`
+- 📤 Logi otwarcia/zamknięcia z transkryptem HTML w stylu Discorda (avatary, kolory ról, wzmianki, załączniki)
 - 💌 DM do klienta po zamknięciu z transkryptem i oceną ⭐ 1–5 (oceny trafiają na logi)
 - 🔢 Numeracja ticketów `#0001`, limit otwartych ticketów na osobę
 - ⚙️ Komendy: `/panel`, `/ticket dodaj`, `/ticket usun`, `/ticket nazwa`, `/ticket zamknij`

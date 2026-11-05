@@ -1,0 +1,944 @@
+<!doctype html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>BubleBot</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;600;800&family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: black void with a fixed WebGL field of soap bubbles; content floats in one 1200px column, white pill buttons are the only solid shapes. */
+:root{
+  --void:#040405;
+  --ink:#f4f4f6;
+  --muted:#8b8b97;
+  --line:#1c1c22;
+  --glass:rgba(255,255,255,.035);
+  --glass-2:rgba(255,255,255,.07);
+  --film-a:#7ef0ff;
+  --film-b:#c58bff;
+  --film-c:#ffb0d9;
+  --ok:#5ee39a;
+  --f-display:"Unbounded","Arial Black",system-ui,sans-serif;
+  --f-body:"Geist",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"Geist Mono",ui-monospace,Menlo,Consolas,monospace;
+  --film:linear-gradient(100deg,var(--film-a),var(--film-b) 45%,var(--film-c) 75%,var(--film-a));
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{background:var(--void);color:var(--ink);font-family:var(--f-body);font-size:16px;line-height:1.55;overflow-x:hidden}
+::selection{background:var(--ink);color:var(--void)}
+#gl{position:fixed;inset:0;width:100%;height:100%;z-index:0;display:block}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:20;background:var(--void)}
+.page{position:relative;z-index:1}
+.wrap{max-width:1200px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+a{color:inherit}
+:focus-visible{outline:2px solid var(--ink);outline-offset:3px}
+code,kbd{font-family:var(--f-mono)}
+
+/* buttons */
+.btn{--mx:0px;--my:0px;display:inline-flex;align-items:center;gap:10px;font:500 15px/1 var(--f-body);padding:14px 22px;border-radius:999px;text-decoration:none;cursor:pointer;border:1px solid var(--ink);background:var(--ink);color:var(--void);transform:translate(var(--mx),var(--my));transition:transform .25s cubic-bezier(.2,.8,.2,1),background .2s,color .2s,box-shadow .3s;white-space:nowrap;position:relative}
+.btn:hover{box-shadow:0 0 0 6px rgba(255,255,255,.08),0 10px 40px -10px rgba(197,139,255,.6)}
+.btn:active{transform:translate(var(--mx),var(--my)) scale(.97)}
+.btn.line{background:transparent;color:var(--ink);border-color:rgba(255,255,255,.28)}
+.btn.line:hover{border-color:var(--ink);background:rgba(255,255,255,.06)}
+.btn.sm{padding:9px 15px;font-size:13px}
+.btn svg{width:16px;height:16px;flex:none}
+.chip{display:inline-flex;align-items:center;gap:8px;font:500 12px/1 var(--f-mono);letter-spacing:.06em;text-transform:uppercase;color:var(--muted);border:1px solid var(--line);border-radius:999px;padding:7px 12px;background:var(--glass)}
+.chip i{width:7px;height:7px;border-radius:50%;background:var(--ok);box-shadow:0 0 10px var(--ok);animation:blink 2s infinite}
+@keyframes blink{50%{opacity:.35}}
+
+/* nav */
+nav{position:sticky;top:env(safe-area-inset-top,0px);z-index:10;backdrop-filter:blur(14px) saturate(1.4);-webkit-backdrop-filter:blur(14px) saturate(1.4);background:rgba(4,4,5,.55);border-bottom:1px solid var(--line)}
+nav .wrap{display:flex;align-items:center;gap:18px;padding-block:12px}
+.logo{display:flex;align-items:center;gap:10px;text-decoration:none;font:800 18px/1 var(--f-display);letter-spacing:-.02em}
+.logo b{width:28px;height:28px;border-radius:50%;background:radial-gradient(circle at 32% 28%,#fff 0 8%,transparent 9%),conic-gradient(from 200deg,var(--film-a),var(--film-b),var(--film-c),var(--film-a));box-shadow:inset 0 0 8px rgba(0,0,0,.6),0 0 18px rgba(197,139,255,.45);display:block}
+nav .links{display:flex;gap:4px;margin-left:auto}
+nav .links a{font-size:14px;color:var(--muted);text-decoration:none;padding:8px 12px;border-radius:999px;transition:color .2s,background .2s}
+nav .links a:hover{color:var(--ink);background:var(--glass-2)}
+nav .acts{display:flex;gap:8px}
+
+/* hero */
+.hero{padding-block:72px 56px;display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,.9fr);gap:32px;align-items:center;min-height:640px}
+.hero h1{font:800 clamp(56px,10vw,148px)/.86 var(--f-display);letter-spacing:-.055em;margin:22px 0 24px}
+.hero h1 .film{background:var(--film);background-size:200% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;animation:film 8s linear infinite}
+@keyframes film{to{background-position:200% 0}}
+.hero h1 span{display:inline-block;animation:rise .9s cubic-bezier(.2,.8,.2,1) both}
+.hero h1 span:nth-child(2){animation-delay:.08s}
+@keyframes rise{from{transform:translateY(.35em) scale(.96);filter:blur(6px)}to{transform:none;filter:none}}
+.lede{font-size:19px;color:#b9b9c4;max-width:44ch;margin:0 0 32px}
+.lede b{color:var(--ink);font-weight:500}
+.cta{display:flex;flex-wrap:wrap;gap:10px}
+.cmdline{margin-top:34px;display:flex;align-items:center;gap:12px;max-width:520px;border:1px solid var(--line);border-radius:14px;padding:12px 12px 12px 16px;background:rgba(10,10,12,.7);font:14px var(--f-mono);color:var(--muted)}
+.cmdline code{color:var(--ink);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cmdline .caret{display:inline-block;width:8px;height:16px;background:var(--ink);vertical-align:-3px;margin-left:2px;animation:blink 1s steps(1) infinite}
+.hero-side{justify-self:end;display:flex;flex-direction:column;gap:12px;align-items:flex-end;align-self:end}
+.pop-hint{font:12px var(--f-mono);color:var(--muted);text-align:right}
+.pop-hint b{color:var(--ink);font-weight:500;font-variant-numeric:tabular-nums}
+
+/* marquee */
+.marquee{border-block:1px solid var(--line);overflow:hidden;background:rgba(4,4,5,.6);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+.marquee .track{display:flex;gap:48px;padding-block:18px;width:max-content;animation:mq 40s linear infinite;font:500 14px var(--f-mono);color:var(--muted);text-transform:uppercase;letter-spacing:.1em}
+.marquee .track span::before{content:"◯";margin-right:14px;color:var(--ink);opacity:.5}
+@keyframes mq{to{transform:translateX(-50%)}}
+
+/* sections */
+section{padding-block:96px}
+.head{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:20px 56px;align-items:end;margin-bottom:44px}
+.eyebrow{font:500 12px/1 var(--f-mono);letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
+h2{font:800 clamp(32px,4.2vw,56px)/.98 var(--f-display);letter-spacing:-.045em;margin:14px 0 0;text-wrap:balance}
+.head p{color:var(--muted);margin:0;max-width:52ch}
+.glass{background:rgba(12,12,15,.72);border:1px solid var(--line);border-radius:22px;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
+
+/* stats */
+.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));border:1px solid var(--line);border-radius:22px;overflow:hidden;background:rgba(10,10,12,.7)}
+.stat{padding:26px 24px;border-right:1px solid var(--line)}
+.stat:last-child{border-right:0}
+.stat b{display:block;font:800 44px/1 var(--f-display);letter-spacing:-.04em;font-variant-numeric:tabular-nums}
+.stat span{display:block;margin-top:10px;color:var(--muted);font-size:14px}
+
+/* configurator */
+.cfg{display:grid;grid-template-columns:320px minmax(0,1fr);gap:16px;align-items:start}
+.controls{padding:22px;display:flex;flex-direction:column;gap:20px;position:sticky;top:84px}
+.field{display:flex;flex-direction:column;gap:8px}
+.field>label,.field>.lbl{font:500 12px var(--f-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+input[type=text]{background:#0b0b0e;border:1px solid var(--line);border-radius:12px;padding:12px 14px;color:var(--ink);font:15px var(--f-body);width:100%}
+input[type=text]:focus{outline:none;border-color:var(--ink)}
+.swatches{display:flex;flex-wrap:wrap;gap:8px}
+.sw{width:34px;height:34px;border-radius:50%;border:2px solid transparent;cursor:pointer;background:var(--c);box-shadow:inset 0 0 0 2px var(--void)}
+.sw[aria-pressed=true]{border-color:var(--ink)}
+.toggles{display:flex;flex-wrap:wrap;gap:8px}
+.tg{font:500 13px var(--f-body);padding:8px 12px;border-radius:999px;border:1px solid var(--line);background:transparent;color:var(--muted);cursor:pointer;transition:all .2s}
+.tg[aria-pressed=true]{background:var(--ink);color:var(--void);border-color:var(--ink)}
+.switch{display:flex;align-items:center;justify-content:space-between;gap:12px;font-size:14px;cursor:pointer}
+.switch input{appearance:none;width:42px;height:24px;border-radius:999px;background:#25252c;position:relative;cursor:pointer;transition:background .2s;flex:none}
+.switch input::after{content:"";position:absolute;left:3px;top:3px;width:18px;height:18px;border-radius:50%;background:var(--muted);transition:transform .25s cubic-bezier(.2,.8,.2,1),background .2s}
+.switch input:checked{background:var(--ink)}
+.switch input:checked::after{transform:translateX(18px);background:var(--void)}
+.out{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:16px;min-width:0}
+.pane{min-width:0;overflow:hidden}
+.pane-top{display:flex;align-items:center;gap:8px;padding:12px 16px;border-bottom:1px solid var(--line);font:12px var(--f-mono);color:var(--muted)}
+.pane-top .dots{display:flex;gap:6px;margin-right:6px}
+.pane-top .dots i{width:10px;height:10px;border-radius:50%;background:#2a2a31}
+.pane-top .sp{margin-left:auto}
+
+/* discord mock */
+.dc{background:#313338;padding:18px 16px;font-family:"gg sans","Noto Sans",Helvetica,Arial,sans-serif;color:#dbdee1;font-size:14.5px;min-height:100%}
+.dc .msg{display:flex;gap:12px}
+.dc .av{width:40px;height:40px;border-radius:50%;flex:none;background:radial-gradient(circle at 32% 28%,#fff 0 8%,transparent 9%),conic-gradient(from 200deg,var(--film-a),var(--film-b),var(--film-c),var(--film-a))}
+.dc .nm{font-weight:600;color:var(--accent,#fff)}
+.dc .tag{background:#5865f2;color:#fff;font-size:10px;padding:1px 5px;border-radius:4px;margin-left:5px;vertical-align:2px;font-weight:600}
+.dc .tm{color:#949ba4;font-size:12px;margin-left:6px}
+.v2{background:#2b2d31;border:1px solid #3a3c42;border-left:4px solid var(--accent,#fff);border-radius:8px;padding:12px 14px;margin-top:6px;transition:border-color .3s}
+.v2 .hd{background:#383a40;border:1px solid #45474e;border-radius:6px;padding:11px 12px;font:700 14px/1.6 var(--f-mono);color:#fff;white-space:pre-wrap;overflow-wrap:anywhere}
+.v2 hr{border:0;border-top:1px solid #45474e;margin:10px 0}
+.v2 .q{border-left:4px solid #4e5058;padding-left:10px;line-height:1.55}
+.v2 .q b{color:#fff}
+.v2 .sel{background:#1e1f22;border:1px solid #45474e;border-radius:8px;padding:10px 12px;display:flex;justify-content:space-between;color:#b5bac1;cursor:pointer}
+.v2 .opts{margin-top:6px;border:1px solid #45474e;border-radius:8px;overflow:hidden}
+.v2 .opt{display:flex;gap:10px;padding:8px 12px;align-items:center;background:#2b2d31;border-bottom:1px solid #1e1f22;animation:optin .35s cubic-bezier(.2,.8,.2,1) both}
+.v2 .opt:last-child{border-bottom:0}
+.v2 .opt small{display:block;color:#949ba4;font-size:12px}
+@keyframes optin{from{transform:translateX(-8px);opacity:.3}to{transform:none;opacity:1}}
+.v2 .ban{height:84px;border-radius:8px;background:radial-gradient(circle at 18% 50%,rgba(255,255,255,.9) 0 3%,transparent 4%),radial-gradient(circle at 20% 50%,var(--accent,#fff) 0 22%,transparent 23%),linear-gradient(110deg,#0b0b0e,#18181d);display:flex;align-items:center;justify-content:flex-end;padding-right:18px;font:800 22px var(--f-display);letter-spacing:-.03em;color:#fff;transition:background .3s}
+.v2 .ft{font-size:12px;color:#949ba4}
+
+/* code */
+pre.code{margin:0;padding:16px 18px;font:13px/1.75 var(--f-mono);color:#cfcfd8;overflow:auto;max-height:520px;white-space:pre;tab-size:2;counter-reset:ln}
+pre.code .ln{display:block}
+pre.code .ln::before{counter-increment:ln;content:counter(ln);display:inline-block;width:28px;color:#3b3b45;text-align:right;margin-right:16px;user-select:none}
+.tk-k{color:#c58bff}.tk-s{color:#7ef0ff}.tk-n{color:#ffb0d9}.tk-c{color:#5a5a66;font-style:italic}.tk-p{color:#f4f4f6}.tk-f{color:#ffe08a}
+
+/* code tabs */
+.tabs{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px}
+.tab{font:500 13px var(--f-mono);padding:9px 14px;border-radius:999px;border:1px solid var(--line);background:transparent;color:var(--muted);cursor:pointer;transition:all .2s}
+.tab[aria-selected=true]{background:var(--ink);color:var(--void);border-color:var(--ink)}
+.codebox{display:grid;grid-template-columns:minmax(0,1fr) 280px;gap:16px}
+.explain{padding:22px;display:flex;flex-direction:column;gap:14px}
+.explain h3{font:600 20px/1.2 var(--f-display);letter-spacing:-.03em;margin:0}
+.explain p{margin:0;color:var(--muted);font-size:14px}
+.explain ul{margin:0;padding-left:18px;color:#c3c3cd;font-size:14px;display:flex;flex-direction:column;gap:6px}
+
+/* features */
+.feats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.feat{padding:26px;position:relative;overflow:hidden;transform-style:preserve-3d;transition:transform .35s cubic-bezier(.2,.8,.2,1),border-color .3s;min-width:0}
+.feat:hover{border-color:#34343d}
+.feat::before{content:"";position:absolute;width:220px;height:220px;border-radius:50%;left:var(--px,50%);top:var(--py,50%);transform:translate(-50%,-50%);background:radial-gradient(circle,rgba(197,139,255,.18),transparent 65%);opacity:0;transition:opacity .3s;pointer-events:none}
+.feat:hover::before{opacity:1}
+.feat .ico{width:46px;height:46px;border-radius:50%;border:1px solid #2c2c34;display:grid;place-items:center;font-size:20px;background:radial-gradient(circle at 32% 28%,rgba(255,255,255,.35) 0 6%,transparent 8%),rgba(255,255,255,.03)}
+.feat h3{font:600 20px/1.2 var(--f-display);letter-spacing:-.03em;margin:18px 0 8px}
+.feat p{margin:0;color:var(--muted);font-size:15px}
+.feat .k{position:absolute;top:22px;right:22px;font:11px var(--f-mono);color:#4a4a55;letter-spacing:.08em;text-transform:uppercase}
+
+/* terminal */
+.term-grid{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:16px}
+.term{background:#060607;font:14px/1.7 var(--f-mono);min-width:0}
+.term-out{padding:16px 18px;height:400px;overflow:auto}
+.term-out .l{white-space:pre-wrap;overflow-wrap:anywhere}
+.term-out .u{color:var(--ink)}.term-out .u::before{content:"❯ ";color:var(--film-b)}
+.term-out .o{color:var(--muted)}.term-out .ok{color:var(--ok)}.term-out .acc{color:var(--film-a)}.term-out .err{color:#ff7a8a}
+.term form{display:flex;border-top:1px solid var(--line);align-items:center;padding:4px 6px 4px 16px;gap:8px}
+.term form span{color:var(--film-b)}
+.term input{flex:1;min-width:0;background:transparent;border:0;color:var(--ink);font:14px var(--f-mono);padding:12px 0}
+.term input:focus{outline:none}
+.quick{padding:22px;display:flex;flex-direction:column;gap:10px}
+.quick h3{font:600 18px/1.2 var(--f-display);letter-spacing:-.03em;margin:0 0 6px}
+.quick .btn{justify-content:space-between;width:100%}
+.quick .btn code{font-size:13px}
+
+/* flow */
+.flow{padding:30px;overflow-x:auto}
+.flow svg{display:block;min-width:820px;width:100%;height:auto}
+.flow .node rect{fill:#0d0d10;stroke:#2a2a32}
+.flow .node text{fill:var(--ink);font:500 14px var(--f-body)}
+.flow .node .sub{fill:var(--muted);font:11px var(--f-mono)}
+.flow .wire{fill:none;stroke:#2a2a32;stroke-width:2}
+.flow .pulse{fill:none;stroke:url(#film);stroke-width:2.5;stroke-dasharray:14 120;animation:dash 3.2s linear infinite}
+@keyframes dash{to{stroke-dashoffset:-134}}
+
+/* faq */
+.faq{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px}
+details{border:1px solid var(--line);border-radius:18px;background:rgba(12,12,15,.72);padding:4px 20px;transition:border-color .2s}
+details[open]{border-color:#34343d}
+summary{cursor:pointer;list-style:none;padding:18px 0;font-weight:500;display:flex;justify-content:space-between;gap:16px}
+summary::-webkit-details-marker{display:none}
+summary::after{content:"+";font:400 22px/1 var(--f-mono);color:var(--muted);transition:transform .25s}
+details[open] summary::after{transform:rotate(45deg)}
+details p{margin:0 0 18px;color:var(--muted)}
+
+/* final */
+.final{padding:64px clamp(22px,5vw,72px);text-align:left;position:relative;overflow:hidden}
+.final h2{font-size:clamp(44px,7vw,96px)}
+.final p{color:var(--muted);max-width:48ch;margin:18px 0 30px}
+footer{border-top:1px solid var(--line);padding-block:30px 44px;display:flex;flex-wrap:wrap;gap:14px 28px;justify-content:space-between;align-items:center;color:var(--muted);font-size:14px}
+footer .fl{display:flex;flex-wrap:wrap;gap:8px}
+
+.toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translate(-50%,20px);opacity:0;background:var(--ink);color:var(--void);font:500 14px var(--f-body);padding:12px 18px;border-radius:999px;z-index:30;transition:all .3s cubic-bezier(.2,.8,.2,1);pointer-events:none}
+.toast.on{opacity:1;transform:translate(-50%,0)}
+
+/* cursor bubble */
+.cur{position:fixed;left:0;top:0;width:34px;height:34px;margin:-17px 0 0 -17px;border-radius:50%;pointer-events:none;z-index:40;border:1px solid rgba(255,255,255,.55);background:radial-gradient(circle at 30% 28%,rgba(255,255,255,.7) 0 6%,transparent 8%);transition:width .25s,height .25s,margin .25s,background .25s;mix-blend-mode:difference;display:none}
+.cur.big{width:64px;height:64px;margin:-32px 0 0 -32px}
+@media (pointer:fine){.cur{display:block}}
+
+@media (max-width:1000px){
+  .hero{grid-template-columns:minmax(0,1fr);min-height:0;padding-top:min(70vw,380px)}
+  .hero-side{justify-self:start;align-items:flex-start}
+  .pop-hint{text-align:left}
+  .head{grid-template-columns:minmax(0,1fr)}
+  .cfg{grid-template-columns:minmax(0,1fr)}
+  .controls{position:static}
+  .codebox,.term-grid{grid-template-columns:minmax(0,1fr)}
+  .feats{grid-template-columns:repeat(2,minmax(0,1fr))}
+  nav .links{display:none}
+  nav .acts{margin-left:auto}
+}
+@media (max-width:720px){
+  .out{grid-template-columns:minmax(0,1fr)}
+  .stats{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .stat:nth-child(2){border-right:0}
+  .stat:nth-child(-n+2){border-bottom:1px solid var(--line)}
+  .feats,.faq{grid-template-columns:minmax(0,1fr)}
+  section{padding-block:64px}
+  nav .acts .line{display:none}
+  .term-out{height:320px}
+}
+@media (prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+  *,*::before,*::after{animation:none!important;transition:none!important}
+}
+</style>
+
+<canvas id="gl" aria-hidden="true"></canvas>
+<div class="cur" id="cur" aria-hidden="true"></div>
+<div class="toast" id="toast" role="status"></div>
+
+<div class="page">
+<nav>
+  <div class="wrap">
+    <a class="logo" href="#top"><b aria-hidden="true"></b>BubleBot</a>
+    <div class="links">
+      <a href="#konfigurator">Konfigurator</a>
+      <a href="#kod">Kod</a>
+      <a href="#funkcje">Funkcje</a>
+      <a href="#terminal">Terminal</a>
+      <a href="#faq">FAQ</a>
+    </div>
+    <div class="acts">
+      <a class="btn sm line" href="#terminal">Wypróbuj</a>
+      <a class="btn sm invite" href="#">Dodaj bota</a>
+    </div>
+  </div>
+</nav>
+
+<header class="wrap hero" id="top">
+  <div>
+    <span class="chip"><i></i>Start wkrótce · bot ticketowy na Discorda</span>
+    <h1><span>Buble</span><span class="film">Bot</span></h1>
+    <p class="lede">Każde zgłoszenie dostaje <b>własną bańkę</b>: prywatny kanał, formularz, obsługę, transkrypt i ocenę. Ustawiasz to raz, a bot pilnuje reszty.</p>
+    <div class="cta">
+      <a class="btn invite magnet" href="#">
+        <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M20.3 4.4A19.6 19.6 0 0 0 15.4 3l-.6 1.3a18 18 0 0 0-5.6 0L8.6 3a19.6 19.6 0 0 0-4.9 1.4C.6 9 0 13.6.3 18.1a19.8 19.8 0 0 0 6 3l1.3-2a12.7 12.7 0 0 1-2-1l.5-.4a14.1 14.1 0 0 0 11.8 0l.5.4-2 1 1.3 2a19.7 19.7 0 0 0 6-3c.5-5.2-.8-9.7-3.4-13.7zM8.5 15.4c-1.2 0-2.1-1.1-2.1-2.4s.9-2.4 2.1-2.4 2.2 1.1 2.1 2.4c0 1.3-.9 2.4-2.1 2.4zm7 0c-1.2 0-2.1-1.1-2.1-2.4s.9-2.4 2.1-2.4 2.2 1.1 2.1 2.4c0 1.3-.9 2.4-2.1 2.4z"/></svg>
+        Dodaj do Discorda
+      </a>
+      <a class="btn line magnet" href="#konfigurator">Zbuduj swój panel</a>
+      <a class="btn line magnet" href="#kod">Zobacz kod</a>
+    </div>
+    <div class="cmdline" aria-label="Przykładowa komenda">
+      <span>$</span><code id="typed"></code><span class="caret" aria-hidden="true"></span>
+      <button class="btn sm" type="button" id="copyCmd">Kopiuj</button>
+    </div>
+  </div>
+  <div class="hero-side">
+    <div class="pop-hint">kliknij bańkę, żeby ją przebić<br>przebite: <b id="pops">0</b></div>
+  </div>
+</header>
+
+<div class="marquee" aria-hidden="true"><div class="track" id="mq"></div></div>
+
+<section>
+  <div class="wrap">
+    <div class="stats">
+      <div class="stat"><b>5</b><span>kategorii ticketów z własnymi formularzami</span></div>
+      <div class="stat"><b>7</b><span>akcji w menu ticketu, od przejęcia po zamknięcie</span></div>
+      <div class="stat"><b>1</b><span>plik konfiguracji, bez bazy danych</span></div>
+      <div class="stat"><b>HTML</b><span>transkrypty w stylu Discorda dla klienta i logów</span></div>
+    </div>
+  </div>
+</section>
+
+<section id="konfigurator">
+  <div class="wrap">
+    <div class="head">
+      <div><div class="eyebrow">Konfigurator</div><h2>Zbuduj panel i dostań gotowy config</h2></div>
+      <p>Zmieniaj nazwę, kolor i kategorie. Podgląd wiadomości na Discordzie i plik <code>config.js</code> aktualizują się na żywo. Kod skopiujesz jednym przyciskiem.</p>
+    </div>
+    <div class="cfg">
+      <div class="glass controls">
+        <div class="field"><label for="cfgName">Nazwa sklepu</label><input type="text" id="cfgName" value="BubleShop" maxlength="24" autocomplete="off"></div>
+        <div class="field"><span class="lbl">Kolor paska</span><div class="swatches" id="swatches"></div></div>
+        <div class="field"><span class="lbl">Kategorie</span><div class="toggles" id="cats"></div></div>
+        <div class="field">
+          <span class="lbl">Opcje</span>
+          <label class="switch" for="optTr">Transkrypty HTML<input type="checkbox" id="optTr" checked></label>
+          <label class="switch" for="optRate">Oceny po zamknięciu<input type="checkbox" id="optRate" checked></label>
+          <label class="switch" for="optBan">Baner pod panelem<input type="checkbox" id="optBan" checked></label>
+        </div>
+        <div class="cta">
+          <button class="btn" type="button" id="copyCfg">Kopiuj config</button>
+          <button class="btn line" type="button" id="randCfg">Losuj</button>
+        </div>
+      </div>
+      <div class="out">
+        <div class="glass pane">
+          <div class="pane-top"><span class="dots"><i></i><i></i><i></i></span># ||🎫ˈstwórz·ticketa<span class="sp">podgląd</span></div>
+          <div class="dc" id="preview"></div>
+        </div>
+        <div class="glass pane">
+          <div class="pane-top"><span class="dots"><i></i><i></i><i></i></span>src/config.js<span class="sp" id="cfgLines"></span></div>
+          <pre class="code" id="cfgCode"></pre>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="kod">
+  <div class="wrap">
+    <div class="head">
+      <div><div class="eyebrow">Pod maską</div><h2>Kod, który czyta się jak instrukcja</h2></div>
+      <p>BubleBot stoi na discord.js v14 i nowych komponentach wiadomości Discorda. Każdy moduł robi jedną rzecz. Przełączaj pliki i zobacz, jak to działa.</p>
+    </div>
+    <div class="tabs" role="tablist" id="tabs"></div>
+    <div class="codebox">
+      <div class="glass pane">
+        <div class="pane-top"><span class="dots"><i></i><i></i><i></i></span><span id="codeFile"></span><span class="sp"><button class="btn sm line" type="button" id="copyCode">Kopiuj</button></span></div>
+        <pre class="code" id="codeView"></pre>
+      </div>
+      <div class="glass explain" id="codeExplain"></div>
+    </div>
+  </div>
+</section>
+
+<section id="funkcje">
+  <div class="wrap">
+    <div class="head">
+      <div><div class="eyebrow">Funkcje</div><h2>Wszystko, czego potrzebuje support</h2></div>
+      <p>Najedź na kartę, żeby ją przechylić. Każda funkcja działa od pierwszego uruchomienia, bez dodatkowych paneli w przeglądarce.</p>
+    </div>
+    <div class="feats" id="feats"></div>
+  </div>
+</section>
+
+<section id="terminal">
+  <div class="wrap">
+    <div class="head">
+      <div><div class="eyebrow">Terminal</div><h2>Wpisz komendę i zobacz odpowiedź</h2></div>
+      <p>To symulacja odpowiedzi bota. Wpisz <code>/pomoc</code> albo kliknij komendę z listy obok. Strzałki w górę i w dół przewijają historię.</p>
+    </div>
+    <div class="term-grid">
+      <div class="glass pane term">
+        <div class="pane-top"><span class="dots"><i></i><i></i><i></i></span>bublebot@discord ~ <span class="sp" id="termClock"></span></div>
+        <div class="term-out" id="termOut" aria-live="polite"></div>
+        <form id="termForm"><span aria-hidden="true">❯</span><input id="termIn" aria-label="Komenda" autocomplete="off" spellcheck="false" placeholder="/pomoc"><button class="btn sm" type="submit">Uruchom</button></form>
+      </div>
+      <div class="glass quick" id="quick"><h3>Szybkie komendy</h3></div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="head">
+      <div><div class="eyebrow">Przepływ</div><h2>Od kliknięcia do oceny</h2></div>
+      <p>Tak wędruje jedno zgłoszenie. Bot przechowuje stan ticketu w małym pliku JSON, więc restart nie gubi otwartych spraw.</p>
+    </div>
+    <div class="glass flow">
+      <svg viewBox="0 0 1100 230" role="img" aria-label="Przepływ ticketu: panel, formularz, kanał, obsługa, zamknięcie, transkrypt i ocena">
+        <defs><linearGradient id="film" x1="0" x2="1"><stop offset="0" stop-color="#7ef0ff"/><stop offset=".5" stop-color="#c58bff"/><stop offset="1" stop-color="#ffb0d9"/></linearGradient></defs>
+        <g id="flowG"></g>
+      </svg>
+    </div>
+  </div>
+</section>
+
+<section id="faq">
+  <div class="wrap">
+    <div class="head">
+      <div><div class="eyebrow">FAQ</div><h2>Pytania przed startem</h2></div>
+      <p>Nie ma tu Twojego pytania? Wejdź na serwer supportu, odpowiadamy w ticketach.</p>
+    </div>
+    <div class="faq">
+      <details open><summary>Czy BubleBot potrzebuje bazy danych?</summary><p>Nie. Stan otwartych ticketów zapisuje w pliku <code>data/tickets.json</code>, a całą konfigurację trzymasz w <code>src/config.js</code>.</p></details>
+      <details><summary>Jakie uprawnienia musi mieć bot?</summary><p>Zarządzanie kanałami i rolami, wysyłanie wiadomości, załączanie plików i czytanie historii. Rola bota musi stać wyżej niż role obsługi.</p></details>
+      <details><summary>Czy mogę zmienić kategorie i pytania?</summary><p>Tak. Każda kategoria ma emotkę, opis i do pięciu pytań. Dopisujesz je w configu, a menu i formularze zbudują się same.</p></details>
+      <details><summary>Gdzie trafiają transkrypty?</summary><p>Plik HTML z całą rozmową idzie na kanał logów i do wiadomości prywatnej klienta. Otwiera się w każdej przeglądarce.</p></details>
+      <details><summary>Czy klient może mieć kilka ticketów?</summary><p>Domyślnie jeden naraz. Limit zmienisz w <code>maxTicketsPerUser</code>.</p></details>
+      <details><summary>Na czym działa bot?</summary><p>Node.js 18 lub nowszy i discord.js v14. Wystarczy VPS, Raspberry Pi albo dowolny hosting botów.</p></details>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="glass final">
+      <div class="eyebrow">Start wkrótce</div>
+      <h2>Wpuść <span style="background:var(--film);-webkit-background-clip:text;background-clip:text;color:transparent">bańki</span> na swój serwer</h2>
+      <p>Dodaj BubleBota, wpisz <code>/panel</code> i pierwszy ticket otworzy się w kilka sekund.</p>
+      <div class="cta">
+        <a class="btn invite magnet" href="#">Dodaj do Discorda</a>
+        <a class="btn line magnet support" href="#">Serwer supportu</a>
+        <a class="btn line magnet" href="#konfigurator">Konfigurator</a>
+        <a class="btn line magnet" href="#top">Na górę</a>
+      </div>
+    </div>
+    <footer>
+      <span>© BubleBot · bot ticketowy na Discorda</span>
+      <span class="fl">
+        <a class="btn sm line" href="#kod">Kod</a>
+        <a class="btn sm line" href="#funkcje">Funkcje</a>
+        <a class="btn sm line" href="#terminal">Terminal</a>
+        <a class="btn sm line" href="#faq">FAQ</a>
+      </span>
+    </footer>
+  </div>
+</section>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(() => {
+'use strict';
+/* ── linki: podmień na swoje ── */
+const INVITE = 'https://discord.com/oauth2/authorize?client_id=TWOJE_ID_BOTA&permissions=268545040&scope=bot%20applications.commands';
+const SUPPORT = 'https://discord.gg/TWOJ_SERWER';
+document.querySelectorAll('.invite').forEach(a => { a.href = INVITE; a.target = '_blank'; a.rel = 'noopener'; });
+document.querySelectorAll('.support').forEach(a => { a.href = SUPPORT; a.target = '_blank'; a.rel = 'noopener'; });
+
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const $ = (s, r = document) => r.querySelector(s);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;' }[c]));
+const toastEl = $('#toast'); let toastT;
+const toast = (m) => { toastEl.textContent = m; toastEl.classList.add('on'); clearTimeout(toastT); toastT = setTimeout(() => toastEl.classList.remove('on'), 1800); };
+async function copy(text, label = 'Skopiowano') {
+  try { await navigator.clipboard.writeText(text); toast(label); }
+  catch { toast('Nie udało się skopiować, zaznacz tekst ręcznie'); }
+}
+
+/* ═════════ 3D: bańki ═════════ */
+let popCount = 0;
+if (window.THREE) {
+  const canvas = $('#gl');
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false, powerPreference: 'high-performance' });
+  renderer.setPixelRatio(Math.min(devicePixelRatio, 1.75));
+  renderer.setClearColor(0x040405, 1);
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(45, 1, .1, 200);
+  camera.position.z = 14;
+
+  const filmVert = `
+    uniform float uTime; attribute float aPhase; attribute float aWobble;
+    varying vec3 vN; varying vec3 vV; varying float vPhase; varying vec3 vP;
+    void main(){
+      float ph = aPhase;
+      vec3 p = position;
+      float w = aWobble;
+      p += normal * (sin(p.y*3.0 + uTime*1.6 + ph*6.0)*0.025 + sin(p.x*4.0 - uTime*1.2 + ph*3.0)*0.02) * w;
+      vec4 mv = modelViewMatrix * instanceMatrix * vec4(p,1.0);
+      vN = normalize(normalMatrix * mat3(instanceMatrix) * normal);
+      vV = normalize(-mv.xyz); vPhase = ph; vP = p;
+      gl_Position = projectionMatrix * mv;
+    }`;
+  const filmFrag = `
+    uniform float uTime; uniform float uAlpha;
+    varying vec3 vN; varying vec3 vV; varying float vPhase; varying vec3 vP;
+    vec3 pal(float t){ return 0.5 + 0.5*cos(6.28318*(vec3(0.0,0.33,0.67) + t)); }
+    void main(){
+      vec3 n = normalize(vN); vec3 v = normalize(vV);
+      float ndv = clamp(dot(n,v),0.0,1.0);
+      float fres = pow(1.0 - ndv, 2.2);
+      float swirl = sin(vP.y*5.0 + uTime*0.6 + vPhase*9.0)*0.12 + sin(vP.x*7.0 - uTime*0.4)*0.08;
+      vec3 film = pal(ndv*1.6 + swirl + vPhase + uTime*0.03);
+      vec3 L1 = normalize(vec3(-0.5,0.7,0.6)); vec3 L2 = normalize(vec3(0.6,-0.4,0.5));
+      float s1 = pow(max(dot(reflect(-L1,n),v),0.0),60.0);
+      float s2 = pow(max(dot(reflect(-L2,n),v),0.0),18.0)*0.25;
+      vec3 col = film * (0.12 + fres*1.15) + vec3(s1*1.4 + s2);
+      float a = (0.035 + fres*0.85 + s1) * uAlpha;
+      gl_FragColor = vec4(col, a);
+    }`;
+  const mkMat = (alpha = 1) => new THREE.ShaderMaterial({
+    vertexShader: filmVert, fragmentShader: filmFrag, transparent: true, depthWrite: false,
+    blending: THREE.AdditiveBlending, uniforms: { uTime: { value: 0 }, uAlpha: { value: alpha } }
+  });
+
+  // pole baniek (instancje)
+  const N = innerWidth < 700 ? 34 : 60;
+  const geo = new THREE.SphereGeometry(1, 48, 32);
+  const igeo = new THREE.InstancedBufferGeometry().copy(geo);
+  const phases = new Float32Array(N), wob = new Float32Array(N);
+  for (let i = 0; i < N; i++) { phases[i] = Math.random(); wob[i] = 1; }
+  igeo.setAttribute('aPhase', new THREE.InstancedBufferAttribute(phases, 1));
+  igeo.setAttribute('aWobble', new THREE.InstancedBufferAttribute(wob, 1));
+  const mat = mkMat(1);
+  const field = new THREE.InstancedMesh(igeo, mat, N);
+  field.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+  field.frustumCulled = false;
+  scene.add(field);
+
+  const PAGE_DEPTH = 120; // jak daleko w dół rozciąga się pole baniek
+  const B = [];
+  const spawn = (b, fromBottom) => {
+    b.r = Math.random() < .2 ? .7 + Math.random() * .9 : .18 + Math.random() * .5;
+    b.x = (Math.random() - .5) * 26;
+    b.y = fromBottom ? b.baseY - 12 - Math.random() * 4 : 6 - Math.random() * PAGE_DEPTH;
+    b.z = -Math.random() * 14 + 2;
+    b.vx = 0; b.vy = 0; b.rise = .25 + Math.random() * .5; b.ph = Math.random() * 10;
+    b.s = fromBottom ? 0 : 1; b.alive = true;
+  };
+  for (let i = 0; i < N; i++) { const b = {}; spawn(b, false); b.baseY = b.y; B.push(b); }
+
+  // główna bańka + rdzeń
+  const hero = new THREE.Group(); scene.add(hero);
+  const hgeo = new THREE.InstancedBufferGeometry().copy(new THREE.SphereGeometry(1, 96, 64));
+  hgeo.setAttribute('aPhase', new THREE.InstancedBufferAttribute(new Float32Array([.37]), 1));
+  hgeo.setAttribute('aWobble', new THREE.InstancedBufferAttribute(new Float32Array([.7]), 1));
+  const heroBubble = new THREE.InstancedMesh(hgeo, mkMat(1.1), 1);
+  heroBubble.setMatrixAt(0, new THREE.Matrix4().makeScale(3, 3, 3));
+  hero.add(heroBubble);
+  const core = new THREE.Mesh(new THREE.IcosahedronGeometry(1.05, 1), new THREE.MeshBasicMaterial({ color: 0xffffff, wireframe: true, transparent: true, opacity: .22 }));
+  hero.add(core);
+  const core2 = new THREE.Mesh(new THREE.OctahedronGeometry(.55, 0), new THREE.MeshBasicMaterial({ color: 0xffffff, wireframe: true, transparent: true, opacity: .55 }));
+  hero.add(core2);
+  // orbitujące punkty danych
+  const ringGeo = new THREE.BufferGeometry(); const RN = 420; const rp = new Float32Array(RN * 3);
+  for (let i = 0; i < RN; i++) { const a = i / RN * Math.PI * 2, r = 3.9 + Math.sin(i * 7.3) * .12; rp[i*3] = Math.cos(a) * r; rp[i*3+1] = Math.sin(i * 3.1) * .08; rp[i*3+2] = Math.sin(a) * r; }
+  ringGeo.setAttribute('position', new THREE.BufferAttribute(rp, 3));
+  const ring = new THREE.Points(ringGeo, new THREE.PointsMaterial({ color: 0xffffff, size: .035, transparent: true, opacity: .7 }));
+  ring.rotation.x = .35; hero.add(ring);
+  const ring2 = ring.clone(); ring2.rotation.set(-.9, 0, .5); ring2.scale.setScalar(1.12); ring2.material = ring.material.clone(); ring2.material.opacity = .35; hero.add(ring2);
+
+  // pył w tle
+  const dustG = new THREE.BufferGeometry(); const DN = 900; const dp = new Float32Array(DN * 3);
+  for (let i = 0; i < DN; i++) { dp[i*3] = (Math.random() - .5) * 60; dp[i*3+1] = 10 - Math.random() * (PAGE_DEPTH + 20); dp[i*3+2] = -10 - Math.random() * 30; }
+  dustG.setAttribute('position', new THREE.BufferAttribute(dp, 3));
+  scene.add(new THREE.Points(dustG, new THREE.PointsMaterial({ color: 0x8b8b97, size: .06, transparent: true, opacity: .55 })));
+
+  // iskry po przebiciu
+  const SP = 400; const spG = new THREE.BufferGeometry(); const spP = new Float32Array(SP * 3); const spV = new Float32Array(SP * 3); const spL = new Float32Array(SP);
+  spG.setAttribute('position', new THREE.BufferAttribute(spP, 3));
+  const sparks = new THREE.Points(spG, new THREE.PointsMaterial({ color: 0xffffff, size: .08, transparent: true, opacity: .9, blending: THREE.AdditiveBlending, depthWrite: false }));
+  sparks.frustumCulled = false; scene.add(sparks);
+  let spI = 0;
+  const burst = (x, y, z, r) => {
+    for (let k = 0; k < 40; k++) {
+      const i = spI++ % SP; const u = Math.random() * 2 - 1, th = Math.random() * 6.283, s = Math.sqrt(1 - u*u);
+      const dx = s * Math.cos(th), dy = u, dz = s * Math.sin(th);
+      spP[i*3] = x + dx * r; spP[i*3+1] = y + dy * r; spP[i*3+2] = z + dz * r;
+      const sp = 2 + Math.random() * 3; spV[i*3] = dx * sp; spV[i*3+1] = dy * sp; spV[i*3+2] = dz * sp; spL[i] = 1;
+    }
+  };
+
+  // wymiary
+  let vw = 1, vh = 1, visH = 1, visW = 1, heroPos = new THREE.Vector3();
+  const resize = () => {
+    vw = innerWidth; vh = innerHeight;
+    renderer.setSize(vw, vh, false); camera.aspect = vw / vh; camera.updateProjectionMatrix();
+    visH = 2 * Math.tan(THREE.MathUtils.degToRad(22.5)) * 14; visW = visH * camera.aspect;
+    if (vw > 1000) { heroPos.set(visW * .24, -.6, 0); hero.scale.setScalar(Math.min(1, visW / 22)); }
+    else { const s = Math.min(.8, visW / 11); hero.scale.setScalar(s); const topPx = Math.min(vw * .7, 380) * .5 + 60; heroPos.set(0, visH / 2 - topPx / vh * visH, 0); }
+  };
+  addEventListener('resize', resize); resize();
+
+  // mysz
+  const mouse = new THREE.Vector2(9, 9); let mx = 0, my = 0;
+  addEventListener('pointermove', e => { mx = e.clientX / vw * 2 - 1; my = -(e.clientY / vh) * 2 + 1; mouse.set(mx, my); });
+  const ray = new THREE.Raycaster(); const tmpV = new THREE.Vector3();
+  const worldAt = (z) => { ray.setFromCamera(mouse, camera); const t = (z - ray.ray.origin.z) / ray.ray.direction.z; return tmpV.copy(ray.ray.origin).addScaledVector(ray.ray.direction, t); };
+  addEventListener('pointerdown', e => {
+    if (e.target.closest('a,button,input,label,summary,form,.glass,pre,nav')) return;
+    mouse.set(e.clientX / vw * 2 - 1, -(e.clientY / vh) * 2 + 1);
+    ray.setFromCamera(mouse, camera);
+    let best = null, bd = 1e9;
+    for (const b of B) {
+      if (!b.alive || b.s < .5) continue;
+      tmpV.set(b.x, b.y + camY, b.z);
+      const d = ray.ray.distanceSqToPoint(tmpV);
+      if (d < (b.r * b.r * 1.6) && tmpV.distanceTo(camera.position) < bd) { bd = tmpV.distanceTo(camera.position); best = b; }
+    }
+    if (best) {
+      burst(best.x, best.y + camY, best.z, best.r); best.alive = false; popCount++;
+      $('#pops').textContent = popCount;
+      setTimeout(() => spawn(best, true), 600);
+    }
+  });
+
+  const m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), sc = new THREE.Vector3(), ps = new THREE.Vector3();
+  let camY = 0, last = performance.now(), t = 0;
+  const frame = (now) => {
+    const dt = Math.min((now - last) / 1000, .05); last = now; t += reduce ? 0 : dt;
+    const scrollWorld = scrollY / vh * visH;
+    camY += (scrollWorld - camY) * .12;           // pole przewija się z treścią (płynnie)
+    mat.uniforms.uTime.value = t; heroBubble.material.uniforms.uTime.value = t;
+
+    // bohater
+    hero.position.set(heroPos.x + mx * .3, heroPos.y + Math.sin(t * .8) * .15 + camY * .8, heroPos.z); // lekki paralaks
+    hero.rotation.y = t * .15 + mx * .4; hero.rotation.x = my * .2;
+    core.rotation.set(t * .3, t * .45, 0); core2.rotation.set(-t * .6, t * .2, t * .4);
+    ring.rotation.y = t * .25; ring2.rotation.y = -t * .18;
+
+    // pole baniek
+    const mw = worldAt(0);
+    for (let i = 0; i < N; i++) {
+      const b = B[i];
+      if (b.alive) b.s += (1 - b.s) * .06; else b.s = 0;
+      b.y += b.rise * dt * (reduce ? 0 : 1);
+      if (b.y > b.baseY + 14) { b.y = b.baseY - 12; }
+      const wy = b.y + camY;
+      // odpychanie kursora
+      const dx = b.x - mw.x, dy = wy - mw.y, d2 = dx*dx + dy*dy, R = 3 + b.r;
+      if (d2 < R * R && Math.abs(b.z) < 5) { const f = (1 - Math.sqrt(d2) / R) * 6 * dt; b.vx += dx * f; b.vy += dy * f; }
+      b.vx *= .94; b.vy *= .94; b.x += b.vx; b.y += b.vy;
+      const wobX = Math.sin(t * .7 + b.ph) * .25;
+      ps.set(b.x + wobX, wy, b.z);
+      q.setFromEuler(new THREE.Euler(t * .1 + b.ph, t * .13, 0));
+      sc.setScalar(Math.max(.0001, b.r * b.s));
+      m4.compose(ps, q, sc); field.setMatrixAt(i, m4);
+    }
+    field.instanceMatrix.needsUpdate = true;
+
+    // iskry
+    for (let i = 0; i < SP; i++) {
+      if (spL[i] <= 0) { spP[i*3+1] = 9999; continue; }
+      spL[i] -= dt * 1.4; spV[i*3+1] -= dt * 2;
+      spP[i*3] += spV[i*3] * dt; spP[i*3+1] += spV[i*3+1] * dt; spP[i*3+2] += spV[i*3+2] * dt;
+    }
+    spG.attributes.position.needsUpdate = true;
+
+    camera.position.x += (mx * .6 - camera.position.x) * .04;
+    camera.position.y += (my * .4 - camera.position.y) * .04;
+    camera.lookAt(0, 0, 0);
+    renderer.render(scene, camera);
+    requestAnimationFrame(frame);
+  };
+  requestAnimationFrame(frame);
+}
+
+/* ═════════ kursor + magnes ═════════ */
+const cur = $('#cur');
+let cx = -100, cy = -100, tx = -100, ty = -100;
+addEventListener('pointermove', e => { tx = e.clientX; ty = e.clientY; cur.classList.toggle('big', !!e.target.closest('a,button,summary,.sw,.tg')); });
+(function loop(){ cx += (tx - cx) * .2; cy += (ty - cy) * .2; cur.style.transform = `translate(${cx}px,${cy}px)`; requestAnimationFrame(loop); })();
+if (!reduce) document.querySelectorAll('.magnet').forEach(b => {
+  b.addEventListener('pointermove', e => { const r = b.getBoundingClientRect(); b.style.setProperty('--mx', ((e.clientX - r.left - r.width / 2) * .25) + 'px'); b.style.setProperty('--my', ((e.clientY - r.top - r.height / 2) * .35) + 'px'); });
+  b.addEventListener('pointerleave', () => { b.style.setProperty('--mx', '0px'); b.style.setProperty('--my', '0px'); });
+});
+
+/* ═════════ hero: pisana komenda ═════════ */
+const CMDS = ['/panel', '/ticket dodaj @Klient', '/ticket zamknij powód: zrealizowane', 'npm start'];
+const typed = $('#typed'); let ci = 0;
+const typeCmd = async () => {
+  const s = CMDS[ci++ % CMDS.length];
+  if (reduce) { typed.textContent = s; return setTimeout(typeCmd, 2500); }
+  for (let i = 0; i <= s.length; i++) { typed.textContent = s.slice(0, i); await new Promise(r => setTimeout(r, 55)); }
+  await new Promise(r => setTimeout(r, 1700));
+  for (let i = s.length; i >= 0; i--) { typed.textContent = s.slice(0, i); await new Promise(r => setTimeout(r, 22)); }
+  typeCmd();
+};
+typed.textContent = CMDS[0]; setTimeout(typeCmd, 1200);
+$('#copyCmd').onclick = () => copy(typed.textContent || CMDS[0], 'Komenda skopiowana');
+
+/* marquee */
+const MQ = ['Components V2', 'discord.js v14', 'Transkrypty HTML', 'Oceny 1–5', 'Formularze', 'Prywatne kanały', 'Logi', 'Przejmowanie', 'Limit ticketów', 'Node.js 18+'];
+$('#mq').innerHTML = [...MQ, ...MQ].map(s => `<span>${s}</span>`).join('');
+
+/* ═════════ podświetlanie składni ═════════ */
+const KW = /\b(const|let|var|function|return|if|else|for|of|in|await|async|new|module|exports|require|true|false|null|try|catch|throw|class)\b/;
+function hl(src) {
+  const out = [];
+  const re = /(\/\/[^\n]*)|('(?:\\.|[^'\\])*'|`(?:\\.|[^`\\])*`|"(?:\\.|[^"\\])*")|(\b0x[0-9a-f]+\b|\b\d+(?:\.\d+)?\b)|(\b[a-zA-Z_$][\w$]*\b)(?=\s*\()|(\b[a-zA-Z_$][\w$]*\b)|([{}()[\];,.:=+\-*/<>!?|&]+)|(\s+)|(.)/gi;
+  let m;
+  while ((m = re.exec(src))) {
+    if (m[1]) out.push(`<span class="tk-c">${esc(m[1])}</span>`);
+    else if (m[2]) out.push(`<span class="tk-s">${esc(m[2])}</span>`);
+    else if (m[3]) out.push(`<span class="tk-n">${esc(m[3])}</span>`);
+    else if (m[4]) out.push(KW.test(m[4]) ? `<span class="tk-k">${m[4]}</span>` : `<span class="tk-f">${m[4]}</span>`);
+    else if (m[5]) out.push(KW.test(m[5]) ? `<span class="tk-k">${m[5]}</span>` : esc(m[5]));
+    else if (m[6]) out.push(`<span class="tk-p">${esc(m[6])}</span>`);
+    else out.push(esc(m[7] || m[8]));
+  }
+  return out.join('').split('\n').map(l => `<span class="ln">${l || ' '}</span>`).join('');
+}
+
+/* ═════════ konfigurator ═════════ */
+const COLORS = [['Biały', '#f4f4f6'], ['Bańka', '#c58bff'], ['Lód', '#7ef0ff'], ['Róż', '#ffb0d9'], ['Czerwony', '#ff1f3d'], ['Mięta', '#5ee39a'], ['Złoto', '#f2c86a']];
+const CATS = [
+  { id: 'zamowienie', label: 'Zamówienie', emoji: '🛒', desc: 'Chcesz coś kupić? Złóż zamówienie!' },
+  { id: 'pomoc', label: 'Pomoc', emoji: '🆘', desc: 'Masz problem lub pytanie?' },
+  { id: 'reklamacja', label: 'Reklamacja', emoji: '⚠️', desc: 'Coś nie działa z zamówieniem?' },
+  { id: 'partnerstwo', label: 'Partnerstwo', emoji: '🤝', desc: 'Chcesz nawiązać współpracę?' },
+  { id: 'nagroda', label: 'Odbiór nagrody', emoji: '🎁', desc: 'Wygrałeś konkurs?' },
+  { id: 'rekrutacja', label: 'Rekrutacja', emoji: '📋', desc: 'Chcesz dołączyć do ekipy?' },
+];
+const st = { name: 'BubleShop', color: COLORS[1][1], cats: new Set(['zamowienie', 'pomoc', 'reklamacja', 'partnerstwo']), tr: true, rate: true, ban: true, open: true };
+const sw = $('#swatches');
+COLORS.forEach(([n, c]) => { const b = document.createElement('button'); b.type = 'button'; b.className = 'sw'; b.style.setProperty('--c', c); b.title = n; b.setAttribute('aria-label', 'Kolor ' + n); b.onclick = () => { st.color = c; render(); }; sw.append(b); });
+const catBox = $('#cats');
+CATS.forEach(c => { const b = document.createElement('button'); b.type = 'button'; b.className = 'tg'; b.dataset.id = c.id; b.textContent = `${c.emoji} ${c.label}`; b.onclick = () => { st.cats.has(c.id) ? (st.cats.size > 1 && st.cats.delete(c.id)) : st.cats.add(c.id); render(); }; catBox.append(b); });
+$('#cfgName').addEventListener('input', e => { st.name = e.target.value.trim() || 'BubleShop'; render(); });
+['optTr', 'optRate', 'optBan'].forEach((id, i) => $('#' + id).addEventListener('change', e => { st[['tr', 'rate', 'ban'][i]] = e.target.checked; render(); }));
+$('#randCfg').onclick = () => {
+  st.color = COLORS[Math.random() * COLORS.length | 0][1];
+  st.cats = new Set(CATS.filter(() => Math.random() > .4).map(c => c.id)); if (!st.cats.size) st.cats.add('pomoc');
+  const names = ['BubleShop', 'NeonStore', 'MintMarket', 'VoidShop', 'PixelDrop', 'CloudKeys'];
+  st.name = names[Math.random() * names.length | 0]; $('#cfgName').value = st.name; render();
+};
+const fancy = s => s.toUpperCase().replace(/[EĘ]/g, 'Ɛ').replace(/Ó/g, 'O');
+function cfgCode() {
+  const cats = CATS.filter(c => st.cats.has(c.id));
+  return `// ${st.name} ˈ konfiguracja BubleBota
+module.exports = {
+  shopName: '${st.name}',
+  brand: '${fancy(st.name)}™',
+  sep: 'ˈ',
+  color: 0x${st.color.slice(1)},
+  bannerFile: ${st.ban ? "'assets/banner.png'" : "''"},
+  transcripts: ${st.tr ? "'html'" : 'false'},
+  ratings: ${st.rate},
+  maxTicketsPerUser: 1,
+  ticketCategoryId: 'ID_KATEGORII',
+  logChannelId: 'ID_KANALU_LOGOW',
+  staffRoleIds: ['ID_ROLI_SUPPORTU'],
+  categories: [
+${cats.map(c => `    { id: '${c.id}', label: '${c.label}', emoji: '${c.emoji}' },`).join('\n')}
+  ],
+};`;
+}
+function render() {
+  sw.querySelectorAll('.sw').forEach(b => b.setAttribute('aria-pressed', String(b.style.getPropertyValue('--c') === st.color)));
+  catBox.querySelectorAll('.tg').forEach(b => b.setAttribute('aria-pressed', String(st.cats.has(b.dataset.id))));
+  const cats = CATS.filter(c => st.cats.has(c.id));
+  const p = $('#preview'); p.style.setProperty('--accent', st.color);
+  p.innerHTML = `<div class="msg"><div class="av"></div><div style="flex:1;min-width:0"><span class="nm">${esc(st.name)} ˈ Bot</span><span class="tag">APL.</span><span class="tm">dzisiaj ${new Date().toLocaleTimeString('pl-PL',{hour:'2-digit',minute:'2-digit'})}</span>
+  <div class="v2"><div class="hd">🫧 ˈ ${esc(fancy(st.name))}™  ✖\nSTWORZ TICKƐTA</div><hr>
+  <div class="q">🔀 ˈ <b>Wybierz kategorię</b> odpowiadającą Twojej sprawie.<br>ℹ️ ˈ Podaj <u>komplet informacji</u> w formularzu.${st.tr ? '<br>📄 ˈ Po zamknięciu dostaniesz transkrypt.' : ''}${st.rate ? '<br>⭐ ˈ Oceń obsługę po rozmowie.' : ''}</div><hr>
+  <div class="sel" id="pvSel" role="button" tabindex="0" aria-expanded="${st.open}"><span>📁 ˈ Wybierz kategorię ticketa</span><span>${st.open ? '⌃' : '⌄'}</span></div>
+  ${st.open ? `<div class="opts">${cats.map((c, i) => `<div class="opt" style="animation-delay:${i * 40}ms"><span>${c.emoji}</span><span><b style="color:#fff;font-weight:500">${c.label}</b><small>${c.desc}</small></span></div>`).join('')}</div>` : ''}
+  ${st.ban ? `<hr><div class="ban">${esc(st.name)}</div>` : ''}<hr><div class="ft">© ${esc(st.name)}™ ˈ dzisiaj</div></div></div></div>`;
+  const sel = $('#pvSel'); const tog = () => { st.open = !st.open; render(); };
+  sel.onclick = tog; sel.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); tog(); } };
+  const code = cfgCode(); $('#cfgCode').innerHTML = hl(code); $('#cfgLines').textContent = code.split('\n').length + ' linii';
+}
+render();
+$('#copyCfg').onclick = () => copy(cfgCode(), 'Config skopiowany');
+
+/* ═════════ zakładki z kodem ═════════ */
+const FILES = [
+  { f: 'src/panel.js', t: 'Panel z komponentów V2', d: 'Panel to jeden kontener z kolorowym paskiem. W środku są tekst, separatory, menu wyboru i baner.', b: ['Ramka nagłówka to blok kodu', 'Menu otwiera formularz kategorii', 'Kolor bierze się z configu'],
+    c: `const { ContainerBuilder, TextDisplayBuilder,
+  SeparatorBuilder, StringSelectMenuBuilder,
+  ActionRowBuilder, MessageFlags } = require('discord.js');
+
+function buildPanel(config) {
+  const menu = new StringSelectMenuBuilder()
+    .setCustomId('ticket_select')
+    .setPlaceholder('📁 ˈ Wybierz kategorię ticketa')
+    .addOptions(config.categories.map((c) => ({
+      label: c.label, value: c.id, emoji: c.emoji,
+    })));
+
+  const box = new ContainerBuilder()
+    .setAccentColor(config.color)
+    .addTextDisplayComponents(new TextDisplayBuilder()
+      .setContent('\`\`\`\\n🫧 ˈ ' + config.brand + ' ✖\\nSTWORZ TICKƐTA\\n\`\`\`'))
+    .addSeparatorComponents(new SeparatorBuilder())
+    .addActionRowComponents(new ActionRowBuilder().addComponents(menu));
+
+  return { components: [box], flags: MessageFlags.IsComponentsV2 };
+}` },
+  { f: 'src/ticket.js', t: 'Tworzenie kanału', d: 'Po wysłaniu formularza bot zakłada prywatny kanał i zapisuje ticket w pliku JSON.', b: ['Widzi go tylko klient i obsługa', 'Numeracja #0001, #0002…', 'Limit otwartych ticketów na osobę'],
+    c: `async function createTicket(interaction, category, answers) {
+  const { guild, user } = interaction;
+  db.counter += 1;
+  const number = String(db.counter).padStart(4, '0');
+
+  const channel = await guild.channels.create({
+    name: '||' + category.emoji + 'ˈ' + category.channel + '•' + user.username,
+    parent: config.ticketCategoryId,
+    permissionOverwrites: [
+      { id: guild.roles.everyone.id, deny: ['ViewChannel'] },
+      { id: user.id, allow: ['ViewChannel', 'SendMessages'] },
+      ...config.staffRoleIds.map((id) => ({ id, allow: ['ViewChannel'] })),
+    ],
+  });
+
+  const msg = await channel.send(renderTicket({ user, category, answers, number }));
+  db.tickets[channel.id] = { ownerId: user.id, number, messageId: msg.id };
+  saveDb();
+}` },
+  { f: 'src/actions.js', t: 'Menu akcji ticketu', d: 'Zamiast rzędu przycisków ticket ma jedno menu z siedmioma akcjami. Uprawnienia sprawdza bot.', b: ['Przejmij aktualizuje wiadomość', 'Przypomnij pinguje i pisze w DM', 'Zamknięcie pyta o potwierdzenie'],
+    c: `client.on('interactionCreate', async (i) => {
+  if (!i.isStringSelectMenu() || i.customId !== 'ticket_action') return;
+  const t = getTicket(i.channelId);
+  const staff = isStaff(i.member);
+
+  switch (i.values[0]) {
+    case 'claim':
+      if (!staff) return i.reply(notice('Tylko obsługa!'));
+      t.claimedBy = i.user.id;
+      saveDb();
+      return i.update(renderTicket(t));
+    case 'remind':
+      return remind(i, t);
+    case 'close':
+      return i.reply(closeConfirm());
+    case 'transcript':
+      return sendTranscript(i, t);
+  }
+});` },
+  { f: 'src/transcript.js', t: 'Transkrypt HTML', d: 'Cała rozmowa zapisuje się jako strona w stylu Discorda, z avatarami, kolorami ról i załącznikami.', b: ['Wzmianki zamieniają się na nicki', 'Znaczniki czasu na daty', 'Plik idzie na logi i do klienta'],
+    c: `async function buildTranscript(channel, ticket) {
+  let all = [];
+  let before;
+  while (all.length < 2000) {
+    const batch = await channel.messages.fetch({ limit: 100, before });
+    if (!batch.size) break;
+    all = all.concat([...batch.values()]);
+    before = batch.last().id;
+  }
+  const html = renderHtml({ channel, messages: all.reverse(), ticket });
+  return new AttachmentBuilder(Buffer.from(html), {
+    name: 'transkrypt-' + channel.id + '.html',
+  });
+}` },
+];
+const tabs = $('#tabs'); let typing = 0;
+FILES.forEach((f, i) => { const b = document.createElement('button'); b.type = 'button'; b.className = 'tab'; b.setAttribute('role', 'tab'); b.textContent = f.f.split('/').pop(); b.onclick = () => showFile(i); tabs.append(b); });
+function showFile(i) {
+  const f = FILES[i]; const my = ++typing;
+  tabs.querySelectorAll('.tab').forEach((b, k) => b.setAttribute('aria-selected', String(k === i)));
+  $('#codeFile').textContent = f.f;
+  $('#codeExplain').innerHTML = `<div class="eyebrow">${esc(f.f)}</div><h3>${esc(f.t)}</h3><p>${esc(f.d)}</p><ul>${f.b.map(x => `<li>${esc(x)}</li>`).join('')}</ul><a class="btn sm" href="#konfigurator">Otwórz konfigurator</a>`;
+  const view = $('#codeView');
+  if (reduce) { view.innerHTML = hl(f.c); return; }
+  const lines = f.c.split('\n'); let n = 0;
+  const step = () => { if (my !== typing) return; n = Math.min(lines.length, n + 2); view.innerHTML = hl(lines.slice(0, n).join('\n')); if (n < lines.length) setTimeout(step, 28); };
+  view.innerHTML = hl(lines.slice(0, 4).join('\n')); n = 4; step();
+}
+showFile(0);
+$('#copyCode').onclick = () => copy(FILES[[...tabs.children].findIndex(b => b.getAttribute('aria-selected') === 'true')].c, 'Kod skopiowany');
+
+/* ═════════ funkcje ═════════ */
+const FEATS = [
+  ['🫧', 'Panel z menu', 'Jedna wiadomość z ramką, opisem, menu kategorii i banerem. Wygląda jak natywny element Discorda.', 'panel'],
+  ['📝', 'Formularze', 'Do pięciu pytań na kategorię. Odpowiedzi trafiają do pierwszej wiadomości ticketu.', 'modal'],
+  ['🔐', 'Prywatne kanały', 'Kanał widzi tylko klient, bot i obsługa. Nazwa w stylu ||🛒ˈzamówienie•nick.', 'kanał'],
+  ['🙋', 'Przejmowanie', 'Obsługa przejmuje ticket z menu, a wiadomość od razu pokazuje, kto prowadzi sprawę.', 'akcja'],
+  ['🔔', 'Przypomnienia', 'Klient milczy? Jedno kliknięcie wysyła ping na kanale i wiadomość prywatną.', 'akcja'],
+  ['📄', 'Transkrypty HTML', 'Pełny zapis rozmowy w stylu Discorda, dla logów i dla klienta.', 'archiwum'],
+  ['⭐', 'Oceny', 'Po zamknięciu klient ocenia obsługę od 1 do 5. Wynik ląduje na kanale logów.', 'opinie'],
+  ['🧾', 'Logi', 'Otwarcie, zamknięcie, powód i ocena w jednym miejscu, z numerem ticketu.', 'logi'],
+  ['⚙️', 'Jeden config', 'Nazwa, kolor, kategorie, pytania i limity w jednym pliku. Bez panelu w przeglądarce.', 'config'],
+];
+$('#feats').innerHTML = FEATS.map(([i, h, p, k]) => `<article class="glass feat"><span class="k">${k}</span><div class="ico" aria-hidden="true">${i}</div><h3>${h}</h3><p>${p}</p></article>`).join('');
+if (!reduce) document.querySelectorAll('.feat').forEach(c => {
+  c.addEventListener('pointermove', e => { const r = c.getBoundingClientRect(), x = (e.clientX - r.left) / r.width, y = (e.clientY - r.top) / r.height; c.style.transform = `perspective(800px) rotateX(${(.5 - y) * 10}deg) rotateY(${(x - .5) * 12}deg) translateZ(0)`; c.style.setProperty('--px', x * 100 + '%'); c.style.setProperty('--py', y * 100 + '%'); });
+  c.addEventListener('pointerleave', () => { c.style.transform = ''; });
+});
+
+/* ═════════ terminal ═════════ */
+const out = $('#termOut'); const hist = []; let hi = 0; let tn = 1;
+const line = (txt, cls = 'o') => { const d = document.createElement('div'); d.className = 'l ' + cls; d.textContent = txt; out.append(d); out.scrollTop = out.scrollHeight; };
+const wait = ms => new Promise(r => setTimeout(r, reduce ? 0 : ms));
+const RESP = {
+  '/pomoc': () => [['Dostępne komendy:', 'acc'], ['  /panel              wysyła panel ticketów'], ['  /ticket dodaj @x    dodaje osobę do ticketu'], ['  /ticket usun @x     usuwa osobę z ticketu'], ['  /ticket nazwa x     zmienia nazwę kanału'], ['  /ticket zamknij     zamyka ticket'], ['  /status  /clear  npm start']],
+  '/panel': () => [['→ budowanie kontenera Components V2…'], ['→ menu kategorii: 5 opcji'], ['✓ Panel ticketów został wysłany na #||🎫ˈstwórz·ticketa', 'ok']],
+  '/status': () => [['BubleBot ˈ status', 'acc'], ['  ping gateway     42 ms (przykład)'], ['  otwarte tickety  ' + (tn - 1) + ' (w tej symulacji)'], ['  wersja           discord.js v14'], ['✓ wszystko działa', 'ok']],
+  'npm start': () => [['> bublebot@1.0.0 start'], ['> node src/index.js'], ['🫧 BubleBot ˈ Zalogowano jako BubleBot#0001', 'acc'], ['✓ Komendy zarejestrowane', 'ok']],
+};
+async function run(cmd) {
+  cmd = cmd.trim(); if (!cmd) return;
+  hist.push(cmd); hi = hist.length; line(cmd, 'u');
+  const low = cmd.toLowerCase();
+  if (low === '/clear' || low === 'clear') { out.innerHTML = ''; return; }
+  let res = RESP[low];
+  if (!res && low.startsWith('/ticket dodaj')) res = () => [['✓ Dodano ' + (cmd.split(' ')[2] || '@ktoś') + ' do ticketu ➕', 'ok']];
+  else if (!res && low.startsWith('/ticket usun')) res = () => [['✓ Usunięto ' + (cmd.split(' ')[2] || '@ktoś') + ' z ticketu ➖', 'ok']];
+  else if (!res && low.startsWith('/ticket nazwa')) res = () => [['✓ Zmieniono nazwę na „' + (cmd.split(' ').slice(2).join(' ') || 'nowa-nazwa') + '” ✏️', 'ok']];
+  else if (!res && low.startsWith('/ticket zamknij')) res = () => [['→ generowanie transkryptu HTML…'], ['→ wysyłanie na #logi i do klienta (DM + ocena ⭐)'], ['✓ Ticket zamknięty, kanał zniknie za 6 s', 'ok']];
+  else if (!res && low.startsWith('/ticket')) res = () => { const n = String(tn++).padStart(4, '0'); return [['→ formularz: Zamówienie'], ['✓ Utworzono #||🛒ˈzamówienie•klient (ticket #' + n + ')', 'ok']]; };
+  if (!res) return line('Nie znam komendy „' + cmd + '”. Wpisz /pomoc, żeby zobaczyć listę.', 'err');
+  for (const [t, c] of res()) { await wait(140); line(t, c); }
+}
+$('#termForm').addEventListener('submit', e => { e.preventDefault(); const i = $('#termIn'); run(i.value); i.value = ''; });
+$('#termIn').addEventListener('keydown', e => {
+  if (e.key === 'ArrowUp') { e.preventDefault(); hi = Math.max(0, hi - 1); e.target.value = hist[hi] || ''; }
+  if (e.key === 'ArrowDown') { e.preventDefault(); hi = Math.min(hist.length, hi + 1); e.target.value = hist[hi] || ''; }
+});
+const QUICK = ['/pomoc', '/panel', '/ticket', '/ticket dodaj @Klient', '/ticket zamknij', '/status', 'npm start', '/clear'];
+const qb = $('#quick');
+QUICK.forEach(c => { const b = document.createElement('button'); b.type = 'button'; b.className = 'btn line sm'; b.innerHTML = `<code>${esc(c)}</code><span aria-hidden="true">↵</span>`; b.onclick = () => run(c); qb.append(b); });
+line('BubleBot terminal · symulacja. Wpisz /pomoc', 'acc');
+run('/status');
+setInterval(() => { $('#termClock').textContent = new Date().toLocaleTimeString('pl-PL'); }, 1000);
+
+/* ═════════ przepływ ═════════ */
+const NODES = [['Panel', 'menu V2'], ['Formularz', 'modal'], ['Kanał', 'prywatny'], ['Obsługa', 'przejmij'], ['Zamknięcie', 'potwierdź'], ['Transkrypt', '.html'], ['Ocena', '1–5 ⭐']];
+const g = $('#flowG'); const W = 1100, nw = 128, gap = (W - 40 - nw * NODES.length) / (NODES.length - 1);
+let svg = '';
+NODES.forEach((n, i) => {
+  const x = 20 + i * (nw + gap), y = i % 2 ? 120 : 40;
+  if (i < NODES.length - 1) {
+    const x2 = 20 + (i + 1) * (nw + gap), y2 = (i + 1) % 2 ? 120 : 40;
+    const d = `M${x + nw} ${y + 35} C ${x + nw + gap / 2} ${y + 35}, ${x2 - gap / 2} ${y2 + 35}, ${x2} ${y2 + 35}`;
+    svg += `<path class="wire" d="${d}"/><path class="pulse" d="${d}" style="animation-delay:${i * .35}s"/>`;
+  }
+  svg += `<g class="node"><rect x="${x}" y="${y}" width="${nw}" height="70" rx="35"/><text x="${x + nw / 2}" y="${y + 32}" text-anchor="middle">${n[0]}</text><text class="sub" x="${x + nw / 2}" y="${y + 50}" text-anchor="middle">${n[1]}</text></g>`;
+});
+g.innerHTML = svg;
+})();
+</script>
+
+</html>

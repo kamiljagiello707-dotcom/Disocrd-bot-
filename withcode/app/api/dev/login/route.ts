@@ -25,7 +25,8 @@ export async function GET(request: NextRequest) {
   await db.session.create({
     data: { sessionToken, userId: user.id, expires: new Date(Date.now() + 30 * 864e5) },
   });
-  const secure = request.nextUrl.protocol === "https:";
+  const secure =
+    request.nextUrl.protocol === "https:" || request.headers.get("x-forwarded-proto") === "https";
   const safeCallback =
     callback.startsWith("/") && !callback.startsWith("//") ? callback : "/dashboard";
   const res = NextResponse.redirect(new URL(safeCallback, request.url));

@@ -63,9 +63,9 @@ public class ClickGuiScreen extends Screen {
         vh = Math.round(height / s);
     }
 
-    /** Scissor w wirtualnych współrzędnych GUI. */
+    /** Scissor w wirtualnych współrzędnych GUI (DrawContext sam uwzględnia skalę macierzy). */
     public void scissor(DrawContext ctx, int x1, int y1, int x2, int y2) {
-        ctx.enableScissor((int) Math.floor(x1 * s), (int) Math.floor(y1 * s), (int) Math.ceil(x2 * s), (int) Math.ceil(y2 * s));
+        ctx.enableScissor(x1, y1, x2, y2);
     }
 
     /** Rozkłada panele, które jeszcze nie mają zapisanej pozycji. */

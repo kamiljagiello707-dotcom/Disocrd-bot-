@@ -1,0 +1,1 @@
+cd withcode && pnpm exec lint-staged && pnpm typecheck

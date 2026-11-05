@@ -1,0 +1,27 @@
+# Konfiguracja AutoModu
+
+Każdy moduł ma te same elementy: **przełącznik**, **czułość** (0–100), **akcje** i **wyjątki**.
+
+## Czułość
+
+Wyższa czułość oznacza niższe progi. Przykład dla anty-spamu:
+
+| Czułość | Limit wiadomości / 5 s |
+| ------- | ---------------------- |
+| 0       | 7                      |
+| 50      | 5                      |
+| 100     | 3                      |
+
+## Akcje
+
+Możesz łączyć akcje, np. **Usuń + Ostrzeż**. Akcja **Wycisz** wymaga ustawienia długości timeoutu.
+
+## Filtr słów
+
+- Gwiazdka działa jak dzika karta: `kup*` zablokuje „kupię”, „kupuj”, „kupcie”.
+- Filtr normalizuje polskie znaki i l33t speak: `1d10t4` zostanie rozpoznane jako „idiota”.
+- Listę zaimportujesz z pliku `.txt` lub `.csv` (jedno słowo w linii).
+
+## Wyjątki
+
+Dodaj kanały (np. `#memy`) i role (np. `@Moderator`), których moduł ma nie sprawdzać.

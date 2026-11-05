@@ -1,0 +1,20 @@
+# Anti-raid and lockdown
+
+A raid is a sudden influx of accounts, usually bots, flooding your channels. WithBot counts joins within a time window.
+
+## Thresholds
+
+Default: **10 joins within 10 seconds**. Lower it to 5 on small servers, raise it to 20–30 on large ones.
+
+## Account age
+
+Set a minimum account age, e.g. **7 days**. Fresh accounts during a raid receive the chosen action.
+
+## Lockdown
+
+Lockdown blocks `@everyone` from sending messages in every channel. Enable it:
+
+- with one click in the dashboard (**Anti-raid** tab),
+- with the `/lockdown` command.
+
+To end it: `/unlock` or the dashboard button. The bot restores previous channel permissions.

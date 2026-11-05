@@ -1,0 +1,687 @@
+{
+  "meta": {
+    "siteName": "WithCode.pl",
+    "defaultTitle": "WithBot — moderacja Discorda, która nie śpi",
+    "defaultDescription": "WithBot to bot moderacyjny dla Discorda: AutoMod, anty-raid, ostrzeżenia, logi, weryfikacja i panel, w którym skonfigurujesz wszystko w kilka minut.",
+    "features": "Funkcje",
+    "featuresDescription": "AutoMod, anty-raid, system kar, logi, weryfikacja, role reakcyjne, powitania i tickety — wszystkie moduły WithBota.",
+    "commands": "Komendy",
+    "commandsDescription": "Pełna lista komend WithBota z opisem, składnią, wymaganymi uprawnieniami i przykładami.",
+    "premium": "Premium",
+    "premiumDescription": "Plany WithBot Premium: więcej modułów, dłuższa historia logów i priorytetowe wsparcie.",
+    "docs": "Dokumentacja",
+    "docsDescription": "Poradniki i dokumentacja WithBota: konfiguracja krok po kroku.",
+    "status": "Status",
+    "statusDescription": "Aktualny status WithBota, API i bazy danych oraz historia incydentów.",
+    "changelog": "Changelog",
+    "changelogDescription": "Nowości, poprawki i zmiany w kolejnych wersjach WithBota.",
+    "demo": "Demo",
+    "demoDescription": "Napisz spam na symulowanym kanale i zobacz, jak WithBot reaguje w czasie rzeczywistym.",
+    "partners": "Partnerzy",
+    "partnersDescription": "Serwery i społeczności, które chroni WithBot.",
+    "contact": "Kontakt",
+    "contactDescription": "Napisz do nas albo dołącz do serwera supportu WithBota.",
+    "terms": "Regulamin",
+    "privacy": "Polityka prywatności",
+    "cookies": "Polityka cookies",
+    "dashboard": "Panel",
+    "login": "Logowanie",
+    "notFound": "Nie znaleziono strony"
+  },
+  "common": {
+    "skipToContent": "Przejdź do treści",
+    "openMenu": "Otwórz menu",
+    "closeMenu": "Zamknij menu",
+    "language": "Język",
+    "switchTo": "English",
+    "loading": "Ładowanie…",
+    "copy": "Kopiuj",
+    "copied": "Skopiowano",
+    "close": "Zamknij",
+    "cancel": "Anuluj",
+    "confirm": "Potwierdź",
+    "save": "Zapisz",
+    "search": "Szukaj",
+    "noResults": "Brak wyników",
+    "back": "Wróć",
+    "learnMore": "Dowiedz się więcej",
+    "viewAll": "Zobacz wszystko",
+    "addToDiscord": "Dodaj do Discorda",
+    "dashboard": "Panel",
+    "login": "Zaloguj przez Discord",
+    "logout": "Wyloguj",
+    "previous": "Poprzednia",
+    "next": "Następna",
+    "page": "Strona {page} z {total}",
+    "sampleData": "Dane przykładowe"
+  },
+  "nav": {
+    "home": "Start",
+    "features": "Funkcje",
+    "commands": "Komendy",
+    "premium": "Premium",
+    "docs": "Dokumentacja",
+    "status": "Status",
+    "changelog": "Changelog",
+    "demo": "Demo",
+    "partners": "Partnerzy",
+    "contact": "Kontakt",
+    "main": "Nawigacja główna"
+  },
+  "footer": {
+    "tagline": "Moderacja Discorda, która nie śpi. Zbudowana w Polsce przez WithCode.pl.",
+    "product": "Produkt",
+    "resources": "Zasoby",
+    "company": "WithCode",
+    "legal": "Prawne",
+    "rights": "© {year} WithCode.pl. Wszelkie prawa zastrzeżone.",
+    "notAffiliated": "WithBot nie jest powiązany z Discord Inc.",
+    "support": "Serwer supportu",
+    "cookieSettings": "Ustawienia cookies"
+  },
+  "cookies": {
+    "title": "Szanujemy Twoją prywatność",
+    "body": "Używamy niezbędnych plików cookies, żeby strona i panel działały. Za Twoją zgodą użyjemy też cookies analitycznych, które pomagają nam ulepszać WithBota.",
+    "acceptAll": "Akceptuję wszystkie",
+    "rejectAll": "Tylko niezbędne",
+    "customize": "Dostosuj",
+    "save": "Zapisz wybór",
+    "necessary": "Niezbędne",
+    "necessaryDesc": "Sesja logowania, język, zabezpieczenia. Zawsze aktywne.",
+    "analytics": "Analityczne",
+    "analyticsDesc": "Anonimowe statystyki odwiedzin.",
+    "marketing": "Marketingowe",
+    "marketingDesc": "Pomiar skuteczności kampanii. Domyślnie wyłączone.",
+    "policy": "Polityka cookies"
+  },
+  "loader": {
+    "label": "Ładowanie sceny 3D"
+  },
+  "home": {
+    "hero": {
+      "eyebrow": "Bot moderacyjny dla Discorda",
+      "titleA": "Moderacja,",
+      "titleB": "która nie śpi.",
+      "subtitle": "WithBot zatrzymuje spam, raidy i toksyczność, zanim zobaczą je Twoi członkowie. Konfigurujesz go w panelu w kilka minut — reszta dzieje się sama.",
+      "scroll": "Przewiń",
+      "sceneAlt": "Trójwymiarowa tarcza z chromu i czarnego szkła otoczona orbitującymi cząsteczkami — symbol ochrony WithBota."
+    },
+    "trust": {
+      "label": "Zaufały nam społeczności z całej Polski",
+      "servers": "serwerów",
+      "users": "chronionych użytkowników",
+      "threats": "zablokowanych zagrożeń"
+    },
+    "story": {
+      "eyebrow": "Jak WithBot chroni serwer",
+      "title": "Każda wiadomość przechodzi przez filtr.",
+      "sceneAlt": "Wizualizacja: karty wiadomości wpadają do świetlistego filtra, spam rozpada się na cząsteczki, a czyste wiadomości przechodzą dalej.",
+      "steps": {
+        "s1": {
+          "title": "Strumień",
+          "body": "Tysiące wiadomości na minutę. WithBot widzi każdą z nich w momencie wysłania — bez opóźnień i bez próbkowania."
+        },
+        "s2": {
+          "title": "Analiza",
+          "body": "Sześć modułów AutoModu sprawdza tempo pisania, linki, zaproszenia, wzmianki, wielkie litery i zakazane słowa — w mniej niż 15 ms."
+        },
+        "s3": {
+          "title": "Reakcja",
+          "body": "Spam znika, autor dostaje ostrzeżenie albo timeout zgodnie z Twoimi progami. Każda akcja trafia do logów jako sprawa z numerem."
+        },
+        "s4": {
+          "title": "Czysty kanał",
+          "body": "Twoi członkowie widzą tylko rozmowę. Ty widzisz wszystko w panelu: co, kiedy i dlaczego zostało zatrzymane."
+        }
+      }
+    },
+    "features": {
+      "eyebrow": "Funkcje",
+      "title": "Wszystko, czego potrzebuje moderator.",
+      "subtitle": "Jeden bot zamiast pięciu. Każdy moduł włączasz przełącznikiem i dostrajasz suwakiem.",
+      "all": "Wszystkie funkcje"
+    },
+    "stats": {
+      "eyebrow": "W liczbach",
+      "title": "Działa tam, gdzie Twoja społeczność.",
+      "subtitle": "WithBot chroni serwery na całym świecie. Punkty na globie to zagregowane regiony — bez żadnych danych osobowych.",
+      "globeAlt": "Obracający się glob z punktami oznaczającymi regiony, w których działa WithBot.",
+      "uptime": "dostępności w ostatnich 90 dniach",
+      "latency": "średni czas reakcji AutoModu",
+      "messages": "wiadomości sprawdzonych dziennie",
+      "regionNote": "Region wyznaczamy z języka serwera, więc pozycje są przybliżone."
+    },
+    "comparison": {
+      "eyebrow": "Porównanie",
+      "title": "Dlaczego WithBot?",
+      "subtitle": "Zestawienie z typowym darmowym botem moderacyjnym.",
+      "feature": "Funkcja",
+      "withbot": "WithBot",
+      "typical": "Typowy bot"
+    },
+    "testimonials": {
+      "eyebrow": "Opinie",
+      "title": "Moderatorzy śpią spokojniej."
+    },
+    "faq": {
+      "eyebrow": "FAQ",
+      "title": "Najczęstsze pytania"
+    },
+    "final": {
+      "title": "Twój serwer zasługuje na spokój.",
+      "subtitle": "Dodaj WithBota w 30 sekund. Darmowy plan wystarcza większości społeczności."
+    }
+  },
+  "features": {
+    "eyebrow": "Moduły",
+    "title": "Funkcje WithBota",
+    "subtitle": "Każdy moduł działa samodzielnie i współpracuje z pozostałymi. Wybierz moduł, żeby zobaczyć szczegóły i interaktywne demo.",
+    "howItWorks": "Jak to działa",
+    "configure": "Konfiguracja w panelu",
+    "tryDemo": "Wypróbuj",
+    "demoTitle": "Interaktywne demo",
+    "demoHint": "Wybierz wiadomość albo napisz własną i zobacz reakcję bota.",
+    "commandsTitle": "Powiązane komendy",
+    "otherModules": "Inne moduły"
+  },
+  "commands": {
+    "eyebrow": "Komendy",
+    "title": "Wszystkie komendy",
+    "subtitle": "{count} komend w {categories} kategoriach. Wpisz nazwę, opis albo literówkę — wyszukiwarka i tak trafi.",
+    "searchPlaceholder": "Szukaj komendy… (naciśnij /)",
+    "all": "Wszystkie",
+    "syntax": "Składnia",
+    "permissions": "Wymagane uprawnienia",
+    "example": "Przykład",
+    "aliases": "Aliasy",
+    "none": "Brak",
+    "premium": "Premium",
+    "results": "{count, plural, =0 {Brak wyników} one {# komenda} few {# komendy} many {# komend} other {# komendy}}",
+    "copyCommand": "Kopiuj składnię"
+  },
+  "premium": {
+    "eyebrow": "Cennik",
+    "title": "Prosty cennik. Bez niespodzianek.",
+    "subtitle": "Zacznij za darmo. Przejdź na Premium, gdy Twoja społeczność urośnie.",
+    "monthly": "Miesięcznie",
+    "yearly": "Rocznie",
+    "save": "2 miesiące gratis",
+    "perMonth": "/ mies.",
+    "billedYearly": "płatne rocznie: {price}",
+    "popular": "Najczęściej wybierany",
+    "compareTitle": "Porównanie planów",
+    "faqTitle": "Pytania o płatności",
+    "choose": "Wybierz {plan}",
+    "currentFree": "Zacznij za darmo",
+    "contactSales": "Napisz do nas"
+  },
+  "docs": {
+    "eyebrow": "Dokumentacja",
+    "searchPlaceholder": "Szukaj w dokumentacji…",
+    "onThisPage": "Na tej stronie",
+    "previous": "Poprzedni",
+    "next": "Następny",
+    "editHint": "Znalazłeś błąd? Napisz na serwerze supportu.",
+    "navLabel": "Nawigacja dokumentacji"
+  },
+  "status": {
+    "eyebrow": "Status",
+    "title": "Status usług",
+    "allOperational": "Wszystkie systemy działają",
+    "degraded": "Częściowe problemy",
+    "outage": "Awaria",
+    "operational": "Działa",
+    "updated": "Zaktualizowano {time}",
+    "uptime90": "Dostępność z 90 dni",
+    "daysAgo": "90 dni temu",
+    "today": "Dziś",
+    "incidents": "Historia incydentów",
+    "noIncidents": "Brak incydentów w ostatnim czasie.",
+    "resolved": "Rozwiązany",
+    "ping": "Ping",
+    "shards": "Shardy",
+    "guilds": "Serwery",
+    "services": {
+      "BOT": "Bot (Gateway)",
+      "API": "API",
+      "DATABASE": "Baza danych",
+      "SHARDS": "Shardy",
+      "DASHBOARD": "Panel"
+    },
+    "incidentStatus": {
+      "INVESTIGATING": "Badamy",
+      "IDENTIFIED": "Zidentyfikowano",
+      "MONITORING": "Monitorujemy",
+      "RESOLVED": "Rozwiązany"
+    },
+    "severity": {
+      "MINOR": "Drobny",
+      "MAJOR": "Poważny",
+      "CRITICAL": "Krytyczny",
+      "MAINTENANCE": "Prace serwisowe"
+    }
+  },
+  "changelog": {
+    "eyebrow": "Changelog",
+    "title": "Co nowego",
+    "subtitle": "Każda wersja WithBota, od najnowszej.",
+    "tags": { "NEW": "Nowość", "FIX": "Poprawka", "CHANGE": "Zmiana" },
+    "all": "Wszystko"
+  },
+  "demo": {
+    "eyebrow": "Interaktywne demo",
+    "title": "Spróbuj nas zaspamować.",
+    "subtitle": "To symulowany kanał Discorda z prawdziwym silnikiem reguł WithBota. Pisz, wklejaj linki, krzycz wielkimi literami — i patrz, co się stanie.",
+    "channel": "ogólny",
+    "placeholder": "Napisz wiadomość na #ogólny",
+    "send": "Wyślij",
+    "presets": "Gotowe przykłady",
+    "log": "Dziennik WithBota",
+    "logEmpty": "Tu pojawią się decyzje bota.",
+    "reset": "Wyczyść kanał",
+    "rules": "Aktywne moduły",
+    "deleted": "Wiadomość usunięta przez WithBota",
+    "warned": "otrzymał ostrzeżenie",
+    "timedOut": "otrzymał timeout",
+    "you": "Ty",
+    "botTag": "BOT",
+    "allowed": "Wiadomość przepuszczona",
+    "presetList": {
+      "spam": "Spam (5 wiadomości)",
+      "link": "Podejrzany link",
+      "invite": "Zaproszenie na inny serwer",
+      "caps": "WIELKIE LITERY",
+      "mentions": "Masowe wzmianki",
+      "word": "Zakazane słowo",
+      "clean": "Normalna wiadomość"
+    }
+  },
+  "partners": {
+    "eyebrow": "Partnerzy",
+    "title": "Społeczności, które chronimy.",
+    "subtitle": "Od małych serwerów znajomych po społeczności z dziesiątkami tysięcy członków.",
+    "members": "{count} członków",
+    "join": "Dołącz",
+    "become": "Zostań partnerem",
+    "becomeText": "Masz aktywną społeczność i używasz WithBota? Napisz do nas — partnerzy dostają Premium i wyróżnienie na tej stronie."
+  },
+  "contact": {
+    "eyebrow": "Kontakt",
+    "title": "Porozmawiajmy.",
+    "subtitle": "Najszybciej odpowiadamy na serwerze supportu. Formularz jest dla spraw, które wymagają prywatności — odpisujemy w ciągu 48 godzin.",
+    "name": "Imię lub nick",
+    "email": "E-mail",
+    "topic": "Temat",
+    "message": "Wiadomość",
+    "send": "Wyślij wiadomość",
+    "sending": "Wysyłanie…",
+    "success": "Dzięki! Wiadomość dotarła. Odpowiemy na podany e-mail.",
+    "error": "Nie udało się wysłać. Spróbuj ponownie za chwilę.",
+    "rateLimited": "Za dużo wiadomości. Spróbuj ponownie za godzinę.",
+    "supportTitle": "Serwer supportu",
+    "supportText": "Pomoc na żywo, ogłoszenia i społeczność WithBota.",
+    "joinSupport": "Dołącz do serwera",
+    "privacyNote": "Wysyłając formularz, akceptujesz politykę prywatności. Dane wykorzystamy wyłącznie do odpowiedzi.",
+    "topics": {
+      "SUPPORT": "Pomoc techniczna",
+      "BUG": "Zgłoszenie błędu",
+      "PARTNERSHIP": "Partnerstwo",
+      "PREMIUM": "Premium i płatności",
+      "OTHER": "Inne"
+    }
+  },
+  "validation": {
+    "required": "To pole jest wymagane",
+    "email": "Podaj poprawny adres e-mail",
+    "min": "Minimum {min} znaków",
+    "max": "Maksymalnie {max} znaków",
+    "captcha": "Potwierdź, że nie jesteś botem"
+  },
+  "notFound": {
+    "title": "Ta strona została zbanowana.",
+    "subtitle": "Albo nigdy nie istniała. WithBot przeszukał wszystkie kanały i nic nie znalazł.",
+    "home": "Wróć na start",
+    "sceneAlt": "Liczba 404 zbudowana z cząsteczek, które rozsypują się pod kursorem."
+  },
+  "auth": {
+    "title": "Zaloguj się do panelu",
+    "subtitle": "Logujesz się przez Discord. Prosimy tylko o Twój profil i listę serwerów — nigdy o hasło ani wiadomości.",
+    "button": "Kontynuuj z Discordem",
+    "scopes": "Uprawnienia: identify, guilds",
+    "devLogin": "Logowanie testowe (tryb deweloperski)",
+    "error": "Logowanie nie powiodło się. Spróbuj ponownie."
+  },
+  "dashboard": {
+    "servers": "Twoje serwery",
+    "serversSubtitle": "Serwery, na których masz uprawnienie Zarządzanie serwerem.",
+    "manage": "Zarządzaj",
+    "invite": "Dodaj WithBota",
+    "noServers": "Nie znaleźliśmy serwerów, którymi możesz zarządzać.",
+    "botMissing": "Bota nie ma na serwerze",
+    "members": "{count} członków",
+    "backToServers": "Wszystkie serwery",
+    "unsaved": "Masz niezapisane zmiany",
+    "saveChanges": "Zapisz zmiany",
+    "revert": "Cofnij",
+    "saving": "Zapisywanie…",
+    "saved": "Zapisano zmiany",
+    "saveError": "Nie udało się zapisać",
+    "conflict": "Ktoś w międzyczasie zmienił te ustawienia. Odśwież stronę.",
+    "forbidden": "Nie masz uprawnień do tego serwera.",
+    "leaveConfirm": "Masz niezapisane zmiany. Na pewno chcesz wyjść?",
+    "nav": {
+      "overview": "Przegląd",
+      "automod": "AutoMod",
+      "antiraid": "Anty-raid",
+      "cases": "Sprawy",
+      "punishments": "Automatyczne kary",
+      "logs": "Logi",
+      "verification": "Weryfikacja",
+      "welcome": "Powitania",
+      "roles": "Role",
+      "access": "Dostęp do panelu",
+      "settings": "Ustawienia",
+      "audit": "Historia zmian",
+      "groupProtection": "Ochrona",
+      "groupModeration": "Moderacja",
+      "groupCommunity": "Społeczność",
+      "groupServer": "Serwer"
+    },
+    "overview": {
+      "title": "Przegląd",
+      "range": { "24h": "24 h", "7d": "7 dni", "30d": "30 dni" },
+      "metrics": {
+        "AUTOMOD_DELETED": "Usunięte przez AutoMod",
+        "PUNISHMENTS": "Kary",
+        "MEMBER_JOINS": "Nowi członkowie",
+        "RAIDS": "Raidy"
+      },
+      "recent": "Ostatnie akcje moderacyjne",
+      "noRecent": "Brak akcji w tym okresie.",
+      "vsPrevious": "vs poprzedni okres"
+    },
+    "automod": {
+      "title": "AutoMod",
+      "subtitle": "Włącz moduły, ustaw czułość i zdecyduj, co bot ma zrobić z naruszeniem.",
+      "sensitivity": "Czułość",
+      "actions": "Akcje",
+      "exemptChannels": "Wyjątki: kanały",
+      "exemptRoles": "Wyjątki: role",
+      "muteDuration": "Długość timeoutu",
+      "bannedWords": "Zakazane słowa",
+      "bannedWordsHint": "Wpisz słowo i naciśnij Enter. Gwiazdka (*) działa jak dzika karta.",
+      "import": "Importuj z pliku",
+      "importHint": "Plik .txt lub .csv, jedno słowo w linii",
+      "addWord": "Dodaj słowo",
+      "wordsCount": "{count} słów",
+      "modules": {
+        "ANTI_SPAM": {
+          "name": "Anty-spam",
+          "desc": "Blokuje zalew wiadomości i powtarzanie treści."
+        },
+        "ANTI_LINK": { "name": "Anty-link", "desc": "Usuwa linki spoza białej listy domen." },
+        "ANTI_INVITE": {
+          "name": "Anty-zaproszenia",
+          "desc": "Blokuje zaproszenia na inne serwery Discorda."
+        },
+        "WORD_FILTER": {
+          "name": "Filtr słów",
+          "desc": "Usuwa wiadomości z zakazanymi słowami i ich wariantami."
+        },
+        "ANTI_CAPS": {
+          "name": "Anty-caps",
+          "desc": "Reaguje na wiadomości pisane głównie wielkimi literami."
+        },
+        "ANTI_MENTION": {
+          "name": "Anty-mention",
+          "desc": "Zatrzymuje masowe oznaczanie użytkowników i ról."
+        }
+      }
+    },
+    "actions": {
+      "DELETE": "Usuń",
+      "WARN": "Ostrzeż",
+      "TIMEOUT": "Wycisz",
+      "KICK": "Wyrzuć",
+      "BAN": "Zbanuj"
+    },
+    "antiraid": {
+      "title": "Anty-raid",
+      "subtitle": "Wykrywa nagły napływ kont i zatrzymuje raid, zanim zaleje kanały.",
+      "enabled": "Ochrona przed raidami",
+      "threshold": "Liczba dołączeń",
+      "window": "W ciągu (sekundy)",
+      "accountAge": "Minimalny wiek konta (dni)",
+      "action": "Akcja wobec nowych kont",
+      "lockdown": "Lockdown",
+      "lockdownDesc": "Natychmiast blokuje pisanie na wszystkich kanałach dla @everyone.",
+      "lockdownOn": "Włącz lockdown",
+      "lockdownOff": "Zakończ lockdown",
+      "lockdownActive": "Lockdown aktywny od {time}",
+      "lockdownConfirm": "Na pewno włączyć lockdown? Członkowie bez ról moderatorskich nie będą mogli pisać.",
+      "lockdownEnabled": "Lockdown włączony",
+      "lockdownDisabled": "Lockdown zakończony",
+      "summary": "Jeśli w ciągu {window} s dołączy {threshold} kont, WithBot uzna to za raid."
+    },
+    "cases": {
+      "title": "Sprawy",
+      "subtitle": "Wszystkie ostrzeżenia i kary na serwerze.",
+      "search": "Szukaj po ID użytkownika, nicku lub powodzie",
+      "type": "Typ",
+      "allTypes": "Wszystkie typy",
+      "status": "Status",
+      "active": "Aktywne",
+      "revoked": "Cofnięte",
+      "all": "Wszystkie",
+      "number": "Nr",
+      "user": "Użytkownik",
+      "moderator": "Moderator",
+      "reason": "Powód",
+      "date": "Data",
+      "noReason": "Brak powodu",
+      "export": "Eksport CSV",
+      "empty": "Brak spraw spełniających kryteria.",
+      "details": "Sprawa #{number}",
+      "revoke": "Cofnij karę",
+      "revokeReason": "Powód cofnięcia",
+      "revokeConfirm": "Cofnąć karę? Bot zdejmie timeout lub ban na Discordzie.",
+      "revokedBy": "Cofnięta przez {user} — {time}",
+      "revokedToast": "Kara cofnięta",
+      "duration": "Czas trwania",
+      "expires": "Wygasa",
+      "source": "Źródło",
+      "sources": {
+        "MANUAL": "Ręcznie",
+        "AUTOMOD": "AutoMod",
+        "AUTO_PUNISHMENT": "Automatyczna kara",
+        "ANTI_RAID": "Anty-raid"
+      },
+      "types": {
+        "WARN": "Ostrzeżenie",
+        "TIMEOUT": "Timeout",
+        "KICK": "Wyrzucenie",
+        "BAN": "Ban",
+        "SOFTBAN": "Softban",
+        "UNBAN": "Unban",
+        "NOTE": "Notatka"
+      }
+    },
+    "punishments": {
+      "title": "Automatyczne kary",
+      "subtitle": "Gdy użytkownik zbierze określoną liczbę aktywnych ostrzeżeń, WithBot sam nałoży karę.",
+      "warnings": "Ostrzeżenia",
+      "action": "Akcja",
+      "duration": "Czas",
+      "add": "Dodaj próg",
+      "remove": "Usuń",
+      "empty": "Brak progów. Dodaj pierwszy, np. 3 ostrzeżenia → timeout 1 h.",
+      "rule": "{count} ostrz. →"
+    },
+    "logs": {
+      "title": "Logi",
+      "subtitle": "Wybierz kanał dla każdego typu zdarzenia. Możesz użyć jednego kanału dla wszystkich.",
+      "none": "Wyłączone",
+      "applyAll": "Ustaw dla wszystkich",
+      "events": {
+        "MESSAGE_DELETE": "Usunięte wiadomości",
+        "MESSAGE_EDIT": "Edytowane wiadomości",
+        "MEMBER_JOIN": "Dołączenia",
+        "MEMBER_LEAVE": "Wyjścia",
+        "MEMBER_BAN": "Bany",
+        "MEMBER_UNBAN": "Odbanowania",
+        "ROLE_UPDATE": "Zmiany ról",
+        "NICK_UPDATE": "Zmiany nicków",
+        "CHANNEL_UPDATE": "Zmiany kanałów",
+        "VOICE": "Kanały głosowe",
+        "MOD_ACTION": "Akcje moderatorów",
+        "AUTOMOD": "Akcje AutoModu"
+      }
+    },
+    "verification": {
+      "title": "Weryfikacja",
+      "subtitle": "Nowi członkowie muszą potwierdzić, że są ludźmi, zanim zobaczą serwer.",
+      "enabled": "Weryfikacja nowych członków",
+      "mode": "Metoda",
+      "modes": { "BUTTON": "Przycisk", "CAPTCHA": "Captcha obrazkowa" },
+      "channel": "Kanał weryfikacji",
+      "role": "Rola po weryfikacji",
+      "message": "Treść wiadomości"
+    },
+    "welcome": {
+      "title": "Powitania i pożegnania",
+      "subtitle": "Wiadomość, którą WithBot wyśle, gdy ktoś dołączy lub wyjdzie.",
+      "welcome": "Powitanie",
+      "goodbye": "Pożegnanie",
+      "enabled": "Włączone",
+      "channel": "Kanał",
+      "content": "Treść",
+      "dm": "Wyślij też w wiadomości prywatnej",
+      "variables": "Zmienne",
+      "preview": "Podgląd na żywo",
+      "embedTitle": "Tytuł embeda",
+      "embedDescription": "Opis embeda",
+      "embedImage": "URL obrazka",
+      "useEmbed": "Użyj embeda"
+    },
+    "roles": {
+      "title": "Role",
+      "subtitle": "Role reakcyjne pozwalają członkom samodzielnie wybrać role. Auto-role są nadawane przy dołączeniu.",
+      "reaction": "Role reakcyjne",
+      "auto": "Auto-role",
+      "addGroup": "Nowa wiadomość z rolami",
+      "groupTitle": "Tytuł wiadomości",
+      "channel": "Kanał",
+      "mode": "Tryb",
+      "modes": {
+        "NORMAL": "Dowolne role",
+        "UNIQUE": "Tylko jedna rola",
+        "VERIFY": "Tylko dodawanie"
+      },
+      "style": "Styl",
+      "styles": { "REACTIONS": "Reakcje", "BUTTONS": "Przyciski", "SELECT": "Menu wyboru" },
+      "addEntry": "Dodaj rolę",
+      "emoji": "Emoji",
+      "label": "Etykieta",
+      "role": "Rola",
+      "delete": "Usuń",
+      "empty": "Brak wiadomości z rolami.",
+      "autoRole": "Rola",
+      "delay": "Opóźnienie (s)",
+      "botsOnly": "Tylko boty",
+      "addAuto": "Dodaj auto-rolę"
+    },
+    "access": {
+      "title": "Dostęp do panelu",
+      "subtitle": "Osoby z uprawnieniem Zarządzanie serwerem mają dostęp zawsze. Tutaj możesz dodać kolejne role lub użytkowników.",
+      "subject": "Rola lub użytkownik",
+      "level": "Poziom",
+      "levels": { "VIEWER": "Podgląd", "EDITOR": "Edycja" },
+      "subjectTypes": { "ROLE": "Rola", "USER": "Użytkownik" },
+      "userId": "ID użytkownika",
+      "add": "Dodaj",
+      "remove": "Usuń",
+      "empty": "Brak dodatkowych uprawnień."
+    },
+    "settings": {
+      "title": "Ustawienia",
+      "subtitle": "Podstawowa konfiguracja WithBota na tym serwerze.",
+      "prefix": "Prefiks komend tekstowych",
+      "prefixHint": "Komendy slash działają zawsze. Prefiks: 1–5 znaków.",
+      "locale": "Język bota",
+      "timezone": "Strefa czasowa"
+    },
+    "audit": {
+      "title": "Historia zmian",
+      "subtitle": "Kto, co i kiedy zmienił w konfiguracji.",
+      "empty": "Brak zmian.",
+      "changed": "zmienił(a) {section}",
+      "before": "Przed",
+      "after": "Po"
+    },
+    "pickers": {
+      "channel": "Wybierz kanał",
+      "role": "Wybierz rolę",
+      "none": "Brak",
+      "searchChannels": "Szukaj kanałów…",
+      "searchRoles": "Szukaj ról…",
+      "selected": "{count} wybranych"
+    },
+    "durations": {
+      "60": "1 min",
+      "300": "5 min",
+      "600": "10 min",
+      "3600": "1 h",
+      "21600": "6 h",
+      "86400": "1 dzień",
+      "604800": "7 dni"
+    }
+  },
+  "admin": {
+    "title": "Administracja",
+    "overview": "Statystyki globalne",
+    "guilds": "Serwery",
+    "changelog": "Changelog",
+    "incidents": "Incydenty",
+    "faq": "FAQ",
+    "testimonials": "Opinie",
+    "partners": "Partnerzy",
+    "blacklist": "Blacklista",
+    "create": "Dodaj",
+    "delete": "Usuń",
+    "deleted": "Usunięto",
+    "created": "Dodano",
+    "updated": "Zapisano",
+    "totalGuilds": "Serwery z botem",
+    "totalUsers": "Zalogowani użytkownicy",
+    "totalCases": "Sprawy (30 dni)",
+    "openIncidents": "Otwarte incydenty",
+    "type": "Typ",
+    "targetId": "ID",
+    "reason": "Powód",
+    "version": "Wersja",
+    "titlePl": "Tytuł (PL)",
+    "titleEn": "Tytuł (EN)",
+    "items": "Pozycje (jedna w linii: TAG | tekst PL | tekst EN)",
+    "status": "Status",
+    "severity": "Waga",
+    "messagePl": "Komunikat (PL)",
+    "messageEn": "Komunikat (EN)",
+    "questionPl": "Pytanie (PL)",
+    "questionEn": "Pytanie (EN)",
+    "answerPl": "Odpowiedź (PL)",
+    "answerEn": "Odpowiedź (EN)",
+    "scope": "Miejsce",
+    "author": "Autor",
+    "rolePl": "Rola (PL)",
+    "roleEn": "Rola (EN)",
+    "quotePl": "Cytat (PL)",
+    "quoteEn": "Cytat (EN)",
+    "name": "Nazwa",
+    "inviteUrl": "Link zaproszenia",
+    "members": "Członkowie",
+    "descPl": "Opis (PL)",
+    "descEn": "Opis (EN)",
+    "addUpdate": "Dodaj aktualizację",
+    "search": "Szukaj serwera"
+  }
+}

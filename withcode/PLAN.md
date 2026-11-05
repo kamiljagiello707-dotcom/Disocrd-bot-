@@ -11,28 +11,28 @@
 
 Przed każdym etapem sprawdzę aktualne API w dokumentacji i przypnę dokładne wersje w `package.json`. Poniżej to, co zakładam dziś, i jak to wpływa na projekt:
 
-| Obszar | Biblioteka | Uwagi do API, które sprawdzę |
-|---|---|---|
-| Framework | Next.js (najnowsza stabilna, App Router, React 19) | `proxy.ts` zamiast `middleware.ts` (od v16), `params` jako Promise, Turbopack, `experimental.viewTransition` |
-| Język | TypeScript `strict`, `noUncheckedIndexedAccess`, `exactOptionalPropertyTypes` | ESLint: `no-explicit-any: error` |
-| Style | Tailwind CSS v4 (konfiguracja w CSS przez `@theme`) | tokeny jako zmienne CSS w `styles/tokens.css`, mapowane do `@theme inline` |
-| 3D | three, @react-three/fiber v9, @react-three/drei v10, @react-three/postprocessing v3 | `View`, `PerformanceMonitor`, `useProgress`, `AdaptiveDpr` |
-| Animacje | gsap + ScrollTrigger + SplitText (GSAP jest teraz w pełni darmowy), `motion` (dawniej Framer Motion, import `motion/react`), `lenis` | jeden zegar: `gsap.ticker` napędza Lenis, Lenis wywołuje `ScrollTrigger.update` |
-| Auth | Auth.js v5 (`next-auth@5`) + `@auth/prisma-adapter`, provider Discord | scope `identify guilds`, odświeżanie access tokena |
-| DB | PostgreSQL 16 + Prisma (najnowsza; przy v7 nowy generator `prisma-client` + driver adapter `@prisma/adapter-pg`) | |
-| Walidacja / formularze | zod v4, react-hook-form + `@hookform/resolvers` | te same schematy na kliencie, w Server Actions i w testach |
-| Dane klienta | TanStack Query v5 | hydratacja z RSC, optimistic updates |
-| Wykresy | Recharts v3 | monochromatyczny motyw, własny tooltip |
-| i18n | next-intl v4 | `pl` domyślny (bez prefiksu w URL? patrz pytania), `en` |
-| Wyszukiwanie | Fuse.js (komendy), FlexSearch/Pagefind (dokumentacja, indeks generowany przy buildzie) | |
-| MDX | `@next/mdx` lub `next-mdx-remote-client` + `rehype-pretty-code` (Shiki), `rehype-slug`, `remark-gfm` | |
-| Sanityzacja | `sanitize-html` (serwer); markdown Discorda parsowany własnym, białolistowym parserem | |
-| Rate limit | `@upstash/ratelimit` gdy jest Redis; w przeciwnym razie tabela w Postgres (sliding window) | |
-| Captcha | Cloudflare Turnstile (opcjonalnie, przez env) | |
-| Błędy | `@sentry/nextjs` (włączany, gdy ustawiony jest `SENTRY_DSN`) | |
-| Testy | vitest + Testing Library, Playwright | |
-| Jakość | ESLint (flat config), Prettier + `prettier-plugin-tailwindcss`, husky + lint-staged | |
-| Env | `@t3-oss/env-nextjs` + zod: build się wywali, jeśli brakuje zmiennej | |
+| Obszar                 | Biblioteka                                                                                                                           | Uwagi do API, które sprawdzę                                                                                 |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------ |
+| Framework              | Next.js (najnowsza stabilna, App Router, React 19)                                                                                   | `proxy.ts` zamiast `middleware.ts` (od v16), `params` jako Promise, Turbopack, `experimental.viewTransition` |
+| Język                  | TypeScript `strict`, `noUncheckedIndexedAccess`, `exactOptionalPropertyTypes`                                                        | ESLint: `no-explicit-any: error`                                                                             |
+| Style                  | Tailwind CSS v4 (konfiguracja w CSS przez `@theme`)                                                                                  | tokeny jako zmienne CSS w `styles/tokens.css`, mapowane do `@theme inline`                                   |
+| 3D                     | three, @react-three/fiber v9, @react-three/drei v10, @react-three/postprocessing v3                                                  | `View`, `PerformanceMonitor`, `useProgress`, `AdaptiveDpr`                                                   |
+| Animacje               | gsap + ScrollTrigger + SplitText (GSAP jest teraz w pełni darmowy), `motion` (dawniej Framer Motion, import `motion/react`), `lenis` | jeden zegar: `gsap.ticker` napędza Lenis, Lenis wywołuje `ScrollTrigger.update`                              |
+| Auth                   | Auth.js v5 (`next-auth@5`) + `@auth/prisma-adapter`, provider Discord                                                                | scope `identify guilds`, odświeżanie access tokena                                                           |
+| DB                     | PostgreSQL 16 + Prisma (najnowsza; przy v7 nowy generator `prisma-client` + driver adapter `@prisma/adapter-pg`)                     |                                                                                                              |
+| Walidacja / formularze | zod v4, react-hook-form + `@hookform/resolvers`                                                                                      | te same schematy na kliencie, w Server Actions i w testach                                                   |
+| Dane klienta           | TanStack Query v5                                                                                                                    | hydratacja z RSC, optimistic updates                                                                         |
+| Wykresy                | Recharts v3                                                                                                                          | monochromatyczny motyw, własny tooltip                                                                       |
+| i18n                   | next-intl v4                                                                                                                         | `pl` domyślny (bez prefiksu w URL? patrz pytania), `en`                                                      |
+| Wyszukiwanie           | Fuse.js (komendy), FlexSearch/Pagefind (dokumentacja, indeks generowany przy buildzie)                                               |                                                                                                              |
+| MDX                    | `@next/mdx` lub `next-mdx-remote-client` + `rehype-pretty-code` (Shiki), `rehype-slug`, `remark-gfm`                                 |                                                                                                              |
+| Sanityzacja            | `sanitize-html` (serwer); markdown Discorda parsowany własnym, białolistowym parserem                                                |                                                                                                              |
+| Rate limit             | `@upstash/ratelimit` gdy jest Redis; w przeciwnym razie tabela w Postgres (sliding window)                                           |                                                                                                              |
+| Captcha                | Cloudflare Turnstile (opcjonalnie, przez env)                                                                                        |                                                                                                              |
+| Błędy                  | `@sentry/nextjs` (włączany, gdy ustawiony jest `SENTRY_DSN`)                                                                         |                                                                                                              |
+| Testy                  | vitest + Testing Library, Playwright                                                                                                 |                                                                                                              |
+| Jakość                 | ESLint (flat config), Prettier + `prettier-plugin-tailwindcss`, husky + lint-staged                                                  |                                                                                                              |
+| Env                    | `@t3-oss/env-nextjs` + zod: build się wywali, jeśli brakuje zmiennej                                                                 |                                                                                                              |
 
 ### 1.2 Warstwy
 
@@ -171,40 +171,40 @@ withcode/
 
 ### 3.1 Część publiczna (`/` = PL, `/en/...` = EN)
 
-| Ścieżka | Zawartość | 3D / animacje | Render |
-|---|---|---|---|
-| `/` | Hero (CTA „Dodaj do Discorda” / „Panel”), Zaufanie (3 liczniki), Storytelling „Jak WithBot chroni serwer”, Funkcje (karty tilt), Statystyki + glob, Porównanie, Opinie, FAQ, Finalne CTA | Hero, pole cząsteczek, Story, Glob | ISR (statystyki co 5 min) |
-| `/features` | Siatka modułów | karty tilt | SSG |
-| `/features/[module]` | `automod` (anty-spam, anty-raid, anty-link, filtr słów, anty-caps, anty-mention), `warnings`, `logs`, `verification`, `reaction-roles`, `welcome`, `tickets`; opis, konfiguracja krok po kroku, interaktywne demo modułu | mini-demo w DiscordMock (DOM, nie WebGL) | SSG |
-| `/commands` | Wyszukiwarka fuzzy (Fuse.js, skrót `/`), filtry kategorii, karty: opis, składnia, uprawnienia, przykład, kopiowanie; stan filtrów w URL | stagger listy | SSG + klient |
-| `/premium` | Karty planów (Free / Premium / Pro), przełącznik miesięcznie/rocznie (animacja cyfr), tabela porównawcza, FAQ płatności | rolling digits | SSG |
-| `/docs/[[...slug]]` | MDX, sidebar, TOC (scrollspy), wyszukiwarka (⌘K), bloki kodu z kopiowaniem, poprzedni/następny | brak | SSG |
-| `/status` | Status usług (Bot, API, Baza, Shardy), pasek uptime z 90 dni (tooltip per dzień), incydenty | brak | ISR 60 s |
-| `/changelog` | Wpisy wersji, tagi nowość/poprawka/zmiana, filtr, RSS (`/changelog/rss.xml`) | reveal | ISR |
-| `/demo` | Symulowany kanał Discorda: użytkownik pisze, silnik reguł (te same funkcje co w testach, uruchamiane w przeglądarce) usuwa, ostrzega, wycisza; panel „co się stało i dlaczego” | animacje wiadomości | SSG + klient |
-| `/partners` | Serwery partnerskie (z DB), CTA „Zostań partnerem” | hover | ISR |
-| `/contact` | Formularz (RHF + zod, honeypot, rate limit, Turnstile), link do serwera supportu | brak | dynamiczny (akcja) |
-| `/legal/terms`, `/legal/privacy`, `/legal/cookies` | MDX + baner zgód RODO (kategorie: niezbędne / analityczne / marketingowe, zapis w cookie, „Odrzuć wszystkie” równorzędny z „Akceptuj”) | brak | SSG |
-| 404 | „404” złożone z cząsteczek, które rozsypują się pod kursorem, CTA powrotu | scena 404 | statyczny |
+| Ścieżka                                            | Zawartość                                                                                                                                                                                                                | 3D / animacje                            | Render                    |
+| -------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------- | ------------------------- |
+| `/`                                                | Hero (CTA „Dodaj do Discorda” / „Panel”), Zaufanie (3 liczniki), Storytelling „Jak WithBot chroni serwer”, Funkcje (karty tilt), Statystyki + glob, Porównanie, Opinie, FAQ, Finalne CTA                                 | Hero, pole cząsteczek, Story, Glob       | ISR (statystyki co 5 min) |
+| `/features`                                        | Siatka modułów                                                                                                                                                                                                           | karty tilt                               | SSG                       |
+| `/features/[module]`                               | `automod` (anty-spam, anty-raid, anty-link, filtr słów, anty-caps, anty-mention), `warnings`, `logs`, `verification`, `reaction-roles`, `welcome`, `tickets`; opis, konfiguracja krok po kroku, interaktywne demo modułu | mini-demo w DiscordMock (DOM, nie WebGL) | SSG                       |
+| `/commands`                                        | Wyszukiwarka fuzzy (Fuse.js, skrót `/`), filtry kategorii, karty: opis, składnia, uprawnienia, przykład, kopiowanie; stan filtrów w URL                                                                                  | stagger listy                            | SSG + klient              |
+| `/premium`                                         | Karty planów (Free / Premium / Pro), przełącznik miesięcznie/rocznie (animacja cyfr), tabela porównawcza, FAQ płatności                                                                                                  | rolling digits                           | SSG                       |
+| `/docs/[[...slug]]`                                | MDX, sidebar, TOC (scrollspy), wyszukiwarka (⌘K), bloki kodu z kopiowaniem, poprzedni/następny                                                                                                                           | brak                                     | SSG                       |
+| `/status`                                          | Status usług (Bot, API, Baza, Shardy), pasek uptime z 90 dni (tooltip per dzień), incydenty                                                                                                                              | brak                                     | ISR 60 s                  |
+| `/changelog`                                       | Wpisy wersji, tagi nowość/poprawka/zmiana, filtr, RSS (`/changelog/rss.xml`)                                                                                                                                             | reveal                                   | ISR                       |
+| `/demo`                                            | Symulowany kanał Discorda: użytkownik pisze, silnik reguł (te same funkcje co w testach, uruchamiane w przeglądarce) usuwa, ostrzega, wycisza; panel „co się stało i dlaczego”                                           | animacje wiadomości                      | SSG + klient              |
+| `/partners`                                        | Serwery partnerskie (z DB), CTA „Zostań partnerem”                                                                                                                                                                       | hover                                    | ISR                       |
+| `/contact`                                         | Formularz (RHF + zod, honeypot, rate limit, Turnstile), link do serwera supportu                                                                                                                                         | brak                                     | dynamiczny (akcja)        |
+| `/legal/terms`, `/legal/privacy`, `/legal/cookies` | MDX + baner zgód RODO (kategorie: niezbędne / analityczne / marketingowe, zapis w cookie, „Odrzuć wszystkie” równorzędny z „Akceptuj”)                                                                                   | brak                                     | SSG                       |
+| 404                                                | „404” złożone z cząsteczek, które rozsypują się pod kursorem, CTA powrotu                                                                                                                                                | scena 404                                | statyczny                 |
 
 ### 3.2 Panel (`/dashboard`)
 
-| Ścieżka | Zawartość |
-|---|---|
-| `/login` | Logowanie przez Discord |
-| `/dashboard` | Serwery z Manage Server: z botem („Zarządzaj”) i bez bota („Dodaj WithBota”, link OAuth z `guild_id` i `disable_guild_select`) |
-| `/dashboard/[g]` | Przegląd: wykresy 24h/7d/30d (usunięte przez AutoMod, kary, nowi członkowie, raidy), ostatnie akcje |
-| `…/automod` | Moduły (przełączniki), czułość (slidery), wyjątki (kanały, role), akcja, zakazane słowa (tagi + import .txt/.csv, dzikie karty) |
-| `…/antiraid` | Próg dołączeń / okno czasu, wiek konta, akcja, **Lockdown** jednym kliknięciem (modal potwierdzenia) |
-| `…/cases`, `…/cases/[id]` | Tabela (szukaj, filtry typ/moderator/status/data, paginacja kursorowa), szczegóły, cofnięcie kary, eksport CSV |
-| `…/punishments` | Progi automatycznych kar (np. 3 ostrzeżenia → timeout 1h), sortowalna lista |
-| `…/logs` | Kanał logów dla każdego typu zdarzenia |
-| `…/verification` | Tryb (przycisk / captcha), kanał, rola po weryfikacji, wiadomość |
-| `…/welcome` | Edytor powitań i pożegnań: zmienne `{user}` `{server}` `{memberCount}`, podgląd na żywo w stylu Discorda, embed |
-| `…/roles` | Role reakcyjne (wiadomość + emoji/przycisk → rola, tryby: normal/unique/verify) i auto-role |
-| `…/access` | Kto ma dostęp do panelu (role/użytkownicy) |
-| `…/settings` | Prefiks, język bota, strefa czasowa |
-| `…/audit` | Historia zmian konfiguracji: kto, co (diff), kiedy |
+| Ścieżka                   | Zawartość                                                                                                                       |
+| ------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| `/login`                  | Logowanie przez Discord                                                                                                         |
+| `/dashboard`              | Serwery z Manage Server: z botem („Zarządzaj”) i bez bota („Dodaj WithBota”, link OAuth z `guild_id` i `disable_guild_select`)  |
+| `/dashboard/[g]`          | Przegląd: wykresy 24h/7d/30d (usunięte przez AutoMod, kary, nowi członkowie, raidy), ostatnie akcje                             |
+| `…/automod`               | Moduły (przełączniki), czułość (slidery), wyjątki (kanały, role), akcja, zakazane słowa (tagi + import .txt/.csv, dzikie karty) |
+| `…/antiraid`              | Próg dołączeń / okno czasu, wiek konta, akcja, **Lockdown** jednym kliknięciem (modal potwierdzenia)                            |
+| `…/cases`, `…/cases/[id]` | Tabela (szukaj, filtry typ/moderator/status/data, paginacja kursorowa), szczegóły, cofnięcie kary, eksport CSV                  |
+| `…/punishments`           | Progi automatycznych kar (np. 3 ostrzeżenia → timeout 1h), sortowalna lista                                                     |
+| `…/logs`                  | Kanał logów dla każdego typu zdarzenia                                                                                          |
+| `…/verification`          | Tryb (przycisk / captcha), kanał, rola po weryfikacji, wiadomość                                                                |
+| `…/welcome`               | Edytor powitań i pożegnań: zmienne `{user}` `{server}` `{memberCount}`, podgląd na żywo w stylu Discorda, embed                 |
+| `…/roles`                 | Role reakcyjne (wiadomość + emoji/przycisk → rola, tryby: normal/unique/verify) i auto-role                                     |
+| `…/access`                | Kto ma dostęp do panelu (role/użytkownicy)                                                                                      |
+| `…/settings`              | Prefiks, język bota, strefa czasowa                                                                                             |
+| `…/audit`                 | Historia zmian konfiguracji: kto, co (diff), kiedy                                                                              |
 
 Wspólne: pasek „Masz niezapisane zmiany” (Zapisz/Cofnij, ostrzeżenie przy opuszczeniu strony), optimistic updates, toasty (`aria-live`), skeletony.
 
@@ -216,16 +216,16 @@ Statystyki globalne, lista serwerów (szukaj/sortuj), changelog, incydenty, FAQ,
 
 ## 4. Sceny 3D: techniki
 
-| # | Scena | Technika | Mobile / low |
-|---|---|---|---|
-| 1 | **Hero: rdzeń/tarcza WithBot** | Proceduralna tarcza: `ExtrudeGeometry` z bevelem z kształtu SVG, wewnątrz ikosfera „rdzenia” (detail 64). Dwa materiały: chrom (`MeshPhysicalMaterial`, metalness 1, roughness 0.15, clearcoat) i czarne szkło (`transmission`, `thickness`, `ior 1.5`, `attenuationColor` #111). „Oddychanie”: `onBeforeCompile` z wstrzykniętym simplex noise 3D w vertex shaderze (przesunięcie wzdłuż normalnej, przeliczanie normalnych przez sąsiednie próbki) + fresnel rim w fragmencie. Parallax: lerp rotacji i pozycji do znormalizowanego kursora (damping z `maath/easing`). Orbitujące cząsteczki: `Points` (2–6 tys.) z orbitami liczonymi w vertex shaderze (zero pracy CPU). **Rozpad przy scrollu**: `MeshSurfaceSampler` próbkuje powierzchnię tarczy do bufora `aStart`; drugi bufor `aEnd` (rozproszenie + curl noise); `uProgress` z ScrollTrigger miesza pozycje, mesh zanika, a cząsteczki płyną do pozycji startowych sceny 2 | transmission → fake (env + fresnel), 40% cząsteczek, bez CA |
-| 2 | **Tło: pole punktów** | `InstancedBufferGeometry` / `Points` na siatce 160×100 (16 tys., GPU). Vertex shader: fala sinusoidalna + noise, „fala od kursora” jako promień od `uMouse` (ray → płaszczyzna) z zanikaniem `exp(-d)` i ringiem impulsu przy kliknięciu; głębia = mniejsze i ciemniejsze punkty; `additive blending`, alpha w fragmencie (okrągły punkt bez tekstury) | 4 tys. punktów, bez fali od kursora na dotyku |
-| 3 | **Storytelling „Jak WithBot chroni”** | Sekcja przypięta (ScrollTrigger `pin`, `scrub`) na ~400vh, 4 etapy zsynchronizowane z tekstem (SplitText). Kamera po `CatmullRomCurve3`, `lookAt` po drugiej krzywej. Wiadomości to instancjonowane karty (`InstancedMesh` z zaokrąglonym `RoundedBox`/SDF w shaderze); treść z **atlasu tekstur generowanego w canvas 2D** (avatar + nick + tekst, bez pobierania). Filtr: pierścień/brama z liniami (`Line2`) i świetlistym fresnelem. Spam: karta → wymiana na cząsteczki z tej samej pozycji (shader explode, kierunek + noise), czyste wiadomości przechodzą dalej i łagodnie rozjaśniają się. Etapy: 1. strumień wiadomości, 2. analiza (skan), 3. rozbicie spamu, 4. czysty kanał + licznik | mniej kart (12 zamiast 40), uproszczona kamera; reduced-motion → 4 statyczne kadry |
-| 4 | **Karty funkcji: tilt** | DOM + CSS 3D (`perspective`, `rotateX/Y` przez CSS vars), połysk jako `radial-gradient` podążający za kursorem i maska krawędzi `conic-gradient`. Celowo bez WebGL: tańsze, ostre, dostępne | bez tiltu, tylko połysk przy dotyku |
-| 5 | **Statystyki: glob** | Kula z punktów rozłożonych spiralą Fibonacciego (~12 tys.), filtrowanych maską lądów (mała tekstura 512×256, odczyt przy inicjalizacji), atmosfera jako fresnel na drugiej sferze (BackSide). Punkty serwerów jako instancje z pulsem; łuki połączeń (`QuadraticBezier` + animowany dash w shaderze). Obrót leniwy, drag OrbitControls ograniczony do osi Y. Liczniki obok: GSAP z `snap` + `Intl.NumberFormat` | 4 tys. punktów, bez łuków |
-| 6 | **Przejścia stron** | Overlay w DOM nad treścią (zawsze czarny, więc nie ma białego mrugnięcia): maska `clip-path`/SVG ze szumem animowana przez `motion` w `template.tsx`. Na przeglądarkach z View Transitions API używam `document.startViewTransition` (Next `experimental.viewTransition`) dla płynności, a overlay to fallback. Shader przejścia w canvasie (dissolve z noise) tylko między stronami marketingowymi, bo canvas jest współdzielony | tylko fade |
-| 7 | **Tekst** | `SplitText` (GSAP) z maską linii + `autoSplit` (przeliczanie przy resize i po załadowaniu fontu), znak po znaku dla hero, linia po linii dla sekcji; `Scramble` dla wybranych słów (własny hook, znaki z puli `!<>-_\/[]{}—=+*^?#`). `aria-label` z pełnym tekstem, podzielone spany mają `aria-hidden` | reduced-motion → fade |
-| 8 | **404** | „404” z tekstu (`TextGeometry`/troika → próbkowanie punktów), cząsteczki uciekają od kursora (siła w vertex shaderze) i wracają sprężyną | statyczne SVG |
+| #   | Scena                                 | Technika                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               | Mobile / low                                                                       |
+| --- | ------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
+| 1   | **Hero: rdzeń/tarcza WithBot**        | Proceduralna tarcza: `ExtrudeGeometry` z bevelem z kształtu SVG, wewnątrz ikosfera „rdzenia” (detail 64). Dwa materiały: chrom (`MeshPhysicalMaterial`, metalness 1, roughness 0.15, clearcoat) i czarne szkło (`transmission`, `thickness`, `ior 1.5`, `attenuationColor` #111). „Oddychanie”: `onBeforeCompile` z wstrzykniętym simplex noise 3D w vertex shaderze (przesunięcie wzdłuż normalnej, przeliczanie normalnych przez sąsiednie próbki) + fresnel rim w fragmencie. Parallax: lerp rotacji i pozycji do znormalizowanego kursora (damping z `maath/easing`). Orbitujące cząsteczki: `Points` (2–6 tys.) z orbitami liczonymi w vertex shaderze (zero pracy CPU). **Rozpad przy scrollu**: `MeshSurfaceSampler` próbkuje powierzchnię tarczy do bufora `aStart`; drugi bufor `aEnd` (rozproszenie + curl noise); `uProgress` z ScrollTrigger miesza pozycje, mesh zanika, a cząsteczki płyną do pozycji startowych sceny 2 | transmission → fake (env + fresnel), 40% cząsteczek, bez CA                        |
+| 2   | **Tło: pole punktów**                 | `InstancedBufferGeometry` / `Points` na siatce 160×100 (16 tys., GPU). Vertex shader: fala sinusoidalna + noise, „fala od kursora” jako promień od `uMouse` (ray → płaszczyzna) z zanikaniem `exp(-d)` i ringiem impulsu przy kliknięciu; głębia = mniejsze i ciemniejsze punkty; `additive blending`, alpha w fragmencie (okrągły punkt bez tekstury)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 | 4 tys. punktów, bez fali od kursora na dotyku                                      |
+| 3   | **Storytelling „Jak WithBot chroni”** | Sekcja przypięta (ScrollTrigger `pin`, `scrub`) na ~400vh, 4 etapy zsynchronizowane z tekstem (SplitText). Kamera po `CatmullRomCurve3`, `lookAt` po drugiej krzywej. Wiadomości to instancjonowane karty (`InstancedMesh` z zaokrąglonym `RoundedBox`/SDF w shaderze); treść z **atlasu tekstur generowanego w canvas 2D** (avatar + nick + tekst, bez pobierania). Filtr: pierścień/brama z liniami (`Line2`) i świetlistym fresnelem. Spam: karta → wymiana na cząsteczki z tej samej pozycji (shader explode, kierunek + noise), czyste wiadomości przechodzą dalej i łagodnie rozjaśniają się. Etapy: 1. strumień wiadomości, 2. analiza (skan), 3. rozbicie spamu, 4. czysty kanał + licznik                                                                                                                                                                                                                                     | mniej kart (12 zamiast 40), uproszczona kamera; reduced-motion → 4 statyczne kadry |
+| 4   | **Karty funkcji: tilt**               | DOM + CSS 3D (`perspective`, `rotateX/Y` przez CSS vars), połysk jako `radial-gradient` podążający za kursorem i maska krawędzi `conic-gradient`. Celowo bez WebGL: tańsze, ostre, dostępne                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            | bez tiltu, tylko połysk przy dotyku                                                |
+| 5   | **Statystyki: glob**                  | Kula z punktów rozłożonych spiralą Fibonacciego (~12 tys.), filtrowanych maską lądów (mała tekstura 512×256, odczyt przy inicjalizacji), atmosfera jako fresnel na drugiej sferze (BackSide). Punkty serwerów jako instancje z pulsem; łuki połączeń (`QuadraticBezier` + animowany dash w shaderze). Obrót leniwy, drag OrbitControls ograniczony do osi Y. Liczniki obok: GSAP z `snap` + `Intl.NumberFormat`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        | 4 tys. punktów, bez łuków                                                          |
+| 6   | **Przejścia stron**                   | Overlay w DOM nad treścią (zawsze czarny, więc nie ma białego mrugnięcia): maska `clip-path`/SVG ze szumem animowana przez `motion` w `template.tsx`. Na przeglądarkach z View Transitions API używam `document.startViewTransition` (Next `experimental.viewTransition`) dla płynności, a overlay to fallback. Shader przejścia w canvasie (dissolve z noise) tylko między stronami marketingowymi, bo canvas jest współdzielony                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      | tylko fade                                                                         |
+| 7   | **Tekst**                             | `SplitText` (GSAP) z maską linii + `autoSplit` (przeliczanie przy resize i po załadowaniu fontu), znak po znaku dla hero, linia po linii dla sekcji; `Scramble` dla wybranych słów (własny hook, znaki z puli `!<>-_\/[]{}—=+*^?#`). `aria-label` z pełnym tekstem, podzielone spany mają `aria-hidden`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                | reduced-motion → fade                                                              |
+| 8   | **404**                               | „404” z tekstu (`TextGeometry`/troika → próbkowanie punktów), cząsteczki uciekają od kursora (siła w vertex shaderze) i wracają sprężyną                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               | statyczne SVG                                                                      |
 
 Postprocessing (z umiarem): `Bloom` (luminanceThreshold 0.8, mipmapBlur), `ChromaticAberration` (offset 0.0006, tylko hero), `Noise` (opacity 0.03, premultiply), `Vignette` (0.35). Grain na stronie robię w CSS (SVG `feTurbulence` jako tło nakładki), nie w postprocessingu, żeby działał też w panelu i bez WebGL.
 
@@ -657,6 +657,7 @@ enum ContactTopic     { SUPPORT BUG PARTNERSHIP PREMIUM OTHER }
 ```
 
 Decyzje:
+
 - **Komendy nie trafiają do DB**: `content/commands.ts` to jedyne źródło (typowane, PL/EN), wystawiane też przez `/api/commands`, więc bot może je stamtąd synchronizować.
 - `options Json` w AutoModRule ma sens, bo każdy moduł ma inne pola (np. anty-caps: `%` i min. długość; anty-mention: limit). Zawsze walidowane zod: rozróżnialna unia po `module`, typy wyprowadzane z `z.infer`.
 - `version` daje optimistic concurrency: zapis odrzucany, jeśli ktoś w międzyczasie zmienił sekcję („Ktoś zmienił te ustawienia, odśwież”).
@@ -680,20 +681,23 @@ Decyzje:
   --color-border: rgb(255 255 255 / 0.08);
   --color-border-strong: rgb(255 255 255 / 0.16);
   --color-fg: #ffffff;
-  --color-fg-muted: #a1a1a1;   /* 8.0:1 na #000 */
-  --color-fg-subtle: #6b6b6b;  /* 4.0:1 na #000: tylko duży tekst i dekoracje, drobny tekst ≥ #8a8a8a */
-  --color-success: #7fae8f;    /* stonowane, tylko panel */
+  --color-fg-muted: #a1a1a1; /* 8.0:1 na #000 */
+  --color-fg-subtle: #6b6b6b; /* 4.0:1 na #000: tylko duży tekst i dekoracje, drobny tekst ≥ #8a8a8a */
+  --color-success: #7fae8f; /* stonowane, tylko panel */
   --color-warning: #c8a96a;
-  --color-danger:  #c27c7c;
+  --color-danger: #c27c7c;
   --color-glass: rgb(20 20 20 / 0.55);
-  --color-glass-edge: rgb(255 255 255 / 0.10);
+  --color-glass-edge: rgb(255 255 255 / 0.1);
   --color-focus: #ffffff;
 
   /* Typografia (fluid, clamp 360 → 1920 px) */
   --font-sans: var(--font-geist-sans), system-ui, sans-serif;
   --font-display: var(--font-display-face), var(--font-sans);
   --font-mono: var(--font-geist-mono), ui-monospace, monospace;
-  --text-xs: 0.75rem;   --text-sm: 0.875rem; --text-base: 1rem; --text-lg: 1.125rem;
+  --text-xs: 0.75rem;
+  --text-sm: 0.875rem;
+  --text-base: 1rem;
+  --text-lg: 1.125rem;
   --text-xl: clamp(1.25rem, 1.1rem + 0.5vw, 1.5rem);
   --text-2xl: clamp(1.5rem, 1.2rem + 1vw, 2.25rem);
   --text-3xl: clamp(2rem, 1.4rem + 2.2vw, 3.5rem);
@@ -703,19 +707,30 @@ Decyzje:
   --tracking-tight: -0.02em;
 
   /* Spacing (bazowo 4 px) */
-  --space-1: 0.25rem; --space-2: 0.5rem; --space-3: 0.75rem; --space-4: 1rem;
-  --space-6: 1.5rem;  --space-8: 2rem;   --space-12: 3rem;   --space-16: 4rem;
-  --space-24: 6rem;   --space-32: 8rem;
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-12: 3rem;
+  --space-16: 4rem;
+  --space-24: 6rem;
+  --space-32: 8rem;
   --section-y: clamp(5rem, 3rem + 8vw, 12rem);
 
   /* Siatka */
-  --container-max: 90rem;             /* 1440 */
+  --container-max: 90rem; /* 1440 */
   --gutter: clamp(1rem, 0.5rem + 2vw, 2.5rem);
   --grid-columns: 12;
 
   /* Promienie */
-  --radius-xs: 4px; --radius-sm: 8px; --radius-md: 12px; --radius-lg: 20px;
-  --radius-xl: 28px; --radius-full: 9999px;
+  --radius-xs: 4px;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 20px;
+  --radius-xl: 28px;
+  --radius-full: 9999px;
 
   /* Efekty */
   --blur-glass: 18px;
@@ -725,14 +740,26 @@ Decyzje:
   /* Ruch */
   --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-in-out-quart: cubic-bezier(0.76, 0, 0.24, 1);
-  --dur-fast: 150ms; --dur-base: 300ms; --dur-slow: 700ms; --dur-page: 900ms;
+  --dur-fast: 150ms;
+  --dur-base: 300ms;
+  --dur-slow: 700ms;
+  --dur-page: 900ms;
 
   /* Warstwy */
-  --z-canvas: 0; --z-content: 10; --z-nav: 50; --z-overlay: 80; --z-toast: 90; --z-cursor: 100;
+  --z-canvas: 0;
+  --z-content: 10;
+  --z-nav: 50;
+  --z-overlay: 80;
+  --z-toast: 90;
+  --z-cursor: 100;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  :root { --dur-base: 0ms; --dur-slow: 150ms; --dur-page: 200ms; }
+  :root {
+    --dur-base: 0ms;
+    --dur-slow: 150ms;
+    --dur-page: 200ms;
+  }
 }
 ```
 
@@ -746,16 +773,16 @@ Tailwind v4: `@theme inline { --color-bg: var(--color-bg); … }`, więc klasy `
 
 ### 6.3 Komponenty i zachowania
 
-| Komponent | Zachowanie |
-|---|---|
-| `Button` primary | białe tło, czarny tekst; hover: magnes (siła 0.3, `motion` spring, wyłączony na dotyku i przy reduced-motion), połysk (pseudo-element z gradientem `translateX` −100% → 100%), `translateY(-2px)` + `--shadow-lift`; `asChild` (Slot) dla linków |
-| `Button` secondary | transparentne, `1px` biała ramka; hover: biały `scale(0) → scale(1)` od środka (pseudo-element, `clip-path: circle()` od punktu kursora), tekst odwraca się na czarny |
-| `Button` ghost / danger | panel |
-| `Card` | glass: `--color-glass` + `backdrop-filter: blur(var(--blur-glass))` + krawędź 1px z gradientem maski; wariant `solid` do panelu (bez blur = szybciej) |
-| Focus | `outline: 2px solid #fff; outline-offset: 3px` (tylko `:focus-visible`), na białych przyciskach dodatkowy czarny wewnętrzny ring |
-| Cursor | punkt 6 px (natychmiastowy) + pierścień 36 px (lerp 0.15) w `mix-blend-mode: difference`, stany `hover` (powiększenie ×1.8), `text` (pionowa kreska), `drag`; ukryty dla `(pointer: coarse)` i reduced-motion; natywny kursor zostaje na polach formularzy |
-| Grain | `position: fixed`, SVG `feTurbulence` jako data URI, `pointer-events: none`, `opacity var(--grain-opacity)`, lekko animowany `steps()` (wyłączony przy reduced-motion) |
-| Pozostałe | Badge, Input, Textarea, Select, Switch, Slider, Tabs, Modal, Toast, Tooltip, Dropdown, Skeleton, Table, Pagination: na **Radix UI primitives** (dostępność, focus trap, obsługa klawiatury), własne style. Toasty przez `sonner` ostylowane tokenami lub własny komponent z `aria-live="polite"` |
+| Komponent               | Zachowanie                                                                                                                                                                                                                                                                                       |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `Button` primary        | białe tło, czarny tekst; hover: magnes (siła 0.3, `motion` spring, wyłączony na dotyku i przy reduced-motion), połysk (pseudo-element z gradientem `translateX` −100% → 100%), `translateY(-2px)` + `--shadow-lift`; `asChild` (Slot) dla linków                                                 |
+| `Button` secondary      | transparentne, `1px` biała ramka; hover: biały `scale(0) → scale(1)` od środka (pseudo-element, `clip-path: circle()` od punktu kursora), tekst odwraca się na czarny                                                                                                                            |
+| `Button` ghost / danger | panel                                                                                                                                                                                                                                                                                            |
+| `Card`                  | glass: `--color-glass` + `backdrop-filter: blur(var(--blur-glass))` + krawędź 1px z gradientem maski; wariant `solid` do panelu (bez blur = szybciej)                                                                                                                                            |
+| Focus                   | `outline: 2px solid #fff; outline-offset: 3px` (tylko `:focus-visible`), na białych przyciskach dodatkowy czarny wewnętrzny ring                                                                                                                                                                 |
+| Cursor                  | punkt 6 px (natychmiastowy) + pierścień 36 px (lerp 0.15) w `mix-blend-mode: difference`, stany `hover` (powiększenie ×1.8), `text` (pionowa kreska), `drag`; ukryty dla `(pointer: coarse)` i reduced-motion; natywny kursor zostaje na polach formularzy                                       |
+| Grain                   | `position: fixed`, SVG `feTurbulence` jako data URI, `pointer-events: none`, `opacity var(--grain-opacity)`, lekko animowany `steps()` (wyłączony przy reduced-motion)                                                                                                                           |
+| Pozostałe               | Badge, Input, Textarea, Select, Switch, Slider, Tabs, Modal, Toast, Tooltip, Dropdown, Skeleton, Table, Pagination: na **Radix UI primitives** (dostępność, focus trap, obsługa klawiatury), własne style. Toasty przez `sonner` ostylowane tokenami lub własny komponent z `aria-live="polite"` |
 
 ---
 
@@ -786,18 +813,18 @@ Tailwind v4: `@theme inline { --color-bg: var(--color-bg); … }`, więc klasy `
 
 ## 10. Etapy wdrożenia
 
-| Etap | Zakres | Weryfikacja |
-|---|---|---|
-| 1 | Szkielet: Next + TS strict, Tailwind v4 + tokeny, ESLint/Prettier/husky, env (zod), next-intl (PL/EN), vitest + Playwright, Docker + compose | lint, typecheck, build, test „smoke” |
-| 2 | Design system: fonty, `components/ui/*`, kursor, grain, Lenis + GSAP, nav + mobilne menu, footer, przejścia stron, motion (SplitReveal, Scramble, Magnetic, Tilt, Counter), strona `/styleguide` (tylko dev) | testy komponentów, axe |
-| 3 | Rdzeń 3D: CanvasRoot + View, QualityProvider, fallback, loader, scena hero (shader, cząsteczki, rozpad), pole punktów | Lighthouse lokalnie, test z wyłączonym WebGL |
-| 4 | Strona główna: wszystkie sekcje, storytelling 3D, glob, liczniki, porównanie, opinie, FAQ, CTA, treści PL/EN | E2E home, Lighthouse |
-| 5 | Prisma + seed, Auth.js (Discord), `lib/discord`, `lib/bot-api`, uprawnienia, webhook HMAC, `/api/status` | unit (uprawnienia, HMAC), migracje |
-| 6 | Podstrony publiczne: funkcje + dema, komendy, premium, status, changelog, demo kanału, partnerzy, kontakt, prawne + baner cookies, 404 | E2E komendy, kontakt |
-| 7 | Dokumentacja MDX (sidebar, TOC, wyszukiwarka, kopiowanie kodu, poradniki) | build, linki |
-| 8 | Panel: lista serwerów, przegląd z wykresami, AutoMod, anty-raid, sprawy + CSV, auto-kary, logi, weryfikacja, powitania (edytor + podgląd), role, dostęp, ustawienia, audit log, pasek niezapisanych zmian | unit walidatorów, E2E zapis AutoMod |
-| 9 | Admin: treści, incydenty, statystyki globalne, serwery, blacklista | unit `assertAdmin`, E2E dostępu |
-| 10 | Hardening: CSP/nagłówki, rate limit, Sentry, SEO (OG, sitemap, JSON-LD), przegląd a11y i responsywności, budżety wydajności, README | Lighthouse (desktop ≥ 90, mobile ≥ 75), axe, pełne E2E |
+| Etap | Zakres                                                                                                                                                                                                       | Weryfikacja                                            |
+| ---- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------ |
+| 1    | Szkielet: Next + TS strict, Tailwind v4 + tokeny, ESLint/Prettier/husky, env (zod), next-intl (PL/EN), vitest + Playwright, Docker + compose                                                                 | lint, typecheck, build, test „smoke”                   |
+| 2    | Design system: fonty, `components/ui/*`, kursor, grain, Lenis + GSAP, nav + mobilne menu, footer, przejścia stron, motion (SplitReveal, Scramble, Magnetic, Tilt, Counter), strona `/styleguide` (tylko dev) | testy komponentów, axe                                 |
+| 3    | Rdzeń 3D: CanvasRoot + View, QualityProvider, fallback, loader, scena hero (shader, cząsteczki, rozpad), pole punktów                                                                                        | Lighthouse lokalnie, test z wyłączonym WebGL           |
+| 4    | Strona główna: wszystkie sekcje, storytelling 3D, glob, liczniki, porównanie, opinie, FAQ, CTA, treści PL/EN                                                                                                 | E2E home, Lighthouse                                   |
+| 5    | Prisma + seed, Auth.js (Discord), `lib/discord`, `lib/bot-api`, uprawnienia, webhook HMAC, `/api/status`                                                                                                     | unit (uprawnienia, HMAC), migracje                     |
+| 6    | Podstrony publiczne: funkcje + dema, komendy, premium, status, changelog, demo kanału, partnerzy, kontakt, prawne + baner cookies, 404                                                                       | E2E komendy, kontakt                                   |
+| 7    | Dokumentacja MDX (sidebar, TOC, wyszukiwarka, kopiowanie kodu, poradniki)                                                                                                                                    | build, linki                                           |
+| 8    | Panel: lista serwerów, przegląd z wykresami, AutoMod, anty-raid, sprawy + CSV, auto-kary, logi, weryfikacja, powitania (edytor + podgląd), role, dostęp, ustawienia, audit log, pasek niezapisanych zmian    | unit walidatorów, E2E zapis AutoMod                    |
+| 9    | Admin: treści, incydenty, statystyki globalne, serwery, blacklista                                                                                                                                           | unit `assertAdmin`, E2E dostępu                        |
+| 10   | Hardening: CSP/nagłówki, rate limit, Sentry, SEO (OG, sitemap, JSON-LD), przegląd a11y i responsywności, budżety wydajności, README                                                                          | Lighthouse (desktop ≥ 90, mobile ≥ 75), axe, pełne E2E |
 
 ---
 

@@ -1,0 +1,576 @@
+// WithCode.pl / WithBot — schemat bazy danych (wspólny ze strony i bota)
+
+generator client {
+  provider     = "prisma-client"
+  output       = "../lib/db/generated"
+  moduleFormat = "esm"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ───────────── Auth.js ─────────────
+model User {
+  id            String    @id @default(cuid())
+  discordId     String?   @unique
+  name          String?
+  image         String?
+  email         String?   @unique
+  emailVerified DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  accounts      Account[]
+  sessions      Session[]
+  auditLogs     ConfigAuditLog[]
+}
+
+model Account {
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?  @db.Text
+  access_token      String?  @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?  @db.Text
+  session_state     String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([provider, providerAccountId])
+}
+
+model Session {
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String
+  expires    DateTime
+
+  @@id([identifier, token])
+}
+
+// ───────────── Serwer i ustawienia ─────────────
+model Guild {
+  id           String      @id
+  name         String
+  icon         String?
+  ownerId      String
+  memberCount  Int         @default(0)
+  region       String?
+  botPresent   Boolean     @default(true)
+  premiumTier  PremiumTier @default(FREE)
+  premiumUntil DateTime?
+  joinedAt     DateTime    @default(now())
+  leftAt       DateTime?
+  updatedAt    DateTime    @updatedAt
+
+  settings      GuildSettings?
+  automod       AutoModRule[]
+  bannedWords   BannedWord[]
+  antiRaid      AntiRaidConfig?
+  thresholds    PunishmentThreshold[]
+  logChannels   LogChannel[]
+  verification  VerificationConfig?
+  greetings     GreetingConfig[]
+  reactionRoles ReactionRoleMessage[]
+  autoRoles     AutoRole[]
+  access        DashboardAccess[]
+  cases         ModCase[]
+  stats         GuildStatBucket[]
+  auditLogs     ConfigAuditLog[]
+
+  @@index([botPresent])
+}
+
+model GuildSettings {
+  guildId  String    @id
+  prefix   String    @default("!") @db.VarChar(5)
+  locale   BotLocale @default(PL)
+  timezone String    @default("Europe/Warsaw")
+  version  Int       @default(1)
+  guild    Guild     @relation(fields: [guildId], references: [id], onDelete: Cascade)
+}
+
+model AutoModRule {
+  id             String        @id @default(cuid())
+  guildId        String
+  module         AutoModModule
+  enabled        Boolean       @default(false)
+  sensitivity    Int           @default(50)
+  actions        ModAction[]
+  muteDuration   Int?
+  exemptChannels String[]
+  exemptRoles    String[]
+  options        Json          @default("{}")
+  version        Int           @default(1)
+  guild          Guild         @relation(fields: [guildId], references: [id], onDelete: Cascade)
+
+  @@unique([guildId, module])
+}
+
+model BannedWord {
+  id        String    @id @default(cuid())
+  guildId   String
+  pattern   String    @db.VarChar(100)
+  matchType WordMatch @default(CONTAINS)
+  createdBy String
+  createdAt DateTime  @default(now())
+  guild     Guild     @relation(fields: [guildId], references: [id], onDelete: Cascade)
+
+  @@unique([guildId, pattern])
+}
+
+model AntiRaidConfig {
+  guildId           String    @id
+  enabled           Boolean   @default(false)
+  joinThreshold     Int       @default(10)
+  joinWindowSec     Int       @default(10)
+  minAccountAgeDays Int       @default(0)
+  action            ModAction @default(KICK)
+  lockdownActive    Boolean   @default(false)
+  lockdownAt        DateTime?
+  lockdownBy        String?
+  version           Int       @default(1)
+  guild             Guild     @relation(fields: [guildId], references: [id], onDelete: Cascade)
+}
+
+model PunishmentThreshold {
+  id        String    @id @default(cuid())
+  guildId   String
+  warnCount Int
+  action    ModAction
+  duration  Int?
+  guild     Guild     @relation(fields: [guildId], references: [id], onDelete: Cascade)
+
+  @@unique([guildId, warnCount])
+}
+
+model LogChannel {
+  guildId   String
+  eventType LogEvent
+  channelId String?
+  enabled   Boolean  @default(true)
+  guild     Guild    @relation(fields: [guildId], references: [id], onDelete: Cascade)
+
+  @@id([guildId, eventType])
+}
+
+model VerificationConfig {
+  guildId   String           @id
+  enabled   Boolean          @default(false)
+  mode      VerificationMode @default(BUTTON)
+  channelId String?
+  roleId    String?
+  message   String?          @db.VarChar(2000)
+  version   Int              @default(1)
+  guild     Guild            @relation(fields: [guildId], references: [id], onDelete: Cascade)
+}
+
+model GreetingConfig {
+  guildId   String
+  type      GreetingType
+  enabled   Boolean      @default(false)
+  channelId String?
+  content   String?      @db.VarChar(2000)
+  embed     Json?
+  dm        Boolean      @default(false)
+  version   Int          @default(1)
+  guild     Guild        @relation(fields: [guildId], references: [id], onDelete: Cascade)
+
+  @@id([guildId, type])
+}
+
+model ReactionRoleMessage {
+  id        String              @id @default(cuid())
+  guildId   String
+  channelId String
+  messageId String?
+  title     String              @db.VarChar(256)
+  mode      ReactionRoleMode    @default(NORMAL)
+  style     ReactionRoleStyle   @default(BUTTONS)
+  entries   ReactionRoleEntry[]
+  createdAt DateTime            @default(now())
+  guild     Guild               @relation(fields: [guildId], references: [id], onDelete: Cascade)
+
+  @@index([guildId])
+}
+
+model ReactionRoleEntry {
+  id       String              @id @default(cuid())
+  groupId  String
+  emoji    String?
+  label    String?             @db.VarChar(80)
+  roleId   String
+  position Int
+  group    ReactionRoleMessage @relation(fields: [groupId], references: [id], onDelete: Cascade)
+}
+
+model AutoRole {
+  guildId  String
+  roleId   String
+  delaySec Int     @default(0)
+  botsOnly Boolean @default(false)
+  guild    Guild   @relation(fields: [guildId], references: [id], onDelete: Cascade)
+
+  @@id([guildId, roleId])
+}
+
+model DashboardAccess {
+  id          String        @id @default(cuid())
+  guildId     String
+  subjectType AccessSubject
+  subjectId   String
+  level       AccessLevel   @default(EDITOR)
+  guild       Guild         @relation(fields: [guildId], references: [id], onDelete: Cascade)
+
+  @@unique([guildId, subjectType, subjectId])
+}
+
+// ───────────── Moderacja i statystyki ─────────────
+model ModCase {
+  id            String         @id @default(cuid())
+  guildId       String
+  caseNumber    Int
+  type          CaseType
+  targetId      String
+  targetTag     String?
+  moderatorId   String
+  moderatorTag  String?
+  reason        String?        @db.VarChar(1000)
+  source        CaseSource     @default(MANUAL)
+  automodModule AutoModModule?
+  duration      Int?
+  expiresAt     DateTime?
+  revokedAt     DateTime?
+  revokedBy     String?
+  revokeReason  String?        @db.VarChar(500)
+  createdAt     DateTime       @default(now())
+  guild         Guild          @relation(fields: [guildId], references: [id], onDelete: Cascade)
+
+  @@unique([guildId, caseNumber])
+  @@index([guildId, createdAt(sort: Desc)])
+  @@index([guildId, targetId])
+  @@index([guildId, type])
+}
+
+model GuildStatBucket {
+  guildId     String
+  metric      StatMetric
+  bucketStart DateTime
+  value       Int        @default(0)
+  guild       Guild      @relation(fields: [guildId], references: [id], onDelete: Cascade)
+
+  @@id([guildId, metric, bucketStart])
+}
+
+model ConfigAuditLog {
+  id        String   @id @default(cuid())
+  guildId   String
+  actorId   String
+  section   String
+  diff      Json
+  createdAt DateTime @default(now())
+  guild     Guild    @relation(fields: [guildId], references: [id], onDelete: Cascade)
+  actor     User     @relation(fields: [actorId], references: [id])
+
+  @@index([guildId, createdAt(sort: Desc)])
+}
+
+// ───────────── Treści (admin) ─────────────
+model ChangelogEntry {
+  id          String          @id @default(cuid())
+  version     String          @unique
+  publishedAt DateTime
+  titlePl     String
+  titleEn     String
+  published   Boolean         @default(true)
+  items       ChangelogItem[]
+}
+
+model ChangelogItem {
+  id       String         @id @default(cuid())
+  entryId  String
+  tag      ChangelogTag
+  textPl   String
+  textEn   String
+  position Int
+  entry    ChangelogEntry @relation(fields: [entryId], references: [id], onDelete: Cascade)
+}
+
+model ServiceCheck {
+  id        BigInt     @id @default(autoincrement())
+  service   ServiceKey
+  ok        Boolean
+  latencyMs Int?
+  checkedAt DateTime   @default(now())
+
+  @@index([service, checkedAt])
+}
+
+model UptimeDay {
+  service   ServiceKey
+  day       DateTime   @db.Date
+  uptimePct Float
+
+  @@id([service, day])
+}
+
+model Incident {
+  id         String           @id @default(cuid())
+  titlePl    String
+  titleEn    String
+  severity   IncidentSeverity
+  status     IncidentStatus
+  services   ServiceKey[]
+  startedAt  DateTime
+  resolvedAt DateTime?
+  updates    IncidentUpdate[]
+}
+
+model IncidentUpdate {
+  id         String         @id @default(cuid())
+  incidentId String
+  status     IncidentStatus
+  messagePl  String
+  messageEn  String
+  createdAt  DateTime       @default(now())
+  incident   Incident       @relation(fields: [incidentId], references: [id], onDelete: Cascade)
+}
+
+model Faq {
+  id         String   @id @default(cuid())
+  scope      FaqScope
+  questionPl String
+  questionEn String
+  answerPl   String
+  answerEn   String
+  position   Int
+  published  Boolean  @default(true)
+}
+
+model Testimonial {
+  id        String  @id @default(cuid())
+  author    String
+  rolePl    String
+  roleEn    String
+  avatarUrl String?
+  quotePl   String
+  quoteEn   String
+  position  Int
+  published Boolean @default(true)
+}
+
+model Partner {
+  id          String  @id @default(cuid())
+  guildId     String?
+  name        String
+  iconUrl     String?
+  inviteUrl   String?
+  memberCount Int?
+  descPl      String?
+  descEn      String?
+  position    Int
+  published   Boolean @default(true)
+}
+
+model BlacklistEntry {
+  id        String        @id @default(cuid())
+  type      BlacklistType
+  targetId  String
+  reason    String?
+  createdBy String
+  createdAt DateTime      @default(now())
+  expiresAt DateTime?
+
+  @@unique([type, targetId])
+}
+
+model ContactMessage {
+  id        String       @id @default(cuid())
+  name      String
+  email     String
+  topic     ContactTopic
+  message   String       @db.VarChar(5000)
+  ipHash    String
+  createdAt DateTime     @default(now())
+  handled   Boolean      @default(false)
+}
+
+model RateLimitHit {
+  key         String
+  windowStart DateTime
+  count       Int
+
+  @@id([key, windowStart])
+}
+
+model WebhookNonce {
+  nonce     String   @id
+  createdAt DateTime @default(now())
+}
+
+// ───────────── Enumy ─────────────
+enum PremiumTier {
+  FREE
+  PREMIUM
+  PRO
+}
+
+enum BotLocale {
+  PL
+  EN
+}
+
+enum AutoModModule {
+  ANTI_SPAM
+  ANTI_LINK
+  ANTI_INVITE
+  WORD_FILTER
+  ANTI_CAPS
+  ANTI_MENTION
+}
+
+enum ModAction {
+  DELETE
+  WARN
+  TIMEOUT
+  KICK
+  BAN
+}
+
+enum WordMatch {
+  EXACT
+  CONTAINS
+  WILDCARD
+}
+
+enum LogEvent {
+  MESSAGE_DELETE
+  MESSAGE_EDIT
+  MEMBER_JOIN
+  MEMBER_LEAVE
+  MEMBER_BAN
+  MEMBER_UNBAN
+  ROLE_UPDATE
+  NICK_UPDATE
+  CHANNEL_UPDATE
+  VOICE
+  MOD_ACTION
+  AUTOMOD
+}
+
+enum VerificationMode {
+  BUTTON
+  CAPTCHA
+}
+
+enum GreetingType {
+  WELCOME
+  GOODBYE
+}
+
+enum ReactionRoleMode {
+  NORMAL
+  UNIQUE
+  VERIFY
+}
+
+enum ReactionRoleStyle {
+  REACTIONS
+  BUTTONS
+  SELECT
+}
+
+enum AccessSubject {
+  USER
+  ROLE
+}
+
+enum AccessLevel {
+  VIEWER
+  EDITOR
+}
+
+enum CaseType {
+  WARN
+  TIMEOUT
+  KICK
+  BAN
+  SOFTBAN
+  UNBAN
+  NOTE
+}
+
+enum CaseSource {
+  MANUAL
+  AUTOMOD
+  AUTO_PUNISHMENT
+  ANTI_RAID
+}
+
+enum StatMetric {
+  AUTOMOD_DELETED
+  PUNISHMENTS
+  MEMBER_JOINS
+  MEMBER_LEAVES
+  RAIDS
+  MESSAGES
+}
+
+enum ChangelogTag {
+  NEW
+  FIX
+  CHANGE
+}
+
+enum ServiceKey {
+  BOT
+  API
+  DATABASE
+  SHARDS
+  DASHBOARD
+}
+
+enum IncidentSeverity {
+  MINOR
+  MAJOR
+  CRITICAL
+  MAINTENANCE
+}
+
+enum IncidentStatus {
+  INVESTIGATING
+  IDENTIFIED
+  MONITORING
+  RESOLVED
+}
+
+enum FaqScope {
+  HOME
+  PREMIUM
+}
+
+enum BlacklistType {
+  GUILD
+  USER
+}
+
+enum ContactTopic {
+  SUPPORT
+  BUG
+  PARTNERSHIP
+  PREMIUM
+  OTHER
+}

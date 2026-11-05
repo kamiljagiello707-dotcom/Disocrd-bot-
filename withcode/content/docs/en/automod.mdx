@@ -1,0 +1,27 @@
+# Configuring AutoMod
+
+Every module has the same parts: a **switch**, **sensitivity** (0–100), **actions** and **exemptions**.
+
+## Sensitivity
+
+Higher sensitivity means lower thresholds. Example for anti-spam:
+
+| Sensitivity | Message limit / 5 s |
+| ----------- | ------------------- |
+| 0           | 7                   |
+| 50          | 5                   |
+| 100         | 3                   |
+
+## Actions
+
+You can combine actions, e.g. **Delete + Warn**. The **Timeout** action requires a timeout length.
+
+## Word filter
+
+- An asterisk is a wildcard: `buy*` blocks "buying", "buyer", "buys".
+- The filter normalises diacritics and l33t speak: `1d10t` is recognised as "idiot".
+- Import a list from a `.txt` or `.csv` file (one word per line).
+
+## Exemptions
+
+Add channels (e.g. `#memes`) and roles (e.g. `@Moderator`) the module should skip.

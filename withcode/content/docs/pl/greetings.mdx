@@ -1,0 +1,23 @@
+# Powitania i zmienne
+
+Edytor powitań pokazuje podgląd na żywo w stylu Discorda.
+
+## Zmienne
+
+| Zmienna         | Wynik                          |
+| --------------- | ------------------------------ |
+| `{user}`        | wzmianka nowej osoby, np. @Ola |
+| `{username}`    | nazwa bez wzmianki             |
+| `{server}`      | nazwa serwera                  |
+| `{memberCount}` | liczba członków po dołączeniu  |
+
+## Przykład
+
+```text
+Cześć {user}! Witamy na {server} — jesteś {memberCount}. osobą 🎉
+Zajrzyj na #regulamin i odbierz role na #role.
+```
+
+## Bezpieczeństwo
+
+Treść jest oczyszczana z HTML, a `@everyone` i `@here` są neutralizowane, żeby powitanie nie pingowało całego serwera.

@@ -1,0 +1,23 @@
+# Greetings and variables
+
+The greeting editor shows a live Discord-style preview.
+
+## Variables
+
+| Variable        | Result                               |
+| --------------- | ------------------------------------ |
+| `{user}`        | mention of the new member, e.g. @Ola |
+| `{username}`    | name without a mention               |
+| `{server}`      | server name                          |
+| `{memberCount}` | member count after joining           |
+
+## Example
+
+```text
+Hi {user}! Welcome to {server} — you are member #{memberCount} 🎉
+Read #rules and grab your roles in #roles.
+```
+
+## Safety
+
+Content is stripped of HTML, and `@everyone` and `@here` are neutralised so a greeting never pings the whole server.

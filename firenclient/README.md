@@ -21,16 +21,40 @@ Klient Minecraft (Fabric **1.21.4**) z nowoczesnym ClickGUI: ciemny motyw z bia�
 
 Konfiguracja zapisuje się w `.minecraft/config/firenclient.json`.
 
-## Działające moduły
-- **KillAura**:
-  - **Cel:** tryby Single (trzyma cel), Switch (z opóźnieniem) i Multi; priorytet Distance / Health / Angle / HurtTime; osobny zasięg ataku i celowania (Aim range); limit FOV.
-  - **Rotacje:** Silent (kamera stoi, obraca się tylko to, co widzi serwer) albo Client; Move fix (ruch zgodny z rotacją serwera, klawisze dobierane pod kamerę); płynne obracanie ze zmienną prędkością, dryfem punktu celowania i mikro-drganiami; dopasowanie do czułości myszy; punkt celowania Nearest / Center / Head.
-  - **Atak:** Raycast (cios tylko gdy promień faktycznie trafia w hitbox, nie przez ściany); timing Cooldown (próg %) albo CPS min/max z losowością; Smart HurtTime; Crit sync (czeka na fazę opadania skoku, żeby ciosy były krytyczne).
-  - **Filtry:** gracze, moby, zwierzęta, niewidzialni, drużyna, AntiBot (gracz musi być na liście TAB), tylko z bronią, pauza przy jedzeniu.
-  - **Target ESP:** animowany pierścień wokół celu; Target HUD z paskiem życia.
-- **Sprint**, **Fullbright**, **ClickGUI** i **HUD** (watermark, FPS, XYZ, animowana ArrayList, Target HUD z paskiem życia celu KillAury).
+## Moduły
 
-Pozostałe moduły mają gotowe ustawienia w GUI, ale ich logika nie jest jeszcze zaimplementowana.
+**Combat**
+- **KillAura**: ciche rotacje i move fix, „ludzkie” obracanie, raycast, cooldown lub CPS, Smart HurtTime, Crit sync, AntiBot, filtry. Target ESP w stylach: Ring, Circle, Box, Orbit i Glow, w kolorze motywu albo własnym.
+- **TriggerBot**: atakuje, gdy celownik jest na celu, z losowym opóźnieniem i progiem cooldownu.
+- **Velocity**: zmniejsza odrzut z ciosów i eksplozji (% poziomo i pionowo).
+- **AutoClicker**: losowy CPS dla lewego i prawego przycisku.
+- **Criticals**: tryb Packet albo Jump.
+- **AutoTotem**: trzyma totem w drugiej ręce.
+
+**Movement**
+- **Sprint**: tryb Legit albo Omni.
+- **Speed**: tryb Strafe (bhop) albo Ground.
+- **Flight**: tryb Motion albo Vanilla, z anti-kickiem.
+- **NoFall**, **Step**.
+
+**Render**
+- **HUD**: watermark, FPS, XYZ, ArrayList z akcentem, Target HUD.
+- **ClickGUI**: motyw Mono, Ocean, Rose, Mint, Sunset, Violet albo Custom z color pickerem; rozmycie tła.
+- **ESP**: tryb Box (3D), 2D (z paskiem życia) albo Glow; osobne kolory dla graczy, mobów i zwierząt.
+- **Tracers**: kolor według dystansu albo stały; punkt Feet, Body albo Head; grubość linii.
+- **Nametags**: nick, HP z kolorem i dystans; zastępuje vanilla nametagi.
+- **ChestESP**: skrzynie, Ender chesty, shulkery i beczki.
+- **Fullbright**: tryb Gamma albo Night vision.
+
+**Player**
+- **AutoTool**, **FastPlace**, **ChestStealer**.
+
+**World**
+- **Scaffold**: ciche rotacje, Tower, Keep Y, Extend.
+- **Timer**.
+- **OreESP**: diamenty, Ancient debris, emeraldy, złoto, żelazo, redstone, lapis i węgiel.
+
+W GUI każde ustawienie koloru ma color picker (pole HSV i pasek odcienia). Opcje z wieloma wartościami wybierasz jako „chipy”.
 
 ## Budowanie
 ```

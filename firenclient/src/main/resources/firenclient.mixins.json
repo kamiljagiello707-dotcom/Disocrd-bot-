@@ -4,10 +4,17 @@
   "package": "pl.firen.client.mixin",
   "compatibilityLevel": "JAVA_21",
   "client": [
+    "ClientPlayNetworkHandlerMixin",
     "ClientPlayerEntityMixin",
+    "ClientPlayerInteractionManagerMixin",
     "EntityMixin",
+    "EntityRendererMixin",
     "KeyboardInputMixin",
-    "LivingEntityMixin"
+    "LivingEntityMixin",
+    "MinecraftClientAccessor",
+    "MinecraftClientMixin",
+    "RenderTickCounterMixin",
+    "SimpleOptionAccessor"
   ],
   "injectors": {
     "defaultRequire": 1

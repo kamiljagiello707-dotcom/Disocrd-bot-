@@ -1,13 +1,6 @@
 package pl.firen.client.module.modules;
 
-import com.mojang.blaze3d.systems.RenderSystem;
 import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderContext;
-import net.minecraft.client.gl.ShaderProgramKeys;
-import net.minecraft.client.render.BufferBuilder;
-import net.minecraft.client.render.BufferRenderer;
-import net.minecraft.client.render.Tessellator;
-import net.minecraft.client.render.VertexFormat;
-import net.minecraft.client.render.VertexFormats;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
@@ -22,11 +15,14 @@ import net.minecraft.util.math.Box;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.RaycastContext;
-import org.joml.Matrix4f;
 import pl.firen.client.module.Category;
 import pl.firen.client.module.Module;
 import pl.firen.client.rotation.RotationManager;
 import pl.firen.client.setting.BooleanSetting;
+import pl.firen.client.setting.ColorSetting;
+import pl.firen.client.gui.Theme;
+import pl.firen.client.render.OutlineManager;
+import pl.firen.client.render.Render3D;
 import pl.firen.client.setting.ModeSetting;
 import pl.firen.client.setting.NumberSetting;
 import pl.firen.client.util.Anim;
@@ -79,7 +75,9 @@ public class KillAura extends Module {
     public final BooleanSetting pauseOnEat = add(new BooleanSetting("Pause on eat", true));
 
     // --- Wygląd
-    public final BooleanSetting targetEsp = add(new BooleanSetting("Target ESP", true));
+    public final ModeSetting espMode = add(new ModeSetting("Target ESP", "Ring", "Ring", "Circle", "Box", "Orbit", "Glow", "Off"));
+    public final BooleanSetting espTheme = add(new BooleanSetting("ESP theme color", true));
+    public final ColorSetting espColor = add(new ColorSetting("ESP color", 0xFFFF4D5E));
 
     private final Random random = new Random();
     private LivingEntity target, espTarget;
@@ -102,6 +100,8 @@ public class KillAura extends Module {
         minCps.visibleWhen(() -> timing.is("CPS"));
         maxCps.visibleWhen(() -> timing.is("CPS"));
         smartHurt.visibleWhen(() -> timing.is("CPS"));
+        espTheme.visibleWhen(() -> !espMode.is("Off"));
+        espColor.visibleWhen(() -> !espMode.is("Off") && !espTheme.get());
     }
 
     @Override public String getSuffix() { return mode.get(); }
@@ -204,8 +204,13 @@ public class KillAura extends Module {
 
     // ------------------------------------------------------------ atak (po ruchu, rotacja jest już na serwerze)
 
+    private int espRgb() {
+        return (espTheme.get() ? Theme.accent() : espColor.get()) & 0xFFFFFF;
+    }
+
     @Override
     public void onTick() {
+        if (target != null && espMode.is("Glow")) OutlineManager.add(target.getId(), espRgb());
         if (target == null || mc.interactionManager == null || mc.currentScreen != null) return;
 
         List<LivingEntity> inRange = findTargets(range.get());
@@ -362,60 +367,73 @@ public class KillAura extends Module {
         return new float[]{yaw + stepYaw, MathHelper.clamp(pitch + stepPitch, -90f, 90f)};
     }
 
-    // ------------------------------------------------------------ Target ESP (animowany pierścień)
+    // ------------------------------------------------------------ Target ESP (Ring / Circle / Box / Orbit)
 
     @Override
     public void onRenderWorld(WorldRenderContext ctx) {
         float dt = 1f / 60f;
-        LivingEntity t = isEnabled() && targetEsp.get() ? target : null;
+        LivingEntity t = isEnabled() && !espMode.is("Off") && !espMode.is("Glow") ? target : null;
         if (t != null) espTarget = t;
         espAnim = Anim.approach(espAnim, t != null ? 1f : 0f, dt, 10f);
         if (espAnim < 0.01f || espTarget == null || ctx.matrixStack() == null) return;
 
         float delta = ctx.tickCounter().getTickDelta(true);
         Vec3d pos = espTarget.getLerpedPos(delta).subtract(ctx.camera().getPos());
-        double radius = espTarget.getWidth() * 0.85;
-        double height = espTarget.getHeight();
-        double time = (System.currentTimeMillis() % 1800) / 1800.0 * Math.PI * 2;
-        double wave = Math.sin(time) * 0.5 + 0.5;
-        double tail = Math.cos(time) > 0 ? -0.32 : 0.32; // smuga za ruchem pierścienia
+        double w = espTarget.getWidth(), height = espTarget.getHeight();
+        long now = System.currentTimeMillis();
+        int rgb = espRgb();
+        int a = (int) (255 * espAnim);
+        // lekko czerwieni się, gdy cel dostaje obrażenia
+        if (espTarget.hurtTime > 0) rgb = Anim.lerpColor(0xFF000000 | rgb, 0xFFFF3B3B, espTarget.hurtTime / 10f) & 0xFFFFFF;
 
         MatrixStack ms = ctx.matrixStack();
+        Render3D.begin();
         ms.push();
-        ms.translate(pos.x, pos.y + wave * height, pos.z);
-        Matrix4f mat = ms.peek().getPositionMatrix();
-
-        RenderSystem.enableBlend();
-        RenderSystem.defaultBlendFunc();
-        RenderSystem.disableCull();
-        RenderSystem.disableDepthTest();
-        RenderSystem.depthMask(false);
-        RenderSystem.setShader(ShaderProgramKeys.POSITION_COLOR);
-
-        int a = (int) (170 * espAnim);
-        BufferBuilder bb = Tessellator.getInstance().begin(VertexFormat.DrawMode.TRIANGLE_STRIP, VertexFormats.POSITION_COLOR);
-        for (int i = 0; i <= 64; i++) {
-            double ang = i / 64.0 * Math.PI * 2;
-            float x = (float) (Math.cos(ang) * radius), z = (float) (Math.sin(ang) * radius);
-            bb.vertex(mat, x, 0, z).color(255, 255, 255, a);
-            bb.vertex(mat, x, (float) tail, z).color(255, 255, 255, 0);
+        ms.translate(pos.x, pos.y, pos.z);
+        switch (espMode.get()) {
+            case "Circle" -> {
+                ms.push();
+                ms.translate(0, 0.02, 0);
+                double r = w * 0.9;
+                Render3D.ring(ms, r - 0.06, r, (a << 24) | rgb, (a << 24) | rgb, 72);
+                Render3D.ring(ms, r * 0.35, r - 0.06, ((int) (a * 0.05) << 24) | rgb, ((int) (a * 0.35) << 24) | rgb, 72);
+                ms.pop();
+            }
+            case "Box" -> {
+                net.minecraft.util.math.Box box = new net.minecraft.util.math.Box(-w / 2, 0, -w / 2, w / 2, height, w / 2).expand(0.05);
+                Render3D.boxFill(ms, box, ((int) (a * 0.22) << 24) | rgb);
+                Render3D.boxLines(ms, box, (a << 24) | rgb, 2f);
+            }
+            case "Orbit" -> {
+                var rot = ctx.camera().getRotation();
+                org.joml.Vector3f right = new org.joml.Vector3f(1, 0, 0).rotate(rot);
+                org.joml.Vector3f up = new org.joml.Vector3f(0, 1, 0).rotate(rot);
+                double r = w * 0.95;
+                for (int orb = 0; orb < 3; orb++) {
+                    for (int trail = 0; trail < 14; trail++) {
+                        double time = (now - trail * 18) / 650.0 + orb * (Math.PI * 2 / 3);
+                        double yy = height * (0.5 + 0.38 * Math.sin(time * 0.7 + orb));
+                        Vec3d c = new Vec3d(Math.cos(time) * r, yy, Math.sin(time) * r);
+                        float size = 0.075f * (1 - trail / 16f);
+                        int al = (int) (a * (1 - trail / 14f));
+                        Render3D.dot(ms, c, size * 2.2f, ((al / 3) << 24) | rgb, right, up);
+                        Render3D.dot(ms, c, size, (al << 24) | 0xFFFFFF, right, up);
+                    }
+                }
+            }
+            default -> { // Ring
+                double time = (now % 1800) / 1800.0 * Math.PI * 2;
+                double wave = Math.sin(time) * 0.5 + 0.5;
+                float tail = Math.cos(time) > 0 ? -0.32f : 0.32f;
+                ms.push();
+                ms.translate(0, wave * height, 0);
+                double r = w * 0.85;
+                Render3D.ringBand(ms, r, tail, ((int) (a * 0.65) << 24) | rgb, 72);
+                Render3D.ring(ms, r - 0.015, r + 0.015, (a << 24) | rgb, (a << 24) | rgb, 72);
+                ms.pop();
+            }
         }
-        BufferRenderer.drawWithGlobalProgram(bb.end());
-
-        // cienka jasna linia na krawędzi pierścienia
-        BufferBuilder line = Tessellator.getInstance().begin(VertexFormat.DrawMode.TRIANGLE_STRIP, VertexFormats.POSITION_COLOR);
-        for (int i = 0; i <= 64; i++) {
-            double ang = i / 64.0 * Math.PI * 2;
-            float x = (float) (Math.cos(ang) * radius), z = (float) (Math.sin(ang) * radius);
-            line.vertex(mat, x, 0.012f, z).color(255, 255, 255, (int) (255 * espAnim));
-            line.vertex(mat, x, -0.012f, z).color(255, 255, 255, (int) (255 * espAnim));
-        }
-        BufferRenderer.drawWithGlobalProgram(line.end());
-
-        RenderSystem.depthMask(true);
-        RenderSystem.enableDepthTest();
-        RenderSystem.enableCull();
-        RenderSystem.disableBlend();
         ms.pop();
+        Render3D.end();
     }
 }

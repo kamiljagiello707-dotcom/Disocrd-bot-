@@ -41,6 +41,9 @@ public final class HudRenderer {
         m.scale(s, s, 1f);
         Render2D.alpha = 1f;
 
+        FirenClient.modules().renderHud(ctx, s); // 2D ESP, Nametags (pod resztą HUD)
+        Render2D.alpha = 1f;
+
         if (hud.watermark.get()) watermark(ctx, mc, hud);
         if (hud.arrayList.get()) arrayList(ctx, hud, vw, dt);
         if (hud.info.get()) coords(ctx, mc, vh);
@@ -59,8 +62,8 @@ public final class HudRenderer {
         Render2D.shadow(ctx, x, y + 2, w, h, 9, 10, 0x80000000);
         Render2D.gradientV(ctx, x, y, w, h, 9, 0xE6141418, 0xE60A0A0D);
         Render2D.outline(ctx, x, y, w, h, 9, 0.5f, 0x1CFFFFFF);
-        Render2D.gradientV(ctx, x + 5, y + 5, 14, 14, 5, 0xFFFFFFFF, 0xFFD2D2D8);
-        Fonts.drawCentered(ctx, Fonts.I_FIRE, Fonts.ICONS, x + 12, y + 8.5f, Theme.BLACK);
+        Render2D.gradientV(ctx, x + 5, y + 5, 14, 14, 5, Theme.accent(), Theme.accent2());
+        Fonts.drawCentered(ctx, Fonts.I_FIRE, Fonts.ICONS, x + 12, y + 8.5f, Theme.onAccent());
         float tx = x + 25;
         Fonts.draw(ctx, "FirenClient", Fonts.SEMIBOLD, tx, y + 8, Theme.TEXT);
         tx += Fonts.width("FirenClient", Fonts.SEMIBOLD) + 9;
@@ -88,7 +91,8 @@ public final class HudRenderer {
             Render2D.alpha = t;
             Render2D.shadow(ctx, x, y + 1, w, h, 6, 6, 0x60000000);
             Render2D.round(ctx, x, y, w, h, 6, 0xD90C0C0F);
-            Render2D.round(ctx, x + w - 3, y + 4, 1.5f, h - 8, 0.75f, 0xFFFFFFFF);
+            Render2D.round(ctx, x + w - 3, y + 4, 1.5f, h - 8, 0.75f, Theme.accent());
+            Render2D.shadow(ctx, x + w - 3, y + 4, 1.5f, h - 8, 0.75f, 4, Theme.accentAlpha(0x70));
             Fonts.draw(ctx, md.getName(), Fonts.SEMIBOLD, x + 7, y + 4.5f, Theme.TEXT);
             if (md.getSuffix() != null) {
                 Fonts.draw(ctx, md.getSuffix(), Fonts.REGULAR, x + 7 + Fonts.width(md.getName(), Fonts.SEMIBOLD) + 4, y + 4.5f, Theme.TEXT_3);
@@ -136,9 +140,9 @@ public final class HudRenderer {
         Render2D.shadow(ctx, x, y + 3, w, h, 12, 12, 0x90000000);
         Render2D.gradientV(ctx, x, y, w, h, 12, 0xEB141418, 0xEB0A0A0D);
         Render2D.outline(ctx, x, y, w, h, 12, 0.5f, 0x1EFFFFFF);
-        Render2D.gradientV(ctx, x + 8, y + 8, 28, 28, 9, 0xFF34343C, 0xFF1C1C22);
+        Render2D.gradientV(ctx, x + 8, y + 8, 28, 28, 9, Theme.accent(), Theme.accent2());
         String initial = lastTarget.getName().getString().isEmpty() ? "?" : lastTarget.getName().getString().substring(0, 1).toUpperCase();
-        Fonts.drawCentered(ctx, initial, Fonts.TITLE, x + 22, y + 15, Theme.WHITE);
+        Fonts.drawCentered(ctx, initial, Fonts.TITLE, x + 22, y + 15, Theme.onAccent());
 
         String name = Fonts.trim(lastTarget.getName().getString(), Fonts.SEMIBOLD, w - 90);
         Fonts.draw(ctx, name, Fonts.SEMIBOLD, x + 44, y + 9, Theme.TEXT);
@@ -146,7 +150,7 @@ public final class HudRenderer {
         Fonts.drawRight(ctx, hpText, Fonts.SMALL, x + w - 10, y + 10, Theme.TEXT_2);
         float bx = x + 44, by = y + 27, bw = w - 54;
         Render2D.round(ctx, bx, by, bw, 6, 3, 0xFF26262C);
-        Render2D.gradientH(ctx, bx, by, Math.max(6, bw * healthAnim), 6, 3, 0xFF9C9CA4, 0xFFFFFFFF);
+        Render2D.gradientH(ctx, bx, by, Math.max(6, bw * healthAnim), 6, 3, Theme.accent2(), Theme.accent());
 
         m.pop();
         Render2D.alpha = 1f;

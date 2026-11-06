@@ -18,20 +18,25 @@ public final class ModuleManager {
     public ModuleManager() {
         // Combat
         modules.add(new KillAura());
+        modules.add(new TriggerBot());
         modules.add(new Velocity());
         modules.add(new AutoClicker());
         modules.add(new Criticals());
+        modules.add(new AutoTotem());
         // Movement
         modules.add(new Sprint());
-        modules.add(new Flight());
         modules.add(new Speed());
+        modules.add(new Flight());
         modules.add(new NoFall());
+        modules.add(new Step());
         // Render
         modules.add(new Hud());
         modules.add(new ClickGui());
         modules.add(new Esp());
-        modules.add(new Fullbright());
         modules.add(new Tracers());
+        modules.add(new Nametags());
+        modules.add(new ChestEsp());
+        modules.add(new Fullbright());
         // Player
         modules.add(new AutoTool());
         modules.add(new FastPlace());
@@ -39,7 +44,7 @@ public final class ModuleManager {
         // World
         modules.add(new Scaffold());
         modules.add(new Timer());
-        modules.add(new XRay());
+        modules.add(new OreEsp());
     }
 
     public List<Module> all() { return modules; }
@@ -64,7 +69,13 @@ public final class ModuleManager {
         }
     }
 
+    public void renderHud(net.minecraft.client.gui.DrawContext ctx, float s) {
+        if (MinecraftClient.getInstance().player == null || MinecraftClient.getInstance().world == null) return;
+        for (Module m : modules) m.onRenderHud(ctx, s);
+    }
+
     public void renderWorld(net.fabricmc.fabric.api.client.rendering.v1.WorldRenderContext context) {
+        pl.firen.client.render.Project.capture(context);
         if (MinecraftClient.getInstance().player == null) return;
         for (Module m : modules) m.onRenderWorld(context);
     }

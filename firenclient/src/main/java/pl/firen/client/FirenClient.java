@@ -62,6 +62,7 @@ public final class FirenClient implements ClientModInitializer {
         HudRenderCallback.EVENT.register(hud::render);
         ClientTickEvents.START_CLIENT_TICK.register(client -> {
             RotationManager.beginTick();
+            pl.firen.client.render.OutlineManager.clear();
             modules.preTick(client);
             RotationManager.endTick();
         });

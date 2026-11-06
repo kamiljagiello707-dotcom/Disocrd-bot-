@@ -46,6 +46,8 @@ public abstract class Module {
     /** Wywoływane na początku ticka, przed wysłaniem pakietu ruchu (rotacje). */
     public void onPreTick() {}
     public void onRenderWorld(net.fabricmc.fabric.api.client.rendering.v1.WorldRenderContext context) {}
+    /** Rysowanie 2D na HUD; s = skala (1 jednostka = 2 px). */
+    public void onRenderHud(net.minecraft.client.gui.DrawContext ctx, float s) {}
 
     /** Dodatkowa informacja wyświetlana w liście modułów na HUD (np. tryb). */
     public String getSuffix() { return null; }

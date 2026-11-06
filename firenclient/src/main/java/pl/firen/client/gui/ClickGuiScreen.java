@@ -13,6 +13,7 @@ import pl.firen.client.module.modules.ClickGui;
 import pl.firen.client.render.Fonts;
 import pl.firen.client.render.Render2D;
 import pl.firen.client.setting.BooleanSetting;
+import pl.firen.client.setting.ColorSetting;
 import pl.firen.client.setting.ModeSetting;
 import pl.firen.client.setting.NumberSetting;
 import pl.firen.client.setting.Setting;
@@ -54,6 +55,9 @@ public class ClickGuiScreen extends Screen {
     private NumberSetting slider;
     private float sliderX, sliderW;
     private Module binding;
+    private ColorSetting colorDrag;
+    private int colorDragPart; // 0 = pole SV, 1 = pasek odcienia
+    private float cdX, cdY, cdW, cdH;
 
     public ClickGuiScreen() {
         super(Text.literal("FirenClient"));
@@ -146,9 +150,9 @@ public class ClickGuiScreen extends Screen {
         Render2D.outline(ctx, sx, sy, sw, sh, 12, 0.5f, STROKE);
 
         // Logo
-        Render2D.shadow(ctx, sx + 10, sy + 11, 24, 24, 8, 10, 0x40FFFFFF);
-        Render2D.gradientV(ctx, sx + 10, sy + 10, 24, 24, 8, 0xFFFFFFFF, 0xFFD6D6DC);
-        Fonts.drawCentered(ctx, Fonts.I_FIRE, Fonts.ICONS, sx + 22, sy + 17.5f, BLACK);
+        Render2D.shadow(ctx, sx + 10, sy + 11, 24, 24, 8, 10, Theme.accentAlpha(0x50));
+        Render2D.gradientV(ctx, sx + 10, sy + 10, 24, 24, 8, Theme.accent(), Theme.accent2());
+        Fonts.drawCentered(ctx, Fonts.I_FIRE, Fonts.ICONS, sx + 22, sy + 17.5f, Theme.onAccent());
         Fonts.draw(ctx, "FirenClient", Fonts.SEMIBOLD, sx + 41, sy + 12, TEXT);
         Fonts.draw(ctx, "v" + FirenClient.VERSION, Fonts.SMALL, sx + 41, sy + 23, TEXT_3);
         hit(sx, sy, sx + sw, sy + 40, b -> {
@@ -165,8 +169,8 @@ public class ClickGuiScreen extends Screen {
 
         if (active >= 0) {
             float py = listY + catAnim;
-            Render2D.shadow(ctx, sx + 8, py + 1, sw - 16, CAT_ROW - 4, 8, 10, 0x30FFFFFF);
-            Render2D.round(ctx, sx + 8, py, sw - 16, CAT_ROW - 4, 8, WHITE);
+            Render2D.shadow(ctx, sx + 8, py + 1, sw - 16, CAT_ROW - 4, 8, 10, Theme.accentAlpha(0x40));
+            Render2D.round(ctx, sx + 8, py, sw - 16, CAT_ROW - 4, 8, Theme.accent());
         }
 
         for (int i = 0; i < cats.length; i++) {
@@ -175,7 +179,7 @@ public class ClickGuiScreen extends Screen {
             boolean hover = mx >= sx + 8 && mx < sx + sw - 8 && my >= ry && my < ry + CAT_ROW - 4;
             float t = active < 0 ? 0f : Math.max(0f, 1f - Math.abs(catAnim - i * CAT_ROW) / CAT_ROW);
             if (hover && i != active) Render2D.round(ctx, sx + 8, ry, sw - 16, CAT_ROW - 4, 8, 0x0DFFFFFF);
-            int col = Anim.lerpColor(hover ? TEXT : TEXT_2, BLACK, t);
+            int col = Anim.lerpColor(hover ? TEXT : TEXT_2, Theme.onAccent(), t);
             Fonts.drawCentered(ctx, c.icon, Fonts.ICONS, sx + 23, ry + 7.5f, col);
             Fonts.draw(ctx, c.display, Fonts.SEMIBOLD, sx + 36, ry + 7, col);
 
@@ -185,7 +189,7 @@ public class ClickGuiScreen extends Screen {
                 float bw = Math.max(14, Fonts.width(n, Fonts.SMALL) + 8);
                 float bx = sx + sw - 14 - bw;
                 Render2D.round(ctx, bx, ry + 5, bw, 12, 6, Anim.lerpColor(0x1AFFFFFF, 0xFF000000, t));
-                Fonts.drawCentered(ctx, n, Fonts.SMALL, bx + bw / 2f, ry + 6.5f, Anim.lerpColor(TEXT, WHITE, t));
+                Fonts.drawCentered(ctx, n, Fonts.SMALL, bx + bw / 2f, ry + 6.5f, Anim.lerpColor(TEXT, Theme.accent(), t));
             }
             hit(sx + 8, ry, sx + sw - 8, ry + CAT_ROW - 4, b -> {
                 if (category != c || !query.isEmpty()) { category = c; query = ""; scrollTarget = 0; }
@@ -219,7 +223,7 @@ public class ClickGuiScreen extends Screen {
         // Wyszukiwarka
         float sw = 150, sh = 24, sx = cx + cw - sw, sy = cy + 1;
         Render2D.round(ctx, sx, sy, sw, sh, 9, FIELD);
-        Render2D.outline(ctx, sx, sy, sw, sh, 9, 0.5f, q.isEmpty() ? STROKE : 0x80FFFFFF);
+        Render2D.outline(ctx, sx, sy, sw, sh, 9, 0.5f, q.isEmpty() ? STROKE : Theme.accentAlpha(0x90));
         Fonts.draw(ctx, Fonts.I_SEARCH, Fonts.ICONS, sx + 10, sy + 8.5f, q.isEmpty() ? TEXT_3 : WHITE);
         boolean caret = (System.currentTimeMillis() / 530) % 2 == 0;
         if (q.isEmpty()) Fonts.draw(ctx, "Szukaj modułu…", Fonts.REGULAR, sx + 25, sy + 8, TEXT_3);
@@ -235,7 +239,7 @@ public class ClickGuiScreen extends Screen {
         ctx.enableScissor((int) (cx - 8), (int) top, (int) Math.ceil(cx + cw + 8), (int) Math.ceil(bottom));
         for (Module md : modules) {
             md.expandAnim = Anim.approach(md.expandAnim, md.expanded ? 1f : 0f, dt, 16f);
-            float h = CARD_HEAD + settingsHeight(md) * md.expandAnim;
+            float h = CARD_HEAD + settingsHeight(md, colW) * md.expandAnim;
             int col = colH[0] <= colH[1] ? 0 : 1;
             float kx = cx + col * (colW + gap);
             float ky = top + colH[col] - scroll;
@@ -265,15 +269,38 @@ public class ClickGuiScreen extends Screen {
         }
     }
 
-    private static float settingsHeight(Module m) {
+    private static final float ROW_COLOR = 20, COLOR_PICKER = 76, CHIP_H = 16, CHIP_GAP = 4;
+
+    private static float settingsHeight(Module m, float cardW) {
+        float iw = cardW - 26;
         float h = 10;
         for (Setting<?> st : m.getSettings()) {
             if (!st.isVisible()) continue;
             if (st instanceof BooleanSetting) h += ROW_BOOL;
             else if (st instanceof NumberSetting) h += ROW_NUM;
-            else if (st instanceof ModeSetting) h += ROW_MODE;
+            else if (st instanceof ModeSetting md) h += useChips(md) ? 16 + chipLayout(md, iw)[0] + 4 : ROW_MODE;
+            else if (st instanceof ColorSetting c) h += ROW_COLOR + COLOR_PICKER * c.openAnim;
         }
         return h + ROW_BIND + 4;
+    }
+
+    private static boolean useChips(ModeSetting md) {
+        return md.getModes().size() > 4;
+    }
+
+    /** Układ "chipów" z zawijaniem: [0] = wysokość, potem x,y dla każdego trybu. */
+    private static float[] chipLayout(ModeSetting md, float iw) {
+        List<String> modes = md.getModes();
+        float[] out = new float[1 + modes.size() * 3];
+        float x = 0, y = 0;
+        for (int i = 0; i < modes.size(); i++) {
+            float w = Fonts.width(modes.get(i), Fonts.SMALL) + 16;
+            if (x > 0 && x + w > iw) { x = 0; y += CHIP_H + CHIP_GAP; }
+            out[1 + i * 3] = x; out[2 + i * 3] = y; out[3 + i * 3] = w;
+            x += w + CHIP_GAP;
+        }
+        out[0] = y + CHIP_H;
+        return out;
     }
 
     private void renderCard(DrawContext ctx, Module md, float x, float y, float w, float h,
@@ -284,11 +311,11 @@ public class ClickGuiScreen extends Screen {
         md.toggleAnim = Anim.approach(md.toggleAnim, md.isEnabled() ? 1f : 0f, dt, 16f);
         float t = md.toggleAnim;
 
-        if (t > 0.01f) Render2D.shadow(ctx, x, y + 2, w, h, 12, 14, Anim.withAlpha(0x2EFFFFFF, t));
+        if (t > 0.01f) Render2D.shadow(ctx, x, y + 2, w, h, 12, 14, Anim.withAlpha(Theme.accentAlpha(0x34), t));
         Render2D.shadow(ctx, x, y + 3, w, h, 12, 8, 0x50000000);
         Render2D.gradientV(ctx, x, y, w, h, 12,
                 Anim.lerpColor(CARD, CARD_HOVER, md.hoverAnim), Anim.lerpColor(0xFF0F0F12, 0xFF141418, md.hoverAnim));
-        Render2D.outline(ctx, x, y, w, h, 12, 0.5f, Anim.lerpColor(STROKE, 0x66FFFFFF, t));
+        Render2D.outline(ctx, x, y, w, h, 12, 0.5f, Anim.lerpColor(STROKE, Theme.accentAlpha(0x80), t));
 
         // Nazwa + opis
         Fonts.draw(ctx, md.getName(), Fonts.SEMIBOLD, x + 13, y + 10, TEXT);
@@ -297,10 +324,10 @@ public class ClickGuiScreen extends Screen {
 
         // Przełącznik
         float tw = 24, th = 13, tx = x + w - 13 - tw, ty = y + 12.5f;
-        Render2D.round(ctx, tx, ty, tw, th, th / 2f, Anim.lerpColor(TRACK, WHITE, t));
-        if (t > 0.01f) Render2D.shadow(ctx, tx, ty, tw, th, th / 2f, 8, Anim.withAlpha(0x55FFFFFF, t));
+        Render2D.round(ctx, tx, ty, tw, th, th / 2f, Anim.lerpColor(TRACK, Theme.accent(), t));
+        if (t > 0.01f) Render2D.shadow(ctx, tx, ty, tw, th, th / 2f, 8, Anim.withAlpha(Theme.accentAlpha(0x60), t));
         float knob = tx + 6.5f + t * 11f;
-        Render2D.circle(ctx, knob, ty + th / 2f, 4.5f, Anim.lerpColor(0xFFB5B5BD, BLACK, t));
+        Render2D.circle(ctx, knob, ty + th / 2f, 4.5f, Anim.lerpColor(0xFFB5B5BD, Theme.onAccent(), t));
 
         // Strzałka rozwijania
         float ax = tx - 16, ay = y + 19;
@@ -340,8 +367,8 @@ public class ClickGuiScreen extends Screen {
                 b.anim = Anim.approach(b.anim, b.get() ? 1f : 0f, dt, 18f);
                 Fonts.draw(ctx, b.getName(), Fonts.REGULAR, ix, ry + 5, TEXT_2);
                 float bw = 18, bh = 10, bx = ix + iw - bw, by = ry + 4;
-                Render2D.round(ctx, bx, by, bw, bh, 5, Anim.lerpColor(TRACK, WHITE, b.anim));
-                Render2D.circle(ctx, bx + 5 + b.anim * 8, by + 5, 3.5f, Anim.lerpColor(0xFFB5B5BD, BLACK, b.anim));
+                Render2D.round(ctx, bx, by, bw, bh, 5, Anim.lerpColor(TRACK, Theme.accent(), b.anim));
+                Render2D.circle(ctx, bx + 5 + b.anim * 8, by + 5, 3.5f, Anim.lerpColor(0xFFB5B5BD, Theme.onAccent(), b.anim));
                 if (rowVisible) hit(ix - 4, clampY(ry, clipTop, clipBottom), ix + iw + 4, clampY(ry + ROW_BOOL, clipTop, clipBottom), k -> b.toggle());
                 ry += ROW_BOOL;
             } else if (st instanceof NumberSetting n) {
@@ -352,7 +379,7 @@ public class ClickGuiScreen extends Screen {
                 Fonts.drawRight(ctx, n.display(), Fonts.SEMIBOLD, ix + iw, ry + 3, TEXT);
                 float ty2 = ry + 17;
                 Render2D.round(ctx, ix, ty2, iw, 4, 2, TRACK);
-                Render2D.gradientH(ctx, ix, ty2, Math.max(4, iw * n.anim), 4, 2, 0xFF8C8C94, WHITE);
+                Render2D.gradientH(ctx, ix, ty2, Math.max(4, iw * n.anim), 4, 2, Theme.accent2(), Theme.accent());
                 float kx = ix + iw * n.anim;
                 Render2D.shadow(ctx, kx - 5, ty2 - 3, 10, 10, 5, 5, 0x60000000);
                 Render2D.circle(ctx, kx, ty2 + 2, slider == n ? 5.5f : 4.5f, WHITE);
@@ -360,6 +387,69 @@ public class ClickGuiScreen extends Screen {
                     if (k == 0) { slider = n; sliderX = ix; sliderW = iw; }
                 });
                 ry += ROW_NUM;
+            } else if (st instanceof ModeSetting chip && useChips(chip)) {
+                List<String> modes = chip.getModes();
+                Fonts.draw(ctx, chip.getName(), Fonts.REGULAR, ix, ry + 3, TEXT_2);
+                float[] lay = chipLayout(chip, iw);
+                float cy0 = ry + 16;
+                for (int i = 0; i < modes.size(); i++) {
+                    float chx = ix + lay[1 + i * 3], chy = cy0 + lay[2 + i * 3], chw = lay[3 + i * 3];
+                    boolean active = chip.index() == i;
+                    boolean hov = mx >= chx && mx < chx + chw && my >= chy && my < chy + CHIP_H;
+                    Render2D.round(ctx, chx, chy, chw, CHIP_H, 7, active ? Theme.accent() : hov ? 0xFF26262C : 0xFF1C1C21);
+                    Fonts.drawCentered(ctx, modes.get(i), Fonts.SMALL, chx + chw / 2f, chy + 4.5f, active ? Theme.onAccent() : TEXT_2);
+                    final int idx = i;
+                    if (rowVisible) hit(chx, clampY(chy, clipTop, clipBottom), chx + chw, clampY(chy + CHIP_H, clipTop, clipBottom), k -> chip.setIndex(idx));
+                }
+                ry += 16 + lay[0] + 4;
+            } else if (st instanceof ColorSetting col) {
+                col.openAnim = Anim.approach(col.openAnim, col.open ? 1f : 0f, dt, 16f);
+                Fonts.draw(ctx, col.getName(), Fonts.REGULAR, ix, ry + 5, TEXT_2);
+                float swW = 26, swH = 12, swX = ix + iw - swW, swY = ry + 3;
+                Render2D.round(ctx, swX - 1, swY - 1, swW + 2, swH + 2, 6.5f, 0x40FFFFFF);
+                Render2D.round(ctx, swX, swY, swW, swH, 6, col.get() | 0xFF000000);
+                String hex = String.format("#%06X", col.get() & 0xFFFFFF);
+                Fonts.drawRight(ctx, hex, Fonts.SMALL, swX - 6, ry + 6, TEXT_3);
+                if (rowVisible) hit(ix - 4, clampY(ry, clipTop, clipBottom), ix + iw + 4, clampY(ry + ROW_COLOR, clipTop, clipBottom), k -> col.open = !col.open);
+                ry += ROW_COLOR;
+                if (col.openAnim > 0.01f) {
+                    float ph = COLOR_PICKER - 10, pw = iw - 20;
+                    float px = ix, py = ry + 2;
+                    int hueColor = 0xFF000000 | (java.awt.Color.HSBtoRGB(col.hue(), 1f, 1f) & 0xFFFFFF);
+                    if (colorDrag == col) {
+                        float u = Math.max(0, Math.min(1, (mx - cdX) / cdW)), v = Math.max(0, Math.min(1, (my - cdY) / cdH));
+                        if (colorDragPart == 0) col.setHsv(col.hue(), u, 1 - v);
+                        else col.setHsv(v, col.sat(), col.bri());
+                    }
+                    // pole nasycenia/jasności
+                    Render2D.gradientH(ctx, px, py, pw, ph, 6, 0xFFFFFFFF, hueColor);
+                    Render2D.gradientV(ctx, px, py, pw, ph, 6, 0x00000000, 0xFF000000);
+                    Render2D.outline(ctx, px, py, pw, ph, 6, 0.5f, 0x30FFFFFF);
+                    float kx = px + col.sat() * pw, ky = py + (1 - col.bri()) * ph;
+                    Render2D.circle(ctx, kx, ky, 4.5f, WHITE);
+                    Render2D.circle(ctx, kx, ky, 3.2f, col.get() | 0xFF000000);
+                    // pasek odcienia (pionowy)
+                    float hx = px + pw + 8, hw = 12;
+                    for (int i = 0; i < 6; i++) {
+                        int c1 = 0xFF000000 | (java.awt.Color.HSBtoRGB(i / 6f, 1, 1) & 0xFFFFFF);
+                        int c2 = 0xFF000000 | (java.awt.Color.HSBtoRGB((i + 1) / 6f, 1, 1) & 0xFFFFFF);
+                        float r = (i == 0 || i == 5) ? 0 : 0;
+                        Render2D.gradientV(ctx, hx, py + ph * i / 6f, hw, ph / 6f + 0.5f, r, c1, c2);
+                    }
+                    Render2D.outline(ctx, hx, py, hw, ph, 3, 0.5f, 0x30FFFFFF);
+                    float hy = py + col.hue() * ph;
+                    Render2D.round(ctx, hx - 2, hy - 2, hw + 4, 4, 2, WHITE);
+                    if (rowVisible && col.open) {
+                        final float fpx = px, fpy = py, fpw = pw, fph = ph, fhx = hx;
+                        hit(fpx, clampY(fpy, clipTop, clipBottom), fpx + fpw, clampY(fpy + fph, clipTop, clipBottom), k -> {
+                            colorDrag = col; colorDragPart = 0; cdX = fpx; cdY = fpy; cdW = fpw; cdH = fph;
+                        });
+                        hit(fhx - 2, clampY(fpy, clipTop, clipBottom), fhx + hw + 2, clampY(fpy + fph, clipTop, clipBottom), k -> {
+                            colorDrag = col; colorDragPart = 1; cdX = fhx; cdY = fpy; cdW = hw; cdH = fph;
+                        });
+                    }
+                    ry += COLOR_PICKER * col.openAnim;
+                }
             } else if (st instanceof ModeSetting md2) {
                 List<String> modes = md2.getModes();
                 Fonts.draw(ctx, md2.getName(), Fonts.REGULAR, ix, ry + 3, TEXT_2);
@@ -377,11 +467,11 @@ public class ClickGuiScreen extends Screen {
                 float pillX = segX[lo] + (segX[hi] - segX[lo]) * frac;
                 float pillW = (segX[lo + 1] - segX[lo]) + ((segX[hi + 1] - segX[hi]) - (segX[lo + 1] - segX[lo])) * frac;
                 Render2D.round(ctx, ix, segY, iw, segH, 7, 0xFF1C1C21);
-                Render2D.round(ctx, ix + pillX + 2, segY + 2, pillW - 4, segH - 4, 5, WHITE);
+                Render2D.round(ctx, ix + pillX + 2, segY + 2, pillW - 4, segH - 4, 5, Theme.accent());
                 for (int i = 0; i < modes.size(); i++) {
                     float active = Math.max(0f, 1f - Math.abs(md2.anim - i));
                     float mid = ix + (segX[i] + segX[i + 1]) / 2f;
-                    Fonts.drawCentered(ctx, modes.get(i), Fonts.SMALL, mid, segY + 4.5f, Anim.lerpColor(TEXT_2, BLACK, active));
+                    Fonts.drawCentered(ctx, modes.get(i), Fonts.SMALL, mid, segY + 4.5f, Anim.lerpColor(TEXT_2, Theme.onAccent(), active));
                     final int idx = i;
                     if (rowVisible) hit(ix + segX[i], clampY(segY, clipTop, clipBottom), ix + segX[i + 1], clampY(segY + segH, clipTop, clipBottom), k -> md2.setIndex(idx));
                 }
@@ -396,8 +486,8 @@ public class ClickGuiScreen extends Screen {
         Fonts.draw(ctx, "Bind", Fonts.REGULAR, ix + 14, ry + 5, TEXT_2);
         float kw = Fonts.width(key, Fonts.SMALL) + 14;
         float kx = ix + iw - kw;
-        Render2D.round(ctx, kx, ry + 2, kw, 14, 6, waiting ? WHITE : 0xFF1F1F25);
-        Fonts.drawCentered(ctx, key, Fonts.SMALL, kx + kw / 2f, ry + 5.5f, waiting ? BLACK : TEXT);
+        Render2D.round(ctx, kx, ry + 2, kw, 14, 6, waiting ? Theme.accent() : 0xFF1F1F25);
+        Fonts.drawCentered(ctx, key, Fonts.SMALL, kx + kw / 2f, ry + 5.5f, waiting ? Theme.onAccent() : TEXT);
         if (ry < Math.min(sBottom, clipBottom)) hit(ix - 4, clampY(ry, clipTop, clipBottom), ix + iw + 4, clampY(ry + ROW_BIND, clipTop, clipBottom),
                 k -> binding = binding == md ? null : md);
 
@@ -428,6 +518,7 @@ public class ClickGuiScreen extends Screen {
     public boolean mouseReleased(double mouseX, double mouseY, int button) {
         draggingWindow = false;
         slider = null;
+        colorDrag = null;
         return super.mouseReleased(mouseX, mouseY, button);
     }
 

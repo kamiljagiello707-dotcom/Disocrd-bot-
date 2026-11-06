@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "id": "mysticclient",
+  "version": "${version}",
+  "name": "MysticClient",
+  "description": "Własny klient utility do Minecrafta: Fly, ESP, Fullbright, Zoom i więcej. Prawy Shift = menu.",
+  "authors": ["MysticClient"],
+  "license": "MIT",
+  "environment": "client",
+  "entrypoints": {
+    "client": ["pl.mystic.client.MysticClient"]
+  },
+  "mixins": ["mysticclient.mixins.json"],
+  "depends": {
+    "fabricloader": ">=0.16.0",
+    "minecraft": "~1.21.1",
+    "java": ">=21",
+    "fabric-api": "*"
+  }
+}

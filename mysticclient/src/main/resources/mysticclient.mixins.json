@@ -1,0 +1,13 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "pl.mystic.client.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "client": [
+    "SimpleOptionMixin",
+    "MinecraftClientAccessor",
+    "GameRendererMixin",
+    "MinecraftClientMixin"
+  ],
+  "injectors": { "defaultRequire": 1 }
+}

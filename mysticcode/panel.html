@@ -1,0 +1,616 @@
+<title>MysticCode Panel</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+  /* App shell: fixed sidebar + topbar, routed main view by hash; dark theme, white accents; state in localStorage. */
+  :root {
+    --bg: #050506; --bg-2: #0a0a0d; --panel: #0f0f13; --panel-2: #131318;
+    --stroke: rgba(255,255,255,0.10); --stroke-2: rgba(255,255,255,0.20);
+    --fg: #f5f5f7; --fg-dim: #a2a2ac; --fg-faint: #5f5f6a; --white: #fff;
+    --good: #4cd6a0; --warn: #e9c46a; --bad: #ff5c6a;
+    --radius: 14px;
+    color-scheme: dark;
+    --fd: "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
+    --fb: "Inter", ui-sans-serif, system-ui, sans-serif;
+    --fm: "JetBrains Mono", ui-monospace, monospace;
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body { margin: 0; background: var(--bg); color: var(--fg); font-family: var(--fb); font-size: 15px; line-height: 1.55; -webkit-font-smoothing: antialiased; overflow-x: hidden; }
+  @media (prefers-reduced-motion: reduce){ *,*::before,*::after{ animation-duration:.001ms!important; transition-duration:.001ms!important; } }
+  a { color: inherit; text-decoration: none; }
+  h1,h2,h3,h4 { font-family: var(--fd); margin: 0; font-weight: 600; letter-spacing: -0.02em; }
+  button { font-family: inherit; }
+  ::selection { background: #fff; color: #09090b; }
+
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: 40px; padding: 0 16px; border-radius: 10px; font-family: var(--fd); font-weight: 600; font-size: 14px; cursor: pointer; border: 1px solid transparent; transition: transform .2s, box-shadow .2s, background .2s, border-color .2s, color .2s; white-space: nowrap; }
+  .btn-primary { background: #fff; color: #09090b; }
+  .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 10px 30px rgba(255,255,255,.2); }
+  .btn-ghost { background: rgba(255,255,255,.03); color: var(--fg); border-color: var(--stroke); }
+  .btn-ghost:hover { border-color: var(--stroke-2); background: rgba(255,255,255,.07); }
+  .btn.sm { height: 32px; font-size: 13px; padding: 0 12px; }
+  .btn.full { width: 100%; }
+
+  /* toggle */
+  .sw { width: 42px; height: 24px; border-radius: 999px; border: 1px solid var(--stroke-2); background: rgba(255,255,255,.05); position: relative; cursor: pointer; flex: 0 0 42px; transition: background .2s, border-color .2s; }
+  .sw i { position: absolute; top: 2px; left: 2px; width: 18px; height: 18px; border-radius: 50%; background: #d4d4da; transition: transform .22s cubic-bezier(.16,1,.3,1), background .2s; }
+  .sw.on { background: #fff; border-color: #fff; }
+  .sw.on i { transform: translateX(18px); background: #09090b; }
+
+  .mono { font-family: var(--fm); }
+  .pill { font-family: var(--fm); font-size: 10.5px; letter-spacing: .06em; text-transform: uppercase; border: 1px solid var(--stroke); border-radius: 6px; padding: 3px 8px; color: var(--fg-dim); display: inline-flex; align-items: center; gap: 6px; }
+  .pill.good { color: var(--good); border-color: rgba(76,214,160,.4); }
+  .pill.good i, .dotg { width: 6px; height: 6px; border-radius: 50%; background: var(--good); box-shadow: 0 0 8px var(--good); display: inline-block; }
+
+  /* ---------- login ---------- */
+  #login { position: fixed; inset: 0; z-index: 50; display: grid; place-items: center; padding: 24px; background: radial-gradient(130% 90% at 50% -10%, #15151c, var(--bg) 60%); }
+  #login .card { width: min(400px, 100%); border: 1px solid var(--stroke); border-radius: 20px; background: var(--panel); padding: 34px 30px; text-align: center; box-shadow: 0 40px 100px rgba(0,0,0,.6); }
+  #login .mark { width: 54px; height: 54px; border-radius: 15px; margin: 0 auto 20px; background: conic-gradient(from 210deg,#fff,#8d8d96,#fff,#52525b,#fff); display: grid; place-items: center; box-shadow: 0 0 30px rgba(255,255,255,.25), inset 0 0 0 1px rgba(255,255,255,.4); animation: spin 16s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  #login .mark i { width: 18px; height: 18px; border-radius: 5px; background: #09090b; }
+  #login h1 { font-size: 24px; margin-bottom: 8px; }
+  #login p { color: var(--fg-dim); font-size: 14px; margin: 0 0 26px; }
+  #login .dbtn { height: 50px; font-size: 15px; }
+  #login .foot { margin-top: 18px; font-size: 12px; color: var(--fg-faint); font-family: var(--fm); }
+
+  /* ---------- app shell ---------- */
+  #app { display: none; min-height: 100%; }
+  #app.live { display: grid; grid-template-columns: 248px 1fr; }
+  @media (max-width: 860px){ #app.live { grid-template-columns: 1fr; } }
+
+  /* sidebar */
+  .side { position: sticky; top: 0; align-self: start; height: 100vh; height: 100dvh; border-right: 1px solid var(--stroke); background: var(--bg-2); display: flex; flex-direction: column; padding: 18px 14px; gap: 6px; }
+  @media (max-width: 860px){ .side { position: fixed; z-index: 40; left: 0; top: 0; width: 262px; transform: translateX(-100%); transition: transform .3s cubic-bezier(.16,1,.3,1); box-shadow: 0 0 60px rgba(0,0,0,.6); } .side.open { transform: none; } }
+  .side .brand { display: flex; align-items: center; gap: 10px; font-family: var(--fd); font-weight: 700; font-size: 17px; padding: 6px 8px 14px; }
+  .side .brand .m { width: 28px; height: 28px; border-radius: 8px; background: conic-gradient(from 210deg,#fff,#8d8d96,#fff,#52525b,#fff); display: grid; place-items: center; box-shadow: inset 0 0 0 1px rgba(255,255,255,.4); }
+  .side .brand .m i { width: 10px; height: 10px; border-radius: 3px; background: #09090b; }
+
+  .server-pick { position: relative; margin-bottom: 10px; }
+  .server-btn { width: 100%; display: flex; align-items: center; gap: 11px; padding: 10px; border: 1px solid var(--stroke); border-radius: 11px; background: var(--panel); cursor: pointer; color: var(--fg); text-align: left; transition: border-color .2s; }
+  .server-btn:hover { border-color: var(--stroke-2); }
+  .server-btn .ic { width: 34px; height: 34px; border-radius: 9px; flex: 0 0 34px; display: grid; place-items: center; font-family: var(--fd); font-weight: 700; font-size: 14px; color: #09090b; }
+  .server-btn .nm { flex: 1; min-width: 0; }
+  .server-btn .nm b { display: block; font-size: 13.5px; font-family: var(--fd); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .server-btn .nm span { font-size: 11px; color: var(--fg-faint); font-family: var(--fm); }
+  .server-btn .ch { color: var(--fg-faint); font-size: 12px; }
+  .server-menu { position: absolute; top: calc(100% + 6px); left: 0; right: 0; background: var(--panel-2); border: 1px solid var(--stroke-2); border-radius: 12px; padding: 6px; z-index: 20; box-shadow: 0 20px 50px rgba(0,0,0,.6); display: none; }
+  .server-menu.open { display: block; }
+  .server-menu button { width: 100%; display: flex; align-items: center; gap: 10px; padding: 8px; border: none; background: none; color: var(--fg); border-radius: 8px; cursor: pointer; text-align: left; }
+  .server-menu button:hover { background: rgba(255,255,255,.05); }
+  .server-menu .ic { width: 28px; height: 28px; border-radius: 8px; flex: 0 0 28px; display: grid; place-items: center; font-family: var(--fd); font-weight: 700; font-size: 12px; color: #09090b; }
+  .server-menu .ic.add { background: rgba(255,255,255,.08); color: #fff; }
+
+  .nav-group { font-family: var(--fm); font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: var(--fg-faint); padding: 14px 10px 6px; }
+  .nav-item { display: flex; align-items: center; gap: 11px; padding: 9px 11px; border-radius: 10px; color: var(--fg-dim); cursor: pointer; font-size: 14px; font-weight: 500; transition: background .18s, color .18s; border: 1px solid transparent; }
+  .nav-item:hover { background: rgba(255,255,255,.04); color: #fff; }
+  .nav-item.active { background: rgba(255,255,255,.07); color: #fff; border-color: var(--stroke); }
+  .nav-item svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 1.7; }
+  .nav-item .badge { margin-left: auto; font-family: var(--fm); font-size: 10px; background: #fff; color: #09090b; border-radius: 6px; padding: 1px 6px; }
+  .side .spacer { flex: 1; }
+  .side .me { display: flex; align-items: center; gap: 10px; padding: 10px; border: 1px solid var(--stroke); border-radius: 11px; background: var(--panel); }
+  .side .me .av { width: 32px; height: 32px; border-radius: 50%; flex: 0 0 32px; background: linear-gradient(140deg,#fff,#9a9aa2); color: #09090b; display: grid; place-items: center; font-family: var(--fm); font-weight: 700; font-size: 12px; }
+  .side .me .nm b { display: block; font-size: 13px; font-family: var(--fd); }
+  .side .me .nm span { font-size: 11px; color: var(--good); font-family: var(--fm); }
+
+  /* main */
+  main { min-width: 0; min-height: 100vh; min-height: 100dvh; display: flex; flex-direction: column; }
+  .topbar { position: sticky; top: 0; z-index: 30; display: flex; align-items: center; gap: 14px; padding: 14px max(18px, env(safe-area-inset-right,0px)) 14px max(18px, env(safe-area-inset-left,0px)); border-bottom: 1px solid var(--stroke); background: rgba(5,5,6,.72); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
+  .topbar .menu-btn { display: none; width: 38px; height: 38px; border: 1px solid var(--stroke); border-radius: 10px; background: rgba(255,255,255,.03); color: #fff; cursor: pointer; flex-direction: column; gap: 4px; align-items: center; justify-content: center; }
+  .topbar .menu-btn span { width: 16px; height: 1.6px; background: #fff; }
+  @media (max-width: 860px){ .topbar .menu-btn { display: flex; } }
+  .topbar h2 { font-size: 18px; }
+  .topbar .crumb { font-family: var(--fm); font-size: 12px; color: var(--fg-faint); }
+  .topbar .right { margin-left: auto; display: flex; align-items: center; gap: 10px; }
+  .icon-btn { width: 38px; height: 38px; border: 1px solid var(--stroke); border-radius: 10px; background: rgba(255,255,255,.03); color: var(--fg-dim); cursor: pointer; display: grid; place-items: center; position: relative; transition: border-color .2s, color .2s; }
+  .icon-btn:hover { border-color: var(--stroke-2); color: #fff; }
+  .icon-btn svg { width: 17px; height: 17px; stroke: currentColor; fill: none; stroke-width: 1.7; }
+  .icon-btn .dot { position: absolute; top: 8px; right: 9px; width: 7px; height: 7px; border-radius: 50%; background: var(--bad); border: 2px solid var(--bg); }
+
+  .view { padding: clamp(18px, 3vw, 30px) max(18px, env(safe-area-inset-right,0px)) 60px max(18px, env(safe-area-inset-left,0px)); max-width: 1120px; width: 100%; margin: 0 auto; flex: 1; }
+  .view-head { margin-bottom: 24px; }
+  .view-head h1 { font-size: clamp(24px, 4vw, 32px); margin-bottom: 6px; }
+  .view-head p { color: var(--fg-dim); font-size: 15px; margin: 0; }
+
+  .fade { animation: fade .4s cubic-bezier(.16,1,.3,1); }
+  @keyframes fade { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
+
+  /* stat tiles */
+  .tiles { display: grid; grid-template-columns: repeat(4,1fr); gap: 16px; margin-bottom: 22px; }
+  @media (max-width: 900px){ .tiles { grid-template-columns: repeat(2,1fr); } }
+  @media (max-width: 460px){ .tiles { grid-template-columns: 1fr; } }
+  .tile { border: 1px solid var(--stroke); border-radius: var(--radius); background: var(--panel); padding: 18px; position: relative; overflow: hidden; }
+  .tile .lbl { font-family: var(--fm); font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: var(--fg-faint); }
+  .tile .val { font-family: var(--fd); font-weight: 700; font-size: 30px; margin: 8px 0 4px; font-variant-numeric: tabular-nums; }
+  .tile .delta { font-size: 12px; font-family: var(--fm); display: inline-flex; align-items: center; gap: 5px; }
+  .tile .delta.up { color: var(--good); } .tile .delta.down { color: var(--bad); }
+  .tile canvas { position: absolute; right: 0; bottom: 0; width: 56%; height: 44px; opacity: .8; }
+
+  .cols { display: grid; grid-template-columns: 1.4fr 1fr; gap: 16px; }
+  @media (max-width: 900px){ .cols { grid-template-columns: 1fr; } }
+  .panel { border: 1px solid var(--stroke); border-radius: var(--radius); background: var(--panel); padding: 20px; }
+  .panel .ph { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; gap: 12px; }
+  .panel .ph h3 { font-size: 16px; }
+  .panel .ph .pill { cursor: default; }
+
+  .chart-wrap { position: relative; height: 180px; }
+  .chart-wrap canvas { width: 100%; height: 100%; }
+
+  .feed { display: flex; flex-direction: column; gap: 2px; }
+  .feed .row { display: flex; gap: 11px; padding: 10px 6px; border-radius: 9px; align-items: flex-start; transition: background .15s; }
+  .feed .row:hover { background: rgba(255,255,255,.03); }
+  .feed .ic { width: 30px; height: 30px; border-radius: 8px; flex: 0 0 30px; display: grid; place-items: center; background: var(--panel-2); border: 1px solid var(--stroke); }
+  .feed .ic svg { width: 15px; height: 15px; stroke: #fff; fill: none; stroke-width: 1.7; }
+  .feed .tx { flex: 1; min-width: 0; font-size: 13.5px; }
+  .feed .tx b { font-family: var(--fd); font-weight: 600; }
+  .feed .tx .t { color: var(--fg-faint); font-family: var(--fm); font-size: 11px; }
+
+  /* module/bot cards */
+  .mods { display: grid; grid-template-columns: repeat(2,1fr); gap: 16px; }
+  @media (max-width: 760px){ .mods { grid-template-columns: 1fr; } }
+  .mod { border: 1px solid var(--stroke); border-radius: var(--radius); background: var(--panel); padding: 18px; transition: border-color .25s, transform .25s; }
+  .mod:hover { border-color: var(--stroke-2); }
+  .mod.on { border-color: rgba(255,255,255,.28); }
+  .mod .mh { display: flex; align-items: flex-start; gap: 13px; }
+  .mod .ic { width: 44px; height: 44px; border-radius: 12px; flex: 0 0 44px; display: grid; place-items: center; background: linear-gradient(160deg,#1b1b20,#0c0c0f); border: 1px solid var(--stroke); }
+  .mod .ic svg { width: 21px; height: 21px; stroke: #fff; fill: none; stroke-width: 1.6; }
+  .mod .mt { flex: 1; min-width: 0; }
+  .mod .mt h3 { font-size: 16px; }
+  .mod .mt .tag { font-family: var(--fm); font-size: 10.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--fg-faint); }
+  .mod p { color: var(--fg-dim); font-size: 13px; margin: 12px 0 14px; }
+  .mod .mf { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+  .mod .mf .state { font-family: var(--fm); font-size: 11px; }
+  .mod .mf .state.on { color: var(--good); } .mod .mf .state.off { color: var(--fg-faint); }
+  .mod .cfg { margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--stroke); display: none; flex-direction: column; gap: 12px; }
+  .mod.on .cfg { display: flex; }
+  .cfg-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; font-size: 13.5px; color: var(--fg-dim); }
+  .cfg-row .sw { transform: scale(.86); }
+  .slider { -webkit-appearance: none; appearance: none; width: 130px; height: 4px; border-radius: 2px; background: var(--stroke-2); outline: none; }
+  .slider::-webkit-slider-thumb { -webkit-appearance: none; width: 15px; height: 15px; border-radius: 50%; background: #fff; cursor: pointer; }
+  .slider::-moz-range-thumb { width: 15px; height: 15px; border: none; border-radius: 50%; background: #fff; cursor: pointer; }
+  .cfg-row .val { font-family: var(--fm); font-size: 12px; color: #fff; min-width: 36px; text-align: right; }
+
+  /* table */
+  .tbl { width: 100%; border-collapse: collapse; }
+  .tbl th { text-align: left; font-family: var(--fm); font-size: 10.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--fg-faint); padding: 0 12px 12px; font-weight: 400; }
+  .tbl td { padding: 13px 12px; border-top: 1px solid var(--stroke); font-size: 13.5px; }
+  .tbl tr:hover td { background: rgba(255,255,255,.02); }
+  .tbl .bname { display: flex; align-items: center; gap: 10px; }
+  .tbl .bname .ic { width: 30px; height: 30px; border-radius: 8px; display: grid; place-items: center; background: linear-gradient(160deg,#1b1b20,#0c0c0f); border: 1px solid var(--stroke); }
+  .tbl .bname .ic svg { width: 15px; height: 15px; stroke: #fff; fill: none; stroke-width: 1.7; }
+  .tbl .bname b { font-family: var(--fd); }
+  .table-wrap { overflow-x: auto; }
+
+  /* settings */
+  .set-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 16px 0; border-top: 1px solid var(--stroke); }
+  .set-row:first-child { border-top: none; }
+  .set-row .st { min-width: 0; }
+  .set-row .st b { font-family: var(--fd); font-size: 14.5px; display: block; }
+  .set-row .st span { font-size: 13px; color: var(--fg-dim); }
+  .field { width: 100%; height: 42px; border: 1px solid var(--stroke); border-radius: 10px; background: var(--panel-2); color: #fff; padding: 0 13px; font-family: var(--fb); font-size: 14px; }
+  .field:focus { outline: none; border-color: var(--stroke-2); }
+  .select { min-width: 150px; }
+
+  .toast { position: fixed; left: 50%; bottom: 26px; transform: translateX(-50%) translateY(20px); background: #fff; color: #09090b; font-family: var(--fd); font-weight: 600; font-size: 14px; padding: 12px 20px; border-radius: 12px; z-index: 200; box-shadow: 0 18px 50px rgba(0,0,0,.5); opacity: 0; transition: opacity .3s, transform .3s; max-width: 92vw; text-align: center; }
+  .scrim { position: fixed; inset: 0; z-index: 35; background: rgba(0,0,0,.5); display: none; }
+  .scrim.show { display: block; }
+  @media (max-width: 860px){ .scrim.show { display: block; } }
+  @media (min-width: 861px){ .scrim { display: none !important; } }
+
+  .demo-note { font-family: var(--fm); font-size: 11px; color: var(--fg-faint); border: 1px dashed var(--stroke-2); border-radius: 8px; padding: 7px 11px; display: inline-flex; align-items: center; gap: 7px; margin-bottom: 20px; }
+</style>
+
+<!-- LOGIN -->
+<div id="login">
+  <div class="card">
+    <div class="mark"><i></i></div>
+    <h1>MysticCode Panel</h1>
+    <p>Zaloguj się, żeby zarządzać botami na swoich serwerach.</p>
+    <button class="btn btn-primary full dbtn" id="loginBtn">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M19.5 5.3A17 17 0 0015.3 4l-.2.4a15.6 15.6 0 014.6 2.3 11 11 0 00-13.4 0A15.6 15.6 0 0110.9 4.4L10.7 4A17 17 0 006.5 5.3 17.8 17.8 0 003 17.6a16 16 0 004.9 2.5l.6-1a10.6 10.6 0 01-1.7-.8l.4-.3a11.4 11.4 0 009.6 0l.4.3a10.6 10.6 0 01-1.7.8l.6 1a16 16 0 004.9-2.5A17.8 17.8 0 0019.5 5.3zM9 15c-.9 0-1.6-.9-1.6-1.9S8.1 11.2 9 11.2s1.6.9 1.6 1.9S9.9 15 9 15zm6 0c-.9 0-1.6-.9-1.6-1.9s.7-1.9 1.6-1.9 1.6.9 1.6 1.9S15.9 15 15 15z"/></svg>
+      Zaloguj przez Discord
+    </button>
+    <div class="foot">Wersja demo — logowanie jest symulowane</div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <aside class="side" id="side">
+    <div class="brand"><span class="m"><i></i></span>MysticCode</div>
+    <div class="server-pick">
+      <button class="server-btn" id="serverBtn">
+        <span class="ic" id="srvIc">M</span>
+        <span class="nm"><b id="srvName">—</b><span id="srvMembers">—</span></span>
+        <span class="ch">▾</span>
+      </button>
+      <div class="server-menu" id="serverMenu"></div>
+    </div>
+    <div class="nav-group">Zarządzanie</div>
+    <div id="nav"></div>
+    <div class="spacer"></div>
+    <div class="me"><div class="av">KJ</div><div class="nm"><b>Kamil</b><span>● online</span></div></div>
+  </aside>
+
+  <main>
+    <div class="topbar">
+      <button class="menu-btn" id="menuBtn" aria-label="Menu"><span></span><span></span><span></span></button>
+      <div><h2 id="pageTitle">Przegląd</h2><div class="crumb" id="crumb">MysticCode / Przegląd</div></div>
+      <div class="right">
+        <button class="icon-btn" id="bell" title="Powiadomienia"><svg viewBox="0 0 24 24"><path d="M18 8a6 6 0 10-12 0c0 7-3 9-3 9h18s-3-2-3-9M13.7 21a2 2 0 01-3.4 0"/></svg><span class="dot"></span></button>
+        <a class="btn btn-ghost sm" id="viewSite" href="#">Strona</a>
+      </div>
+    </div>
+    <div class="view" id="view"></div>
+  </main>
+</div>
+<div class="scrim" id="scrim"></div>
+
+<script>
+(function(){
+  "use strict";
+  var reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  function ic(inner){ return '<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">'+inner+'</svg>'; }
+  function navIcon(inner){ return '<svg viewBox="0 0 24 24">'+inner+'</svg>'; }
+
+  /* ---------------- state ---------------- */
+  var ICONS = {
+    guard:'<path d="M12 3l7 3v5c0 4.4-3 7.6-7 9-4-1.4-7-4.6-7-9V6z"/>',
+    tunes:'<path d="M9 18V5l10-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="16" cy="16" r="3"/>',
+    eco:'<circle cx="12" cy="12" r="8"/><path d="M12 8v8M9.5 10h4a1.5 1.5 0 010 3h-3a1.5 1.5 0 000 3h4"/>',
+    desk:'<path d="M4 6h16v9H9l-4 3z"/>',
+    levels:'<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>',
+    ai:'<rect x="4" y="5" width="16" height="14" rx="3"/><path d="M9 10h.01M15 10h.01M9 15h6"/>',
+    gate:'<rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 018 0v3"/>',
+    stage:'<path d="M4 5h16v11H4z"/><path d="M8 20h8M12 16v4"/>'
+  };
+  var SERVERS = [
+    { id:"s1", name:"Mystic Community", members:"12 480", color:"#fff", letter:"M" },
+    { id:"s2", name:"GameZone PL", members:"5 120", color:"#b9b9c2", letter:"G" },
+    { id:"s3", name:"Dev Hub", members:"1 940", color:"#8d8d96", letter:"D" }
+  ];
+  var MODULES = [
+    { id:"guard", name:"MysticGuard", tag:"Moderacja", icon:ICONS.guard, desc:"Auto-moderacja, bany i ochrona przed raidami.",
+      cfg:[{t:"switch",k:"antiraid",label:"Anty-raid",v:true},{t:"switch",k:"filter",label:"Filtr wyzwisk",v:true},{t:"slider",k:"warns",label:"Ostrzeżenia do bana",v:3,min:1,max:10}] },
+    { id:"tunes", name:"MysticTunes", tag:"Muzyka", icon:ICONS.tunes, desc:"Muzyka 24/7 z kolejkami i filtrami.",
+      cfg:[{t:"switch",k:"dj",label:"Tryb DJ (tylko role)",v:false},{t:"slider",k:"vol",label:"Domyślna głośność",v:70,min:0,max:100}] },
+    { id:"eco", name:"MysticEco", tag:"Ekonomia", icon:ICONS.eco, desc:"Waluta serwera, sklep i rankingi.",
+      cfg:[{t:"switch",k:"daily",label:"Codzienne nagrody",v:true},{t:"slider",k:"rate",label:"Mnożnik zarobku",v:2,min:1,max:5}] },
+    { id:"levels", name:"MysticLevels", tag:"Poziomy", icon:ICONS.levels, desc:"XP, role za aktywność i karty rangi.",
+      cfg:[{t:"switch",k:"voicexp",label:"XP na głosowym",v:true},{t:"slider",k:"xp",label:"XP za wiadomość",v:15,min:5,max:50}] },
+    { id:"desk", name:"MysticDesk", tag:"Ticketów", icon:ICONS.desk, desc:"Zgłoszenia z transkryptami i ocenami.",
+      cfg:[{t:"switch",k:"transcripts",label:"Zapisuj transkrypty",v:true},{t:"switch",k:"rating",label:"Oceny obsługi",v:true}] },
+    { id:"ai", name:"MysticAI", tag:"Asystent AI", icon:ICONS.ai, desc:"Odpowiedzi AI, FAQ i podsumowania.",
+      cfg:[{t:"switch",k:"faq",label:"Auto-FAQ",v:true},{t:"switch",k:"summarize",label:"Podsumowania dyskusji",v:false}] },
+    { id:"gate", name:"MysticGate", tag:"Weryfikacja", icon:ICONS.gate, desc:"Captcha i brama wejścia dla nowych.",
+      cfg:[{t:"switch",k:"captcha",label:"Captcha przy wejściu",v:true},{t:"switch",k:"rules",label:"Akceptacja regulaminu",v:true}] },
+    { id:"stage", name:"MysticStage", tag:"Eventy", icon:ICONS.stage, desc:"Giveaway'e, ankiety i wydarzenia.",
+      cfg:[{t:"switch",k:"announce",label:"Ogłaszaj zwycięzców",v:true}] }
+  ];
+
+  var DEFAULT_ENABLED = { guard:true, tunes:true, levels:true, desk:false, eco:false, ai:false, gate:true, stage:false };
+
+  function loadState(){
+    var st = { server:"s1", enabled:{}, cfg:{} };
+    try { var raw = localStorage.getItem("mystic.panel.v1"); if(raw){ var p = JSON.parse(raw); st = Object.assign(st, p); } } catch(e){}
+    MODULES.forEach(function(m){
+      if(typeof st.enabled[m.id] !== "boolean") st.enabled[m.id] = !!DEFAULT_ENABLED[m.id];
+      if(!st.cfg[m.id]) st.cfg[m.id] = {};
+      m.cfg.forEach(function(c){ if(typeof st.cfg[m.id][c.k] === "undefined") st.cfg[m.id][c.k] = c.v; });
+    });
+    return st;
+  }
+  var state = loadState();
+  function save(){ try { localStorage.setItem("mystic.panel.v1", JSON.stringify(state)); } catch(e){} }
+
+  function toast(msg){
+    var t = document.createElement("div"); t.className = "toast"; t.textContent = msg;
+    document.body.appendChild(t);
+    requestAnimationFrame(function(){ t.style.opacity="1"; t.style.transform="translateX(-50%) translateY(0)"; });
+    setTimeout(function(){ t.style.opacity="0"; t.style.transform="translateX(-50%) translateY(20px)"; setTimeout(function(){ t.remove(); }, 320); }, 2200);
+  }
+
+  /* ---------------- login ---------------- */
+  document.getElementById("loginBtn").addEventListener("click", function(){
+    var r = document.getElementById("load-ring");
+    this.innerHTML = '<span class="load-spin" style="width:18px;height:18px;border:2px solid rgba(9,9,11,.25);border-top-color:#09090b;border-radius:50%;display:inline-block;animation:spin .7s linear infinite"></span> Łączenie z Discord…';
+    var self = this;
+    setTimeout(function(){
+      document.getElementById("login").style.display = "none";
+      document.getElementById("app").classList.add("live");
+      route(location.hash.replace("#","") || "overview");
+    }, reduce ? 50 : 900);
+  });
+
+  /* ---------------- servers ---------------- */
+  var curServer = SERVERS.filter(function(s){ return s.id === state.server; })[0] || SERVERS[0];
+  function paintServer(){
+    document.getElementById("srvName").textContent = curServer.name;
+    document.getElementById("srvMembers").textContent = curServer.members + " członków";
+    var sic = document.getElementById("srvIc");
+    sic.textContent = curServer.letter; sic.style.background = curServer.color;
+  }
+  var serverMenu = document.getElementById("serverMenu");
+  function buildServerMenu(){
+    serverMenu.innerHTML = SERVERS.map(function(s){
+      return '<button data-srv="'+s.id+'"><span class="ic" style="background:'+s.color+'">'+s.letter+'</span><span style="font-family:var(--fd);font-size:13px">'+s.name+'</span></button>';
+    }).join("") + '<button data-add="1"><span class="ic add">+</span><span style="font-family:var(--fd);font-size:13px">Dodaj serwer</span></button>';
+  }
+  buildServerMenu(); paintServer();
+  document.getElementById("serverBtn").addEventListener("click", function(e){ e.stopPropagation(); serverMenu.classList.toggle("open"); });
+  document.addEventListener("click", function(){ serverMenu.classList.remove("open"); });
+  serverMenu.addEventListener("click", function(e){
+    var b = e.target.closest("button"); if(!b) return;
+    if(b.getAttribute("data-add")){ toast("Demo — tu dodałbyś bota na kolejny serwer."); return; }
+    curServer = SERVERS.filter(function(s){ return s.id === b.getAttribute("data-srv"); })[0];
+    state.server = curServer.id; save(); paintServer();
+    route(current);
+  });
+
+  /* ---------------- nav ---------------- */
+  var NAV = [
+    { id:"overview", label:"Przegląd", icon:'<rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/>' },
+    { id:"modules", label:"Moduły", icon:'<path d="M4 7l8-4 8 4-8 4z"/><path d="M4 7v6l8 4 8-4V7"/>', badge:true },
+    { id:"bots", label:"Boty", icon:'<rect x="4" y="5" width="16" height="14" rx="3"/><path d="M9 10h.01M15 10h.01M9 15h6"/>' },
+    { id:"stats", label:"Statystyki", icon:'<path d="M4 20V4M20 20H4M8 16l3-4 3 2 4-6"/>' },
+    { id:"logs", label:"Logi", icon:'<path d="M5 4h14v16H5z"/><path d="M8 8h8M8 12h8M8 16h5"/>' },
+    { id:"settings", label:"Ustawienia", icon:'<circle cx="12" cy="12" r="3"/><path d="M19 12a7 7 0 00-.1-1.3l2-1.5-2-3.4-2.3 1a7 7 0 00-2.3-1.3L13.9 2h-3.8l-.4 2.5a7 7 0 00-2.3 1.3l-2.3-1-2 3.4 2 1.5A7 7 0 005 12a7 7 0 00.1 1.3l-2 1.5 2 3.4 2.3-1a7 7 0 002.3 1.3l.4 2.5h3.8l.4-2.5a7 7 0 002.3-1.3l2.3 1 2-3.4-2-1.5A7 7 0 0019 12z"/>' }
+  ];
+  var navEl = document.getElementById("nav");
+  function enabledCount(){ return MODULES.filter(function(m){ return state.enabled[m.id]; }).length; }
+  function buildNav(){
+    navEl.innerHTML = NAV.map(function(n){
+      return '<div class="nav-item'+(n.id===current?" active":"")+'" data-route="'+n.id+'">'+navIcon(n.icon)+'<span>'+n.label+'</span>'+(n.badge?'<span class="badge">'+enabledCount()+'</span>':'')+'</div>';
+    }).join("");
+  }
+  navEl.addEventListener("click", function(e){
+    var it = e.target.closest(".nav-item"); if(!it) return;
+    location.hash = it.getAttribute("data-route");
+  });
+
+  /* ---------------- charts ---------------- */
+  function spark(canvas, data, fill){
+    var dpr = Math.min(window.devicePixelRatio||1, 2);
+    var w = canvas.clientWidth, h = canvas.clientHeight;
+    canvas.width = w*dpr; canvas.height = h*dpr;
+    var c = canvas.getContext("2d"); c.scale(dpr, dpr);
+    var min = Math.min.apply(null, data), max = Math.max.apply(null, data), rng = max-min||1;
+    function x(i){ return i/(data.length-1)*w; }
+    function y(v){ return h - 4 - (v-min)/rng*(h-8); }
+    c.beginPath(); c.moveTo(x(0), y(data[0]));
+    for(var i=1;i<data.length;i++) c.lineTo(x(i), y(data[i]));
+    if(fill){ c.lineTo(w,h); c.lineTo(0,h); c.closePath(); var g=c.createLinearGradient(0,0,0,h); g.addColorStop(0,"rgba(255,255,255,.18)"); g.addColorStop(1,"rgba(255,255,255,0)"); c.fillStyle=g; c.fill(); }
+    c.beginPath(); c.moveTo(x(0), y(data[0]));
+    for(var j=1;j<data.length;j++) c.lineTo(x(j), y(data[j]));
+    c.strokeStyle = "#fff"; c.lineWidth = 1.6; c.lineJoin="round"; c.stroke();
+    c.beginPath(); c.arc(x(data.length-1), y(data[data.length-1]), 2.6, 0, 7); c.fillStyle="#fff"; c.fill();
+  }
+  function bars(canvas, data){
+    var dpr = Math.min(window.devicePixelRatio||1, 2);
+    var w = canvas.clientWidth, h = canvas.clientHeight;
+    canvas.width = w*dpr; canvas.height = h*dpr;
+    var c = canvas.getContext("2d"); c.scale(dpr,dpr);
+    var max = Math.max.apply(null, data)||1, n = data.length, gap = 6, bw = (w-gap*(n-1))/n;
+    for(var i=0;i<n;i++){
+      var bh = Math.max(3, data[i]/max*(h-6)); var x = i*(bw+gap), y = h-bh;
+      c.fillStyle = i===n-1 ? "#fff" : "rgba(255,255,255,.26)";
+      roundRect(c, x, y, bw, bh, 3); c.fill();
+    }
+  }
+  function roundRect(c,x,y,w,h,r){ r=Math.min(r,w/2,h/2); c.beginPath(); c.moveTo(x+r,y); c.arcTo(x+w,y,x+w,y+h,r); c.arcTo(x+w,y+h,x,y+h,r); c.arcTo(x,y+h,x,y,r); c.arcTo(x,y,x+w,y,r); c.closePath(); }
+  function rnd(seed){ var s=seed; return function(){ s=(s*9301+49297)%233280; return s/233280; }; }
+  function series(n, base, varr, seed){ var r=rnd(seed), out=[], v=base; for(var i=0;i<n;i++){ v += (r()-0.45)*varr; v=Math.max(base*0.5,v); out.push(Math.round(v)); } return out; }
+
+  /* ---------------- views ---------------- */
+  var current = "overview";
+  var view = document.getElementById("view");
+  var titles = { overview:"Przegląd", modules:"Moduły", bots:"Boty", stats:"Statystyki", logs:"Logi", settings:"Ustawienia" };
+
+  function viewOverview(){
+    var seed = curServer.id.charCodeAt(1)*7;
+    var msgs = series(16, 1200, 500, seed), joins = series(16, 40, 30, seed+3), cmds = series(16, 300, 160, seed+7);
+    view.innerHTML =
+      '<div class="view-head"><h1>Cześć, Kamil 👋</h1><p>Oto co dzieje się na serwerze <b style="color:#fff">'+curServer.name+'</b>.</p></div>'+
+      '<div class="demo-note">◆ Wersja demo — dane są przykładowe, zmiany zapisują się w tej przeglądarce.</div>'+
+      '<div class="tiles">'+
+        tile("Członkowie", curServer.members, "+2.4%", "up", "m1")+
+        tile("Wiadomości / 24h", msgs[15].toLocaleString("pl-PL"), "+12%", "up", "m2")+
+        tile("Nowi / 24h", joins[15], "+8%", "up", "m3")+
+        tile("Aktywne moduły", enabledCount()+" / "+MODULES.length, "online", "up", "m4")+
+      '</div>'+
+      '<div class="cols">'+
+        '<div class="panel"><div class="ph"><h3>Aktywność wiadomości</h3><span class="pill good"><i></i>na żywo</span></div><div class="chart-wrap"><canvas id="chMsg"></canvas></div></div>'+
+        '<div class="panel"><div class="ph"><h3>Ostatnie zdarzenia</h3></div>'+feed()+'</div>'+
+      '</div>';
+    setTimeout(function(){
+      var a=document.getElementById("m1q"); if(a) spark(a, series(12,120,40,seed+1));
+      spark(document.getElementById("m2q"), msgs.slice(4));
+      spark(document.getElementById("m3q"), joins.slice(4));
+      var big = document.getElementById("chMsg"); if(big){ lineChart(big, msgs); }
+    }, 30);
+  }
+  function tile(lbl,val,delta,dir,id){
+    return '<div class="tile"><div class="lbl">'+lbl+'</div><div class="val">'+val+'</div><div class="delta '+dir+'">'+(dir==="up"?"▲":"▼")+' '+delta+'</div><canvas id="'+id+'q"></canvas></div>';
+  }
+  function feed(){
+    var items = [
+      { i:ICONS.guard, b:"MysticGuard", t:"zbanował @spamer za reklamę", ago:"2 min temu" },
+      { i:ICONS.desk, b:"MysticDesk", t:"nowy ticket #0231 od @Ania", ago:"8 min temu" },
+      { i:ICONS.gate, b:"MysticGate", t:"zweryfikował 4 nowych członków", ago:"15 min temu" },
+      { i:ICONS.levels, b:"MysticLevels", t:"@Marek awansował na poziom 20", ago:"31 min temu" },
+      { i:ICONS.tunes, b:"MysticTunes", t:"odtwarza muzykę na #chill", ago:"42 min temu" }
+    ];
+    return '<div class="feed">'+items.map(function(x){ return '<div class="row"><div class="ic">'+ic(x.i)+'</div><div class="tx"><b>'+x.b+'</b> '+x.t+'<div class="t">'+x.ago+'</div></div></div>'; }).join("")+'</div>';
+  }
+  function lineChart(canvas, data){
+    var dpr=Math.min(window.devicePixelRatio||1,2), w=canvas.clientWidth, h=canvas.clientHeight;
+    canvas.width=w*dpr; canvas.height=h*dpr; var c=canvas.getContext("2d"); c.scale(dpr,dpr);
+    var min=Math.min.apply(null,data), max=Math.max.apply(null,data), rng=max-min||1, pad=6;
+    for(var gi=0; gi<=3; gi++){ var gy=pad+(h-2*pad)*gi/3; c.beginPath(); c.moveTo(0,gy); c.lineTo(w,gy); c.strokeStyle="rgba(255,255,255,.05)"; c.lineWidth=1; c.stroke(); }
+    function x(i){ return i/(data.length-1)*w; } function y(v){ return pad+(h-2*pad)-(v-min)/rng*(h-2*pad); }
+    c.beginPath(); c.moveTo(x(0),y(data[0])); for(var i=1;i<data.length;i++) c.lineTo(x(i),y(data[i]));
+    c.lineTo(w,h); c.lineTo(0,h); c.closePath(); var g=c.createLinearGradient(0,0,0,h); g.addColorStop(0,"rgba(255,255,255,.16)"); g.addColorStop(1,"rgba(255,255,255,0)"); c.fillStyle=g; c.fill();
+    c.beginPath(); c.moveTo(x(0),y(data[0])); for(var j=1;j<data.length;j++) c.lineTo(x(j),y(data[j])); c.strokeStyle="#fff"; c.lineWidth=2; c.lineJoin="round"; c.stroke();
+    c.beginPath(); c.arc(x(data.length-1),y(data[data.length-1]),3.2,0,7); c.fillStyle="#fff"; c.fill();
+  }
+
+  function viewModules(){
+    view.innerHTML =
+      '<div class="view-head"><h1>Moduły</h1><p>Włączaj funkcje i konfiguruj je klikaniem. Zmiany działają od razu.</p></div>'+
+      '<div class="mods">'+MODULES.map(function(m){
+        var on = state.enabled[m.id];
+        return '<div class="mod'+(on?" on":"")+'" data-mod="'+m.id+'">'+
+          '<div class="mh"><div class="ic">'+ic(m.icon)+'</div><div class="mt"><div class="tag">'+m.tag+'</div><h3>'+m.name+'</h3></div><div class="sw'+(on?" on":"")+'" data-toggle="'+m.id+'"><i></i></div></div>'+
+          '<p>'+m.desc+'</p>'+
+          '<div class="mf"><span class="state '+(on?"on":"off")+'">'+(on?"● Aktywny":"○ Wyłączony")+'</span><span class="pill">'+m.cfg.length+' ustawień</span></div>'+
+          '<div class="cfg">'+m.cfg.map(function(c){ return cfgRow(m.id, c); }).join("")+'</div>'+
+        '</div>';
+      }).join("")+'</div>';
+  }
+  function cfgRow(mid, c){
+    var val = state.cfg[mid][c.k];
+    if(c.t === "switch"){
+      return '<div class="cfg-row"><span>'+c.label+'</span><div class="sw'+(val?" on":"")+'" data-cfg-sw="'+mid+'|'+c.k+'"><i></i></div></div>';
+    }
+    return '<div class="cfg-row"><span>'+c.label+'</span><div style="display:flex;align-items:center;gap:10px"><input type="range" class="slider" min="'+c.min+'" max="'+c.max+'" value="'+val+'" data-cfg-sl="'+mid+'|'+c.k+'"><span class="val" id="v_'+mid+'_'+c.k+'">'+val+'</span></div></div>';
+  }
+
+  function viewBots(){
+    view.innerHTML =
+      '<div class="view-head"><h1>Boty</h1><p>Status botów podłączonych do serwera <b style="color:#fff">'+curServer.name+'</b>.</p></div>'+
+      '<div class="panel"><div class="table-wrap"><table class="tbl"><thead><tr><th>Bot</th><th>Status</th><th>Komendy / 24h</th><th>Ping</th><th></th></tr></thead><tbody>'+
+      MODULES.map(function(m, i){
+        var on = state.enabled[m.id];
+        var cmds = on ? (120 + (i*37)%400) : 0;
+        var ping = 18 + (i*11)%40;
+        return '<tr><td><div class="bname"><div class="ic">'+ic(m.icon)+'</div><div><b>'+m.name+'</b><div class="mono" style="font-size:11px;color:var(--fg-faint)">'+m.tag+'</div></div></div></td>'+
+          '<td>'+(on?'<span class="pill good"><i></i>online</span>':'<span class="pill">offline</span>')+'</td>'+
+          '<td class="mono">'+(on?cmds.toLocaleString("pl-PL"):"—")+'</td>'+
+          '<td class="mono">'+(on?ping+" ms":"—")+'</td>'+
+          '<td style="text-align:right"><button class="btn btn-ghost sm" data-goto-mod="'+m.id+'">Konfiguruj</button></td></tr>';
+      }).join("")+'</tbody></table></div></div>';
+  }
+
+  function viewStats(){
+    var seed = curServer.id.charCodeAt(1)*7;
+    view.innerHTML =
+      '<div class="view-head"><h1>Statystyki</h1><p>Aktywność serwera z ostatnich 14 dni.</p></div>'+
+      '<div class="tiles">'+
+        tile("Wiadomości / 7 dni", (series(7,1200,400,seed).reduce(function(a,b){return a+b;},0)).toLocaleString("pl-PL"), "+9%", "up","s1")+
+        tile("Komendy / 7 dni", (series(7,300,120,seed+2).reduce(function(a,b){return a+b;},0)).toLocaleString("pl-PL"), "+14%", "up","s2")+
+        tile("Nowi członkowie", series(7,40,20,seed+4).reduce(function(a,b){return a+b;},0), "+5%", "up","s3")+
+        tile("Retencja", "92%", "+1.2%", "up","s4")+
+      '</div>'+
+      '<div class="cols">'+
+        '<div class="panel"><div class="ph"><h3>Wiadomości dziennie</h3><span class="pill">14 dni</span></div><div class="chart-wrap"><canvas id="st1"></canvas></div></div>'+
+        '<div class="panel"><div class="ph"><h3>Komendy botów</h3><span class="pill">7 dni</span></div><div class="chart-wrap"><canvas id="st2"></canvas></div></div>'+
+      '</div>';
+    setTimeout(function(){
+      ["s1q","s2q","s3q"].forEach(function(id,k){ var el=document.getElementById(id); if(el) spark(el, series(10,100,40,seed+k)); });
+      var a=document.getElementById("st1"); if(a) lineChart(a, series(14,1200,420,seed));
+      var b=document.getElementById("st2"); if(b) bars(b, series(7,300,150,seed+9));
+    }, 30);
+  }
+
+  function viewLogs(){
+    var kinds = [
+      { i:ICONS.guard, c:"MysticGuard", a:"Ban", t:"@spamer • reklama", lv:"warn" },
+      { i:ICONS.gate, c:"MysticGate", a:"Weryfikacja", t:"@nowy123 przeszedł captcha", lv:"ok" },
+      { i:ICONS.desk, c:"MysticDesk", a:"Ticket", t:"#0231 otwarty przez @Ania", lv:"ok" },
+      { i:ICONS.guard, c:"MysticGuard", a:"Mute", t:"@krzykacz • spam (5 min)", lv:"warn" },
+      { i:ICONS.levels, c:"MysticLevels", a:"Awans", t:"@Marek → poziom 20", lv:"ok" },
+      { i:ICONS.eco, c:"MysticEco", a:"Transfer", t:"@Jan → @Ola • 500 monet", lv:"ok" },
+      { i:ICONS.guard, c:"MysticGuard", a:"Anty-raid", t:"wykryto 12 wejść/min — blokada", lv:"bad" },
+      { i:ICONS.stage, c:"MysticStage", a:"Giveaway", t:"zwycięzca: @Patryk", lv:"ok" }
+    ];
+    view.innerHTML =
+      '<div class="view-head"><h1>Logi</h1><p>Ostatnie akcje botów na serwerze.</p></div>'+
+      '<div class="panel"><div class="feed">'+kinds.map(function(x, i){
+        var col = x.lv==="bad"?"var(--bad)":x.lv==="warn"?"var(--warn)":"var(--good)";
+        return '<div class="row"><div class="ic">'+ic(x.i)+'</div><div class="tx"><b>'+x.c+'</b> <span class="mono" style="font-size:11px;color:'+col+'">['+x.a+']</span> '+x.t+'<div class="t">'+((i+1)*7)+' min temu</div></div></div>';
+      }).join("")+'</div></div>';
+  }
+
+  function viewSettings(){
+    view.innerHTML =
+      '<div class="view-head"><h1>Ustawienia</h1><p>Globalna konfiguracja bota na serwerze '+curServer.name+'.</p></div>'+
+      '<div class="panel" style="margin-bottom:16px">'+
+        setRow("Prefix komend","Znak przed komendami tekstowymi",'<input class="field" style="width:90px;text-align:center" value="'+(state.prefix||"!")+'" id="setPrefix" maxlength="3">')+
+        setRow("Język bota","Język odpowiedzi i komunikatów",'<select class="field select" id="setLang"><option>Polski</option><option>English</option><option>Deutsch</option></select>')+
+        setRow("Kanał logów","Gdzie trafiają logi moderacji",'<select class="field select"><option>#logi-moderacji</option><option>#admin</option><option>#bot-logs</option></select>')+
+        setRow("Powiadomienia DM","Wysyłaj powiadomienia na priv",'<div class="sw'+(state.dm?" on":"")+'" id="setDm"><i></i></div>')+
+      '</div>'+
+      '<div class="panel">'+
+        '<h3 style="margin-bottom:6px">Plan</h3><p style="color:var(--fg-dim);font-size:13.5px;margin:0 0 16px">Obecny plan dla tego serwera.</p>'+
+        '<div style="display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap">'+
+          '<div><div style="font-family:var(--fd);font-weight:700;font-size:22px">MysticAll <span class="pill good" style="vertical-align:middle"><i></i>aktywny</span></div><div style="color:var(--fg-faint);font-family:var(--fm);font-size:12px;margin-top:4px">odnawia się 12 dni</div></div>'+
+          '<button class="btn btn-primary" id="managePlan">Zarządzaj planem</button>'+
+        '</div>'+
+      '</div>'+
+      '<div style="margin-top:20px;display:flex;gap:12px;flex-wrap:wrap">'+
+        '<button class="btn btn-ghost" id="resetBtn">Przywróć domyślne</button>'+
+        '<button class="btn btn-ghost" id="logoutBtn">Wyloguj</button>'+
+      '</div>';
+    var pf=document.getElementById("setPrefix"); if(pf) pf.addEventListener("input", function(){ state.prefix=pf.value; save(); });
+    var dm=document.getElementById("setDm"); if(dm) dm.addEventListener("click", function(){ state.dm=!state.dm; dm.classList.toggle("on", state.dm); save(); });
+    var mp=document.getElementById("managePlan"); if(mp) mp.addEventListener("click", function(){ toast("Demo — tu otworzyłoby się zarządzanie planem."); });
+    var rb=document.getElementById("resetBtn"); if(rb) rb.addEventListener("click", function(){ try{ localStorage.removeItem("mystic.panel.v1"); }catch(e){} state=loadState(); curServer=SERVERS.filter(function(s){return s.id===state.server;})[0]||SERVERS[0]; paintServer(); buildNav(); route("settings"); toast("Przywrócono ustawienia domyślne"); });
+    var lb=document.getElementById("logoutBtn"); if(lb) lb.addEventListener("click", function(){ document.getElementById("app").classList.remove("live"); document.getElementById("login").style.display="grid"; var b=document.getElementById("loginBtn"); b.innerHTML='<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M19.5 5.3A17 17 0 0015.3 4l-.2.4a15.6 15.6 0 014.6 2.3 11 11 0 00-13.4 0A15.6 15.6 0 0110.9 4.4L10.7 4A17 17 0 006.5 5.3 17.8 17.8 0 003 17.6a16 16 0 004.9 2.5l.6-1a10.6 10.6 0 01-1.7-.8l.4-.3a11.4 11.4 0 009.6 0l.4.3a10.6 10.6 0 01-1.7.8l.6 1a16 16 0 004.9-2.5A17.8 17.8 0 0019.5 5.3zM9 15c-.9 0-1.6-.9-1.6-1.9S8.1 11.2 9 11.2s1.6.9 1.6 1.9S9.9 15 9 15zm6 0c-.9 0-1.6-.9-1.6-1.9s.7-1.9 1.6-1.9 1.6.9 1.6 1.9S15.9 15 15 15z"/></svg> Zaloguj przez Discord'; });
+  }
+  function setRow(title, sub, control){
+    return '<div class="set-row"><div class="st"><b>'+title+'</b><span>'+sub+'</span></div>'+control+'</div>';
+  }
+
+  var VIEWS = { overview:viewOverview, modules:viewModules, bots:viewBots, stats:viewStats, logs:viewLogs, settings:viewSettings };
+
+  function route(r){
+    if(!VIEWS[r]) r = "overview";
+    current = r;
+    buildNav();
+    document.getElementById("pageTitle").textContent = titles[r];
+    document.getElementById("crumb").textContent = "MysticCode / " + titles[r];
+    VIEWS[r]();
+    view.classList.remove("fade"); void view.offsetWidth; view.classList.add("fade");
+    document.getElementById("side").classList.remove("open");
+    document.getElementById("scrim").classList.remove("show");
+    window.scrollTo(0,0);
+  }
+  window.addEventListener("hashchange", function(){ route(location.hash.replace("#","") || "overview"); });
+
+  /* module interactions (delegated) */
+  view.addEventListener("click", function(e){
+    var tg = e.target.closest("[data-toggle]");
+    if(tg){
+      var id = tg.getAttribute("data-toggle");
+      state.enabled[id] = !state.enabled[id]; save();
+      var card = tg.closest(".mod");
+      tg.classList.toggle("on", state.enabled[id]);
+      card.classList.toggle("on", state.enabled[id]);
+      var st = card.querySelector(".state"); st.className = "state " + (state.enabled[id]?"on":"off"); st.textContent = state.enabled[id]?"● Aktywny":"○ Wyłączony";
+      buildNav();
+      toast((MODULES.filter(function(m){return m.id===id;})[0].name) + (state.enabled[id] ? " włączony" : " wyłączony"));
+      return;
+    }
+    var csw = e.target.closest("[data-cfg-sw]");
+    if(csw){
+      var parts = csw.getAttribute("data-cfg-sw").split("|");
+      state.cfg[parts[0]][parts[1]] = !state.cfg[parts[0]][parts[1]]; save();
+      csw.classList.toggle("on", state.cfg[parts[0]][parts[1]]);
+      return;
+    }
+    var goto = e.target.closest("[data-goto-mod]");
+    if(goto){ location.hash = "modules"; return; }
+  });
+  view.addEventListener("input", function(e){
+    var sl = e.target.closest("[data-cfg-sl]");
+    if(sl){ var parts = sl.getAttribute("data-cfg-sl").split("|"); state.cfg[parts[0]][parts[1]] = +sl.value; save(); var v=document.getElementById("v_"+parts[0]+"_"+parts[1]); if(v) v.textContent = sl.value; }
+  });
+
+  /* topbar */
+  document.getElementById("menuBtn").addEventListener("click", function(){ document.getElementById("side").classList.add("open"); document.getElementById("scrim").classList.add("show"); });
+  document.getElementById("scrim").addEventListener("click", function(){ document.getElementById("side").classList.remove("open"); document.getElementById("scrim").classList.remove("show"); });
+  document.getElementById("bell").addEventListener("click", function(){ toast("3 nowe zdarzenia — sprawdź Logi."); });
+  document.getElementById("viewSite").addEventListener("click", function(e){ e.preventDefault(); toast("Demo — tu wróciłbyś na stronę MysticCode."); });
+
+  window.addEventListener("resize", function(){ if(["overview","stats"].indexOf(current)>=0) VIEWS[current](); });
+})();
+</script>

@@ -1,6 +1,5 @@
 package pl.firen.client.module.modules;
 
-import org.lwjgl.glfw.GLFW;
 import pl.firen.client.gui.ClickGuiScreen;
 import pl.firen.client.module.Category;
 import pl.firen.client.module.Module;
@@ -10,8 +9,7 @@ public class ClickGui extends Module {
     public final BooleanSetting blur = add(new BooleanSetting("Blur", true));
 
     public ClickGui() {
-        super("ClickGUI", "Otwiera to menu (domyślnie Right Shift).", Category.RENDER);
-        setKey(GLFW.GLFW_KEY_RIGHT_SHIFT);
+        super("ClickGUI", "Otwiera menu. Klawisz zmienisz w Opcje → Sterowanie.", Category.RENDER);
     }
 
     @Override

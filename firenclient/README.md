@@ -10,7 +10,7 @@ Klient Minecraft (Fabric **1.21.4**) z nowoczesnym ClickGUI: ciemny motyw z bia�
 ## Sterowanie
 | Akcja | Klawisz |
 |---|---|
-| Otwórz / zamknij ClickGUI | **Right Shift** |
+| Otwórz / zamknij ClickGUI | **Right Shift** (zmienisz w Opcje → Sterowanie → FirenClient) albo przycisk **FirenClient** w menu ESC |
 | Włącz / wyłącz moduł | LPM na module |
 | Ustawienia modułu | PPM na module |
 | Ustaw bind | ŚPM na module (ESC / Backspace usuwa bind) |

@@ -200,7 +200,7 @@ public class ClickGuiScreen extends Screen {
         Fonts.drawCentered(ctx, Fonts.I_USER, Fonts.ICONS, sx + 25, uy + 13, TEXT);
         String name = Fonts.trim(client.getSession().getUsername(), Fonts.SEMIBOLD, sw - 60);
         Fonts.draw(ctx, name, Fonts.SEMIBOLD, sx + 42, uy + 8, TEXT);
-        Fonts.draw(ctx, "RShift · zamknij", Fonts.SMALL, sx + 42, uy + 19, TEXT_3);
+        Fonts.draw(ctx, FirenClient.openGuiKey().getBoundKeyLocalizedText().getString() + " · zamknij", Fonts.SMALL, sx + 42, uy + 19, TEXT_3);
     }
 
     private void renderContent(DrawContext ctx, float cx, float cy, float cw, float ch, float mx, float my, float dt) {
@@ -450,7 +450,7 @@ public class ClickGuiScreen extends Screen {
             scrollTarget = 0;
             return true;
         }
-        if (keyCode == GLFW.GLFW_KEY_ESCAPE || keyCode == FirenClient.modules().get(ClickGui.class).getKey()) {
+        if (keyCode == GLFW.GLFW_KEY_ESCAPE || FirenClient.openGuiKey().matchesKey(keyCode, scanCode)) {
             close();
             return true;
         }

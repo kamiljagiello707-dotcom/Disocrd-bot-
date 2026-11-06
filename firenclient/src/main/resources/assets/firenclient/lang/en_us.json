@@ -1,3 +1,4 @@
 {
-  "category.firenclient": "FirenClient"
+  "category.firenclient": "FirenClient",
+  "key.firenclient.clickgui": "Open ClickGUI"
 }

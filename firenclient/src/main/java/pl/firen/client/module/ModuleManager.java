@@ -57,6 +57,18 @@ public final class ModuleManager {
         return modules.stream().filter(m -> m.getName().equalsIgnoreCase(name)).findFirst();
     }
 
+    public void preTick(MinecraftClient client) {
+        if (client.player == null || client.world == null) return;
+        for (Module m : modules) {
+            if (m.isEnabled()) m.onPreTick();
+        }
+    }
+
+    public void renderWorld(net.fabricmc.fabric.api.client.rendering.v1.WorldRenderContext context) {
+        if (MinecraftClient.getInstance().player == null) return;
+        for (Module m : modules) m.onRenderWorld(context);
+    }
+
     public void tick(MinecraftClient client) {
         handleKeybinds(client);
         if (client.player == null) return;

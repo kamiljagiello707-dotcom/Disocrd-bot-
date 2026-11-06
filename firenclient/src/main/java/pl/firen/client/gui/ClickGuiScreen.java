@@ -268,6 +268,7 @@ public class ClickGuiScreen extends Screen {
     private static float settingsHeight(Module m) {
         float h = 10;
         for (Setting<?> st : m.getSettings()) {
+            if (!st.isVisible()) continue;
             if (st instanceof BooleanSetting) h += ROW_BOOL;
             else if (st instanceof NumberSetting) h += ROW_NUM;
             else if (st instanceof ModeSetting) h += ROW_MODE;
@@ -332,6 +333,7 @@ public class ClickGuiScreen extends Screen {
         float ix = x + 13, iw = w - 26;
         float ry = sTop + 8;
         for (Setting<?> st : md.getSettings()) {
+            if (!st.isVisible()) continue;
             float rowTop = ry;
             boolean rowVisible = rowTop < Math.min(sBottom, clipBottom) && rowTop > clipTop - 40;
             if (st instanceof BooleanSetting b) {
@@ -361,15 +363,27 @@ public class ClickGuiScreen extends Screen {
             } else if (st instanceof ModeSetting md2) {
                 List<String> modes = md2.getModes();
                 Fonts.draw(ctx, md2.getName(), Fonts.REGULAR, ix, ry + 3, TEXT_2);
-                float segY = ry + 14, segH = 16, segW = iw / modes.size();
+                float segY = ry + 14, segH = 16;
+                // szerokość segmentu proporcjonalna do długości napisu
+                float[] segX = new float[modes.size() + 1];
+                float total = 0;
+                for (String mode : modes) total += Fonts.width(mode, Fonts.SMALL) + 12;
+                for (int i = 0; i < modes.size(); i++) {
+                    segX[i + 1] = segX[i] + (Fonts.width(modes.get(i), Fonts.SMALL) + 12) / total * iw;
+                }
                 md2.anim = md2.anim < 0 ? md2.index() : Anim.approach(md2.anim, md2.index(), dt, 18f);
+                int lo = (int) Math.floor(md2.anim), hi = Math.min(modes.size() - 1, lo + 1);
+                float frac = md2.anim - lo;
+                float pillX = segX[lo] + (segX[hi] - segX[lo]) * frac;
+                float pillW = (segX[lo + 1] - segX[lo]) + ((segX[hi + 1] - segX[hi]) - (segX[lo + 1] - segX[lo])) * frac;
                 Render2D.round(ctx, ix, segY, iw, segH, 7, 0xFF1C1C21);
-                Render2D.round(ctx, ix + 2 + md2.anim * segW, segY + 2, segW - 4, segH - 4, 5, WHITE);
+                Render2D.round(ctx, ix + pillX + 2, segY + 2, pillW - 4, segH - 4, 5, WHITE);
                 for (int i = 0; i < modes.size(); i++) {
                     float active = Math.max(0f, 1f - Math.abs(md2.anim - i));
-                    Fonts.drawCentered(ctx, modes.get(i), Fonts.SMALL, ix + segW * i + segW / 2f, segY + 4.5f, Anim.lerpColor(TEXT_2, BLACK, active));
+                    float mid = ix + (segX[i] + segX[i + 1]) / 2f;
+                    Fonts.drawCentered(ctx, modes.get(i), Fonts.SMALL, mid, segY + 4.5f, Anim.lerpColor(TEXT_2, BLACK, active));
                     final int idx = i;
-                    if (rowVisible) hit(ix + segW * i, clampY(segY, clipTop, clipBottom), ix + segW * (i + 1), clampY(segY + segH, clipTop, clipBottom), k -> md2.setIndex(idx));
+                    if (rowVisible) hit(ix + segX[i], clampY(segY, clipTop, clipBottom), ix + segX[i + 1], clampY(segY + segH, clipTop, clipBottom), k -> md2.setIndex(idx));
                 }
                 ry += ROW_MODE;
             }

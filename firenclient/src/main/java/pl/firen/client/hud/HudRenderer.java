@@ -37,6 +37,7 @@ public final class HudRenderer {
 
         var m = ctx.getMatrices();
         m.push();
+        m.translate(0, 0, 5000); // nad warstwami vanilla HUD (każda podnosi Z o 200)
         m.scale(s, s, 1f);
         Render2D.alpha = 1f;
 
@@ -136,7 +137,8 @@ public final class HudRenderer {
         Render2D.gradientV(ctx, x, y, w, h, 12, 0xEB141418, 0xEB0A0A0D);
         Render2D.outline(ctx, x, y, w, h, 12, 0.5f, 0x1EFFFFFF);
         Render2D.gradientV(ctx, x + 8, y + 8, 28, 28, 9, 0xFF34343C, 0xFF1C1C22);
-        Fonts.drawCentered(ctx, Fonts.I_CROSSHAIR, Fonts.ICONS, x + 22, y + 18.5f, Theme.TEXT);
+        String initial = lastTarget.getName().getString().isEmpty() ? "?" : lastTarget.getName().getString().substring(0, 1).toUpperCase();
+        Fonts.drawCentered(ctx, initial, Fonts.TITLE, x + 22, y + 15, Theme.WHITE);
 
         String name = Fonts.trim(lastTarget.getName().getString(), Fonts.SEMIBOLD, w - 90);
         Fonts.draw(ctx, name, Fonts.SEMIBOLD, x + 44, y + 9, Theme.TEXT);

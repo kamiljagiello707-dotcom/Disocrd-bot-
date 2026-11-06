@@ -4,16 +4,23 @@
   "version": "${version}",
   "name": "FirenClient",
   "description": "FirenClient — klient z ClickGUI w czarno-białym motywie.",
-  "authors": ["Firen"],
+  "authors": [
+    "Firen"
+  ],
   "license": "MIT",
   "environment": "client",
   "entrypoints": {
-    "client": ["pl.firen.client.FirenClient"]
+    "client": [
+      "pl.firen.client.FirenClient"
+    ]
   },
   "depends": {
     "fabricloader": ">=0.16.0",
     "minecraft": "~1.21.4",
     "java": ">=21",
     "fabric-api": "*"
-  }
+  },
+  "mixins": [
+    "firenclient.mixins.json"
+  ]
 }

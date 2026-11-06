@@ -43,6 +43,9 @@ public abstract class Module {
     public void onEnable() {}
     public void onDisable() {}
     public void onTick() {}
+    /** Wywoływane na początku ticka, przed wysłaniem pakietu ruchu (rotacje). */
+    public void onPreTick() {}
+    public void onRenderWorld(net.fabricmc.fabric.api.client.rendering.v1.WorldRenderContext context) {}
 
     /** Dodatkowa informacja wyświetlana w liście modułów na HUD (np. tryb). */
     public String getSuffix() { return null; }

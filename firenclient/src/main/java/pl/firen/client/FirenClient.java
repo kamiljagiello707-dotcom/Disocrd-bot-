@@ -4,6 +4,8 @@ import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientLifecycleEvents;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
+import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderEvents;
+import pl.firen.client.rotation.RotationManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import pl.firen.client.config.ConfigManager;
@@ -28,7 +30,13 @@ public final class FirenClient implements ClientModInitializer {
 
         HudRenderer hud = new HudRenderer();
         HudRenderCallback.EVENT.register(hud::render);
+        ClientTickEvents.START_CLIENT_TICK.register(client -> {
+            RotationManager.beginTick();
+            modules.preTick(client);
+            RotationManager.endTick();
+        });
         ClientTickEvents.END_CLIENT_TICK.register(modules::tick);
+        WorldRenderEvents.LAST.register(modules::renderWorld);
         ClientLifecycleEvents.CLIENT_STOPPING.register(client -> config.save());
 
         LOGGER.info("FirenClient {} załadowany — Right Shift otwiera ClickGUI", VERSION);

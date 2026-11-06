@@ -42,6 +42,15 @@ public final class Fonts {
         int c = Render2D.a(color);
         if ((c >>> 24) < 5) c = (c & 0xFFFFFF) | 0x05000000;
         var m = ctx.getMatrices();
+        // przyciągnij do siatki pikseli ekranu, żeby cienkie litery były ostre
+        double sf = MinecraftClient.getInstance().getWindow().getScaleFactor();
+        org.joml.Matrix4f mat = m.peek().getPositionMatrix();
+        org.joml.Vector4f p = mat.transform(new org.joml.Vector4f(x, y, 0, 1));
+        float unit = mat.m00();
+        if (unit > 0) {
+            x += (float) ((Math.round(p.x * sf) / sf - p.x) / unit);
+            y += (float) ((Math.round(p.y * sf) / sf - p.y) / mat.m11());
+        }
         m.push();
         m.translate(x, y, 0);
         ctx.drawText(tr(), text(s, font), 0, 0, c, false);

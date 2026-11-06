@@ -62,7 +62,11 @@ public class KillAura extends Module {
     public final NumberSetting maxCps = add(new NumberSetting("Max CPS", 13, 1, 20, 1));
     public final BooleanSetting smartHurt = add(new BooleanSetting("Smart HurtTime", true));
     public final BooleanSetting critSync = add(new BooleanSetting("Crit sync", true));
-    public final BooleanSetting throughWalls = add(new BooleanSetting("Through walls", false));
+    public final BooleanSetting throughWalls = add(new BooleanSetting("Through walls", true));
+    public final NumberSetting wallRange = add(new NumberSetting("Wall range", 3.0, 1.0, 6.0, 0.05));
+    public final NumberSetting predict = add(new NumberSetting("Prediction", 1.0, 0.0, 4.0, 0.25));
+    public final BooleanSetting autoWeapon = add(new BooleanSetting("Auto weapon", true));
+    public final BooleanSetting ignoreFriends = add(new BooleanSetting("Ignore friends", true));
 
     // --- Filtry
     public final BooleanSetting players = add(new BooleanSetting("Players", true));
@@ -87,7 +91,7 @@ public class KillAura extends Module {
     private float espAnim;
 
     public KillAura() {
-        super("KillAura", "Ciche rotacje, raycast, krytyki i Target ESP.", Category.COMBAT);
+        super("KillAura", "Bije sama, także przez ściany. Ciche rotacje, predykcja, Target ESP.", Category.COMBAT);
         switchDelay.visibleWhen(() -> mode.is("Switch"));
         aimPoint.visibleWhen(() -> !rotations.is("None"));
         minSpeed.visibleWhen(() -> !rotations.is("None"));
@@ -101,6 +105,7 @@ public class KillAura extends Module {
         maxCps.visibleWhen(() -> timing.is("CPS"));
         smartHurt.visibleWhen(() -> timing.is("CPS"));
         espTheme.visibleWhen(() -> !espMode.is("Off"));
+        wallRange.visibleWhen(throughWalls::get);
         espColor.visibleWhen(() -> !espMode.is("Off") && !espTheme.get());
     }
 
@@ -164,7 +169,11 @@ public class KillAura extends Module {
             if (!isValidType(living)) continue;
             if (distanceTo(living) > maxRange) continue;
             if (fov.get() < 360 && angleTo(living) > fov.get() / 2) continue;
-            if (!throughWalls.get() && !canSee(living)) continue;
+            if (!canSee(living)) {
+                if (!throughWalls.get()) continue;
+                // za ścianą: krótszy zasięg (na celowanie +1 bloku zapasu)
+                if (distanceTo(living) > Math.min(maxRange, wallRange.get() + (maxRange > range.get() ? 1.0 : 0.0))) continue;
+            }
             list.add(living);
         }
         Comparator<LivingEntity> order = switch (priority.get()) {
@@ -180,6 +189,7 @@ public class KillAura extends Module {
     private boolean isValidType(LivingEntity e) {
         if (e.isInvisible() && !invisibles.get()) return false;
         if (teams.get() && mc.player.isTeammate(e)) return false;
+        if (ignoreFriends.get() && pl.firen.client.util.Friends.is(e.getName().getString())) return false;
         if (e instanceof PlayerEntity p) {
             if (!players.get() || p.isSpectator() || p.isCreative()) return false;
             return !antiBot.get() || !isBot(p);
@@ -191,6 +201,8 @@ public class KillAura extends Module {
 
     /** Prosty AntiBot: gracz musi być na liście graczy (TAB) i mieć poprawny nick. */
     private boolean isBot(PlayerEntity p) {
+        if (FakePlayer.isFake(p)) return false;
+        if (p.age < 15) return true; // świeżo zespawnowane "boty" antycheatu
         var handler = mc.getNetworkHandler();
         if (handler == null || handler.getPlayerListEntry(p.getUuid()) == null) return true;
         String name = p.getGameProfile().getName();
@@ -215,8 +227,10 @@ public class KillAura extends Module {
 
         List<LivingEntity> inRange = findTargets(range.get());
         if (!inRange.contains(target)) return;
-        if (!rotations.is("None") && raycast.get() && !rayHits(target)) return;
+        boolean visible = canSee(target);
+        if (!rotations.is("None") && raycast.get() && !rayHits(target, visible)) return;
         if (!readyToAttack(target)) return;
+        if (autoWeapon.get()) selectWeapon();
 
         if (mode.is("Multi")) {
             for (LivingEntity e : inRange) attack(e);
@@ -243,6 +257,27 @@ public class KillAura extends Module {
         if (!canCrit) { critWait = 0; return false; }
         if (p.fallDistance > 0 && p.getVelocity().y < 0) { critWait = 0; return false; }
         return ++critWait <= 8;
+    }
+
+    /** Najlepsza broń z paska (wg obrażeń ataku). */
+    private void selectWeapon() {
+        var inv = mc.player.getInventory();
+        int best = inv.selectedSlot;
+        double bestDmg = damageOf(inv.getStack(best));
+        for (int i = 0; i < 9; i++) {
+            double d = damageOf(inv.getStack(i));
+            if (d > bestDmg + 0.01) { bestDmg = d; best = i; }
+        }
+        inv.selectedSlot = best;
+    }
+
+    public static double damageOf(ItemStack stack) {
+        double[] v = {0};
+        stack.getOrDefault(net.minecraft.component.DataComponentTypes.ATTRIBUTE_MODIFIERS,
+                net.minecraft.component.type.AttributeModifiersComponent.DEFAULT).applyModifiers(net.minecraft.entity.EquipmentSlot.MAINHAND, (attr, mod) -> {
+            if (attr.equals(net.minecraft.entity.attribute.EntityAttributes.ATTACK_DAMAGE)) v[0] += mod.value();
+        });
+        return v[0];
     }
 
     private void scheduleNext() {
@@ -284,7 +319,7 @@ public class KillAura extends Module {
     }
 
     /** Czy promień z rotacji wysłanej do serwera trafia w hitbox celu (a nie w ścianę). */
-    private boolean rayHits(LivingEntity e) {
+    private boolean rayHits(LivingEntity e, boolean visible) {
         float yaw = rotations.is("Silent") ? RotationManager.sentYaw : mc.player.getYaw();
         float pitch = rotations.is("Silent") ? RotationManager.sentPitch : mc.player.getPitch();
         Vec3d eye = mc.player.getEyePos();
@@ -294,7 +329,7 @@ public class KillAura extends Module {
         var hit = box.raycast(eye, end);
         if (hit.isEmpty()) return false;
         if (eye.distanceTo(hit.get()) > range.get()) return false;
-        if (throughWalls.get()) return true;
+        if (throughWalls.get() || !visible) return true;
         var block = mc.world.raycast(new RaycastContext(eye, hit.get(), RaycastContext.ShapeType.COLLIDER,
                 RaycastContext.FluidHandling.NONE, mc.player));
         return block.getType() == HitResult.Type.MISS;
@@ -312,6 +347,9 @@ public class KillAura extends Module {
         } else {
             driftX = driftY = driftZ = 0;
         }
+        // predykcja: przesuń hitbox o prędkość celu (ticki do przodu)
+        Vec3d vel = e.getPos().subtract(e.prevX, e.prevY, e.prevZ).multiply(predict.get());
+        b = b.offset(vel.x, 0, vel.z);
         double cx = b.getCenter().x + driftX * w, cz = b.getCenter().z + driftZ * w;
         return switch (aimPoint.get()) {
             case "Center" -> new Vec3d(cx, b.minY + h * (0.5 + driftY * 0.5), cz);

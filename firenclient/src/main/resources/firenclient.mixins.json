@@ -9,6 +9,7 @@
     "ClientPlayerInteractionManagerMixin",
     "EntityMixin",
     "EntityRendererMixin",
+    "GameRendererMixin",
     "KeyboardInputMixin",
     "LivingEntityMixin",
     "MinecraftClientAccessor",

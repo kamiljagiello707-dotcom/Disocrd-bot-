@@ -18,7 +18,10 @@ public final class ModuleManager {
     public ModuleManager() {
         // Combat
         modules.add(new KillAura());
+        modules.add(new AutoTrap());
+        modules.add(new Surround());
         modules.add(new TriggerBot());
+        modules.add(new AimAssist());
         modules.add(new Velocity());
         modules.add(new AutoClicker());
         modules.add(new Criticals());
@@ -29,6 +32,8 @@ public final class ModuleManager {
         modules.add(new Flight());
         modules.add(new NoFall());
         modules.add(new Step());
+        modules.add(new NoSlow());
+        modules.add(new Parkour());
         // Render
         modules.add(new Hud());
         modules.add(new ClickGui());
@@ -37,7 +42,10 @@ public final class ModuleManager {
         modules.add(new Nametags());
         modules.add(new ChestEsp());
         modules.add(new Fullbright());
+        modules.add(new Zoom());
+        modules.add(new NoHurtCam());
         // Player
+        modules.add(new AutoArmor());
         modules.add(new AutoTool());
         modules.add(new FastPlace());
         modules.add(new ChestStealer());
@@ -45,6 +53,11 @@ public final class ModuleManager {
         modules.add(new Scaffold());
         modules.add(new Timer());
         modules.add(new OreEsp());
+        // Misc
+        modules.add(new FakePlayer());
+        modules.add(new MiddleClickFriend());
+        modules.add(new AutoRespawn());
+        modules.add(new AntiAfk());
     }
 
     public List<Module> all() { return modules; }

@@ -56,7 +56,7 @@ public final class HudRenderer {
         float x = 8, y = 8, h = 24;
         String fps = mc.getCurrentFps() + " fps";
         String user = mc.getSession().getUsername();
-        float w = 30 + Fonts.width("FirenClient", Fonts.SEMIBOLD) + 22
+        float w = 30 + Fonts.width("FirenClient", Fonts.SEMIBOLD) + 22 + 22
                 + (hud.info.get() ? Fonts.width(fps, Fonts.REGULAR) + 18 : 0)
                 + Fonts.width(user, Fonts.REGULAR) + 2;
         Render2D.shadow(ctx, x, y + 2, w, h, 9, 10, 0x80000000);
@@ -66,7 +66,10 @@ public final class HudRenderer {
         Fonts.drawCentered(ctx, Fonts.I_FIRE, Fonts.ICONS, x + 12, y + 8.5f, Theme.onAccent());
         float tx = x + 25;
         Fonts.draw(ctx, "FirenClient", Fonts.SEMIBOLD, tx, y + 8, Theme.TEXT);
-        tx += Fonts.width("FirenClient", Fonts.SEMIBOLD) + 9;
+        tx += Fonts.width("FirenClient", Fonts.SEMIBOLD) + 4;
+        Render2D.round(ctx, tx, y + 7, 17, 10, 4, Theme.accentAlpha(0x38));
+        Fonts.drawCentered(ctx, "V2", Fonts.SMALL, tx + 8.5f, y + 9, Theme.accent());
+        tx += 26;
         if (hud.info.get()) {
             Render2D.circle(ctx, tx, y + 12, 1.2f, 0x60FFFFFF);
             tx += 8;

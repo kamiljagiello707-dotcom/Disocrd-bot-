@@ -5,6 +5,8 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.Redirect;
+import pl.firen.client.module.modules.NoSlow;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import pl.firen.client.rotation.RotationManager;
 
@@ -35,5 +37,12 @@ abstract class ClientPlayerEntityMixin {
         self.setYaw(firen$realYaw);
         self.setPitch(firen$realPitch);
         firen$swapped = false;
+    }
+
+    /** NoSlow: pierwsze sprawdzenie isUsingItem() w tickMovement to spowolnienie ruchu. */
+    @Redirect(method = "tickMovement", at = @At(value = "INVOKE",
+            target = "Lnet/minecraft/client/network/ClientPlayerEntity;isUsingItem()Z", ordinal = 0))
+    private boolean firen$noSlow(ClientPlayerEntity self) {
+        return !NoSlow.active() && self.isUsingItem();
     }
 }

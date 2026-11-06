@@ -8,12 +8,17 @@ import java.util.function.BooleanSupplier;
 public abstract class Setting<T> {
     private final String name;
     protected T value;
+    protected final T defaultValue;
     private BooleanSupplier visible = () -> true;
 
     protected Setting(String name, T value) {
         this.name = name;
         this.value = value;
+        this.defaultValue = value;
     }
+
+    /** Przywraca wartość domyślną. */
+    public void reset() { set(defaultValue); }
 
     public String getName() { return name; }
 

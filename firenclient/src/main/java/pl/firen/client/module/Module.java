@@ -20,6 +20,7 @@ public abstract class Module {
     // Stan animacji GUI / HUD
     public float toggleAnim, hoverAnim, expandAnim, arrayAnim;
     public boolean expanded;
+    public boolean favorite;
 
     protected Module(String name, String description, Category category) {
         this.name = name;
@@ -38,6 +39,13 @@ public abstract class Module {
         if (enabled == value) return;
         enabled = value;
         if (value) onEnable(); else onDisable();
+    }
+
+    /** Ustawia stan bez wywoływania onEnable/onDisable (np. przy wczytywaniu configu w menu). */
+    public void setEnabledSilently(boolean value) { enabled = value; }
+
+    public void resetSettings() {
+        for (Setting<?> s : settings) s.reset();
     }
 
     public void onEnable() {}

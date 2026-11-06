@@ -27,6 +27,18 @@ public final class Fonts {
     public static final String I_KEYBOARD = "";
     public static final String I_BOLT = "";
     public static final String I_CROSSHAIR = "";
+    public static final String I_STAR = "\uf005";
+    public static final String I_SAVE = "\uf0c7";
+    public static final String I_TRASH = "\uf1f8";
+    public static final String I_FOLDER = "\uf07c";
+    public static final String I_IMPORT = "\uf56f";
+    public static final String I_EXPORT = "\uf56e";
+    public static final String I_PALETTE = "\uf53f";
+    public static final String I_RESET = "\uf2f1";
+    public static final String I_CHECK = "\uf00c";
+    public static final String I_LIST = "\uf03a";
+    public static final String I_LAYERS = "\uf5fd";
+    public static final String I_HEART = "\uf004";
 
     private static TextRenderer tr() { return MinecraftClient.getInstance().textRenderer; }
 

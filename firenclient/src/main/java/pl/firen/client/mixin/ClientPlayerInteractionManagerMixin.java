@@ -11,8 +11,15 @@ import pl.firen.client.module.modules.Criticals;
 
 @Mixin(ClientPlayerInteractionManager.class)
 abstract class ClientPlayerInteractionManagerMixin {
-    @Inject(method = "attackEntity", at = @At("HEAD"))
+    @Inject(method = "attackEntity", at = @At("HEAD"), cancellable = true)
     private void firen$beforeAttack(PlayerEntity player, Entity target, CallbackInfo ci) {
+        if (pl.firen.client.module.modules.FakePlayer.isFake(target)) {
+            // manekin istnieje tylko u nas – symulujemy cios lokalnie
+            pl.firen.client.module.modules.FakePlayer.simulateHit(target);
+            player.resetLastAttackedTicks();
+            ci.cancel();
+            return;
+        }
         Criticals.beforeAttack(target);
     }
 }

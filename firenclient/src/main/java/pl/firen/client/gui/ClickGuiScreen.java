@@ -4,12 +4,14 @@ import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.util.InputUtil;
 import net.minecraft.text.Text;
-import net.minecraft.util.math.RotationAxis;
+import net.minecraft.util.Util;
 import org.lwjgl.glfw.GLFW;
 import pl.firen.client.FirenClient;
+import pl.firen.client.config.ConfigManager;
 import pl.firen.client.module.Category;
 import pl.firen.client.module.Module;
 import pl.firen.client.module.modules.ClickGui;
+import pl.firen.client.module.modules.Hud;
 import pl.firen.client.render.Fonts;
 import pl.firen.client.render.Render2D;
 import pl.firen.client.setting.BooleanSetting;
@@ -20,47 +22,61 @@ import pl.firen.client.setting.Setting;
 import pl.firen.client.util.Anim;
 
 import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.EnumMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.function.IntConsumer;
 
 import static pl.firen.client.gui.Theme.*;
 
-/** Nowoczesne ClickGUI: okno z bocznym menu kategorii i kartami modułów. */
+/**
+ * FirenClient V2 – GUI: górny pasek zakładek, lista modułów, panel ustawień,
+ * zakładki Configs (profile) i Theme, pasek statusu.
+ */
 public class ClickGuiScreen extends Screen {
-    // Stan zapamiętywany między otwarciami (i w configu)
-    public static Category category = Category.COMBAT;
     public static float winX = -1, winY = -1;
+    public static int tab = 0;
+    public static Category category = Category.COMBAT;
+    private static final Map<Category, Module> SELECTED = new EnumMap<>(Category.class);
     private static String query = "";
 
-    private static final float SIDEBAR_W = 128;
-    private static final float CAT_ROW = 26;
-    private static final float CARD_HEAD = 38;
-    private static final float ROW_BOOL = 20, ROW_NUM = 28, ROW_MODE = 34, ROW_BIND = 20;
+    private static final int TAB_CONFIGS = Category.values().length, TAB_THEME = TAB_CONFIGS + 1;
+    private static final float TOP = 48, STATUS = 24, ROW = 30;
+    private static final float ROW_BOOL = 22, ROW_NUM = 30, ROW_MODE = 36, ROW_COLOR = 22, COLOR_PICKER = 80, CHIP_H = 17, CHIP_GAP = 5;
 
     private record Hit(float x1, float y1, float x2, float y2, IntConsumer action) {}
 
     private final List<Hit> hits = new ArrayList<>();
     private final long openedAt = System.nanoTime();
-    private long closingAt = -1;
-    private long lastFrame = System.nanoTime();
-
-    private float s = 1f;   // skala: 1 jednostka = 2 px (ostre czcionki i kształty)
+    private long closingAt = -1, lastFrame = System.nanoTime();
+    private float s = 1f;
     private int vw, vh;
-    private float catAnim = -1f;
-    private float scroll, scrollTarget, maxScroll;
+
+    private float tabX = -1, tabW = 0;
+    private float listScroll, listTarget, listMax;
+    private float panelScroll, panelTarget, panelMax;
+    private float panelAnim = 1f;
+    private Object lastPanel;
+    private float listTop, listBottom, listLeft, listRight;
 
     private boolean draggingWindow;
     private float dragOffX, dragOffY;
     private NumberSetting slider;
     private float sliderX, sliderW;
-    private Module binding;
     private ColorSetting colorDrag;
-    private int colorDragPart; // 0 = pole SV, 1 = pasek odcienia
+    private int colorDragPart;
     private float cdX, cdY, cdW, cdH;
+    private Module binding;
+
+    private boolean editingName;
+    private String nameField = "";
+    private String toast;
+    private long toastAt;
 
     public ClickGuiScreen() {
-        super(Text.literal("FirenClient"));
+        super(Text.literal("FirenClient V2"));
     }
 
     @Override
@@ -70,6 +86,17 @@ public class ClickGuiScreen extends Screen {
         s = (float) (target / factor);
         vw = Math.round(width / s);
         vh = Math.round(height / s);
+        if (tab < 0 || tab > TAB_THEME) tab = 0;
+    }
+
+    /** Otwiera GUI z wybranym modułem (np. z komend / testów). */
+    public static void select(Module m) {
+        SELECTED.put(m.getCategory(), m);
+        tab = m.getCategory().ordinal();
+    }
+
+    public static void openTab(int t) {
+        tab = t;
     }
 
     public static String keyName(int key) {
@@ -78,21 +105,28 @@ public class ClickGuiScreen extends Screen {
     }
 
     private void hit(float x1, float y1, float x2, float y2, IntConsumer action) {
-        hits.add(new Hit(x1, y1, x2, y2, action));
+        if (y2 > y1 && x2 > x1) hits.add(new Hit(x1, y1, x2, y2, action));
+    }
+
+    private void showToast(String text) {
+        toast = text;
+        toastAt = System.currentTimeMillis();
     }
 
     private float progress() {
-        float open = Math.min(1f, (System.nanoTime() - openedAt) / 260_000_000f);
+        float open = Math.min(1f, (System.nanoTime() - openedAt) / 280_000_000f);
         if (closingAt < 0) return Anim.easeOutCubic(open);
-        float close = Math.min(1f, (System.nanoTime() - closingAt) / 160_000_000f);
-        return Anim.easeOutCubic(open) * (1f - close);
+        return Anim.easeOutCubic(open) * (1f - Math.min(1f, (System.nanoTime() - closingAt) / 160_000_000f));
     }
 
-    // ------------------------------------------------------------------ render
+    private static float clampY(float v, float top, float bottom) {
+        return Math.max(top, Math.min(bottom, v));
+    }
+
+    // ================================================================== render
 
     @Override
     public void renderBackground(DrawContext ctx, int mouseX, int mouseY, float delta) {
-        // vanilla: rozmycie świata (albo panorama w menu głównym)
         if (FirenClient.modules().get(ClickGui.class).blur.get()) super.renderBackground(ctx, mouseX, mouseY, delta);
     }
 
@@ -105,18 +139,16 @@ public class ClickGuiScreen extends Screen {
             client.setScreen(null);
             return;
         }
-
         float mx = rawX / s, my = rawY / s;
         float p = progress();
 
         renderBackground(ctx, rawX, rawY, delta);
-        ctx.fillGradient(0, 0, width, height, Anim.withAlpha(0x66000000, p), Anim.withAlpha(0xAA000000, p));
-
+        ctx.fillGradient(0, 0, width, height, Anim.withAlpha(0x70000000, p), Anim.withAlpha(0xB0000000, p));
         hits.clear();
         Render2D.alpha = p;
 
-        float W = Math.min(580, vw - 32), H = Math.min(350, vh - 32);
-        if (winX < 0) { winX = (vw - W) / 2f; winY = (vh - H) / 2f; }
+        float W = Math.min(660, vw - 24), H = Math.min(390, vh - 24);
+        if (winX < 0 || winY < 0) { winX = (vw - W) / 2f; winY = (vh - H) / 2f; }
         if (draggingWindow) { winX = mx - dragOffX; winY = my - dragOffY; }
         winX = Math.max(4, Math.min(vw - W - 4, winX));
         winY = Math.max(4, Math.min(vh - H - 4, winY));
@@ -125,385 +157,584 @@ public class ClickGuiScreen extends Screen {
         var m = ctx.getMatrices();
         m.push();
         m.scale(s, s, 1f);
-        float zoom = 0.94f + 0.06f * p;
-        m.translate(x + W / 2f, y + H / 2f + (1 - p) * 8f, 0);
+        float zoom = 0.95f + 0.05f * p;
+        m.translate(x + W / 2f, y + H / 2f + (1 - p) * 10f, 0);
         m.scale(zoom, zoom, 1f);
         m.translate(-(x + W / 2f), -(y + H / 2f), 0);
 
-        // Okno
-        Render2D.shadow(ctx, x, y + 6, W, H, 16, 30, 0xB0000000);
-        Render2D.gradientV(ctx, x, y, W, H, 16, WINDOW_TOP, WINDOW_BOTTOM);
-        Render2D.outline(ctx, x, y, W, H, 16, 0.5f, 0x1EFFFFFF);
-        // delikatna poświata u góry okna
-        Render2D.gradientV(ctx, x + 1, y + 1, W - 2, 60, 15, 0x0CFFFFFF, 0x00FFFFFF);
+        Render2D.shadow(ctx, x, y + 8, W, H, 18, 34, 0xC0000000);
+        Render2D.shadow(ctx, x, y, W, H, 18, 26, Theme.accentAlpha(0x1C));
+        Render2D.gradientV(ctx, x, y, W, H, 18, 0xF70E0E12, 0xF706060A);
+        Render2D.outline(ctx, x, y, W, H, 18, 0.5f, 0x22FFFFFF);
+        Render2D.gradientH(ctx, x + 1, y + 1, W * 0.6f, TOP, 17, Theme.accentAlpha(0x16), 0x00000000);
 
-        renderSidebar(ctx, x, y, H, mx, my, dt);
-        renderContent(ctx, x + SIDEBAR_W + 20, y + 16, W - SIDEBAR_W - 34, H - 26, mx, my, dt);
+        renderTopBar(ctx, x, y, W, mx, my, dt);
+        Render2D.round(ctx, x + 14, y + TOP, W - 28, 0.5f, 0, 0x14FFFFFF);
+
+        float bodyTop = y + TOP + 10, bodyBottom = y + H - STATUS - 6;
+        boolean searching = !query.isEmpty();
+        if (tab == TAB_CONFIGS && !searching) renderConfigs(ctx, x + 12, bodyTop, W - 24, bodyBottom - bodyTop, mx, my);
+        else if (tab == TAB_THEME && !searching) renderThemeTab(ctx, x + 12, bodyTop, W - 24, bodyBottom - bodyTop, mx, my, dt);
+        else renderModules(ctx, x + 12, bodyTop, W - 24, bodyBottom - bodyTop, mx, my, dt);
+
+        renderStatus(ctx, x, y + H - STATUS, W);
+        renderToast(ctx, x, y, W, H);
 
         m.pop();
         Render2D.alpha = 1f;
     }
 
-    private void renderSidebar(DrawContext ctx, float x, float y, float H, float mx, float my, float dt) {
-        float sx = x + 8, sy = y + 8, sw = SIDEBAR_W, sh = H - 16;
-        Render2D.round(ctx, sx, sy, sw, sh, 12, SIDEBAR);
-        Render2D.outline(ctx, sx, sy, sw, sh, 12, 0.5f, STROKE);
+    // ------------------------------------------------------------------ górny pasek
 
-        // Logo
-        Render2D.shadow(ctx, sx + 10, sy + 11, 24, 24, 8, 10, Theme.accentAlpha(0x50));
-        Render2D.gradientV(ctx, sx + 10, sy + 10, 24, 24, 8, Theme.accent(), Theme.accent2());
-        Fonts.drawCentered(ctx, Fonts.I_FIRE, Fonts.ICONS, sx + 22, sy + 17.5f, Theme.onAccent());
-        Fonts.draw(ctx, "FirenClient", Fonts.SEMIBOLD, sx + 41, sy + 12, TEXT);
-        Fonts.draw(ctx, "v" + FirenClient.VERSION, Fonts.SMALL, sx + 41, sy + 23, TEXT_3);
-        hit(sx, sy, sx + sw, sy + 40, b -> {
+    private void renderTopBar(DrawContext ctx, float x, float y, float W, float mx, float my, float dt) {
+        Render2D.shadow(ctx, x + 14, y + 12, 26, 26, 8, 12, Theme.accentAlpha(0x60));
+        Render2D.gradientV(ctx, x + 14, y + 11, 26, 26, 8, Theme.accent(), Theme.accent2());
+        Fonts.drawCentered(ctx, Fonts.I_FIRE, Fonts.ICONS, x + 27, y + 19, Theme.onAccent());
+        Fonts.draw(ctx, "FirenClient", Fonts.SEMIBOLD, x + 47, y + 14, TEXT);
+        float vx = x + 47 + Fonts.width("FirenClient", Fonts.SEMIBOLD) + 5;
+        Render2D.round(ctx, vx, y + 13, 18, 11, 4, Theme.accentAlpha(0x30));
+        Fonts.drawCentered(ctx, "V2", Fonts.SMALL, vx + 9, y + 15.5f, Theme.accent());
+        Fonts.draw(ctx, "moduły · configi · motywy", Fonts.SMALL, x + 47, y + 27, TEXT_3);
+        hit(x, y, x + 150, y + TOP, b -> {
             if (b == 0) { draggingWindow = true; dragOffX = mx - winX; dragOffY = my - winY; }
         });
 
-        Fonts.draw(ctx, "KATEGORIE", Fonts.SMALL, sx + 14, sy + 52, TEXT_3);
-
         Category[] cats = Category.values();
-        float listY = sy + 64;
-        int active = query.isEmpty() ? category.ordinal() : -1;
-        float targetY = active < 0 ? catAnim : active * CAT_ROW;
-        catAnim = catAnim < 0 ? targetY : Anim.approach(catAnim, targetY, dt, 18f);
+        int n = TAB_THEME + 1;
+        String[] icons = new String[n], labels = new String[n];
+        for (int i = 0; i < cats.length; i++) { icons[i] = cats[i].icon; labels[i] = cats[i].display; }
+        icons[TAB_CONFIGS] = Fonts.I_SAVE; labels[TAB_CONFIGS] = "Configs";
+        icons[TAB_THEME] = Fonts.I_PALETTE; labels[TAB_THEME] = "Theme";
 
-        if (active >= 0) {
-            float py = listY + catAnim;
-            Render2D.shadow(ctx, sx + 8, py + 1, sw - 16, CAT_ROW - 4, 8, 10, Theme.accentAlpha(0x40));
-            Render2D.round(ctx, sx + 8, py, sw - 16, CAT_ROW - 4, 8, Theme.accent());
+        float searchW = 128, tabsX = x + 168, tabsRight = x + W - 14 - searchW - 10;
+        float full = 0;
+        for (int i = 0; i < n; i++) full += Fonts.width(labels[i], Fonts.SEMIBOLD) + 34 + (i == TAB_CONFIGS ? 8 : 0);
+        boolean compact = full > tabsRight - tabsX;
+        float[] tx = new float[n], tw = new float[n];
+        float cx = tabsX;
+        for (int i = 0; i < n; i++) {
+            if (i == TAB_CONFIGS) cx += 8;
+            boolean showLabel = !compact || i == tab;
+            tw[i] = showLabel ? Fonts.width(labels[i], Fonts.SEMIBOLD) + 34 : 26;
+            tx[i] = cx;
+            cx += tw[i] + 2;
         }
-
-        for (int i = 0; i < cats.length; i++) {
-            Category c = cats[i];
-            float ry = listY + i * CAT_ROW;
-            boolean hover = mx >= sx + 8 && mx < sx + sw - 8 && my >= ry && my < ry + CAT_ROW - 4;
-            float t = active < 0 ? 0f : Math.max(0f, 1f - Math.abs(catAnim - i * CAT_ROW) / CAT_ROW);
-            if (hover && i != active) Render2D.round(ctx, sx + 8, ry, sw - 16, CAT_ROW - 4, 8, 0x0DFFFFFF);
-            int col = Anim.lerpColor(hover ? TEXT : TEXT_2, Theme.onAccent(), t);
-            Fonts.drawCentered(ctx, c.icon, Fonts.ICONS, sx + 23, ry + 7.5f, col);
-            Fonts.draw(ctx, c.display, Fonts.SEMIBOLD, sx + 36, ry + 7, col);
-
-            long on = FirenClient.modules().byCategory(c).stream().filter(Module::isEnabled).count();
-            if (on > 0) {
-                String n = String.valueOf(on);
-                float bw = Math.max(14, Fonts.width(n, Fonts.SMALL) + 8);
-                float bx = sx + sw - 14 - bw;
-                Render2D.round(ctx, bx, ry + 5, bw, 12, 6, Anim.lerpColor(0x1AFFFFFF, 0xFF000000, t));
-                Fonts.drawCentered(ctx, n, Fonts.SMALL, bx + bw / 2f, ry + 6.5f, Anim.lerpColor(TEXT, Theme.accent(), t));
-            }
-            hit(sx + 8, ry, sx + sw - 8, ry + CAT_ROW - 4, b -> {
-                if (category != c || !query.isEmpty()) { category = c; query = ""; scrollTarget = 0; }
+        int active = query.isEmpty() ? tab : -1;
+        if (active >= 0) {
+            if (tabX < 0) { tabX = tx[active]; tabW = tw[active]; }
+            tabX = Anim.approach(tabX, tx[active], dt, 16f);
+            tabW = Anim.approach(tabW, tw[active], dt, 16f);
+            Render2D.shadow(ctx, tabX, y + 13, tabW, 24, 9, 10, Theme.accentAlpha(0x50));
+            Render2D.gradientV(ctx, tabX, y + 12, tabW, 24, 9, Theme.accent(), Theme.accent2());
+        }
+        for (int i = 0; i < n; i++) {
+            boolean on = i == active;
+            boolean hover = mx >= tx[i] && mx < tx[i] + tw[i] && my >= y + 12 && my < y + 36;
+            if (hover && !on) Render2D.round(ctx, tx[i], y + 12, tw[i], 24, 9, 0x0FFFFFFF);
+            int col = on ? Theme.onAccent() : hover ? TEXT : TEXT_2;
+            boolean showLabel = !compact || i == tab;
+            Fonts.drawCentered(ctx, icons[i], Fonts.ICONS, tx[i] + (showLabel ? 13 : tw[i] / 2f), y + 20.5f, col);
+            if (showLabel) Fonts.draw(ctx, labels[i], Fonts.SEMIBOLD, tx[i] + 22, y + 20, col);
+            final int idx = i;
+            hit(tx[i], y + 12, tx[i] + tw[i], y + 36, b -> {
+                tab = idx;
+                query = "";
+                editingName = false;
+                if (idx < TAB_CONFIGS) category = Category.values()[idx];
+                listTarget = 0;
+                panelTarget = 0;
             });
         }
+        if (compact) Render2D.round(ctx, tx[TAB_CONFIGS] - 6, y + 17, 0.5f, 14, 0, 0x22FFFFFF);
 
-        // Karta użytkownika
-        float uy = sy + sh - 42;
-        Render2D.round(ctx, sx + 8, uy, sw - 16, 34, 10, 0x0AFFFFFF);
-        Render2D.outline(ctx, sx + 8, uy, sw - 16, 34, 10, 0.5f, STROKE);
-        Render2D.gradientV(ctx, sx + 15, uy + 7, 20, 20, 10, 0xFF3A3A42, 0xFF1E1E24);
-        Fonts.drawCentered(ctx, Fonts.I_USER, Fonts.ICONS, sx + 25, uy + 13, TEXT);
-        String name = Fonts.trim(client.getSession().getUsername(), Fonts.SEMIBOLD, sw - 60);
-        Fonts.draw(ctx, name, Fonts.SEMIBOLD, sx + 42, uy + 8, TEXT);
-        Fonts.draw(ctx, FirenClient.openGuiKey().getBoundKeyLocalizedText().getString() + " · zamknij", Fonts.SMALL, sx + 42, uy + 19, TEXT_3);
+        float sx = x + W - 14 - searchW, sy = y + 12;
+        Render2D.round(ctx, sx, sy, searchW, 24, 9, FIELD);
+        Render2D.outline(ctx, sx, sy, searchW, 24, 9, 0.5f, query.isEmpty() ? STROKE : Theme.accentAlpha(0x90));
+        Fonts.draw(ctx, Fonts.I_SEARCH, Fonts.ICONS, sx + 9, sy + 8.5f, query.isEmpty() ? TEXT_3 : Theme.accent());
+        boolean caret = (System.currentTimeMillis() / 530) % 2 == 0;
+        if (query.isEmpty()) Fonts.draw(ctx, "Szukaj…", Fonts.REGULAR, sx + 23, sy + 8, TEXT_3);
+        else Fonts.draw(ctx, Fonts.trim(query, Fonts.REGULAR, searchW - 34) + (caret && !editingName ? "|" : ""), Fonts.REGULAR, sx + 23, sy + 8, TEXT);
     }
 
-    private void renderContent(DrawContext ctx, float cx, float cy, float cw, float ch, float mx, float my, float dt) {
+    // ------------------------------------------------------------------ lista modułów + panel
+
+    private List<Module> visibleModules() {
         String q = query.toLowerCase(Locale.ROOT);
-        List<Module> modules = q.isEmpty()
-                ? FirenClient.modules().byCategory(category)
-                : FirenClient.modules().all().stream()
-                    .filter(md -> md.getName().toLowerCase(Locale.ROOT).contains(q)).toList();
+        List<Module> list = new ArrayList<>(q.isEmpty()
+                ? FirenClient.modules().byCategory(Category.values()[Math.min(tab, TAB_CONFIGS - 1)])
+                : FirenClient.modules().all().stream().filter(md -> md.getName().toLowerCase(Locale.ROOT).contains(q)
+                    || md.getDescription().toLowerCase(Locale.ROOT).contains(q)).toList());
+        list.sort(Comparator.comparing((Module md) -> !md.favorite));
+        return list;
+    }
 
-        // Nagłówek
-        String title = q.isEmpty() ? category.display : "Wyniki";
-        Fonts.draw(ctx, title, Fonts.TITLE, cx, cy + 1, WHITE);
-        long on = modules.stream().filter(Module::isEnabled).count();
-        Fonts.draw(ctx, modules.size() + " modułów  ·  " + on + " aktywnych", Fonts.SMALL, cx, cy + 18, TEXT_3);
+    private void renderModules(DrawContext ctx, float x, float y, float w, float h, float mx, float my, float dt) {
+        List<Module> mods = visibleModules();
+        Category cat = query.isEmpty() ? Category.values()[Math.min(tab, TAB_CONFIGS - 1)] : null;
+        Module sel = cat != null ? SELECTED.get(cat) : null;
+        if (sel == null || !mods.contains(sel)) sel = mods.isEmpty() ? null : mods.get(0);
+        if (cat != null && sel != null) SELECTED.put(cat, sel);
 
-        // Wyszukiwarka
-        float sw = 150, sh = 24, sx = cx + cw - sw, sy = cy + 1;
-        Render2D.round(ctx, sx, sy, sw, sh, 9, FIELD);
-        Render2D.outline(ctx, sx, sy, sw, sh, 9, 0.5f, q.isEmpty() ? STROKE : Theme.accentAlpha(0x90));
-        Fonts.draw(ctx, Fonts.I_SEARCH, Fonts.ICONS, sx + 10, sy + 8.5f, q.isEmpty() ? TEXT_3 : WHITE);
-        boolean caret = (System.currentTimeMillis() / 530) % 2 == 0;
-        if (q.isEmpty()) Fonts.draw(ctx, "Szukaj modułu…", Fonts.REGULAR, sx + 25, sy + 8, TEXT_3);
-        else Fonts.draw(ctx, query + (caret ? "|" : ""), Fonts.REGULAR, sx + 25, sy + 8, TEXT);
+        float lw = 200, lx = x, ly = y;
+        Render2D.round(ctx, lx, ly, lw, h, 13, SIDEBAR);
+        Render2D.outline(ctx, lx, ly, lw, h, 13, 0.5f, STROKE);
+        String title = cat == null ? "Wyniki" : cat.display;
+        Fonts.draw(ctx, title.toUpperCase(Locale.ROOT), Fonts.SMALL, lx + 14, ly + 12, TEXT_3);
+        long on = mods.stream().filter(Module::isEnabled).count();
+        Fonts.drawRight(ctx, on + "/" + mods.size(), Fonts.SMALL, lx + lw - 14, ly + 12, TEXT_3);
 
-        // Karty modułów (dwie kolumny, układ "masonry")
-        float top = cy + 36, bottom = cy + ch;
-        float gap = 10, colW = (cw - gap) / 2f;
-        float[] colH = {0, 0};
-        scroll = Anim.approach(scroll, scrollTarget, dt, 14f);
-
-        // DrawContext sam przelicza scissor przez aktualną macierz (skala + animacja)
-        ctx.enableScissor((int) (cx - 8), (int) top, (int) Math.ceil(cx + cw + 8), (int) Math.ceil(bottom));
-        for (Module md : modules) {
-            md.expandAnim = Anim.approach(md.expandAnim, md.expanded ? 1f : 0f, dt, 16f);
-            float h = CARD_HEAD + settingsHeight(md, colW) * md.expandAnim;
-            int col = colH[0] <= colH[1] ? 0 : 1;
-            float kx = cx + col * (colW + gap);
-            float ky = top + colH[col] - scroll;
-            colH[col] += h + gap;
-            if (ky > bottom || ky + h < top) {
-                md.hoverAnim = 0;
-                continue;
-            }
-            renderCard(ctx, md, kx, ky, colW, h, mx, my, dt, top, bottom);
+        listTop = ly + 28; listBottom = ly + h - 8; listLeft = lx; listRight = lx + lw;
+        listScroll = Anim.approach(listScroll, listTarget, dt, 16f);
+        ctx.enableScissor((int) lx, (int) listTop, (int) Math.ceil(lx + lw), (int) Math.ceil(listBottom));
+        float ry = listTop - listScroll;
+        for (Module md : mods) {
+            renderRow(ctx, md, md == sel, lx + 7, ry, lw - 14, mx, my, dt, cat);
+            ry += ROW + 3;
         }
         ctx.disableScissor();
+        listMax = Math.max(0, mods.size() * (ROW + 3) - (listBottom - listTop));
+        listTarget = Math.max(0, Math.min(listMax, listTarget));
+        if (mods.isEmpty()) Fonts.drawCentered(ctx, "Brak wyników", Fonts.REGULAR, lx + lw / 2f, listTop + 20, TEXT_3);
 
-        float contentH = Math.max(colH[0], colH[1]) - gap;
-        maxScroll = Math.max(0, contentH - (bottom - top));
-        scrollTarget = Math.max(0, Math.min(maxScroll, scrollTarget));
-
-        // Pasek przewijania
-        if (maxScroll > 0) {
-            float trackH = bottom - top;
-            float barH = Math.max(20, trackH * trackH / (trackH + maxScroll));
-            float barY = top + (trackH - barH) * (scroll / maxScroll);
-            Render2D.round(ctx, cx + cw + 6, barY, 3, barH, 1.5f, 0x40FFFFFF);
-        }
-
-        if (modules.isEmpty()) {
-            Fonts.drawCentered(ctx, "Brak modułów dla „" + query + "”", Fonts.REGULAR, cx + cw / 2f, top + 40, TEXT_3);
-        }
+        float px = lx + lw + 10, pw = w - lw - 10;
+        if (sel != lastPanel) { lastPanel = sel; panelAnim = 0f; panelTarget = 0; panelScroll = 0; }
+        panelAnim = Anim.approach(panelAnim, 1f, dt, 14f);
+        if (sel != null) renderPanel(ctx, sel, px, y, pw, h, mx, my, dt);
     }
 
-    private static final float ROW_COLOR = 20, COLOR_PICKER = 76, CHIP_H = 16, CHIP_GAP = 4;
-
-    private static float settingsHeight(Module m, float cardW) {
-        float iw = cardW - 26;
-        float h = 10;
-        for (Setting<?> st : m.getSettings()) {
-            if (!st.isVisible()) continue;
-            if (st instanceof BooleanSetting) h += ROW_BOOL;
-            else if (st instanceof NumberSetting) h += ROW_NUM;
-            else if (st instanceof ModeSetting md) h += useChips(md) ? 16 + chipLayout(md, iw)[0] + 4 : ROW_MODE;
-            else if (st instanceof ColorSetting c) h += ROW_COLOR + COLOR_PICKER * c.openAnim;
-        }
-        return h + ROW_BIND + 4;
-    }
-
-    private static boolean useChips(ModeSetting md) {
-        return md.getModes().size() > 4;
-    }
-
-    /** Układ "chipów" z zawijaniem: [0] = wysokość, potem x,y dla każdego trybu. */
-    private static float[] chipLayout(ModeSetting md, float iw) {
-        List<String> modes = md.getModes();
-        float[] out = new float[1 + modes.size() * 3];
-        float x = 0, y = 0;
-        for (int i = 0; i < modes.size(); i++) {
-            float w = Fonts.width(modes.get(i), Fonts.SMALL) + 16;
-            if (x > 0 && x + w > iw) { x = 0; y += CHIP_H + CHIP_GAP; }
-            out[1 + i * 3] = x; out[2 + i * 3] = y; out[3 + i * 3] = w;
-            x += w + CHIP_GAP;
-        }
-        out[0] = y + CHIP_H;
-        return out;
-    }
-
-    private void renderCard(DrawContext ctx, Module md, float x, float y, float w, float h,
-                            float mx, float my, float dt, float clipTop, float clipBottom) {
-        boolean inClip = my >= clipTop && my < clipBottom;
-        boolean hover = inClip && mx >= x && mx < x + w && my >= y && my < y + CARD_HEAD;
+    private void renderRow(DrawContext ctx, Module md, boolean selected, float x, float y, float w,
+                           float mx, float my, float dt, Category cat) {
+        boolean inList = my >= listTop && my < listBottom;
+        boolean hover = inList && mx >= x && mx < x + w && my >= y && my < y + ROW;
         md.hoverAnim = Anim.approach(md.hoverAnim, hover ? 1f : 0f, dt, 18f);
         md.toggleAnim = Anim.approach(md.toggleAnim, md.isEnabled() ? 1f : 0f, dt, 16f);
         float t = md.toggleAnim;
 
-        if (t > 0.01f) Render2D.shadow(ctx, x, y + 2, w, h, 12, 14, Anim.withAlpha(Theme.accentAlpha(0x34), t));
-        Render2D.shadow(ctx, x, y + 3, w, h, 12, 8, 0x50000000);
-        Render2D.gradientV(ctx, x, y, w, h, 12,
-                Anim.lerpColor(CARD, CARD_HOVER, md.hoverAnim), Anim.lerpColor(0xFF0F0F12, 0xFF141418, md.hoverAnim));
-        Render2D.outline(ctx, x, y, w, h, 12, 0.5f, Anim.lerpColor(STROKE, Theme.accentAlpha(0x80), t));
-
-        // Nazwa + opis
-        Fonts.draw(ctx, md.getName(), Fonts.SEMIBOLD, x + 13, y + 10, TEXT);
-        String desc = Fonts.trim(md.getDescription(), Fonts.SMALL, w - 82);
-        Fonts.draw(ctx, desc, Fonts.SMALL, x + 13, y + 22, TEXT_3);
-
-        // Przełącznik
-        float tw = 24, th = 13, tx = x + w - 13 - tw, ty = y + 12.5f;
-        Render2D.round(ctx, tx, ty, tw, th, th / 2f, Anim.lerpColor(TRACK, Theme.accent(), t));
-        if (t > 0.01f) Render2D.shadow(ctx, tx, ty, tw, th, th / 2f, 8, Anim.withAlpha(Theme.accentAlpha(0x60), t));
-        float knob = tx + 6.5f + t * 11f;
-        Render2D.circle(ctx, knob, ty + th / 2f, 4.5f, Anim.lerpColor(0xFFB5B5BD, Theme.onAccent(), t));
-
-        // Strzałka rozwijania
-        float ax = tx - 16, ay = y + 19;
-        boolean arrowHover = inClip && mx >= ax - 7 && mx < ax + 7 && my >= ay - 7 && my < ay + 7;
-        if (arrowHover) Render2D.circle(ctx, ax, ay, 8, 0x14FFFFFF);
-        var m = ctx.getMatrices();
-        m.push();
-        m.translate(ax, ay, 0);
-        m.multiply(RotationAxis.POSITIVE_Z.rotationDegrees(180f * md.expandAnim));
-        Fonts.drawCentered(ctx, Fonts.I_CHEVRON, Fonts.ICONS, 0, -3.5f, arrowHover ? TEXT : TEXT_3);
-        m.pop();
-
-        float headBottom = Math.min(y + CARD_HEAD, clipBottom), headTop = Math.max(y, clipTop);
-        if (headBottom > headTop) {
-            hit(ax - 8, Math.max(ay - 8, clipTop), ax + 8, Math.min(ay + 8, clipBottom), b -> md.expanded = !md.expanded);
-            hit(x, headTop, x + w, headBottom, b -> {
-                if (b == 0) md.toggle();
-                else if (b == 1) md.expanded = !md.expanded;
-                else if (b == 2) binding = binding == md ? null : md;
-            });
+        if (selected) {
+            Render2D.round(ctx, x, y, w, ROW, 9, 0xFF1B1B21);
+            Render2D.outline(ctx, x, y, w, ROW, 9, 0.5f, Theme.accentAlpha(0x55));
+            Render2D.round(ctx, x + 3, y + 8, 2.5f, ROW - 16, 1.25f, Theme.accent());
+        } else if (md.hoverAnim > 0.01f) {
+            Render2D.round(ctx, x, y, w, ROW, 9, Anim.withAlpha(0xFF15151A, md.hoverAnim));
         }
 
-        if (md.expandAnim < 0.01f) return;
+        boolean starHover = hover && mx < x + 22;
+        int starCol = md.favorite ? Theme.accent() : starHover ? TEXT_2 : 0xFF34343C;
+        Fonts.drawCentered(ctx, Fonts.I_STAR, Fonts.ICONS, x + 13, y + 11.5f, starCol);
 
-        // Ustawienia
-        float sTop = y + CARD_HEAD, sBottom = y + h;
-        ctx.enableScissor((int) x, (int) Math.max(sTop, clipTop), (int) Math.ceil(x + w), (int) Math.ceil(Math.min(sBottom, clipBottom)));
-        Render2D.round(ctx, x + 13, sTop - 1, w - 26, 0.5f, 0, 0x14FFFFFF);
+        int nameCol = Anim.lerpColor(TEXT_2, TEXT, Math.max(t, selected ? 1f : md.hoverAnim));
+        Fonts.draw(ctx, Fonts.trim(md.getName(), Fonts.SEMIBOLD, w - 90), Fonts.SEMIBOLD, x + 24, y + 11, nameCol);
+        if (cat == null) Fonts.draw(ctx, md.getCategory().display, Fonts.SMALL, x + 24 + Fonts.width(md.getName(), Fonts.SEMIBOLD) + 5, y + 12, TEXT_3);
 
-        float ix = x + 13, iw = w - 26;
-        float ry = sTop + 8;
-        for (Setting<?> st : md.getSettings()) {
+        float tw = 20, th = 11, tx = x + w - 10 - tw, ty = y + 9.5f;
+        if (md.getKey() != GLFW.GLFW_KEY_UNKNOWN || binding == md) {
+            String k = binding == md ? "…" : keyName(md.getKey());
+            float kw = Math.max(14, Fonts.width(k, Fonts.SMALL) + 8);
+            Render2D.round(ctx, tx - kw - 6, ty, kw, th, 4, binding == md ? Theme.accent() : 0xFF24242B);
+            Fonts.drawCentered(ctx, k, Fonts.SMALL, tx - kw / 2f - 6, ty + 2.5f, binding == md ? Theme.onAccent() : TEXT_2);
+        }
+        Render2D.round(ctx, tx, ty, tw, th, th / 2f, Anim.lerpColor(TRACK, Theme.accent(), t));
+        if (t > 0.01f) Render2D.shadow(ctx, tx, ty, tw, th, th / 2f, 6, Anim.withAlpha(Theme.accentAlpha(0x60), t));
+        Render2D.circle(ctx, tx + 5.5f + t * 9f, ty + th / 2f, 3.8f, Anim.lerpColor(0xFFB5B5BD, Theme.onAccent(), t));
+
+        float top = clampY(y, listTop, listBottom), bottom = clampY(y + ROW, listTop, listBottom);
+        hit(x, top, x + w, bottom, b -> {
+            if (b == 0) {
+                if (cat != null) SELECTED.put(cat, md);
+                else { tab = md.getCategory().ordinal(); SELECTED.put(md.getCategory(), md); query = ""; }
+            } else if (b == 1) md.toggle();
+            else if (b == 2) binding = binding == md ? null : md;
+        });
+        hit(x, top, x + 22, bottom, b -> md.favorite = !md.favorite);
+        hit(tx - 4, top, tx + tw + 4, bottom, b -> md.toggle());
+    }
+
+    private void renderPanel(DrawContext ctx, Module md, float x, float y, float w, float h, float mx, float my, float dt) {
+        Render2D.gradientV(ctx, x, y, w, h, 13, CARD, 0xFF0D0D11);
+        Render2D.outline(ctx, x, y, w, h, 13, 0.5f, Anim.lerpColor(STROKE, Theme.accentAlpha(0x50), md.toggleAnim));
+
+        float a = Anim.easeOutCubic(panelAnim);
+        float baseAlpha = Render2D.alpha;
+        Render2D.alpha = baseAlpha * a;
+        var m = ctx.getMatrices();
+        m.push();
+        m.translate((1 - a) * 12f, 0, 0);
+
+        Fonts.draw(ctx, md.getName(), Fonts.TITLE, x + 18, y + 16, WHITE);
+        float chipX = x + 18 + Fonts.width(md.getName(), Fonts.TITLE) + 8;
+        String cat = md.getCategory().display;
+        float cw = Fonts.width(cat, Fonts.SMALL) + 20;
+        Render2D.round(ctx, chipX, y + 18, cw, 13, 5, 0xFF1F1F26);
+        Fonts.draw(ctx, md.getCategory().icon, Fonts.ICONS, chipX + 5, y + 20.5f, TEXT_3);
+        Fonts.draw(ctx, cat, Fonts.SMALL, chipX + 15, y + 21, TEXT_2);
+        Fonts.draw(ctx, Fonts.trim(md.getDescription(), Fonts.SMALL, w - 150), Fonts.SMALL, x + 18, y + 38, TEXT_3);
+
+        float t = md.toggleAnim;
+        float bw = 34, bh = 18, bx = x + w - 18 - bw, by = y + 17;
+        Render2D.round(ctx, bx, by, bw, bh, bh / 2f, Anim.lerpColor(TRACK, Theme.accent(), t));
+        if (t > 0.01f) Render2D.shadow(ctx, bx, by, bw, bh, bh / 2f, 10, Anim.withAlpha(Theme.accentAlpha(0x70), t));
+        Render2D.circle(ctx, bx + 9 + t * 16f, by + bh / 2f, 6.5f, Anim.lerpColor(0xFFC5C5CC, Theme.onAccent(), t));
+        hit(bx - 2, by - 2, bx + bw + 2, by + bh + 2, b -> md.toggle());
+
+        boolean waiting = binding == md;
+        String key = waiting ? "Naciśnij…" : keyName(md.getKey());
+        float kw = Fonts.width(key, Fonts.SMALL) + 26;
+        float kx = bx - 8 - kw, ky = by + 2;
+        Render2D.round(ctx, kx, ky, kw, 14, 6, waiting ? Theme.accent() : 0xFF1F1F26);
+        Fonts.draw(ctx, Fonts.I_KEYBOARD, Fonts.ICONS, kx + 6, ky + 3.5f, waiting ? Theme.onAccent() : TEXT_3);
+        Fonts.draw(ctx, key, Fonts.SMALL, kx + 19, ky + 4, waiting ? Theme.onAccent() : TEXT_2);
+        hit(kx, ky, kx + kw, ky + 14, b -> binding = b == 1 ? null : (binding == md ? null : md));
+        if (!md.getSettings().isEmpty()) {
+            float rx = kx - 22;
+            boolean rh = mx >= rx && mx < rx + 16 && my >= ky && my < ky + 14;
+            Render2D.round(ctx, rx, ky, 16, 14, 6, rh ? 0xFF2A2A32 : 0xFF1F1F26);
+            Fonts.drawCentered(ctx, Fonts.I_RESET, Fonts.ICONS, rx + 8, ky + 3.5f, rh ? TEXT : TEXT_3);
+            hit(rx, ky, rx + 16, ky + 14, b -> { md.resetSettings(); showToast("Przywrócono domyślne: " + md.getName()); });
+        }
+
+        Render2D.round(ctx, x + 18, y + 54, w - 36, 0.5f, 0, 0x14FFFFFF);
+
+        float top = y + 60, bottom = y + h - 8;
+        panelScroll = Anim.approach(panelScroll, panelTarget, dt, 16f);
+        ctx.enableScissor((int) x, (int) top, (int) Math.ceil(x + w), (int) Math.ceil(bottom));
+        float contentH;
+        if (md.getSettings().stream().noneMatch(Setting::isVisible)) {
+            Fonts.drawCentered(ctx, "Ten moduł nie ma ustawień – po prostu go włącz.", Fonts.REGULAR, x + w / 2f, top + 24, TEXT_3);
+            contentH = 0;
+        } else {
+            contentH = renderSettings(ctx, md.getSettings(), x + 18, top + 6 - panelScroll, w - 36, mx, my, dt, top, bottom);
+        }
+        ctx.disableScissor();
+        panelMax = Math.max(0, contentH + 12 - (bottom - top));
+        panelTarget = Math.max(0, Math.min(panelMax, panelTarget));
+        if (panelMax > 0) {
+            float trackH = bottom - top - 8;
+            float barH = Math.max(18, trackH * trackH / (trackH + panelMax));
+            float barY = top + 4 + (trackH - barH) * (panelScroll / panelMax);
+            Render2D.round(ctx, x + w - 7, barY, 3, barH, 1.5f, Theme.accentAlpha(0x70));
+        }
+
+        m.pop();
+        Render2D.alpha = baseAlpha;
+    }
+
+    // ------------------------------------------------------------------ ustawienia (wspólne)
+
+    private static boolean useChips(ModeSetting md, float w) {
+        float total = 0;
+        for (String mode : md.getModes()) total += Fonts.width(mode, Fonts.SMALL) + 16;
+        return md.getModes().size() > 4 || total > w;
+    }
+
+    private static float[] chipLayout(ModeSetting md, float iw) {
+        List<String> modes = md.getModes();
+        float[] out = new float[1 + modes.size() * 3];
+        float cx = 0, cy = 0;
+        for (int i = 0; i < modes.size(); i++) {
+            float cw = Fonts.width(modes.get(i), Fonts.SMALL) + 18;
+            if (cx > 0 && cx + cw > iw) { cx = 0; cy += CHIP_H + CHIP_GAP; }
+            out[1 + i * 3] = cx; out[2 + i * 3] = cy; out[3 + i * 3] = cw;
+            cx += cw + CHIP_GAP;
+        }
+        out[0] = cy + CHIP_H;
+        return out;
+    }
+
+    /** Rysuje listę ustawień i zwraca jej wysokość. */
+    private float renderSettings(DrawContext ctx, List<Setting<?>> settings, float ix, float y, float iw,
+                                 float mx, float my, float dt, float clipTop, float clipBottom) {
+        float ry = y;
+        for (Setting<?> st : settings) {
             if (!st.isVisible()) continue;
-            float rowTop = ry;
-            boolean rowVisible = rowTop < Math.min(sBottom, clipBottom) && rowTop > clipTop - 40;
+            boolean vis = ry < clipBottom && ry > clipTop - 120;
             if (st instanceof BooleanSetting b) {
                 b.anim = Anim.approach(b.anim, b.get() ? 1f : 0f, dt, 18f);
-                Fonts.draw(ctx, b.getName(), Fonts.REGULAR, ix, ry + 5, TEXT_2);
-                float bw = 18, bh = 10, bx = ix + iw - bw, by = ry + 4;
-                Render2D.round(ctx, bx, by, bw, bh, 5, Anim.lerpColor(TRACK, Theme.accent(), b.anim));
-                Render2D.circle(ctx, bx + 5 + b.anim * 8, by + 5, 3.5f, Anim.lerpColor(0xFFB5B5BD, Theme.onAccent(), b.anim));
-                if (rowVisible) hit(ix - 4, clampY(ry, clipTop, clipBottom), ix + iw + 4, clampY(ry + ROW_BOOL, clipTop, clipBottom), k -> b.toggle());
+                boolean hv = my >= ry && my < ry + ROW_BOOL && mx >= ix && mx < ix + iw && my >= clipTop && my < clipBottom;
+                if (hv) Render2D.round(ctx, ix - 6, ry, iw + 12, ROW_BOOL, 7, 0x08FFFFFF);
+                Fonts.draw(ctx, b.getName(), Fonts.REGULAR, ix, ry + 7, hv ? TEXT : TEXT_2);
+                float bw = 22, bh = 12, bx = ix + iw - bw, by = ry + 5;
+                Render2D.round(ctx, bx, by, bw, bh, 6, Anim.lerpColor(TRACK, Theme.accent(), b.anim));
+                Render2D.circle(ctx, bx + 6 + b.anim * 10, by + 6, 4.2f, Anim.lerpColor(0xFFB5B5BD, Theme.onAccent(), b.anim));
+                if (vis) hit(ix - 6, clampY(ry, clipTop, clipBottom), ix + iw + 6, clampY(ry + ROW_BOOL, clipTop, clipBottom), k -> b.toggle());
                 ry += ROW_BOOL;
             } else if (st instanceof NumberSetting n) {
                 if (slider == n) n.setFromPercent((mx - sliderX) / sliderW);
                 float pct = (float) n.getPercent();
                 n.anim = n.anim < 0 ? pct : Anim.approach(n.anim, pct, dt, 22f);
-                Fonts.draw(ctx, n.getName(), Fonts.REGULAR, ix, ry + 3, TEXT_2);
-                Fonts.drawRight(ctx, n.display(), Fonts.SEMIBOLD, ix + iw, ry + 3, TEXT);
-                float ty2 = ry + 17;
+                Fonts.draw(ctx, n.getName(), Fonts.REGULAR, ix, ry + 4, TEXT_2);
+                String val = n.display();
+                float vw2 = Fonts.width(val, Fonts.SEMIBOLD) + 12;
+                Render2D.round(ctx, ix + iw - vw2, ry + 1, vw2, 13, 5, slider == n ? Theme.accentAlpha(0x40) : 0xFF1C1C22);
+                Fonts.drawCentered(ctx, val, Fonts.SEMIBOLD, ix + iw - vw2 / 2f, ry + 4, TEXT);
+                float ty2 = ry + 21;
                 Render2D.round(ctx, ix, ty2, iw, 4, 2, TRACK);
                 Render2D.gradientH(ctx, ix, ty2, Math.max(4, iw * n.anim), 4, 2, Theme.accent2(), Theme.accent());
                 float kx = ix + iw * n.anim;
-                Render2D.shadow(ctx, kx - 5, ty2 - 3, 10, 10, 5, 5, 0x60000000);
-                Render2D.circle(ctx, kx, ty2 + 2, slider == n ? 5.5f : 4.5f, WHITE);
-                if (rowVisible) hit(ix - 4, clampY(ry, clipTop, clipBottom), ix + iw + 4, clampY(ry + ROW_NUM, clipTop, clipBottom), k -> {
+                Render2D.shadow(ctx, kx - 5, ty2 - 3, 10, 10, 5, 6, Theme.accentAlpha(0x60));
+                Render2D.circle(ctx, kx, ty2 + 2, slider == n ? 6f : 5f, WHITE);
+                if (vis) hit(ix - 6, clampY(ry, clipTop, clipBottom), ix + iw + 6, clampY(ry + ROW_NUM, clipTop, clipBottom), k -> {
                     if (k == 0) { slider = n; sliderX = ix; sliderW = iw; }
                 });
                 ry += ROW_NUM;
-            } else if (st instanceof ModeSetting chip && useChips(chip)) {
-                List<String> modes = chip.getModes();
-                Fonts.draw(ctx, chip.getName(), Fonts.REGULAR, ix, ry + 3, TEXT_2);
-                float[] lay = chipLayout(chip, iw);
-                float cy0 = ry + 16;
+            } else if (st instanceof ModeSetting md && useChips(md, iw)) {
+                List<String> modes = md.getModes();
+                Fonts.draw(ctx, md.getName(), Fonts.REGULAR, ix, ry + 4, TEXT_2);
+                float[] lay = chipLayout(md, iw);
+                float cy0 = ry + 18;
                 for (int i = 0; i < modes.size(); i++) {
                     float chx = ix + lay[1 + i * 3], chy = cy0 + lay[2 + i * 3], chw = lay[3 + i * 3];
-                    boolean active = chip.index() == i;
-                    boolean hov = mx >= chx && mx < chx + chw && my >= chy && my < chy + CHIP_H;
-                    Render2D.round(ctx, chx, chy, chw, CHIP_H, 7, active ? Theme.accent() : hov ? 0xFF26262C : 0xFF1C1C21);
-                    Fonts.drawCentered(ctx, modes.get(i), Fonts.SMALL, chx + chw / 2f, chy + 4.5f, active ? Theme.onAccent() : TEXT_2);
+                    boolean act = md.index() == i;
+                    boolean hv = mx >= chx && mx < chx + chw && my >= chy && my < chy + CHIP_H;
+                    Render2D.round(ctx, chx, chy, chw, CHIP_H, 7, act ? Theme.accent() : hv ? 0xFF28282F : 0xFF1C1C22);
+                    Fonts.drawCentered(ctx, modes.get(i), Fonts.SMALL, chx + chw / 2f, chy + 5, act ? Theme.onAccent() : TEXT_2);
                     final int idx = i;
-                    if (rowVisible) hit(chx, clampY(chy, clipTop, clipBottom), chx + chw, clampY(chy + CHIP_H, clipTop, clipBottom), k -> chip.setIndex(idx));
+                    if (vis) hit(chx, clampY(chy, clipTop, clipBottom), chx + chw, clampY(chy + CHIP_H, clipTop, clipBottom), k -> md.setIndex(idx));
                 }
-                ry += 16 + lay[0] + 4;
+                ry += 18 + lay[0] + 7;
+            } else if (st instanceof ModeSetting md) {
+                List<String> modes = md.getModes();
+                Fonts.draw(ctx, md.getName(), Fonts.REGULAR, ix, ry + 4, TEXT_2);
+                float segY = ry + 16, segH = 17;
+                float[] segX = new float[modes.size() + 1];
+                float total = 0;
+                for (String mode : modes) total += Fonts.width(mode, Fonts.SMALL) + 14;
+                for (int i = 0; i < modes.size(); i++) segX[i + 1] = segX[i] + (Fonts.width(modes.get(i), Fonts.SMALL) + 14) / total * iw;
+                md.anim = md.anim < 0 ? md.index() : Anim.approach(md.anim, md.index(), dt, 18f);
+                int lo = (int) Math.floor(md.anim), hi = Math.min(modes.size() - 1, lo + 1);
+                float frac = md.anim - lo;
+                float pillX = segX[lo] + (segX[hi] - segX[lo]) * frac;
+                float pillW = (segX[lo + 1] - segX[lo]) + ((segX[hi + 1] - segX[hi]) - (segX[lo + 1] - segX[lo])) * frac;
+                Render2D.round(ctx, ix, segY, iw, segH, 7, 0xFF1C1C22);
+                Render2D.gradientV(ctx, ix + pillX + 2, segY + 2, pillW - 4, segH - 4, 5, Theme.accent(), Theme.accent2());
+                for (int i = 0; i < modes.size(); i++) {
+                    float act = Math.max(0f, 1f - Math.abs(md.anim - i));
+                    Fonts.drawCentered(ctx, modes.get(i), Fonts.SMALL, ix + (segX[i] + segX[i + 1]) / 2f, segY + 5, Anim.lerpColor(TEXT_2, Theme.onAccent(), act));
+                    final int idx = i;
+                    if (vis) hit(ix + segX[i], clampY(segY, clipTop, clipBottom), ix + segX[i + 1], clampY(segY + segH, clipTop, clipBottom), k -> md.setIndex(idx));
+                }
+                ry += ROW_MODE;
             } else if (st instanceof ColorSetting col) {
                 col.openAnim = Anim.approach(col.openAnim, col.open ? 1f : 0f, dt, 16f);
-                Fonts.draw(ctx, col.getName(), Fonts.REGULAR, ix, ry + 5, TEXT_2);
-                float swW = 26, swH = 12, swX = ix + iw - swW, swY = ry + 3;
-                Render2D.round(ctx, swX - 1, swY - 1, swW + 2, swH + 2, 6.5f, 0x40FFFFFF);
-                Render2D.round(ctx, swX, swY, swW, swH, 6, col.get() | 0xFF000000);
-                String hex = String.format("#%06X", col.get() & 0xFFFFFF);
-                Fonts.drawRight(ctx, hex, Fonts.SMALL, swX - 6, ry + 6, TEXT_3);
-                if (rowVisible) hit(ix - 4, clampY(ry, clipTop, clipBottom), ix + iw + 4, clampY(ry + ROW_COLOR, clipTop, clipBottom), k -> col.open = !col.open);
+                Fonts.draw(ctx, col.getName(), Fonts.REGULAR, ix, ry + 7, TEXT_2);
+                float swW = 30, swH = 14, swX = ix + iw - swW, swY = ry + 4;
+                Render2D.round(ctx, swX - 1, swY - 1, swW + 2, swH + 2, 7.5f, 0x40FFFFFF);
+                Render2D.round(ctx, swX, swY, swW, swH, 7, col.get() | 0xFF000000);
+                Fonts.drawRight(ctx, String.format("#%06X", col.get() & 0xFFFFFF), Fonts.SMALL, swX - 7, ry + 8, TEXT_3);
+                if (vis) hit(ix - 6, clampY(ry, clipTop, clipBottom), ix + iw + 6, clampY(ry + ROW_COLOR, clipTop, clipBottom), k -> col.open = !col.open);
                 ry += ROW_COLOR;
                 if (col.openAnim > 0.01f) {
-                    float ph = COLOR_PICKER - 10, pw = iw - 20;
-                    float px = ix, py = ry + 2;
+                    float ph = COLOR_PICKER - 12, pw = iw - 22, px = ix, py = ry + 2;
                     int hueColor = 0xFF000000 | (java.awt.Color.HSBtoRGB(col.hue(), 1f, 1f) & 0xFFFFFF);
                     if (colorDrag == col) {
                         float u = Math.max(0, Math.min(1, (mx - cdX) / cdW)), v = Math.max(0, Math.min(1, (my - cdY) / cdH));
                         if (colorDragPart == 0) col.setHsv(col.hue(), u, 1 - v);
                         else col.setHsv(v, col.sat(), col.bri());
                     }
-                    // pole nasycenia/jasności
-                    Render2D.gradientH(ctx, px, py, pw, ph, 6, 0xFFFFFFFF, hueColor);
-                    Render2D.gradientV(ctx, px, py, pw, ph, 6, 0x00000000, 0xFF000000);
-                    Render2D.outline(ctx, px, py, pw, ph, 6, 0.5f, 0x30FFFFFF);
+                    Render2D.gradientH(ctx, px, py, pw, ph, 7, 0xFFFFFFFF, hueColor);
+                    Render2D.gradientV(ctx, px, py, pw, ph, 7, 0x00000000, 0xFF000000);
+                    Render2D.outline(ctx, px, py, pw, ph, 7, 0.5f, 0x30FFFFFF);
                     float kx = px + col.sat() * pw, ky = py + (1 - col.bri()) * ph;
-                    Render2D.circle(ctx, kx, ky, 4.5f, WHITE);
-                    Render2D.circle(ctx, kx, ky, 3.2f, col.get() | 0xFF000000);
-                    // pasek odcienia (pionowy)
-                    float hx = px + pw + 8, hw = 12;
+                    Render2D.circle(ctx, kx, ky, 5f, WHITE);
+                    Render2D.circle(ctx, kx, ky, 3.6f, col.get() | 0xFF000000);
+                    float hx = px + pw + 8, hw = 14;
                     for (int i = 0; i < 6; i++) {
                         int c1 = 0xFF000000 | (java.awt.Color.HSBtoRGB(i / 6f, 1, 1) & 0xFFFFFF);
                         int c2 = 0xFF000000 | (java.awt.Color.HSBtoRGB((i + 1) / 6f, 1, 1) & 0xFFFFFF);
-                        float r = (i == 0 || i == 5) ? 0 : 0;
-                        Render2D.gradientV(ctx, hx, py + ph * i / 6f, hw, ph / 6f + 0.5f, r, c1, c2);
+                        Render2D.gradientV(ctx, hx, py + ph * i / 6f, hw, ph / 6f + 0.5f, 0, c1, c2);
                     }
                     Render2D.outline(ctx, hx, py, hw, ph, 3, 0.5f, 0x30FFFFFF);
-                    float hy = py + col.hue() * ph;
-                    Render2D.round(ctx, hx - 2, hy - 2, hw + 4, 4, 2, WHITE);
-                    if (rowVisible && col.open) {
-                        final float fpx = px, fpy = py, fpw = pw, fph = ph, fhx = hx;
+                    Render2D.round(ctx, hx - 2, py + col.hue() * ph - 2, hw + 4, 4, 2, WHITE);
+                    if (vis && col.open) {
+                        final float fpx = px, fpy = py, fpw = pw, fph = ph, fhx = hx, fhw = hw;
                         hit(fpx, clampY(fpy, clipTop, clipBottom), fpx + fpw, clampY(fpy + fph, clipTop, clipBottom), k -> {
                             colorDrag = col; colorDragPart = 0; cdX = fpx; cdY = fpy; cdW = fpw; cdH = fph;
                         });
-                        hit(fhx - 2, clampY(fpy, clipTop, clipBottom), fhx + hw + 2, clampY(fpy + fph, clipTop, clipBottom), k -> {
-                            colorDrag = col; colorDragPart = 1; cdX = fhx; cdY = fpy; cdW = hw; cdH = fph;
+                        hit(fhx - 2, clampY(fpy, clipTop, clipBottom), fhx + fhw + 2, clampY(fpy + fph, clipTop, clipBottom), k -> {
+                            colorDrag = col; colorDragPart = 1; cdX = fhx; cdY = fpy; cdW = fhw; cdH = fph;
                         });
                     }
                     ry += COLOR_PICKER * col.openAnim;
                 }
-            } else if (st instanceof ModeSetting md2) {
-                List<String> modes = md2.getModes();
-                Fonts.draw(ctx, md2.getName(), Fonts.REGULAR, ix, ry + 3, TEXT_2);
-                float segY = ry + 14, segH = 16;
-                // szerokość segmentu proporcjonalna do długości napisu
-                float[] segX = new float[modes.size() + 1];
-                float total = 0;
-                for (String mode : modes) total += Fonts.width(mode, Fonts.SMALL) + 12;
-                for (int i = 0; i < modes.size(); i++) {
-                    segX[i + 1] = segX[i] + (Fonts.width(modes.get(i), Fonts.SMALL) + 12) / total * iw;
-                }
-                md2.anim = md2.anim < 0 ? md2.index() : Anim.approach(md2.anim, md2.index(), dt, 18f);
-                int lo = (int) Math.floor(md2.anim), hi = Math.min(modes.size() - 1, lo + 1);
-                float frac = md2.anim - lo;
-                float pillX = segX[lo] + (segX[hi] - segX[lo]) * frac;
-                float pillW = (segX[lo + 1] - segX[lo]) + ((segX[hi + 1] - segX[hi]) - (segX[lo + 1] - segX[lo])) * frac;
-                Render2D.round(ctx, ix, segY, iw, segH, 7, 0xFF1C1C21);
-                Render2D.round(ctx, ix + pillX + 2, segY + 2, pillW - 4, segH - 4, 5, Theme.accent());
-                for (int i = 0; i < modes.size(); i++) {
-                    float active = Math.max(0f, 1f - Math.abs(md2.anim - i));
-                    float mid = ix + (segX[i] + segX[i + 1]) / 2f;
-                    Fonts.drawCentered(ctx, modes.get(i), Fonts.SMALL, mid, segY + 4.5f, Anim.lerpColor(TEXT_2, Theme.onAccent(), active));
-                    final int idx = i;
-                    if (rowVisible) hit(ix + segX[i], clampY(segY, clipTop, clipBottom), ix + segX[i + 1], clampY(segY + segH, clipTop, clipBottom), k -> md2.setIndex(idx));
-                }
-                ry += ROW_MODE;
             }
         }
-
-        // Bind
-        boolean waiting = binding == md;
-        String key = waiting ? "Naciśnij klawisz…" : keyName(md.getKey());
-        Fonts.draw(ctx, Fonts.I_KEYBOARD, Fonts.ICONS, ix, ry + 5.5f, TEXT_3);
-        Fonts.draw(ctx, "Bind", Fonts.REGULAR, ix + 14, ry + 5, TEXT_2);
-        float kw = Fonts.width(key, Fonts.SMALL) + 14;
-        float kx = ix + iw - kw;
-        Render2D.round(ctx, kx, ry + 2, kw, 14, 6, waiting ? Theme.accent() : 0xFF1F1F25);
-        Fonts.drawCentered(ctx, key, Fonts.SMALL, kx + kw / 2f, ry + 5.5f, waiting ? Theme.onAccent() : TEXT);
-        if (ry < Math.min(sBottom, clipBottom)) hit(ix - 4, clampY(ry, clipTop, clipBottom), ix + iw + 4, clampY(ry + ROW_BIND, clipTop, clipBottom),
-                k -> binding = binding == md ? null : md);
-
-        ctx.disableScissor();
+        return ry - y;
     }
 
-    private static float clampY(float v, float top, float bottom) {
-        return Math.max(top, Math.min(bottom, v));
+    // ------------------------------------------------------------------ Configs
+
+    private void renderConfigs(DrawContext ctx, float x, float y, float w, float h, float mx, float my) {
+        ConfigManager cfg = FirenClient.config();
+        float lw = 220;
+        Render2D.round(ctx, x, y, lw, h, 13, SIDEBAR);
+        Render2D.outline(ctx, x, y, lw, h, 13, 0.5f, STROKE);
+        Fonts.draw(ctx, "Configi", Fonts.TITLE, x + 16, y + 16, WHITE);
+        Fonts.draw(ctx, "Zapisuj i wczytuj zestawy ustawień.", Fonts.SMALL, x + 16, y + 36, TEXT_3);
+        Fonts.draw(ctx, "Aktywny zapisuje się automatycznie.", Fonts.SMALL, x + 16, y + 46, TEXT_3);
+
+        float fy = y + 64;
+        Fonts.draw(ctx, "NAZWA NOWEGO CONFIGU", Fonts.SMALL, x + 16, fy, TEXT_3);
+        float fx = x + 14, fw = lw - 28;
+        Render2D.round(ctx, fx, fy + 12, fw, 26, 9, FIELD);
+        Render2D.outline(ctx, fx, fy + 12, fw, 26, 9, 0.5f, editingName ? Theme.accentAlpha(0xA0) : STROKE);
+        boolean caret = (System.currentTimeMillis() / 530) % 2 == 0;
+        if (nameField.isEmpty() && !editingName) Fonts.draw(ctx, "np. pvp, bedwars…", Fonts.REGULAR, fx + 10, fy + 21, TEXT_3);
+        else Fonts.draw(ctx, nameField + (editingName && caret ? "|" : ""), Fonts.REGULAR, fx + 10, fy + 21, TEXT);
+        hit(fx, fy + 12, fx + fw, fy + 38, b -> editingName = true);
+
+        float by = fy + 46;
+        button(ctx, fx, by, fw, 26, Fonts.I_SAVE, "Zapisz jako nowy", true, mx, my, () -> {
+            String n = nameField.isBlank() ? "config" + (cfg.list().size() + 1) : nameField;
+            if (cfg.saveAs(n)) showToast("Zapisano config: " + ConfigManager.sanitize(n));
+            nameField = "";
+            editingName = false;
+        });
+        button(ctx, fx, by + 32, fw, 26, Fonts.I_IMPORT, "Importuj ze schowka", false, mx, my, () -> {
+            String n = nameField.isBlank() ? "import" + (cfg.list().size() + 1) : nameField;
+            showToast(cfg.importFromClipboard(n) ? "Zaimportowano: " + ConfigManager.sanitize(n) : "W schowku nie ma configu FirenClient");
+            nameField = "";
+        });
+        button(ctx, fx, by + 64, fw, 26, Fonts.I_EXPORT, "Kopiuj obecny do schowka", false, mx, my, () -> {
+            cfg.exportToClipboard();
+            showToast("Skopiowano config do schowka");
+        });
+        button(ctx, fx, by + 96, fw, 26, Fonts.I_FOLDER, "Otwórz folder", false, mx, my, () -> {
+            try {
+                java.nio.file.Files.createDirectories(cfg.folder());
+                Util.getOperatingSystem().open(cfg.folder().toFile());
+            } catch (Exception ignored) {
+            }
+        });
+        if (by + 96 + 26 + 34 < y + h) {
+            Fonts.draw(ctx, "Aktywny config zapisuje się sam", Fonts.SMALL, x + 16, y + h - 30, TEXT_3);
+            Fonts.draw(ctx, "przy zamknięciu menu i gry.", Fonts.SMALL, x + 16, y + h - 19, TEXT_3);
+        }
+
+        float px = x + lw + 10, pw = w - lw - 10;
+        Render2D.gradientV(ctx, px, y, pw, h, 13, CARD, 0xFF0D0D11);
+        Render2D.outline(ctx, px, y, pw, h, 13, 0.5f, STROKE);
+        List<String> list = cfg.list();
+        Fonts.draw(ctx, "TWOJE CONFIGI", Fonts.SMALL, px + 16, y + 14, TEXT_3);
+        Fonts.drawRight(ctx, String.valueOf(list.size()), Fonts.SMALL, px + pw - 16, y + 14, TEXT_3);
+        float ry = y + 30;
+        for (String name : list) {
+            if (ry + 34 > y + h - 6) break;
+            boolean act = name.equals(cfg.active());
+            boolean hv = mx >= px + 10 && mx < px + pw - 10 && my >= ry && my < ry + 34;
+            Render2D.round(ctx, px + 10, ry, pw - 20, 34, 10, act ? 0xFF1B1B22 : hv ? 0xFF16161B : 0xFF121216);
+            Render2D.outline(ctx, px + 10, ry, pw - 20, 34, 10, 0.5f, act ? Theme.accentAlpha(0x70) : STROKE);
+            Render2D.gradientV(ctx, px + 18, ry + 7, 20, 20, 7, act ? Theme.accent() : 0xFF2A2A32, act ? Theme.accent2() : 0xFF1E1E24);
+            Fonts.drawCentered(ctx, Fonts.I_LAYERS, Fonts.ICONS, px + 28, ry + 13.5f, act ? Theme.onAccent() : TEXT_2);
+            Fonts.draw(ctx, name, Fonts.SEMIBOLD, px + 46, ry + 9, TEXT);
+            Fonts.draw(ctx, act ? "aktywny" : "kliknij Wczytaj", Fonts.SMALL, px + 46, ry + 20, act ? Theme.accent() : TEXT_3);
+            float bx = px + pw - 18;
+            bx = iconButton(ctx, bx, ry + 8, Fonts.I_TRASH, 0xFFFF5C6A, mx, my, () -> {
+                if (cfg.delete(name)) showToast("Usunięto: " + name);
+            });
+            bx = iconButton(ctx, bx, ry + 8, Fonts.I_SAVE, TEXT_2, mx, my, () -> {
+                if (cfg.saveAs(name)) showToast("Nadpisano: " + name);
+            });
+            textButton(ctx, bx, ry + 8, "Wczytaj", act, mx, my, () -> {
+                if (cfg.load(name)) showToast("Wczytano: " + name);
+            });
+            ry += 40;
+        }
     }
 
-    // ------------------------------------------------------------------ input
+    private void button(DrawContext ctx, float x, float y, float w, float h, String icon, String label, boolean primary,
+                        float mx, float my, Runnable action) {
+        boolean hv = mx >= x && mx < x + w && my >= y && my < y + h;
+        if (primary) {
+            if (hv) Render2D.shadow(ctx, x, y + 1, w, h, 9, 10, Theme.accentAlpha(0x60));
+            Render2D.gradientV(ctx, x, y, w, h, 9, Theme.accent(), Theme.accent2());
+        } else {
+            Render2D.round(ctx, x, y, w, h, 9, hv ? 0xFF22222A : 0xFF18181E);
+            Render2D.outline(ctx, x, y, w, h, 9, 0.5f, STROKE);
+        }
+        int col = primary ? Theme.onAccent() : hv ? TEXT : TEXT_2;
+        Fonts.draw(ctx, icon, Fonts.ICONS, x + 12, y + h / 2f - 3.5f, col);
+        Fonts.draw(ctx, label, Fonts.SEMIBOLD, x + 28, y + h / 2f - 4, col);
+        hit(x, y, x + w, y + h, b -> action.run());
+    }
+
+    private float iconButton(DrawContext ctx, float right, float y, String icon, int color, float mx, float my, Runnable action) {
+        float x = right - 18;
+        boolean hv = mx >= x && mx < x + 18 && my >= y && my < y + 18;
+        Render2D.round(ctx, x, y, 18, 18, 6, hv ? 0xFF2A2A32 : 0xFF1C1C22);
+        Fonts.drawCentered(ctx, icon, Fonts.ICONS, x + 9, y + 5.5f, hv ? color : TEXT_3);
+        hit(x, y, x + 18, y + 18, b -> action.run());
+        return x - 5;
+    }
+
+    private float textButton(DrawContext ctx, float right, float y, String label, boolean disabled, float mx, float my, Runnable action) {
+        float w = Fonts.width(label, Fonts.SEMIBOLD) + 18, x = right - w;
+        boolean hv = !disabled && mx >= x && mx < x + w && my >= y && my < y + 18;
+        if (disabled) Render2D.round(ctx, x, y, w, 18, 6, 0xFF1C1C22);
+        else Render2D.gradientV(ctx, x, y, w, 18, 6, hv ? Theme.accent() : Theme.accentAlpha(0xCC), Theme.accent2());
+        Fonts.drawCentered(ctx, label, Fonts.SEMIBOLD, x + w / 2f, y + 5, disabled ? TEXT_3 : Theme.onAccent());
+        if (!disabled) hit(x, y, x + w, y + 18, b -> action.run());
+        return x - 5;
+    }
+
+    // ------------------------------------------------------------------ Theme
+
+    private void renderThemeTab(DrawContext ctx, float x, float y, float w, float h, float mx, float my, float dt) {
+        float half = (w - 10) / 2f;
+        Module[] mods = {FirenClient.modules().get(ClickGui.class), FirenClient.modules().get(Hud.class)};
+        String[] titles = {"Wygląd", "HUD"};
+        String[] subs = {"Kolor akcentu, motyw i tło menu.", "Elementy na ekranie gry."};
+        for (int i = 0; i < 2; i++) {
+            float bx = x + i * (half + 10);
+            Render2D.gradientV(ctx, bx, y, half, h, 13, CARD, 0xFF0D0D11);
+            Render2D.outline(ctx, bx, y, half, h, 13, 0.5f, STROKE);
+            Fonts.draw(ctx, titles[i], Fonts.TITLE, bx + 18, y + 16, WHITE);
+            Fonts.draw(ctx, subs[i], Fonts.SMALL, bx + 18, y + 36, TEXT_3);
+            Render2D.round(ctx, bx + 18, y + 50, half - 36, 0.5f, 0, 0x14FFFFFF);
+            ctx.enableScissor((int) bx, (int) (y + 54), (int) Math.ceil(bx + half), (int) Math.ceil(y + h - 6));
+            renderSettings(ctx, mods[i].getSettings(), bx + 18, y + 60, half - 36, mx, my, dt, y + 54, y + h - 6);
+            ctx.disableScissor();
+        }
+        float px = x + half - 70, py = y + 18;
+        Render2D.shadow(ctx, px, py, 52, 12, 6, 10, Theme.accentAlpha(0x70));
+        Render2D.gradientH(ctx, px, py, 52, 12, 6, Theme.accent2(), Theme.accent());
+    }
+
+    // ------------------------------------------------------------------ status + toast
+
+    private void renderStatus(DrawContext ctx, float x, float y, float W) {
+        Render2D.round(ctx, x + 14, y, W - 28, 0.5f, 0, 0x10FFFFFF);
+        long on = FirenClient.modules().all().stream().filter(Module::isEnabled).count();
+        int total = FirenClient.modules().all().size();
+        Render2D.circle(ctx, x + 22, y + 12, 2.5f, Theme.accent());
+        Fonts.draw(ctx, on + " / " + total + " modułów aktywnych", Fonts.SMALL, x + 30, y + 9, TEXT_2);
+        Fonts.drawCentered(ctx, "Config: " + FirenClient.config().active(), Fonts.SMALL, x + W / 2f, y + 9, TEXT_2);
+        String right = "FirenClient " + FirenClient.VERSION + "  ·  " + FirenClient.openGuiKey().getBoundKeyLocalizedText().getString();
+        Fonts.drawRight(ctx, right, Fonts.SMALL, x + W - 18, y + 9, TEXT_3);
+    }
+
+    private void renderToast(DrawContext ctx, float x, float y, float W, float H) {
+        if (toast == null) return;
+        long age = System.currentTimeMillis() - toastAt;
+        if (age > 2600) { toast = null; return; }
+        float a = Math.min(1f, Math.min(age / 150f, (2600 - age) / 300f));
+        float base = Render2D.alpha;
+        Render2D.alpha = base * a;
+        float tw = Fonts.width(toast, Fonts.SEMIBOLD) + 40, tx = x + (W - tw) / 2f, ty = y + H - STATUS - 40 + (1 - a) * 8;
+        Render2D.shadow(ctx, tx, ty + 2, tw, 26, 10, 12, 0x90000000);
+        Render2D.round(ctx, tx, ty, tw, 26, 10, 0xF21A1A20);
+        Render2D.outline(ctx, tx, ty, tw, 26, 10, 0.5f, Theme.accentAlpha(0x80));
+        Fonts.draw(ctx, Fonts.I_CHECK, Fonts.ICONS, tx + 12, ty + 9.5f, Theme.accent());
+        Fonts.draw(ctx, toast, Fonts.SEMIBOLD, tx + 27, ty + 9, TEXT);
+        Render2D.alpha = base;
+    }
+
+    // ================================================================== input
 
     @Override
     public boolean mouseClicked(double rawX, double rawY, int button) {
         if (closingAt > 0) return true;
         double mx = rawX / s, my = rawY / s;
+        boolean wasEditing = editingName;
+        editingName = false;
         for (int i = hits.size() - 1; i >= 0; i--) {
             Hit h = hits.get(i);
             if (mx >= h.x1 && mx < h.x2 && my >= h.y1 && my < h.y2) {
@@ -511,6 +742,7 @@ public class ClickGuiScreen extends Screen {
                 return true;
             }
         }
+        if (wasEditing) return true;
         return super.mouseClicked(rawX, rawY, button);
     }
 
@@ -523,8 +755,13 @@ public class ClickGuiScreen extends Screen {
     }
 
     @Override
-    public boolean mouseScrolled(double mouseX, double mouseY, double horizontal, double vertical) {
-        scrollTarget = (float) Math.max(0, Math.min(maxScroll, scrollTarget - vertical * 32));
+    public boolean mouseScrolled(double rawX, double rawY, double horizontal, double vertical) {
+        double mx = rawX / s, my = rawY / s;
+        if (mx >= listLeft && mx < listRight && my >= listTop && my < listBottom) {
+            listTarget = (float) Math.max(0, Math.min(listMax, listTarget - vertical * 33));
+        } else {
+            panelTarget = (float) Math.max(0, Math.min(panelMax, panelTarget - vertical * 36));
+        }
         return true;
     }
 
@@ -533,12 +770,30 @@ public class ClickGuiScreen extends Screen {
         if (binding != null) {
             boolean clear = keyCode == GLFW.GLFW_KEY_ESCAPE || keyCode == GLFW.GLFW_KEY_DELETE || keyCode == GLFW.GLFW_KEY_BACKSPACE;
             binding.setKey(clear ? GLFW.GLFW_KEY_UNKNOWN : keyCode);
+            showToast(clear ? "Usunięto bind: " + binding.getName() : "Bind " + binding.getName() + ": " + keyName(keyCode));
             binding = null;
+            return true;
+        }
+        if (editingName) {
+            if (keyCode == GLFW.GLFW_KEY_BACKSPACE && !nameField.isEmpty()) {
+                nameField = nameField.substring(0, nameField.length() - 1);
+            } else if (keyCode == GLFW.GLFW_KEY_ENTER || keyCode == GLFW.GLFW_KEY_KP_ENTER) {
+                String n = nameField.isBlank() ? "config" : nameField;
+                if (FirenClient.config().saveAs(n)) showToast("Zapisano config: " + ConfigManager.sanitize(n));
+                nameField = "";
+                editingName = false;
+            } else if (keyCode == GLFW.GLFW_KEY_ESCAPE) {
+                editingName = false;
+            }
             return true;
         }
         if (keyCode == GLFW.GLFW_KEY_BACKSPACE && !query.isEmpty()) {
             query = query.substring(0, query.length() - 1);
-            scrollTarget = 0;
+            listTarget = 0;
+            return true;
+        }
+        if (keyCode == GLFW.GLFW_KEY_ESCAPE && !query.isEmpty()) {
+            query = "";
             return true;
         }
         if (keyCode == GLFW.GLFW_KEY_ESCAPE || FirenClient.openGuiKey().matchesKey(keyCode, scanCode)) {
@@ -550,9 +805,14 @@ public class ClickGuiScreen extends Screen {
 
     @Override
     public boolean charTyped(char chr, int modifiers) {
-        if (binding == null && query.length() < 20 && (Character.isLetterOrDigit(chr) || chr == ' ')) {
+        if (binding != null) return true;
+        if (editingName) {
+            if (nameField.length() < 24 && (Character.isLetterOrDigit(chr) || chr == '_' || chr == '-' || chr == ' ')) nameField += chr;
+            return true;
+        }
+        if (query.length() < 20 && (Character.isLetterOrDigit(chr) || chr == ' ')) {
             query += chr;
-            scrollTarget = 0;
+            listTarget = 0;
             return true;
         }
         return super.charTyped(chr, modifiers);

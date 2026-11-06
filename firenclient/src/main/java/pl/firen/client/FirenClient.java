@@ -23,7 +23,7 @@ import pl.firen.client.hud.HudRenderer;
 import pl.firen.client.module.ModuleManager;
 
 public final class FirenClient implements ClientModInitializer {
-    public static final String VERSION = "0.1.0";
+    public static final String VERSION = "V2";
     public static final Logger LOGGER = LoggerFactory.getLogger("FirenClient");
 
     private static ModuleManager modules;

@@ -5,7 +5,8 @@ public enum Category {
     MOVEMENT("Movement", "\uf70c"),
     RENDER("Render", "\uf06e"),
     PLAYER("Player", "\uf007"),
-    WORLD("World", "\uf57d");
+    WORLD("World", "\uf57d"),
+    MISC("Misc", "\uf1b3");
 
     public final String display;
     /** Ikona Font Awesome. */

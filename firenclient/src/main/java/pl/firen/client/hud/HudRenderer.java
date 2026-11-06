@@ -1,80 +1,152 @@
 package pl.firen.client.hud;
 
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.render.RenderTickCounter;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
+import net.minecraft.entity.LivingEntity;
 import pl.firen.client.FirenClient;
-import pl.firen.client.gui.Draw;
 import pl.firen.client.gui.Theme;
 import pl.firen.client.module.Module;
 import pl.firen.client.module.modules.Hud;
+import pl.firen.client.module.modules.KillAura;
+import pl.firen.client.render.Fonts;
+import pl.firen.client.render.Render2D;
 import pl.firen.client.util.Anim;
 
 import java.util.Comparator;
 import java.util.List;
 
+/** Nowoczesny HUD: watermark, lista modułów, współrzędne i Target HUD. */
 public final class HudRenderer {
     private long lastFrame = System.nanoTime();
+    private float targetAnim, healthAnim = -1;
+    private LivingEntity lastTarget;
 
     public void render(DrawContext ctx, RenderTickCounter tickCounter) {
         MinecraftClient mc = MinecraftClient.getInstance();
         long now = System.nanoTime();
-        float dt = Math.min(0.1f, (now - lastFrame) / 1_000_000_000f);
+        float dt = Math.min(0.05f, (now - lastFrame) / 1e9f);
         lastFrame = now;
 
         Hud hud = FirenClient.modules().get(Hud.class);
         if (!hud.isEnabled() || mc.options.hudHidden || mc.player == null) return;
-        TextRenderer tr = mc.textRenderer;
-        int sw = ctx.getScaledWindowWidth();
 
-        if (hud.watermark.get()) {
-            Text logo = Text.literal("Firen").formatted(Formatting.BOLD)
-                    .append(Text.literal("Client").formatted(Formatting.GRAY));
-            String fps = mc.getCurrentFps() + " FPS";
-            int w = tr.getWidth(logo) + 8 + (hud.info.get() ? tr.getWidth(fps) + 8 : 0);
-            Draw.round(ctx, 4, 4, 4 + w + 10, 20, 0xC0000000);
-            ctx.fill(4, 4, 6, 20, Theme.WHITE);
-            ctx.drawText(tr, logo, 11, 8, Theme.WHITE, false);
-            if (hud.info.get()) {
-                int fx = 11 + tr.getWidth(logo) + 8;
-                ctx.fill(fx - 4, 8, fx - 3, 16, 0xFF3A3A3A);
-                ctx.drawText(tr, fps, fx + 1, 8, Theme.TEXT, false);
-            }
-        }
+        double factor = mc.getWindow().getScaleFactor();
+        float s = (float) ((mc.getWindow().getFramebufferWidth() >= 1280 ? 2 : 1) / factor);
+        float vw = ctx.getScaledWindowWidth() / s, vh = ctx.getScaledWindowHeight() / s;
 
+        var m = ctx.getMatrices();
+        m.push();
+        m.scale(s, s, 1f);
+        Render2D.alpha = 1f;
+
+        if (hud.watermark.get()) watermark(ctx, mc, hud);
+        if (hud.arrayList.get()) arrayList(ctx, hud, vw, dt);
+        if (hud.info.get()) coords(ctx, mc, vh);
+        targetHud(ctx, vw, vh, dt);
+
+        m.pop();
+    }
+
+    private void watermark(DrawContext ctx, MinecraftClient mc, Hud hud) {
+        float x = 8, y = 8, h = 24;
+        String fps = mc.getCurrentFps() + " fps";
+        String user = mc.getSession().getUsername();
+        float w = 30 + Fonts.width("FirenClient", Fonts.SEMIBOLD) + 22
+                + (hud.info.get() ? Fonts.width(fps, Fonts.REGULAR) + 18 : 0)
+                + Fonts.width(user, Fonts.REGULAR) + 2;
+        Render2D.shadow(ctx, x, y + 2, w, h, 9, 10, 0x80000000);
+        Render2D.gradientV(ctx, x, y, w, h, 9, 0xE6141418, 0xE60A0A0D);
+        Render2D.outline(ctx, x, y, w, h, 9, 0.5f, 0x1CFFFFFF);
+        Render2D.gradientV(ctx, x + 5, y + 5, 14, 14, 5, 0xFFFFFFFF, 0xFFD2D2D8);
+        Fonts.drawCentered(ctx, Fonts.I_FIRE, Fonts.ICONS, x + 12, y + 8.5f, Theme.BLACK);
+        float tx = x + 25;
+        Fonts.draw(ctx, "FirenClient", Fonts.SEMIBOLD, tx, y + 8, Theme.TEXT);
+        tx += Fonts.width("FirenClient", Fonts.SEMIBOLD) + 9;
         if (hud.info.get()) {
-            String xyz = String.format("XYZ  %.0f  %.0f  %.0f", mc.player.getX(), mc.player.getY(), mc.player.getZ());
-            ctx.drawText(tr, xyz, 6, ctx.getScaledWindowHeight() - 12, Theme.TEXT, true);
+            Render2D.circle(ctx, tx, y + 12, 1.2f, 0x60FFFFFF);
+            tx += 8;
+            Fonts.draw(ctx, fps, Fonts.REGULAR, tx, y + 8, Theme.TEXT_2);
+            tx += Fonts.width(fps, Fonts.REGULAR) + 9;
         }
+        Render2D.circle(ctx, tx, y + 12, 1.2f, 0x60FFFFFF);
+        Fonts.draw(ctx, user, Fonts.REGULAR, tx + 8, y + 8, Theme.TEXT_2);
+    }
 
-        if (hud.arrayList.get()) {
-            List<Module> mods = FirenClient.modules().all().stream()
-                    .peek(m -> m.arrayAnim = Anim.approach(m.arrayAnim, m.isEnabled() && m != hud ? 1f : 0f, dt, 14f))
-                    .filter(m -> m.arrayAnim > 0.01f)
-                    .sorted(Comparator.comparingInt((Module m) -> tr.getWidth(label(m))).reversed())
-                    .toList();
-            float y = 4;
-            for (Module m : mods) {
-                String name = m.getName();
-                String suffix = m.getSuffix();
-                int w = tr.getWidth(label(m)) + 8;
-                int h = 11;
-                int x = sw - 2 - Math.round(w * m.arrayAnim);
-                int iy = Math.round(y);
-                ctx.fill(x, iy, sw - 2, iy + h, 0xC0000000);
-                ctx.fill(sw - 2, iy, sw, iy + h, Theme.WHITE);
-                ctx.drawText(tr, name, x + 4, iy + 2, Theme.WHITE, false);
-                if (suffix != null) ctx.drawText(tr, " " + suffix, x + 4 + tr.getWidth(name), iy + 2, Theme.TEXT_DIM, false);
-                y += h * m.arrayAnim;
+    private void arrayList(DrawContext ctx, Hud hud, float vw, float dt) {
+        List<Module> mods = FirenClient.modules().all().stream()
+                .peek(md -> md.arrayAnim = Anim.approach(md.arrayAnim, md.isEnabled() && md != hud ? 1f : 0f, dt, 14f))
+                .filter(md -> md.arrayAnim > 0.01f)
+                .sorted(Comparator.comparingDouble((Module md) -> -labelWidth(md)))
+                .toList();
+        float y = 8;
+        for (Module md : mods) {
+            float t = Anim.easeOutCubic(md.arrayAnim);
+            float w = labelWidth(md) + 16, h = 16;
+            float x = vw - 8 - w + (1 - t) * (w + 12);
+            Render2D.alpha = t;
+            Render2D.shadow(ctx, x, y + 1, w, h, 6, 6, 0x60000000);
+            Render2D.round(ctx, x, y, w, h, 6, 0xD90C0C0F);
+            Render2D.round(ctx, x + w - 3, y + 4, 1.5f, h - 8, 0.75f, 0xFFFFFFFF);
+            Fonts.draw(ctx, md.getName(), Fonts.SEMIBOLD, x + 7, y + 4.5f, Theme.TEXT);
+            if (md.getSuffix() != null) {
+                Fonts.draw(ctx, md.getSuffix(), Fonts.REGULAR, x + 7 + Fonts.width(md.getName(), Fonts.SEMIBOLD) + 4, y + 4.5f, Theme.TEXT_3);
             }
+            y += (h + 3) * t;
         }
+        Render2D.alpha = 1f;
     }
 
-    private static String label(Module m) {
-        return m.getSuffix() == null ? m.getName() : m.getName() + " " + m.getSuffix();
+    private static float labelWidth(Module md) {
+        float w = Fonts.width(md.getName(), Fonts.SEMIBOLD);
+        if (md.getSuffix() != null) w += 4 + Fonts.width(md.getSuffix(), Fonts.REGULAR);
+        return w;
     }
 
+    private void coords(DrawContext ctx, MinecraftClient mc, float vh) {
+        String xyz = String.format("%.0f  %.0f  %.0f", mc.player.getX(), mc.player.getY(), mc.player.getZ());
+        float w = Fonts.width(xyz, Fonts.REGULAR) + 34, h = 18, x = 8, y = vh - 8 - h;
+        Render2D.round(ctx, x, y, w, h, 7, 0xCC0C0C0F);
+        Render2D.outline(ctx, x, y, w, h, 7, 0.5f, 0x16FFFFFF);
+        Fonts.draw(ctx, "XYZ", Fonts.SMALL, x + 7, y + 6, Theme.TEXT_3);
+        Fonts.draw(ctx, xyz, Fonts.REGULAR, x + 27, y + 5, Theme.TEXT);
+    }
+
+    private void targetHud(DrawContext ctx, float vw, float vh, float dt) {
+        KillAura aura = FirenClient.modules().get(KillAura.class);
+        LivingEntity target = aura.isEnabled() ? aura.getTarget() : null;
+        if (target != null) lastTarget = target;
+        targetAnim = Anim.approach(targetAnim, target != null ? 1f : 0f, dt, 12f);
+        if (targetAnim < 0.01f || lastTarget == null) { healthAnim = -1; return; }
+
+        float hp = Math.max(0, lastTarget.getHealth()), max = Math.max(1, lastTarget.getMaxHealth());
+        float pct = Math.min(1, hp / max);
+        healthAnim = healthAnim < 0 ? pct : Anim.approach(healthAnim, pct, dt, 8f);
+
+        float w = 150, h = 44, x = vw / 2f + 18, y = vh / 2f + 18;
+        float t = Anim.easeOutCubic(targetAnim);
+        Render2D.alpha = t;
+        var m = ctx.getMatrices();
+        m.push();
+        m.translate(x + w / 2f, y + h / 2f, 0);
+        m.scale(0.9f + 0.1f * t, 0.9f + 0.1f * t, 1);
+        m.translate(-(x + w / 2f), -(y + h / 2f), 0);
+
+        Render2D.shadow(ctx, x, y + 3, w, h, 12, 12, 0x90000000);
+        Render2D.gradientV(ctx, x, y, w, h, 12, 0xEB141418, 0xEB0A0A0D);
+        Render2D.outline(ctx, x, y, w, h, 12, 0.5f, 0x1EFFFFFF);
+        Render2D.gradientV(ctx, x + 8, y + 8, 28, 28, 9, 0xFF34343C, 0xFF1C1C22);
+        Fonts.drawCentered(ctx, Fonts.I_CROSSHAIR, Fonts.ICONS, x + 22, y + 18.5f, Theme.TEXT);
+
+        String name = Fonts.trim(lastTarget.getName().getString(), Fonts.SEMIBOLD, w - 90);
+        Fonts.draw(ctx, name, Fonts.SEMIBOLD, x + 44, y + 9, Theme.TEXT);
+        String hpText = String.format("%.1f HP", hp);
+        Fonts.drawRight(ctx, hpText, Fonts.SMALL, x + w - 10, y + 10, Theme.TEXT_2);
+        float bx = x + 44, by = y + 27, bw = w - 54;
+        Render2D.round(ctx, bx, by, bw, 6, 3, 0xFF26262C);
+        Render2D.gradientH(ctx, bx, by, Math.max(6, bw * healthAnim), 6, 3, 0xFF9C9CA4, 0xFFFFFFFF);
+
+        m.pop();
+        Render2D.alpha = 1f;
+    }
 }

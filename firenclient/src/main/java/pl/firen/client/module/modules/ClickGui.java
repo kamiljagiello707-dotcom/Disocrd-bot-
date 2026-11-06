@@ -7,7 +7,7 @@ import pl.firen.client.module.Module;
 import pl.firen.client.setting.BooleanSetting;
 
 public class ClickGui extends Module {
-    public final BooleanSetting blur = add(new BooleanSetting("Dark background", true));
+    public final BooleanSetting blur = add(new BooleanSetting("Blur", true));
 
     public ClickGui() {
         super("ClickGUI", "Otwiera to menu (domyślnie Right Shift).", Category.RENDER);

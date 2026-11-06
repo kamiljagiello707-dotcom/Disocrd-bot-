@@ -7,11 +7,17 @@ import java.util.List;
 
 public class ModeSetting extends Setting<String> {
     private final List<String> modes;
+    /** Animowana pozycja wskaźnika w GUI. */
+    public float anim = -1f;
 
     public ModeSetting(String name, String value, String... modes) {
         super(name, value);
         this.modes = List.of(modes);
     }
+
+    public List<String> getModes() { return modes; }
+    public int index() { return modes.indexOf(value); }
+    public void setIndex(int i) { value = modes.get(Math.floorMod(i, modes.size())); }
 
     public boolean is(String mode) { return value.equalsIgnoreCase(mode); }
 

@@ -5,6 +5,8 @@ import com.google.gson.JsonPrimitive;
 
 public class NumberSetting extends Setting<Double> {
     private final double min, max, step;
+    /** Animowana pozycja suwaka w GUI. */
+    public float anim = -1f;
 
     public NumberSetting(String name, double value, double min, double max, double step) {
         super(name, value);

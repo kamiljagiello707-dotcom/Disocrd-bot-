@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "id": "musticclient",
+  "version": "${version}",
+  "name": "MusticClient",
+  "description": "MusticClient - utility client z ClickGUI.",
+  "authors": ["Mustic"],
+  "license": "All-Rights-Reserved",
+  "environment": "client",
+  "entrypoints": {
+    "client": ["dev.mustic.client.MusticClient"]
+  },
+  "mixins": ["musticclient.mixins.json"],
+  "depends": {
+    "fabricloader": ">=0.16.0",
+    "minecraft": "~1.21.4",
+    "java": ">=21",
+    "fabric-api": "*"
+  }
+}

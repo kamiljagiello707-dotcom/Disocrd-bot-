@@ -43,7 +43,7 @@ public class ClickGuiScreen extends Screen {
     private static String query = "";
 
     private static final int TAB_CONFIGS = Category.values().length, TAB_THEME = TAB_CONFIGS + 1;
-    private static final float TOP = 48, STATUS = 24, ROW = 30;
+    private static final float TOP = 44, STATUS = 24, ROW = 30, RAIL = 58;
     private static final float ROW_BOOL = 22, ROW_NUM = 30, ROW_MODE = 36, ROW_COLOR = 22, COLOR_PICKER = 80, CHIP_H = 17, CHIP_GAP = 5;
 
     private record Hit(float x1, float y1, float x2, float y2, IntConsumer action) {}
@@ -147,7 +147,7 @@ public class ClickGuiScreen extends Screen {
         hits.clear();
         Render2D.alpha = p;
 
-        float W = Math.min(660, vw - 24), H = Math.min(390, vh - 24);
+        float W = Math.min(700, vw - 24), H = Math.min(396, vh - 24);
         if (winX < 0 || winY < 0) { winX = (vw - W) / 2f; winY = (vh - H) / 2f; }
         if (draggingWindow) { winX = mx - dragOffX; winY = my - dragOffY; }
         winX = Math.max(4, Math.min(vw - W - 4, winX));
@@ -168,16 +168,17 @@ public class ClickGuiScreen extends Screen {
         Render2D.outline(ctx, x, y, W, H, 18, 0.5f, 0x22FFFFFF);
         Render2D.gradientH(ctx, x + 1, y + 1, W * 0.6f, TOP, 17, Theme.accentAlpha(0x16), 0x00000000);
 
-        renderTopBar(ctx, x, y, W, mx, my, dt);
-        Render2D.round(ctx, x + 14, y + TOP, W - 28, 0.5f, 0, 0x14FFFFFF);
+        renderRail(ctx, x, y, H, mx, my, dt);
+        renderHeader(ctx, x + RAIL, y, W - RAIL, mx, my);
 
-        float bodyTop = y + TOP + 10, bodyBottom = y + H - STATUS - 6;
+        float bx = x + RAIL + 12, bodyTop = y + TOP + 8, bodyBottom = y + H - STATUS - 6;
+        float bw = W - RAIL - 24;
         boolean searching = !query.isEmpty();
-        if (tab == TAB_CONFIGS && !searching) renderConfigs(ctx, x + 12, bodyTop, W - 24, bodyBottom - bodyTop, mx, my);
-        else if (tab == TAB_THEME && !searching) renderThemeTab(ctx, x + 12, bodyTop, W - 24, bodyBottom - bodyTop, mx, my, dt);
-        else renderModules(ctx, x + 12, bodyTop, W - 24, bodyBottom - bodyTop, mx, my, dt);
+        if (tab == TAB_CONFIGS && !searching) renderConfigs(ctx, bx, bodyTop, bw, bodyBottom - bodyTop, mx, my);
+        else if (tab == TAB_THEME && !searching) renderThemeTab(ctx, bx, bodyTop, bw, bodyBottom - bodyTop, mx, my, dt);
+        else renderModules(ctx, bx, bodyTop, bw, bodyBottom - bodyTop, mx, my, dt);
 
-        renderStatus(ctx, x, y + H - STATUS, W);
+        renderStatus(ctx, x + RAIL, y + H - STATUS, W - RAIL);
         renderToast(ctx, x, y, W, H);
 
         m.pop();
@@ -186,18 +187,16 @@ public class ClickGuiScreen extends Screen {
 
     // ------------------------------------------------------------------ górny pasek
 
-    private void renderTopBar(DrawContext ctx, float x, float y, float W, float mx, float my, float dt) {
-        Render2D.shadow(ctx, x + 14, y + 12, 26, 26, 8, 12, Theme.accentAlpha(0x60));
-        Render2D.gradientV(ctx, x + 14, y + 11, 26, 26, 8, Theme.accent(), Theme.accent2());
-        Fonts.drawCentered(ctx, Fonts.I_FIRE, Fonts.ICONS, x + 27, y + 19, Theme.onAccent());
-        Fonts.draw(ctx, "FirenClient", Fonts.SEMIBOLD, x + 47, y + 14, TEXT);
-        float vx = x + 47 + Fonts.width("FirenClient", Fonts.SEMIBOLD) + 5;
-        Render2D.round(ctx, vx, y + 13, 18, 11, 4, Theme.accentAlpha(0x30));
-        Fonts.drawCentered(ctx, "V3", Fonts.SMALL, vx + 9, y + 15.5f, Theme.accent());
-        Fonts.draw(ctx, "moduły · configi · motywy", Fonts.SMALL, x + 47, y + 27, TEXT_3);
-        hit(x, y, x + 150, y + TOP, b -> {
-            if (b == 0) { draggingWindow = true; dragOffX = mx - winX; dragOffY = my - winY; }
-        });
+    private void renderRail(DrawContext ctx, float x, float y, float H, float mx, float my, float dt) {
+        // tło railsa
+        Render2D.gradientV(ctx, x + 1, y + 1, RAIL - 1, H - 2, 17, 0xFF0C0C10, 0xFF08080B);
+        Render2D.round(ctx, x + RAIL, y + 10, 0.5f, H - 20, 0, 0x16FFFFFF);
+
+        // logo
+        Render2D.shadow(ctx, x + RAIL / 2f - 13, y + 12, 26, 26, 8, 12, Theme.accentAlpha(0x70));
+        Render2D.gradientV(ctx, x + RAIL / 2f - 13, y + 11, 26, 26, 8, Theme.accent(), Theme.accent2());
+        Fonts.drawCentered(ctx, Fonts.I_FIRE, Fonts.ICONS, x + RAIL / 2f, y + 19, Theme.onAccent());
+        hit(x, y, x + RAIL, y + 44, b -> { if (b == 0) { draggingWindow = true; dragOffX = mx - winX; dragOffY = my - winY; } });
 
         Category[] cats = Category.values();
         int n = TAB_THEME + 1;
@@ -206,54 +205,58 @@ public class ClickGuiScreen extends Screen {
         icons[TAB_CONFIGS] = Fonts.I_SAVE; labels[TAB_CONFIGS] = "Configs";
         icons[TAB_THEME] = Fonts.I_PALETTE; labels[TAB_THEME] = "Theme";
 
-        float searchW = 128, tabsX = x + 168, tabsRight = x + W - 14 - searchW - 10;
-        float full = 0;
-        for (int i = 0; i < n; i++) full += Fonts.width(labels[i], Fonts.SEMIBOLD) + 34 + (i == TAB_CONFIGS ? 8 : 0);
-        boolean compact = full > tabsRight - tabsX;
-        float[] tx = new float[n], tw = new float[n];
-        float cx = tabsX;
-        for (int i = 0; i < n; i++) {
-            if (i == TAB_CONFIGS) cx += 8;
-            boolean showLabel = !compact || i == tab;
-            tw[i] = showLabel ? Fonts.width(labels[i], Fonts.SEMIBOLD) + 34 : 26;
-            tx[i] = cx;
-            cx += tw[i] + 2;
-        }
+        float top = y + 50;
+        float area = (y + H - 8) - top;
+        float itemH = Math.min(42f, area / n);
+        float[] iy = new float[n];
+        for (int i = 0; i < n; i++) iy[i] = top + i * itemH + (itemH - 40) / 2f;
+        // separator nad Configs/Theme
+        Render2D.round(ctx, x + 14, iy[TAB_CONFIGS] - 2, RAIL - 28, 0.5f, 0, 0x16FFFFFF);
+
         int active = query.isEmpty() ? tab : -1;
         if (active >= 0) {
-            if (tabX < 0) { tabX = tx[active]; tabW = tw[active]; }
-            tabX = Anim.approach(tabX, tx[active], dt, 16f);
-            tabW = Anim.approach(tabW, tw[active], dt, 16f);
-            Render2D.shadow(ctx, tabX, y + 13, tabW, 24, 9, 10, Theme.accentAlpha(0x50));
-            Render2D.gradientV(ctx, tabX, y + 12, tabW, 24, 9, Theme.accent(), Theme.accent2());
+            float ty = iy[active];
+            if (tabX < 0) tabX = ty;
+            tabX = Anim.approach(tabX, ty, dt, 16f);
+            // pigułka aktywnej kategorii + pasek akcentu z boku
+            Render2D.round(ctx, x + 8, tabX + 2, RAIL - 16, 38, 11, 0xFF17171C);
+            Render2D.outline(ctx, x + 8, tabX + 2, RAIL - 16, 38, 11, 0.5f, Theme.accentAlpha(0x50));
+            Render2D.round(ctx, x + 4, tabX + 21 - 8, 2.5f, 16, 1.25f, Theme.accent());
+            Render2D.shadow(ctx, x + 4, tabX + 21 - 8, 2.5f, 16, 1.25f, 6, Theme.accentAlpha(0x80));
         }
         for (int i = 0; i < n; i++) {
             boolean on = i == active;
-            boolean hover = mx >= tx[i] && mx < tx[i] + tw[i] && my >= y + 12 && my < y + 36;
-            if (hover && !on) Render2D.round(ctx, tx[i], y + 12, tw[i], 24, 9, 0x0FFFFFFF);
-            int col = on ? Theme.onAccent() : hover ? TEXT : TEXT_2;
-            boolean showLabel = !compact || i == tab;
-            Fonts.drawCentered(ctx, icons[i], Fonts.ICONS, tx[i] + (showLabel ? 13 : tw[i] / 2f), y + 20.5f, col);
-            if (showLabel) Fonts.draw(ctx, labels[i], Fonts.SEMIBOLD, tx[i] + 22, y + 20, col);
+            boolean hover = mx >= x + 6 && mx < x + RAIL - 6 && my >= iy[i] && my < iy[i] + 40;
+            if (hover && !on) Render2D.round(ctx, x + 8, iy[i] + 2, RAIL - 16, 38, 11, 0x0CFFFFFF);
+            int col = on ? Theme.accent() : hover ? TEXT : TEXT_2;
+            Fonts.drawCentered(ctx, icons[i], Fonts.ICONS, x + RAIL / 2f, iy[i] + 11, col);
+            Fonts.drawCentered(ctx, labels[i], Fonts.SMALL, x + RAIL / 2f, iy[i] + 25, on ? Theme.accent() : TEXT_3);
             final int idx = i;
-            hit(tx[i], y + 12, tx[i] + tw[i], y + 36, b -> {
-                tab = idx;
-                query = "";
-                editingName = false;
+            hit(x + 4, iy[i], x + RAIL - 4, iy[i] + 40, b -> {
+                tab = idx; query = ""; editingName = false;
                 if (idx < TAB_CONFIGS) category = Category.values()[idx];
-                listTarget = 0;
-                panelTarget = 0;
+                listTarget = 0; panelTarget = 0;
             });
         }
-        if (compact) Render2D.round(ctx, tx[TAB_CONFIGS] - 6, y + 17, 0.5f, 14, 0, 0x22FFFFFF);
+    }
 
-        float sx = x + W - 14 - searchW, sy = y + 12;
+    private void renderHeader(DrawContext ctx, float x, float y, float w, float mx, float my) {
+        String title = tab == TAB_CONFIGS ? "Configs" : tab == TAB_THEME ? "Theme"
+                : query.isEmpty() ? Category.values()[Math.min(tab, TAB_CONFIGS - 1)].display : "Wyniki";
+        Fonts.draw(ctx, "FirenClient", Fonts.SMALL, x + 12, y + 10, TEXT_3);
+        float vx = x + 12 + Fonts.width("FirenClient", Fonts.SMALL) + 5;
+        Render2D.round(ctx, vx, y + 9, 18, 10, 4, Theme.accentAlpha(0x30));
+        Fonts.drawCentered(ctx, "V4", Fonts.SMALL, vx + 9, y + 11, Theme.accent());
+        Fonts.draw(ctx, title, Fonts.TITLE, x + 12, y + 22, WHITE);
+
+        float searchW = 150, sx = x + w - 14 - searchW, sy = y + 13;
         Render2D.round(ctx, sx, sy, searchW, 24, 9, FIELD);
         Render2D.outline(ctx, sx, sy, searchW, 24, 9, 0.5f, query.isEmpty() ? STROKE : Theme.accentAlpha(0x90));
         Fonts.draw(ctx, Fonts.I_SEARCH, Fonts.ICONS, sx + 9, sy + 8.5f, query.isEmpty() ? TEXT_3 : Theme.accent());
         boolean caret = (System.currentTimeMillis() / 530) % 2 == 0;
         if (query.isEmpty()) Fonts.draw(ctx, "Szukaj…", Fonts.REGULAR, sx + 23, sy + 8, TEXT_3);
         else Fonts.draw(ctx, Fonts.trim(query, Fonts.REGULAR, searchW - 34) + (caret && !editingName ? "|" : ""), Fonts.REGULAR, sx + 23, sy + 8, TEXT);
+        Render2D.round(ctx, x + 12, y + TOP, w - 26, 0.5f, 0, 0x12FFFFFF);
     }
 
     // ------------------------------------------------------------------ lista modułów + panel

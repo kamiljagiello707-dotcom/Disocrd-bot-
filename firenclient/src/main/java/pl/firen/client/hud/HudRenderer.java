@@ -68,7 +68,7 @@ public final class HudRenderer {
         Fonts.draw(ctx, "FirenClient", Fonts.SEMIBOLD, tx, y + 8, Theme.TEXT);
         tx += Fonts.width("FirenClient", Fonts.SEMIBOLD) + 4;
         Render2D.round(ctx, tx, y + 7, 17, 10, 4, Theme.accentAlpha(0x38));
-        Fonts.drawCentered(ctx, "V3", Fonts.SMALL, tx + 8.5f, y + 9, Theme.accent());
+        Fonts.drawCentered(ctx, "V4", Fonts.SMALL, tx + 8.5f, y + 9, Theme.accent());
         tx += 26;
         if (hud.info.get()) {
             Render2D.circle(ctx, tx, y + 12, 1.2f, 0x60FFFFFF);
@@ -86,19 +86,29 @@ public final class HudRenderer {
                 .filter(md -> md.arrayAnim > 0.01f)
                 .sorted(Comparator.comparingDouble((Module md) -> -labelWidth(md)))
                 .toList();
-        float y = 8;
-        for (Module md : mods) {
+        float y = 6;
+        int n = Math.max(1, mods.size());
+        for (int i = 0; i < mods.size(); i++) {
+            Module md = mods.get(i);
             float t = Anim.easeOutCubic(md.arrayAnim);
-            float w = labelWidth(md) + 16, h = 16;
-            float x = vw - 8 - w + (1 - t) * (w + 12);
+            float w = labelWidth(md) + 18, h = 17;
+            float x = vw - 6 - w + (1 - t) * (w + 14);
+            // gradient koloru w dół listy (klasyczny "rainbow"/akcent)
+            int top = Theme.accent(), bot = Theme.accent2();
+            int barCol = Anim.lerpColor(top, bot, (float) i / n);
             Render2D.alpha = t;
-            Render2D.shadow(ctx, x, y + 1, w, h, 6, 6, 0x60000000);
-            Render2D.round(ctx, x, y, w, h, 6, 0xD90C0C0F);
-            Render2D.round(ctx, x + w - 3, y + 4, 1.5f, h - 8, 0.75f, Theme.accent());
-            Render2D.shadow(ctx, x + w - 3, y + 4, 1.5f, h - 8, 0.75f, 4, Theme.accentAlpha(0x70));
-            Fonts.draw(ctx, md.getName(), Fonts.SEMIBOLD, x + 7, y + 4.5f, Theme.TEXT);
+            // tło kapsułki z delikatnym gradientem akcentu od prawej
+            Render2D.shadow(ctx, x, y + 1.5f, w, h, 6, 7, 0x70000000);
+            Render2D.round(ctx, x, y, w, h, 6, 0xE60B0B0E);
+            Render2D.gradientH(ctx, x, y, w, h, 6, 0x00000000, (barCol & 0xFFFFFF) | 0x1E000000);
+            Render2D.outline(ctx, x, y, w, h, 6, 0.5f, (barCol & 0xFFFFFF) | 0x33000000);
+            // świecący pasek akcentu z prawej
+            Render2D.round(ctx, x + w - 2.5f, y + 2, 2f, h - 4, 1f, 0xFF000000 | (barCol & 0xFFFFFF));
+            Render2D.shadow(ctx, x + w - 2.5f, y + 2, 2f, h - 4, 1f, 5, (barCol & 0xFFFFFF) | 0x80000000);
+            // nazwa + sufiks
+            Fonts.draw(ctx, md.getName(), Fonts.SEMIBOLD, x + 8, y + 5, Theme.TEXT);
             if (md.getSuffix() != null) {
-                Fonts.draw(ctx, md.getSuffix(), Fonts.REGULAR, x + 7 + Fonts.width(md.getName(), Fonts.SEMIBOLD) + 4, y + 4.5f, Theme.TEXT_3);
+                Fonts.draw(ctx, md.getSuffix(), Fonts.REGULAR, x + 8 + Fonts.width(md.getName(), Fonts.SEMIBOLD) + 4, y + 5, 0xFF000000 | (barCol & 0xFFFFFF));
             }
             y += (h + 3) * t;
         }

@@ -1,0 +1,53 @@
+plugins {
+    id 'fabric-loom' version '1.10.5'
+}
+
+version = project.mod_version
+group = project.maven_group
+
+base {
+    archivesName = project.archives_base_name
+}
+
+dependencies {
+    minecraft "com.mojang:minecraft:${project.minecraft_version}"
+    mappings "net.fabricmc:yarn:${project.yarn_mappings}:v2"
+    modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
+    modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
+}
+
+processResources {
+    inputs.property "version", project.version
+    filesMatching("fabric.mod.json") {
+        expand "version": project.version
+    }
+}
+
+tasks.withType(JavaCompile).configureEach {
+    it.options.release = 21
+    it.options.encoding = 'UTF-8'
+}
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_21
+    targetCompatibility = JavaVersion.VERSION_21
+}
+
+// Generuje definicje czcionek TTF dla każdego rozmiaru w pikselach (renderowanie 1:1 = ostry tekst)
+def fontGenDir = layout.buildDirectory.dir("generated/fonts")
+tasks.register('generateFonts') {
+    outputs.dir fontGenDir
+    doLast {
+        def dir = fontGenDir.get().dir("assets/mysticclient/font").asFile
+        dir.mkdirs()
+        def fonts = [regular: 'inter-regular.ttf', medium: 'inter-medium.ttf', semibold: 'inter-semibold.ttf', icons: 'lucide.ttf']
+        fonts.each { name, file ->
+            (6..72).each { s ->
+                new File(dir, "${name}_${s}.json").text =
+                        """{"providers":[{"type":"ttf","file":"mysticclient:${file}","size":${s},"oversample":1.0,"shift":[0,0]}]}"""
+            }
+        }
+    }
+}
+sourceSets.main.resources.srcDir(fontGenDir)
+processResources.dependsOn 'generateFonts'

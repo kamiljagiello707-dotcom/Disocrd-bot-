@@ -1,0 +1,21 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "pl.mysticclient.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "client": [
+    "ClientWorldPropertiesMixin",
+    "EntityMixin",
+    "InGameHudMixin",
+    "KeyboardMixin",
+    "MinecraftClientAccessor",
+    "MinecraftClientMixin",
+    "MouseMixin",
+    "PlayerEntityMixin",
+    "SimpleOptionAccessor",
+    "WorldMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

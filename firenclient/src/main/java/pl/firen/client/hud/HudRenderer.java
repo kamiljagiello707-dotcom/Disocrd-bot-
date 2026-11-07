@@ -68,7 +68,7 @@ public final class HudRenderer {
         Fonts.draw(ctx, "FirenClient", Fonts.SEMIBOLD, tx, y + 8, Theme.TEXT);
         tx += Fonts.width("FirenClient", Fonts.SEMIBOLD) + 4;
         Render2D.round(ctx, tx, y + 7, 17, 10, 4, Theme.accentAlpha(0x38));
-        Fonts.drawCentered(ctx, "V2", Fonts.SMALL, tx + 8.5f, y + 9, Theme.accent());
+        Fonts.drawCentered(ctx, "V3", Fonts.SMALL, tx + 8.5f, y + 9, Theme.accent());
         tx += 26;
         if (hud.info.get()) {
             Render2D.circle(ctx, tx, y + 12, 1.2f, 0x60FFFFFF);

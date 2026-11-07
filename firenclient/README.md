@@ -1,4 +1,4 @@
-# FirenClient V2
+# FirenClient V3
 
 Klient Minecraft (Fabric **1.21.4**) z nowoczesnym ClickGUI: ciemny motyw z białymi akcentami, gładka czcionka Inter, ikony, zaokrąglone rogi, cienie i poświaty (własny shader SDF), rozmyte tło i animacje.
 
@@ -45,6 +45,14 @@ Klient Minecraft (Fabric **1.21.4**) z nowoczesnym ClickGUI: ciemny motyw z bia�
 - **Speed**: tryb Strafe (bhop) albo Ground.
 - **Flight**: tryb Motion albo Vanilla, z anti-kickiem.
 - **NoFall**, **Step**, **NoSlow**, **Parkour**.
+
+**Render (nowe w V3)**
+- **ItemESP**: podświetla przedmioty leżące na ziemi.
+- **PlayerBeam**: pionowy słup światła nad każdym graczem (kolor osobny dla znajomych).
+- **Trail**: zanikający ślad za Twoją postacią.
+- **Keystrokes**: podgląd wciskanych klawiszy WASD + mysz + spacja (pozycja X/Y).
+- **CPS**: licznik kliknięć na sekundę.
+- **Target ESP** w KillAurze: dwa nowe style — **Pulse** (rozchodzące się pierścienie) i **Corners** (narożniki jak w FPS).
 
 **Render**
 - **HUD**: watermark, FPS, XYZ, ArrayList z akcentem, Target HUD.

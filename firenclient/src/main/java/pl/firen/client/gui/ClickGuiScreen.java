@@ -193,7 +193,7 @@ public class ClickGuiScreen extends Screen {
         Fonts.draw(ctx, "FirenClient", Fonts.SEMIBOLD, x + 47, y + 14, TEXT);
         float vx = x + 47 + Fonts.width("FirenClient", Fonts.SEMIBOLD) + 5;
         Render2D.round(ctx, vx, y + 13, 18, 11, 4, Theme.accentAlpha(0x30));
-        Fonts.drawCentered(ctx, "V2", Fonts.SMALL, vx + 9, y + 15.5f, Theme.accent());
+        Fonts.drawCentered(ctx, "V3", Fonts.SMALL, vx + 9, y + 15.5f, Theme.accent());
         Fonts.draw(ctx, "moduły · configi · motywy", Fonts.SMALL, x + 47, y + 27, TEXT_3);
         hit(x, y, x + 150, y + TOP, b -> {
             if (b == 0) { draggingWindow = true; dragOffX = mx - winX; dragOffY = my - winY; }

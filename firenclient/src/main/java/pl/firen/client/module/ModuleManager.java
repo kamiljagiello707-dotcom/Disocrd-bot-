@@ -39,6 +39,11 @@ public final class ModuleManager {
         modules.add(new ClickGui());
         modules.add(new Esp());
         modules.add(new Tracers());
+        modules.add(new ItemEsp());
+        modules.add(new PlayerBeam());
+        modules.add(new Trail());
+        modules.add(new Keystrokes());
+        modules.add(new CpsDisplay());
         modules.add(new Nametags());
         modules.add(new ChestEsp());
         modules.add(new Fullbright());

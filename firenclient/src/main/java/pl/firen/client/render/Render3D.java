@@ -75,6 +75,7 @@ public final class Render3D {
         MatrixStack.Entry entry = ms.peek();
         Matrix4f m = entry.getPositionMatrix();
         int R = r(color), G = g(color), B = b(color), A = a(color);
+        boolean any = false;
         for (double[] s : segs) {
             float dx = (float) (s[3] - s[0]), dy = (float) (s[4] - s[1]), dz = (float) (s[5] - s[2]);
             float len = (float) Math.sqrt(dx * dx + dy * dy + dz * dz);
@@ -82,8 +83,10 @@ public final class Render3D {
             dx /= len; dy /= len; dz /= len;
             bb.vertex(m, (float) s[0], (float) s[1], (float) s[2]).color(R, G, B, A).normal(entry, dx, dy, dz);
             bb.vertex(m, (float) s[3], (float) s[4], (float) s[5]).color(R, G, B, A).normal(entry, dx, dy, dz);
+            any = true;
         }
-        BufferRenderer.drawWithGlobalProgram(bb.end());
+        var built = bb.endNullable(); // nie rysuj pustego bufora (np. gdy stoisz w miejscu)
+        if (any && built != null) BufferRenderer.drawWithGlobalProgram(built);
     }
 
     /** Pozioma "wstęga" okręgu: jasna krawędź u dołu, zanikająca ku górze (o height). */

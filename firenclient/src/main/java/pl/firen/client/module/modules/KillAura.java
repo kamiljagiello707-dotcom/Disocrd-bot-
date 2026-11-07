@@ -79,7 +79,7 @@ public class KillAura extends Module {
     public final BooleanSetting pauseOnEat = add(new BooleanSetting("Pause on eat", true));
 
     // --- Wygląd
-    public final ModeSetting espMode = add(new ModeSetting("Target ESP", "Ring", "Ring", "Circle", "Box", "Orbit", "Glow", "Off"));
+    public final ModeSetting espMode = add(new ModeSetting("Target ESP", "Ring", "Ring", "Circle", "Box", "Orbit", "Pulse", "Corners", "Glow", "Off"));
     public final BooleanSetting espTheme = add(new BooleanSetting("ESP theme color", true));
     public final ColorSetting espColor = add(new ColorSetting("ESP color", 0xFFFF4D5E));
 
@@ -458,6 +458,32 @@ public class KillAura extends Module {
                         Render3D.dot(ms, c, size, (al << 24) | 0xFFFFFF, right, up);
                     }
                 }
+            }
+            case "Pulse" -> {
+                // rozchodzące się pierścienie u podstawy celu
+                ms.push();
+                ms.translate(0, 0.02, 0);
+                for (int p = 0; p < 3; p++) {
+                    double ph = ((now / 1100.0) + p / 3.0) % 1.0;
+                    double r = w * (0.4 + ph * 1.1);
+                    int al = (int) (a * (1 - ph));
+                    Render3D.ring(ms, r - 0.05, r, (al << 24) | rgb, (al << 24) | rgb, 64);
+                }
+                ms.pop();
+            }
+            case "Corners" -> {
+                // narożniki pudełka (jak w FPS-ach)
+                net.minecraft.util.math.Box box = new net.minecraft.util.math.Box(-w / 2, 0, -w / 2, w / 2, height, w / 2).expand(0.05);
+                double len = Math.min(0.35, height * 0.25);
+                double[] xs = {box.minX, box.maxX}, ys = {box.minY, box.maxY}, zs = {box.minZ, box.maxZ};
+                java.util.List<double[]> segs = new java.util.ArrayList<>();
+                for (double cx : xs) for (double cy : ys) for (double cz : zs) {
+                    double sx = cx == box.minX ? 1 : -1, sy = cy == box.minY ? 1 : -1, sz = cz == box.minZ ? 1 : -1;
+                    segs.add(new double[]{cx, cy, cz, cx + sx * len, cy, cz});
+                    segs.add(new double[]{cx, cy, cz, cx, cy + sy * len, cz});
+                    segs.add(new double[]{cx, cy, cz, cx, cy, cz + sz * len});
+                }
+                Render3D.lines(ms, segs.toArray(new double[0][]), (a << 24) | rgb, 2.5f);
             }
             default -> { // Ring
                 double time = (now % 1800) / 1800.0 * Math.PI * 2;

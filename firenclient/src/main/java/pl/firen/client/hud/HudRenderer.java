@@ -43,6 +43,7 @@ public final class HudRenderer {
 
         FirenClient.modules().renderHud(ctx, s); // 2D ESP, Nametags (pod resztą HUD)
         Render2D.alpha = 1f;
+        pl.firen.client.util.Notifications.render(ctx, s, dt);
 
         if (hud.watermark.get()) watermark(ctx, mc, hud);
         if (hud.arrayList.get()) arrayList(ctx, hud, vw, dt);
@@ -68,7 +69,7 @@ public final class HudRenderer {
         Fonts.draw(ctx, "FirenClient", Fonts.SEMIBOLD, tx, y + 8, Theme.TEXT);
         tx += Fonts.width("FirenClient", Fonts.SEMIBOLD) + 4;
         Render2D.round(ctx, tx, y + 7, 17, 10, 4, Theme.accentAlpha(0x38));
-        Fonts.drawCentered(ctx, "V4", Fonts.SMALL, tx + 8.5f, y + 9, Theme.accent());
+        Fonts.drawCentered(ctx, "V5", Fonts.SMALL, tx + 8.5f, y + 9, Theme.accent());
         tx += 26;
         if (hud.info.get()) {
             Render2D.circle(ctx, tx, y + 12, 1.2f, 0x60FFFFFF);
@@ -94,8 +95,14 @@ public final class HudRenderer {
             float w = labelWidth(md) + 18, h = 17;
             float x = vw - 6 - w + (1 - t) * (w + 14);
             // gradient koloru w dół listy (klasyczny "rainbow"/akcent)
-            int top = Theme.accent(), bot = Theme.accent2();
-            int barCol = Anim.lerpColor(top, bot, (float) i / n);
+            int barCol;
+            var cs = FirenClient.modules().get(pl.firen.client.module.modules.ClientSettings.class);
+            if (cs.rainbowArray.get()) {
+                float hue = ((System.currentTimeMillis() / 20f) + i * 28f) % 360f / 360f;
+                barCol = 0xFF000000 | (java.awt.Color.HSBtoRGB(hue, 0.55f, 1f) & 0xFFFFFF);
+            } else {
+                barCol = Anim.lerpColor(Theme.accent(), Theme.accent2(), (float) i / n);
+            }
             Render2D.alpha = t;
             // tło kapsułki z delikatnym gradientem akcentu od prawej
             Render2D.shadow(ctx, x, y + 1.5f, w, h, 6, 7, 0x70000000);

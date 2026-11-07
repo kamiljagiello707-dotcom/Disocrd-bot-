@@ -39,6 +39,17 @@ public abstract class Module {
         if (enabled == value) return;
         enabled = value;
         if (value) onEnable(); else onDisable();
+        // powiadomienie o przełączeniu (jeśli włączone i jesteśmy w grze)
+        if (mc.world != null && mc.player != null && notifyAllowed()) {
+            pl.firen.client.util.Notifications.module(name, value, getSuffix());
+        }
+    }
+
+    private boolean notifyAllowed() {
+        var mgr = pl.firen.client.FirenClient.modules();
+        if (mgr == null) return false;
+        var cs = mgr.get(pl.firen.client.module.modules.ClientSettings.class);
+        return cs.notifyModules.get() && this != cs;
     }
 
     /** Ustawia stan bez wywoływania onEnable/onDisable (np. przy wczytywaniu configu w menu). */

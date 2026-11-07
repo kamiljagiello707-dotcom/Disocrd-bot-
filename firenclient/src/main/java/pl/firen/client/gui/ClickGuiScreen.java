@@ -246,7 +246,7 @@ public class ClickGuiScreen extends Screen {
         Fonts.draw(ctx, "FirenClient", Fonts.SMALL, x + 12, y + 10, TEXT_3);
         float vx = x + 12 + Fonts.width("FirenClient", Fonts.SMALL) + 5;
         Render2D.round(ctx, vx, y + 9, 18, 10, 4, Theme.accentAlpha(0x30));
-        Fonts.drawCentered(ctx, "V4", Fonts.SMALL, vx + 9, y + 11, Theme.accent());
+        Fonts.drawCentered(ctx, "V5", Fonts.SMALL, vx + 9, y + 11, Theme.accent());
         Fonts.draw(ctx, title, Fonts.TITLE, x + 12, y + 22, WHITE);
 
         float searchW = 150, sx = x + w - 14 - searchW, sy = y + 13;

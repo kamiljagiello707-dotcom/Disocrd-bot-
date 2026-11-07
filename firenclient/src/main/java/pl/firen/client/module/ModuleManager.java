@@ -44,6 +44,8 @@ public final class ModuleManager {
         modules.add(new Trail());
         modules.add(new Keystrokes());
         modules.add(new CpsDisplay());
+        modules.add(new PotionHud());
+        modules.add(new ArmorHud());
         modules.add(new Nametags());
         modules.add(new ChestEsp());
         modules.add(new Fullbright());
@@ -63,6 +65,7 @@ public final class ModuleManager {
         modules.add(new MiddleClickFriend());
         modules.add(new AutoRespawn());
         modules.add(new AntiAfk());
+        modules.add(new ClientSettings());
     }
 
     public List<Module> all() { return modules; }

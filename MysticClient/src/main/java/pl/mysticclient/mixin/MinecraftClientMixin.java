@@ -13,6 +13,8 @@ import pl.mysticclient.module.render.ESP;
 public class MinecraftClientMixin {
     @Inject(method = "hasOutline", at = @At("HEAD"), cancellable = true)
     private void mystic$glowEsp(Entity entity, CallbackInfoReturnable<Boolean> cir) {
+        pl.mysticclient.module.combat.KillAura ka = ModuleManager.get(pl.mysticclient.module.combat.KillAura.class);
+        if (ka != null && ka.glowTarget(entity)) { cir.setReturnValue(true); return; }
         ESP esp = ModuleManager.get(ESP.class);
         if (esp != null && esp.isEnabled() && esp.mode.is("Glow") && esp.shouldRender(entity)) {
             cir.setReturnValue(true);

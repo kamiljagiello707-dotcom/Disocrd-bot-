@@ -38,7 +38,7 @@ Klient do Minecrafta **1.21.4** (Fabric) z nowoczesnym, czarno-białym ClickGUI,
 
 | Kategoria | Moduły |
 |---|---|
-| Combat | TriggerBot, AutoTotem |
+| Combat | KillAura (Single/Switch/Multi + Target ESP), TriggerBot, AutoTotem |
 | Movement | Sprint (Legit/Omni), AutoWalk, SafeWalk |
 | Render | NameTags, HUD (watermark + ArrayList), Fullbright, ESP (Box/Glow), Tracers, Keystrokes, PotionHUD, ArmorHUD, Coordinates |
 | Player | AutoRespawn, FastPlace, AutoEat |

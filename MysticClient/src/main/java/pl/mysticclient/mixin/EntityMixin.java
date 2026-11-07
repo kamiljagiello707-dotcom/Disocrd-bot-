@@ -12,8 +12,10 @@ import pl.mysticclient.module.render.ESP;
 public class EntityMixin {
     @Inject(method = "getTeamColorValue", at = @At("HEAD"), cancellable = true)
     private void mystic$espColor(CallbackInfoReturnable<Integer> cir) {
-        ESP esp = ModuleManager.get(ESP.class);
         Entity self = (Entity) (Object) this;
+        pl.mysticclient.module.combat.KillAura ka = ModuleManager.get(pl.mysticclient.module.combat.KillAura.class);
+        if (ka != null && ka.glowTarget(self)) { cir.setReturnValue(ka.espRgb() & 0xFFFFFF); return; }
+        ESP esp = ModuleManager.get(ESP.class);
         if (esp != null && esp.isEnabled() && esp.mode.is("Glow") && esp.shouldRender(self)) {
             cir.setReturnValue(esp.colorFor(self) & 0xFFFFFF);
         }

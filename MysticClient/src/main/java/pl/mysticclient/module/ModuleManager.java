@@ -1,6 +1,7 @@
 package pl.mysticclient.module;
 
 import pl.mysticclient.module.combat.AutoTotem;
+import pl.mysticclient.module.combat.KillAura;
 import pl.mysticclient.module.combat.TriggerBot;
 import pl.mysticclient.module.misc.*;
 import pl.mysticclient.module.movement.AutoWalk;
@@ -26,6 +27,7 @@ public final class ModuleManager {
 
     public static void init() {
         // Combat
+        register(new KillAura());
         register(new TriggerBot());
         register(new AutoTotem());
         // Movement

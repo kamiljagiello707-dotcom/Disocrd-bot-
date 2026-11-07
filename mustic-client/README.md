@@ -8,6 +8,8 @@ Klient Fabric dla **Minecraft 1.21.4** (Java 21).
 ```
 Gotowy plik: `build/libs/mustic-client-0.1.0.jar` → wrzuć do `.minecraft/mods` razem z Fabric API.
 
+![ClickGUI](docs/clickgui-preview.png)
+
 ## ClickGUI (`Right Shift`)
 - **LPM** na module – włącz/wyłącz
 - **PPM** na module – rozwiń ustawienia

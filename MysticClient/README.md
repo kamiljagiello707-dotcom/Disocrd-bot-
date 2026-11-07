@@ -8,6 +8,10 @@ Klient do Minecrafta **1.21.4** (Fabric) z nowoczesnym, czarno-białym ClickGUI,
 |---|---|---|
 | ![](screenshots/gui-light.jpg) | ![](screenshots/gui-theme.jpg) | ![](screenshots/hud.jpg) |
 
+**NameTags** – tabliczki z HP, paskiem zdrowia, dystansem, zbroją i oznaczeniem znajomego:
+
+![NameTags](screenshots/nametags.jpg)
+
 ## Instalacja (krok po kroku)
 
 1. Zainstaluj **Fabric Loader** dla Minecraft **1.21.4**: <https://fabricmc.net/use/installer/>
@@ -36,7 +40,7 @@ Klient do Minecrafta **1.21.4** (Fabric) z nowoczesnym, czarno-białym ClickGUI,
 |---|---|
 | Combat | TriggerBot, AutoTotem |
 | Movement | Sprint (Legit/Omni), AutoWalk, SafeWalk |
-| Render | HUD (watermark + ArrayList), Fullbright, ESP (Box/Glow), Tracers, Keystrokes, PotionHUD, ArmorHUD, Coordinates |
+| Render | NameTags, HUD (watermark + ArrayList), Fullbright, ESP (Box/Glow), Tracers, Keystrokes, PotionHUD, ArmorHUD, Coordinates |
 | Player | AutoRespawn, FastPlace, AutoEat |
 | World | NoWeather, TimeChanger |
 | Misc | ClickGUI, ClientSettings, MiddleClick, FakePlayer, AntiAFK |

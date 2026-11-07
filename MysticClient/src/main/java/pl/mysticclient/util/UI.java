@@ -379,13 +379,13 @@ public final class UI {
     // ------------------------------------------------------------------ ikony (Lucide)
 
     public static final class Icons {
-        public static final char SWORDS = '', MOVE = '', EYE = '', USER = '', GLOBE = '',
-                BOXES = '', LAYERS = '', FOLDER = '', PALETTE = '', SEARCH = '',
-                KEYBOARD = '', RESET = '', STAR = '', SETTINGS = '', SPARKLES = '',
-                CHECK = '', SAVE = '', FOLDER_OPEN = '', TRASH = '', PLUS = '',
-                DOWNLOAD = '', SUN = '', MOON = '', ZAP = '', SHIELD = '',
-                CROSSHAIR = '', GAUGE = '', COMMAND = '', GRID = '', SLIDERS = '',
-                BELL = '', CIRCLE_CHECK = '', CIRCLE_X = '', X = '', FOOTPRINTS = '';
+        public static final char SWORDS = '\ue2b4', MOVE = '\ue121', EYE = '\ue0ba', USER = '\ue19f', GLOBE = '\ue0e8',
+                BOXES = '\ue2d0', LAYERS = '\ue529', FOLDER = '\ue0d7', PALETTE = '\ue1dd', SEARCH = '\ue151',
+                KEYBOARD = '\ue284', RESET = '\ue148', STAR = '\ue176', SETTINGS = '\ue154', SPARKLES = '\ue412',
+                CHECK = '\ue06c', SAVE = '\ue14d', FOLDER_OPEN = '\ue247', TRASH = '\ue18e', PLUS = '\ue13d',
+                DOWNLOAD = '\ue0b2', SUN = '\ue178', MOON = '\ue11e', ZAP = '\ue1b4', SHIELD = '\ue158',
+                CROSSHAIR = '\ue0ac', GAUGE = '\ue1bf', COMMAND = '\ue09a', GRID = '\ue0ff', SLIDERS = '\ue29a',
+                BELL = '\ue059', CIRCLE_CHECK = '\ue226', CIRCLE_X = '\ue084', X = '\ue1b2', FOOTPRINTS = '\ue3b9', HEART = '\ue0f2';
 
         private Icons() {}
     }

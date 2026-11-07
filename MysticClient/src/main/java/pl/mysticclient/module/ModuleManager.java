@@ -33,6 +33,7 @@ public final class ModuleManager {
         register(new AutoWalk());
         register(new SafeWalk());
         // Render
+        register(new NameTags());
         register(new HUD());
         register(new Fullbright());
         register(new ESP());

@@ -6,8 +6,10 @@
   "client": [
     "ClientWorldPropertiesMixin",
     "EntityMixin",
+    "EntityRendererMixin",
     "InGameHudMixin",
     "KeyboardMixin",
+    "LivingEntityRendererMixin",
     "MinecraftClientAccessor",
     "MinecraftClientMixin",
     "MouseMixin",

@@ -113,23 +113,36 @@ public class HudEditorScreen extends Screen {
 
     private final Map<HudElement, Animation> chipAnim = new HashMap<>();
 
+    private float chipW(HudElement h) { return RenderUtil.width(h.getName()) + 24; }
+
+    private float chipsTotal(List<HudElement> els) {
+        float total = -4;
+        for (HudElement h : els) total += chipW(h) + 4;
+        return total;
+    }
+
     private void renderToggleBar(DrawContext c, int mx, int my) {
         List<HudElement> els = elements();
-        float total = 0;
-        for (HudElement h : els) total += RenderUtil.width(h.getName()) + 14;
+        float total = chipsTotal(els);
         float bx = width / 2f - total / 2, by = height / 2f + 30;
-        String title = "§lHUD Editor";
-        RenderUtil.centered(c, title, width / 2f, by - 26, Theme.TEXT);
-        RenderUtil.centered(c, "Drag elements §8•§7 click a chip to toggle §8•§7 Esc to go back", width / 2f, by - 14, Theme.TEXT_DIM);
+        float cardW = Math.max(total, 240) + 20;
+        RenderUtil.round(c, width / 2f - cardW / 2, by - 36, cardW, 60, 9, 0xF00B0B0B);
+        RenderUtil.roundOutline(c, width / 2f - cardW / 2, by - 36, cardW, 60, 9, 0.5f, 0x26FFFFFF);
+        float titleW = RenderUtil.width("§lHUD Editor") + 16;
+        RenderUtil.round(c, width / 2f - titleW / 2 - 2, by - 30, 12, 12, 3.5f, Theme.accent());
+        dev.wave.util.Icons.draw(c, "hudeditor", width / 2f - titleW / 2, by - 28, 8, Theme.onAccent());
+        RenderUtil.text(c, "§lHUD Editor", width / 2f - titleW / 2 + 14, by - 28, Theme.TEXT);
+        RenderUtil.centered(c, "§7Drag elements §8\u2022§7 click to toggle §8\u2022§7 Esc to go back", width / 2f, by - 14, Theme.TEXT_DIM);
         for (HudElement h : els) {
-            float w = RenderUtil.width(h.getName()) + 10;
+            float w = chipW(h);
             Animation an = chipAnim.computeIfAbsent(h, k -> new Animation(16, h.isEnabled() ? 1 : 0));
             an.setTarget(h.isEnabled() ? 1 : 0);
             float t = an.update();
-            boolean hov = RenderUtil.hovered(mx, my, bx, by, w, 14);
-            RenderUtil.round(c, bx, by, w, 14, 7, ColorUtil.lerp(hov ? 0xF0202020 : 0xF0101010, Theme.accent(), t));
-            RenderUtil.roundOutline(c, bx, by, w, 14, 7, 0.5f, Theme.BORDER);
-            RenderUtil.text(c, h.getName(), bx + 5, by + 3, ColorUtil.lerp(Theme.TEXT_DIM, Theme.onAccent(), t), false);
+            boolean hov = RenderUtil.hovered(mx, my, bx, by, w, 16);
+            RenderUtil.round(c, bx, by, w, 16, 5, ColorUtil.lerp(hov ? 0xFF222222 : 0xFF161616, Theme.accent(), t));
+            int col = ColorUtil.lerp(hov ? Theme.TEXT : Theme.TEXT_DIM, Theme.onAccent(), t);
+            dev.wave.util.Icons.draw(c, h.getIcon(), bx + 5, by + 4, 8, col);
+            RenderUtil.text(c, h.getName(), bx + 16, by + 4, col, false);
             bx += w + 4;
         }
     }
@@ -137,12 +150,11 @@ public class HudEditorScreen extends Screen {
     @Override
     public boolean mouseClicked(double mx, double my, int button) {
         List<HudElement> els = elements();
-        float total = 0;
-        for (HudElement h : els) total += RenderUtil.width(h.getName()) + 14;
+        float total = chipsTotal(els);
         float bx = width / 2f - total / 2, by = height / 2f + 30;
         for (HudElement h : els) {
-            float w = RenderUtil.width(h.getName()) + 10;
-            if (RenderUtil.hovered(mx, my, bx, by, w, 14)) {
+            float w = chipW(h);
+            if (RenderUtil.hovered(mx, my, bx, by, w, 16)) {
                 h.toggle();
                 ClickGuiScreen.click(h.isEnabled() ? 1.2f : 0.9f);
                 return true;

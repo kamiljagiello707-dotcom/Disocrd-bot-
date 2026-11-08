@@ -18,10 +18,14 @@ public class NotificationManager {
     private static final float HEIGHT = 30, GAP = 4, ANIM = 280;
     private final List<Notification> list = new CopyOnWriteArrayList<>();
 
-    public void push(String title, String message, Notification.Type type) {
+    public void push(String title, String message, Notification.Type type) { push(title, message, type, null); }
+
+    public void push(String title, String message, Notification.Type type, String icon) {
         Notifications cfg = WaveClient.INSTANCE.modules.get(Notifications.class);
         if (!cfg.isEnabled()) return;
-        list.add(new Notification(title, message, type, (long) (cfg.duration.get() * 1000) + (long) ANIM * 2));
+        Notification n = new Notification(title, message, type, (long) (cfg.duration.get() * 1000) + (long) ANIM * 2);
+        if (icon != null) n.icon = icon;
+        list.add(n);
         while (list.size() > 6) list.remove(0);
         if (cfg.sound.isOn()) {
             float pitch = type == Notification.Type.DISABLED ? 0.8f : 1.25f;
@@ -49,7 +53,7 @@ public class NotificationManager {
             float out = age > n.duration - ANIM ? Easing.inCubic((age - (n.duration - ANIM)) / ANIM) : 0;
             float slide = Math.max(0, in) * (1 - out);
 
-            float w = Math.max(130, Math.max(RenderUtil.width(n.title), RenderUtil.width(n.message)) + 62);
+            float w = Math.max(130, Math.max(RenderUtil.width(n.title), RenderUtil.width(n.message)) + 66);
             float nx;
             if (center) {
                 nx = sw / 2f - w / 2;
@@ -68,33 +72,25 @@ public class NotificationManager {
         RenderUtil.round(c, x, y, w, HEIGHT, 5, Theme.BG);
         RenderUtil.roundOutline(c, x, y, w, HEIGHT, 5, 0.5f, Theme.BORDER);
 
-        // icon
-        float ix = x + 15, iy = y + HEIGHT / 2 - 1;
-        switch (n.type) {
-            case ENABLED -> {
-                RenderUtil.circle(c, ix, iy, 7, Theme.accent());
-                RenderUtil.text(c, "✔", ix - 3, iy - 4, Theme.onAccent(), false);
-            }
-            case DISABLED -> {
-                RenderUtil.roundOutline(c, ix - 7, iy - 7, 14, 14, 7, 1.2f, Theme.TEXT);
-                RenderUtil.text(c, "✖", ix - 3, iy - 4, Theme.TEXT, false);
-            }
-            case WARNING -> {
-                RenderUtil.circle(c, ix, iy, 7, 0xFFFFB020);
-                RenderUtil.text(c, "!", ix - 1, iy - 4, Theme.TEXT_DARK, false);
-            }
-            default -> {
-                RenderUtil.circle(c, ix, iy, 7, Theme.TEXT);
-                RenderUtil.text(c, "i", ix - 1, iy - 4, Theme.TEXT_DARK, false);
-            }
-        }
+        // icon tile
+        float ix = x + 6, iy = y + HEIGHT / 2 - 10;
+        float t = Easing.outCubic((age - 120) / 260f);
+        boolean on = n.type == Notification.Type.ENABLED;
+        int tile = switch (n.type) {
+            case ENABLED -> ColorUtil.lerp(0xFF1E1E1E, Theme.accent(), t);
+            case DISABLED -> ColorUtil.lerp(Theme.accent(), 0xFF1E1E1E, t);
+            case WARNING -> 0xFFFFB020;
+            default -> 0xFF1E1E1E;
+        };
+        int iconCol = on ? ColorUtil.lerp(Theme.TEXT, Theme.onAccent(), t) : (n.type == Notification.Type.WARNING ? Theme.TEXT_DARK : Theme.TEXT);
+        RenderUtil.round(c, ix, iy, 20, 20, 5, tile);
+        dev.wave.util.Icons.draw(c, n.icon, ix + 4, iy + 4, 12, iconCol);
 
-        RenderUtil.text(c, n.title, x + 28, y + 6, Theme.TEXT, false);
-        RenderUtil.text(c, n.message, x + 28, y + 16, Theme.TEXT_DIM, false);
+        RenderUtil.text(c, n.title, x + 32, y + 6, Theme.TEXT, false);
+        RenderUtil.text(c, n.message, x + 32, y + 16, Theme.TEXT_DIM, false);
 
         // animated mini toggle switch on the right for module toggles
         if (n.type == Notification.Type.ENABLED || n.type == Notification.Type.DISABLED) {
-            float t = Easing.outCubic((age - 120) / 260f);
             float knob = n.type == Notification.Type.ENABLED ? t : 1 - t;
             float sx = x + w - 26, sy = y + HEIGHT / 2 - 5;
             RenderUtil.round(c, sx, sy, 18, 10, 5, ColorUtil.lerp(0xFF2A2A2A, Theme.accent(), knob));

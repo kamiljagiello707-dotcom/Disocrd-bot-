@@ -8,6 +8,7 @@ public class Notification {
     public final String title;
     public final String message;
     public final Type type;
+    public String icon = "notifications";
     public final long start = System.currentTimeMillis();
     public final long duration;
     public final Animation y = new Animation(14, -1);

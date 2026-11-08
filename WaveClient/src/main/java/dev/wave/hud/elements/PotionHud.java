@@ -20,7 +20,7 @@ public class PotionHud extends HudElement {
     }
 
     @Override
-    protected void defaultPosition(int sw, int sh) { x = sw - 100; y = sh / 2f; }
+    protected void defaultPosition(int sw, int sh) { x = sw - 100; y = sh / 2f - 60; }
 
     private static String roman(int n) {
         String[] r = {"", "", " II", " III", " IV", " V", " VI", " VII", " VIII", " IX", " X"};

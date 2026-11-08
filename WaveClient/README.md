@@ -2,7 +2,8 @@
 
 Klient-mod do **Minecraft 1.21.4 (Fabric)** z rozbudowanym, animowanym ClickGUI w stylu czarno-białym, systemem bindów, edytorem HUD, powiadomieniami i modułami wizualnymi.
 
-![ClickGUI](screenshots/clickgui-ingame.png)
+![ClickGUI](screenshots/clickgui.png)
+![Ustawienia modułu](screenshots/settings.png)
 ![HUD w grze](screenshots/ingame-hud.png)
 ![Edytor HUD](screenshots/hud-editor.png)
 
@@ -25,13 +26,13 @@ Wymaga Javy 21.
 | Klawisz / akcja | Działanie |
 |---|---|
 | **Prawy Shift** | Otwiera / zamyka ClickGUI |
-| **LPM** na module | Włącza / wyłącza moduł |
-| **PPM** na module | Rozwija ustawienia (animowane) |
-| **ŚPM** na module | Szybkie ustawienie binda |
-| **PPM** na nagłówku panelu | Zwija / rozwija kategorię |
-| Przeciąganie nagłówka | Przesuwa panel |
-| Pisanie / `Ctrl+F` | Wyszukiwarka modułów (podświetla wyniki) |
-| Kółko myszy | Przewijanie paneli / zmiana wartości suwaka |
+| Klik w kategorię (lub ↑ / ↓) | Zmiana kategorii w panelu bocznym |
+| **LPM** na karcie modułu | Włącza / wyłącza moduł |
+| **PPM** na karcie lub strzałka `>` | Otwiera stronę ustawień modułu |
+| `Esc` / przycisk `<` | Powrót z ustawień |
+| Pisanie / `Ctrl+F` | Wyszukiwarka (Enter otwiera ustawienia jedynego wyniku) |
+| Przeciąganie logo / nagłówka | Przesuwa okno GUI |
+| Kółko myszy | Przewijanie / zmiana wartości suwaka |
 | **PPM** na suwaku | Reset do wartości domyślnej |
 | **C** (przytrzymaj) | Zoom (kółkiem zmieniasz przybliżenie) |
 
@@ -42,13 +43,15 @@ Wymaga Javy 21.
 - Bind jest wyświetlany obok nazwy modułu w GUI.
 
 ## ✦ GUI
-- Czarno-biały motyw z kolorem akcentu do zmiany (moduł **ClickGUI → Accent**, także tryb Rainbow).
-- Animacje: otwierania (Scale / Slide / Fade), wypełnienia włączonego modułu, rozwijania ustawień, przełączników, suwaków, listy trybów, hover, zwijania paneli.
-- Rozmycie tła, przyciemnienie, podpowiedzi (opisy modułów i ustawień), dźwięki kliknięć.
-- Pozycje paneli i wszystkie ustawienia zapisują się w `.minecraft/config/waveclient.json`.
+- Jedno okno w stylu czarno-białym: panel boczny z kategoriami (własne ikony, animowany wskaźnik, licznik włączonych), siatka kart modułów i osobna strona ustawień w dwóch kolumnach.
+- **Własne ikony** dla każdej kategorii i każdego modułu (atlas generowany skryptem `tools/gen_icons.py`).
+- Karta modułu: kafelek z ikoną (podświetla się po włączeniu), nazwa, opis, przełącznik, bind, przejście do ustawień.
+- Animacje: otwierania okna (Scale / Slide / Fade), kart wjeżdżających po kolei przy zmianie kategorii, przejścia siatka ↔ ustawienia, przełączników, suwaków, list trybów, hover, pasek przewijania z wygaszaniem krawędzi, podpowiedzi przy kursorze.
+- Kolor akcentu do zmiany (**ClickGUI → Accent**, także Rainbow), rozmycie tła, dźwięki.
+- Pozycja okna, wybrana kategoria i wszystkie ustawienia zapisują się w `.minecraft/config/waveclient.json`.
 
 ## ✦ Powiadomienia
-Przy włączeniu / wyłączeniu modułu wysuwa się czarna karta z ikoną, nazwą, animowanym mini-przełącznikiem i paskiem czasu. Pozycja (BottomRight / TopRight / TopCenter), czas i dźwięk w module **Notifications**.
+Przy włączeniu / wyłączeniu modułu wysuwa się czarna karta z ikoną modułu, nazwą, animowanym mini-przełącznikiem i paskiem czasu. Pozycja (BottomRight / TopRight / TopCenter), czas i dźwięk w module **Notifications**.
 
 ## ✦ HUD (edytor: przycisk „HUD Editor” na dole GUI)
 Przeciągaj elementy myszką, przyciąganie do krawędzi, środka i innych elementów z liniami pomocniczymi, siatka. Kliknięcie „chipa” włącza/wyłącza element, PPM na elemencie go ukrywa.
@@ -56,7 +59,7 @@ Przeciągaj elementy myszką, przyciąganie do krawędzi, środka i innych eleme
 | Element | Opis |
 |---|---|
 | Watermark | Logo klienta (style Modern / Minimal / Logo), FPS, godzina, nick |
-| ArrayList | Lista włączonych modułów z animacją wjazdu, kolory Wave / White / Accent / Rainbow |
+| ArrayList | Karta z ikonką i nagłówkiem **Enabled:** (licznik), pod spodem włączone moduły z ikonami i animacją; styl Classic do wyboru |
 | Info | FPS, ping, prędkość (b/s), serwer, biom |
 | Coordinates | XYZ, kierunek, przeliczenie Nether/Overworld |
 | Armor | Zbroja + przedmioty w rękach z % wytrzymałości |

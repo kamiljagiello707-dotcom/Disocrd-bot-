@@ -48,6 +48,7 @@ public abstract class Module {
     }
 
     public String getName() { return name; }
+    public String getIcon() { return dev.wave.util.Icons.key(name); }
     public String getDescription() { return description; }
     public Category getCategory() { return category; }
     public boolean isEnabled() { return enabled; }

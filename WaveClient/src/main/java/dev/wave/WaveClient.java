@@ -71,7 +71,7 @@ public class WaveClient implements ClientModInitializer {
         }
         if (cfg.toggles.isOn()) {
             notifications.push(m.getName(), m.isEnabled() ? "Module §fenabled" : "Module §7disabled",
-                    m.isEnabled() ? Notification.Type.ENABLED : Notification.Type.DISABLED);
+                    m.isEnabled() ? Notification.Type.ENABLED : Notification.Type.DISABLED, m.getIcon());
         }
     }
 

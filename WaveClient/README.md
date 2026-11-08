@@ -43,6 +43,7 @@ Wymaga Javy 21.
 - Bind jest wyświetlany obok nazwy modułu w GUI.
 
 ## ✦ GUI
+- Nowoczesny wygląd: gładka czcionka **Inter** (TTF, automatycznie dobierana do rozdzielczości ekranu, zawsze ostra), wygładzane (antyaliasowane) zaokrąglenia rysowane w pełnej rozdzielczości monitora.
 - Jedno okno w stylu czarno-białym: panel boczny z kategoriami (własne ikony, animowany wskaźnik, licznik włączonych), siatka kart modułów i osobna strona ustawień w dwóch kolumnach.
 - **Własne ikony** dla każdej kategorii i każdego modułu (atlas generowany skryptem `tools/gen_icons.py`).
 - Karta modułu: kafelek z ikoną (podświetla się po włączeniu), nazwa, opis, przełącznik, bind, przejście do ustawień.
@@ -75,5 +76,7 @@ Przeciągaj elementy myszką, przyciąganie do krawędzi, środka i innych eleme
 **Player:** AutoRespawn, AntiAFK.
 
 **Client:** ClickGUI, Notifications, HUD Editor.
+
+Czcionka Inter: © The Inter Project Authors, licencja SIL Open Font License 1.1 (`assets/waveclient/font/INTER_LICENSE.txt`).
 
 > ⚠️ Używaj na własnych światach lub serwerach, które na to pozwalają — na wielu serwerach takie modyfikacje są zabronione regulaminem.

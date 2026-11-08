@@ -1,0 +1,1 @@
+{"providers": [{"type": "ttf", "file": "waveclient:inter_medium.ttf", "size": 8.5, "oversample": 1.5, "shift": [0, 0.6], "skip": ""}, {"type": "reference", "id": "minecraft:default"}]}

@@ -368,7 +368,7 @@ public class ClickGuiScreen extends Screen {
             if (!search.isEmpty()) Icons.draw(c, "close", b[0] + b[2] - 14, b[1] + 5, 8, Theme.TEXT_DIM);
         }
         if (!searchFocused && search.isEmpty())
-            RenderUtil.textScaled(c, "Ctrl+F", b[0] + b[2] - 8 - RenderUtil.width("Ctrl+F") * 0.65f, b[1] + 6.5f, 0.65f, 0xFF4A4A4A, false);
+            RenderUtil.textScaled(c, "Ctrl+F", b[0] + b[2] - 9 - RenderUtil.width("Ctrl+F") * 0.75f, b[1] + 6, 0.75f, 0xFF4A4A4A, false);
     }
 
     private void renderTooltip(DrawContext c, int mx, int my) {
@@ -396,7 +396,7 @@ public class ClickGuiScreen extends Screen {
         float base = RenderUtil.globalAlpha;
         RenderUtil.globalAlpha = base * ta;
         float tw = RenderUtil.width(tip) * 0.85f + 12;
-        float bx = Math.min(mx + 10, wx + ww - tw - 4), by = my + 12 + (1 - ta) * 4;
+        float bx = Math.min(mx + 8, wx + ww - tw - 4), by = my - 20 - (1 - ta) * 4;
         RenderUtil.round(c, bx, by, tw, 14, 4, 0xF5161616);
         RenderUtil.roundOutline(c, bx, by, tw, 14, 4, 0.5f, 0x30FFFFFF);
         RenderUtil.textScaled(c, tip, bx + 6, by + 4, 0.85f, Theme.TEXT, false);

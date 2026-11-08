@@ -18,14 +18,14 @@ public class BoolComponent extends Component {
         this.knob = new Animation(16, s.isOn() ? 1 : 0);
     }
 
-    @Override public float baseHeight() { return 14; }
+    @Override public float baseHeight() { return 19; }
 
     @Override
     protected void render(DrawContext c, int mx, int my) {
         knob.setTarget(s.isOn() ? 1 : 0);
         float k = knob.update();
-        RenderUtil.text(c, s.getName(), x + 2, y + 3, ColorUtil.lerp(Theme.TEXT_DIM, Theme.TEXT, Math.max(k, hover.get() * 0.6f)));
-        float sw = 16, sh = 8, sx = x + w - sw - 2, sy = y + 3;
+        RenderUtil.text(c, s.getName(), x + 2, y + 5.5f, ColorUtil.lerp(Theme.TEXT_DIM, Theme.TEXT, Math.max(k, hover.get() * 0.6f)));
+        float sw = 16, sh = 8, sx = x + w - sw - 2, sy = y + 5.5f;
         RenderUtil.round(c, sx, sy, sw, sh, 4, ColorUtil.lerp(0xFF2A2A2A, Theme.accent(), k));
         RenderUtil.circle(c, sx + 4 + k * 8, sy + 4, 2.8f + hover.get() * 0.4f, ColorUtil.lerp(0xFF8A8A8A, Theme.onAccent(), k));
     }

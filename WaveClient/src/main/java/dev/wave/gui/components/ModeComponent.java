@@ -23,35 +23,35 @@ public class ModeComponent extends Component {
     }
 
     @Override
-    public float baseHeight() { return 14 + (s.getModes().size() * 11 + 2) * expand.get(); }
+    public float baseHeight() { return 19 + (s.getModes().size() * 11 + 2) * expand.get(); }
 
     @Override
     protected void render(DrawContext c, int mx, int my) {
         expand.setTarget(open ? 1 : 0);
         float e = expand.update();
-        boolean headerHover = RenderUtil.hovered(mx, my, x, y, w, 14);
-        RenderUtil.text(c, s.getName(), x + 2, y + 3, ColorUtil.lerp(Theme.TEXT_DIM, Theme.TEXT, headerHover ? 0.6f : 0));
+        boolean headerHover = RenderUtil.hovered(mx, my, x, y, w, 19);
+        RenderUtil.text(c, s.getName(), x + 2, y + 5.5f, ColorUtil.lerp(Theme.TEXT_DIM, Theme.TEXT, headerHover ? 0.6f : 0));
 
         // value with a slide animation when it changes
         float t = Easing.outCubic((System.currentTimeMillis() - changedAt) / 220f);
         String val = s.get();
         float vw = RenderUtil.width(val);
         float boxW = vw + 8, bx = x + w - boxW - 1;
-        RenderUtil.round(c, bx, y + 1.5f, boxW, 11, 3, ColorUtil.lerp(0xFF1E1E1E, 0xFF2A2A2A, headerHover ? 1 : 0));
-        RenderUtil.scissor(c, bx, y + 1, boxW, 12);
+        RenderUtil.round(c, bx, y + 3.5f, boxW, 12, 4, ColorUtil.lerp(0xFF1E1E1E, 0xFF2A2A2A, headerHover ? 1 : 0));
+        RenderUtil.scissor(c, bx, y + 3, boxW, 13);
         float off = (1 - t) * 8 * direction;
         float base = RenderUtil.globalAlpha;
         RenderUtil.globalAlpha = base * t;
-        RenderUtil.text(c, val, bx + 4 + off, y + 3, Theme.TEXT);
+        RenderUtil.text(c, val, bx + 4 + off, y + 5.5f, Theme.TEXT);
         if (previous != null && t < 1) {
             RenderUtil.globalAlpha = base * (1 - t);
-            RenderUtil.text(c, previous, bx + 4 + off - 8 * direction, y + 3, Theme.TEXT);
+            RenderUtil.text(c, previous, bx + 4 + off - 8 * direction, y + 5.5f, Theme.TEXT);
         }
         RenderUtil.globalAlpha = base;
         RenderUtil.endScissor(c);
 
         if (e > 0.01f) {
-            float ly = y + 14;
+            float ly = y + 19;
             RenderUtil.scissor(c, x, ly, w, (s.getModes().size() * 11 + 2) * e);
             RenderUtil.round(c, x + 2, ly, w - 4, s.getModes().size() * 11 + 1, 3, 0xFF141414);
             for (String m : s.getModes()) {
@@ -77,14 +77,14 @@ public class ModeComponent extends Component {
 
     @Override
     public boolean mouseClicked(double mx, double my, int button) {
-        if (RenderUtil.hovered(mx, my, x, y, w, 14)) {
+        if (RenderUtil.hovered(mx, my, x, y, w, 19)) {
             if (button == 0) change(1);
             else if (button == 1) { open = !open; ClickGuiScreen.click(open ? 1.2f : 0.9f); }
             else if (button == 2) change(-1);
             return true;
         }
         if (open && expand.get() > 0.9f) {
-            float ly = y + 14;
+            float ly = y + 19;
             for (String m : s.getModes()) {
                 if (RenderUtil.hovered(mx, my, x + 2, ly, w - 4, 11)) {
                     if (!s.is(m)) {

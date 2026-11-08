@@ -22,21 +22,21 @@ public class ColorComponent extends Component {
         this.rainbowKnob = new Animation(16, s.isRainbow() ? 1 : 0);
     }
 
-    @Override public float baseHeight() { return 14 + EXTRA * expand.get(); }
+    @Override public float baseHeight() { return 19 + EXTRA * expand.get(); }
 
     @Override
     protected void render(DrawContext c, int mx, int my) {
         expand.setTarget(open ? 1 : 0);
         float e = expand.update();
-        boolean headerHover = RenderUtil.hovered(mx, my, x, y, w, 14);
-        RenderUtil.text(c, s.getName(), x + 2, y + 3, ColorUtil.lerp(Theme.TEXT_DIM, Theme.TEXT, headerHover ? 0.6f : 0));
+        boolean headerHover = RenderUtil.hovered(mx, my, x, y, w, 19);
+        RenderUtil.text(c, s.getName(), x + 2, y + 5.5f, ColorUtil.lerp(Theme.TEXT_DIM, Theme.TEXT, headerHover ? 0.6f : 0));
         float sx = x + w - 20;
-        RenderUtil.round(c, sx, y + 2.5f, 18, 9, 3, 0xFF2A2A2A);
-        RenderUtil.round(c, sx + 1, y + 3.5f, 16, 7, 2.5f, ColorUtil.withAlpha(s.getColor(), 255));
+        RenderUtil.round(c, sx, y + 4.5f, 18, 10, 3.5f, 0xFF2A2A2A);
+        RenderUtil.round(c, sx + 1, y + 5.5f, 16, 8, 3, ColorUtil.withAlpha(s.getColor(), 255));
 
         if (e < 0.01f) return;
         float px = x + 2, pw = w - 4;
-        float sqY = y + 16, sqH = 38;
+        float sqY = y + 21, sqH = 38;
         float hueY = sqY + sqH + 4, alphaY = hueY + 9, rbY = alphaY + 8;
 
         if (dragging == 1) {
@@ -48,7 +48,7 @@ public class ColorComponent extends Component {
             s.setAlpha((mx - px) / pw);
         }
 
-        RenderUtil.scissor(c, x, y + 14, w, EXTRA * e);
+        RenderUtil.scissor(c, x, y + 19, w, EXTRA * e);
         int hueColor = ColorUtil.hsb(s.getHue(), 1, 1, 255);
         RenderUtil.gradientH(c, px, sqY, pw, sqH, 0xFFFFFFFF, hueColor);
         RenderUtil.gradientV(c, px, sqY, pw, sqH, 0x00000000, 0xFF000000);
@@ -78,7 +78,7 @@ public class ColorComponent extends Component {
 
     @Override
     public boolean mouseClicked(double mx, double my, int button) {
-        if (RenderUtil.hovered(mx, my, x, y, w, 14)) {
+        if (RenderUtil.hovered(mx, my, x, y, w, 19)) {
             if (button == 0 || button == 1) {
                 open = !open;
                 ClickGuiScreen.click(open ? 1.2f : 0.9f);
@@ -87,7 +87,7 @@ public class ColorComponent extends Component {
         }
         if (!open || expand.get() < 0.9f || button != 0) return false;
         float px = x + 2, pw = w - 4;
-        float sqY = y + 16, sqH = 38;
+        float sqY = y + 21, sqH = 38;
         float hueY = sqY + sqH + 4, alphaY = hueY + 9, rbY = alphaY + 8;
         if (RenderUtil.hovered(mx, my, px, sqY, pw, sqH)) dragging = 1;
         else if (RenderUtil.hovered(mx, my, px, hueY - 1, pw, 7)) dragging = 2;

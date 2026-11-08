@@ -22,11 +22,11 @@ public class SliderComponent extends Component {
 
     private float pct() { return (float) ((s.get() - s.getMin()) / (s.getMax() - s.getMin())); }
 
-    @Override public float baseHeight() { return 20; }
+    @Override public float baseHeight() { return 26; }
 
     @Override
     protected void render(DrawContext c, int mx, int my) {
-        float bx = x + 2, bw = w - 4, by = y + 14;
+        float bx = x + 2, bw = w - 4, by = y + 18;
         if (dragging) {
             float p = Math.max(0, Math.min(1, (mx - bx) / bw));
             s.set(s.getMin() + p * (s.getMax() - s.getMin()));
@@ -36,9 +36,9 @@ public class SliderComponent extends Component {
         drag.setTarget(dragging ? 1 : 0);
         float d = drag.update();
 
-        RenderUtil.text(c, s.getName(), x + 2, y + 2, ColorUtil.lerp(Theme.TEXT_DIM, Theme.TEXT, Math.max(d, hover.get() * 0.6f)));
+        RenderUtil.text(c, s.getName(), x + 2, y + 4, ColorUtil.lerp(Theme.TEXT_DIM, Theme.TEXT, Math.max(d, hover.get() * 0.6f)));
         String val = s.display();
-        RenderUtil.text(c, val, x + w - 2 - RenderUtil.width(val), y + 2, Theme.TEXT);
+        RenderUtil.text(c, val, x + w - 2 - RenderUtil.width(val), y + 4, Theme.TEXT);
 
         float bh = 2.5f + d;
         RenderUtil.round(c, bx, by - d / 2, bw, bh, bh / 2, 0xFF2A2A2A);

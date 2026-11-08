@@ -23,13 +23,13 @@ public class BindComponent extends Component {
 
     public boolean isListening() { return ClickGuiScreen.listening == this; }
 
-    @Override public float baseHeight() { return 14; }
+    @Override public float baseHeight() { return 19; }
 
     @Override
     protected void render(DrawContext c, int mx, int my) {
         listen.setTarget(isListening() ? 1 : 0);
         float l = listen.update();
-        RenderUtil.text(c, "Keybind", x + 2, y + 3, ColorUtil.lerp(Theme.TEXT_DIM, Theme.TEXT, Math.max(l, hover.get() * 0.6f)));
+        RenderUtil.text(c, "Keybind", x + 2, y + 5.5f, ColorUtil.lerp(Theme.TEXT_DIM, Theme.TEXT, Math.max(l, hover.get() * 0.6f)));
         String label;
         if (isListening()) {
             int dots = (int) (System.currentTimeMillis() / 300 % 4);
@@ -38,9 +38,9 @@ public class BindComponent extends Component {
         float bw = Math.max(26, RenderUtil.width(label) + 8);
         float bx = x + w - bw - 1;
         int bg = ColorUtil.lerp(0xFF1E1E1E, Theme.accent(), l);
-        RenderUtil.round(c, bx, y + 1.5f, bw, 11, 3, bg);
-        if (!isListening()) RenderUtil.roundOutline(c, bx, y + 1.5f, bw, 11, 3, 0.5f, ColorUtil.alpha(Theme.BORDER, 1 + hover.get()));
-        RenderUtil.text(c, label, bx + bw / 2 - RenderUtil.width(label) / 2f, y + 3, ColorUtil.lerp(Theme.TEXT, Theme.onAccent(), l));
+        RenderUtil.round(c, bx, y + 3.5f, bw, 12, 4, bg);
+        if (!isListening()) RenderUtil.roundOutline(c, bx, y + 3.5f, bw, 12, 4, 0.5f, ColorUtil.alpha(Theme.BORDER, 1 + hover.get()));
+        RenderUtil.text(c, label, bx + bw / 2 - RenderUtil.width(label) / 2f, y + 5.5f, ColorUtil.lerp(Theme.TEXT, Theme.onAccent(), l));
     }
 
     @Override

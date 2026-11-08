@@ -46,7 +46,7 @@ public class ModuleCard {
 
         // card
         RenderUtil.round(c, x, yy, w, HEIGHT, 7, ColorUtil.lerp(0xFF121212, 0xFF181818, hv));
-        RenderUtil.roundOutline(c, x, yy, w, HEIGHT, 7, 0.5f, ColorUtil.lerp(ColorUtil.lerp(0x16FFFFFF, 0x30FFFFFF, hv), ColorUtil.alpha(Theme.accent(), 0.55f), t));
+        RenderUtil.roundOutline(c, x, yy, w, HEIGHT, 7, 0.5f, ColorUtil.lerp(ColorUtil.lerp(0x16FFFFFF, 0x30FFFFFF, hv), ColorUtil.alpha(Theme.accent(), 0.28f), t));
         // enabled glow strip on the left
         if (t > 0.01f) RenderUtil.round(c, x + 0.5f, yy + 10, 2, (HEIGHT - 20) * t, 1, Theme.accent());
 

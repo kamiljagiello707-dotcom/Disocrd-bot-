@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "id": "nova",
+  "version": "${version}",
+  "name": "Nova ClickGUI",
+  "description": "Animated ClickGUI with panels, settings, search and themes.",
+  "environment": "client",
+  "entrypoints": { "client": ["dev.nova.client.NovaClient"] },
+  "depends": { "fabricloader": ">=0.16.0", "minecraft": "~1.21.4", "fabric-api": "*", "java": ">=21" }
+}

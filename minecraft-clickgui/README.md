@@ -3,6 +3,8 @@
 Animowane ClickGUI do własnego klienta: przeciągane panele kategorii, ustawienia modułów,
 wyszukiwarka, motyw z gradientem/rainbow, HUD z ArrayListą i zapis configu.
 
+![preview](preview.png)
+
 ## Sterowanie
 
 | Akcja | Jak |

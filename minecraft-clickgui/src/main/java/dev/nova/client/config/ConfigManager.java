@@ -46,6 +46,7 @@ public final class ConfigManager {
             o.addProperty("x", ps.x);
             o.addProperty("y", ps.y);
             o.addProperty("open", ps.open);
+            if (ps.anchor != null) o.addProperty("anchor", ps.anchor.name());
             panels.add(c.name(), o);
         }
         root.add("panels", panels);
@@ -86,6 +87,8 @@ public final class ConfigManager {
                 ps.x = o.get("x").getAsDouble();
                 ps.y = o.get("y").getAsDouble();
                 ps.open = o.get("open").getAsBoolean();
+                ps.placed = true;
+                ps.anchor = o.has("anchor") ? Category.valueOf(o.get("anchor").getAsString()) : null;
             }
         } catch (Exception e) {
             System.err.println("[Nova] Failed to load config: " + e);

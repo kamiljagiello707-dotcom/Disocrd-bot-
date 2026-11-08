@@ -33,8 +33,7 @@ public class NovaClient implements ClientModInitializer {
     public void onInitializeClient() {
         instance = this;
         modules = new ModuleManager();
-        int i = 0;
-        for (Category c : Category.values()) panelStates.put(c, new PanelState(20 + i++ * (114 + 10), 34));
+        for (Category c : Category.values()) panelStates.put(c, new PanelState(0, 0));
 
         config = new ConfigManager(this);
         config.load();

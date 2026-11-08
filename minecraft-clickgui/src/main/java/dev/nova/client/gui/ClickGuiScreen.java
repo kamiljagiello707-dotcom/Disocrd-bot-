@@ -33,6 +33,31 @@ public class ClickGuiScreen extends Screen {
         for (Category c : Category.values()) panels.add(new Panel(c, NovaClient.get().panelState(c)));
     }
 
+    @Override
+    protected void init() {
+        // Lay out panels that have no saved position, wrapping rows to fit the screen.
+        int step = Panel.WIDTH + 10;
+        int cols = Math.max(1, Math.min(panels.size(), (width - 20) / step));
+        int startX = (width - (cols * step - 10)) / 2;
+        for (int i = 0; i < panels.size(); i++) {
+            PanelState s = panels.get(i).state;
+            if (!s.placed) {
+                s.x = startX + (i % cols) * step;
+                s.y = 34;
+                s.anchor = i >= cols ? panels.get(i - cols).category : null;
+                s.placed = true;
+            }
+            // Keep panels reachable after a resolution / GUI scale change.
+            s.x = Math.max(0, Math.min(s.x, width - Panel.WIDTH));
+            s.y = Math.max(0, Math.min(s.y, height - Panel.HEADER));
+        }
+    }
+
+    Panel panel(Category c) {
+        for (Panel p : panels) if (p.category == c) return p;
+        return null;
+    }
+
     public boolean canHover() { return !closing; }
     public void setTooltip(String text) { tooltip = text; }
 

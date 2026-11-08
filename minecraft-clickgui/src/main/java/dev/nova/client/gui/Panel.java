@@ -23,7 +23,7 @@ public class Panel {
     private final Animation openAnim, scrollAnim = new Animation(16, 0);
     private boolean dragging;
     private double dragX, dragY, scroll;
-    private double drawX, drawY, contentH;
+    private double drawX, drawY, contentH, fullH = HEADER;
 
     public Panel(Category category, PanelState state) {
         this.category = category;
@@ -36,6 +36,12 @@ public class Panel {
         if (dragging) {
             state.x = mx - dragX;
             state.y = my - dragY;
+        } else if (state.anchor != null) {
+            Panel above = screen.panel(state.anchor);
+            if (above != null && above != this) {
+                state.x = above.state.x;
+                state.y = above.state.y + above.fullH + 8;
+            }
         }
         var font = MinecraftClient.getInstance().textRenderer;
         drawX = state.x;
@@ -47,11 +53,13 @@ public class Panel {
         double total = 0;
         for (ModuleButton b : visible) total += b.height();
         double open = openAnim.setTarget(state.open ? 1 : 0).get();
-        contentH = Math.min(total, MAX_CONTENT) * open;
-        scroll = Math.max(0, Math.min(scroll, Math.max(0, total - MAX_CONTENT)));
+        // Never extend past the bottom of the screen; scroll instead.
+        double maxContent = Math.max(60, Math.min(MAX_CONTENT, screen.height - drawY - HEADER - 40));
+        contentH = Math.min(total, maxContent) * open;
+        scroll = Math.max(0, Math.min(scroll, Math.max(0, total - maxContent)));
         double sc = scrollAnim.setTarget(scroll).get();
 
-        double fullH = HEADER + contentH + (contentH > 0 ? 3 : 0);
+        fullH = HEADER + contentH + (contentH > 0 ? 3 : 0);
         Render2D.shadow(ctx, drawX, drawY, WIDTH, fullH, 8, ClickGuiScreen.fade);
         Render2D.roundRect(ctx, drawX, drawY, WIDTH, fullH, 5, c(Theme.PANEL));
 
@@ -75,9 +83,9 @@ public class Panel {
             ctx.disableScissor();
 
             // Scrollbar
-            if (total > MAX_CONTENT) {
-                double barH = contentH * (MAX_CONTENT / total);
-                double barY = top + (contentH - barH) * (sc / (total - MAX_CONTENT));
+            if (total > maxContent) {
+                double barH = contentH * (maxContent / total);
+                double barY = top + (contentH - barH) * (sc / (total - maxContent));
                 Render2D.roundRect(ctx, drawX + WIDTH - 3, barY, 2, barH, 1, c(ColorUtil.alpha(Theme.accent(barY), 0.7)));
             }
         }
@@ -90,7 +98,7 @@ public class Panel {
     public boolean mouseClicked(double mx, double my, int button) {
         for (ModuleButton b : buttons) if (b.isListening()) return b.mouseClicked(mx, my, button);
         if (overHeader(mx, my)) {
-            if (button == 0) { dragging = true; dragX = mx - state.x; dragY = my - state.y; }
+            if (button == 0) { dragging = true; state.anchor = null; dragX = mx - state.x; dragY = my - state.y; }
             else if (button == 1) state.open = !state.open;
             return true;
         }

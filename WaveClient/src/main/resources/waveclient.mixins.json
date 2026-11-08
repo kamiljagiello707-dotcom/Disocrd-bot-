@@ -1,0 +1,21 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "dev.wave.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "client": [
+    "KeyboardMixin",
+    "MouseMixin",
+    "MinecraftClientMixin",
+    "EntityMixin",
+    "GameRendererMixin",
+    "SimpleOptionMixin",
+    "InGameHudMixin",
+    "InGameOverlayRendererMixin",
+    "ClientWorldPropertiesMixin",
+    "WorldMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

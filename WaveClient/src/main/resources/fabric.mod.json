@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "id": "waveclient",
+  "version": "${version}",
+  "name": "WaveClient",
+  "description": "WaveClient - utility / visuals client with a polished ClickGUI, HUD editor and notifications.",
+  "authors": ["Wave"],
+  "license": "MIT",
+  "icon": "assets/waveclient/icon.png",
+  "environment": "client",
+  "entrypoints": {
+    "client": ["dev.wave.WaveClient"]
+  },
+  "mixins": ["waveclient.mixins.json"],
+  "depends": {
+    "fabricloader": ">=0.16.0",
+    "fabric-api": "*",
+    "minecraft": "~1.21.4",
+    "java": ">=21"
+  }
+}

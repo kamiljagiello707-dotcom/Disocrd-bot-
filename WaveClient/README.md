@@ -2,6 +2,10 @@
 
 Klient-mod do **Minecraft 1.21.4 (Fabric)** z rozbudowanym, animowanym ClickGUI w stylu czarno-białym, systemem bindów, edytorem HUD, powiadomieniami i modułami wizualnymi.
 
+![ClickGUI](screenshots/clickgui-ingame.png)
+![HUD w grze](screenshots/ingame-hud.png)
+![Edytor HUD](screenshots/hud-editor.png)
+
 ## ✦ Instalacja
 1. Zainstaluj **Fabric Loader** dla 1.21.4 (<https://fabricmc.net/use/installer/>).
 2. Wrzuć do `.minecraft/mods`:

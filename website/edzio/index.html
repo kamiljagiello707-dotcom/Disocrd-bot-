@@ -1,0 +1,1181 @@
+<!doctype html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Edzio · e-dziennik</title>
+<meta name="description" content="Edzio: nowoczesny dziennik elektroniczny dla uczniów, rodziców, nauczycieli i dyrekcji.">
+<meta name="theme-color" content="#5b5bf7">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%235b5bf7'/%3E%3Cstop offset='1' stop-color='%23a855f7'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='64' height='64' rx='18' fill='url(%23g)'/%3E%3Cpath d='M42 20H24v24h18M24 32h14' stroke='%23fff' stroke-width='6' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f3f4fa;--sf:#ffffff;--sf2:#f7f8fc;--ink:#0f1222;--mute:#5d6478;--dim:#99a0b3;--line:#e6e8f1;
+  --br:#5b5bf7;--br2:#a855f7;--brs:rgba(91,91,247,.1);--grad:linear-gradient(135deg,#5b5bf7,#a855f7);
+  --ok:#16a34a;--bad:#e11d48;--warn:#f59e0b;--info:#2563eb;
+  --sh:0 1px 2px rgba(16,24,40,.04),0 10px 30px -14px rgba(16,24,40,.14);--sh2:0 24px 60px -20px rgba(16,24,40,.35);
+  --r:18px;--ease:cubic-bezier(.2,.8,.2,1);
+  --font:'Plus Jakarta Sans',system-ui,-apple-system,sans-serif;color-scheme:light;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme=light]){--bg:#0a0d18;--sf:#121628;--sf2:#171c31;--ink:#e9ecf7;--mute:#9ba3bc;--dim:#5f6882;--line:#242a43;--brs:rgba(124,124,255,.15);--sh:0 1px 2px rgba(0,0,0,.3),0 12px 30px -14px rgba(0,0,0,.6);color-scheme:dark}}
+:root[data-theme=dark]{--bg:#0a0d18;--sf:#121628;--sf2:#171c31;--ink:#e9ecf7;--mute:#9ba3bc;--dim:#5f6882;--line:#242a43;--brs:rgba(124,124,255,.15);--sh:0 1px 2px rgba(0,0,0,.3),0 12px 30px -14px rgba(0,0,0,.6);color-scheme:dark}
+*{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-text-size-adjust:100%}
+body{background:var(--bg);color:var(--ink);font-family:var(--font);font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased;transition:background .3s,color .3s}
+a{color:inherit;text-decoration:none}
+button,input,select,textarea{font:inherit;color:inherit}
+button{background:none;border:0;cursor:pointer}
+:focus-visible{outline:2px solid var(--br);outline-offset:2px;border-radius:8px}
+.ic{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+
+/* ── logowanie ── */
+.login{min-height:100svh;display:grid;grid-template-columns:1.05fr .95fr}
+.lg-art{position:relative;overflow:hidden;background:#0d0b2a;color:#fff;padding:48px;display:flex;flex-direction:column;justify-content:space-between}
+.lg-art .bl{position:absolute;border-radius:50%;filter:blur(60px);opacity:.75;animation:blob 14s ease-in-out infinite}
+.lg-art .b1{width:420px;height:420px;background:#5b5bf7;left:-80px;top:-60px}
+.lg-art .b2{width:360px;height:360px;background:#a855f7;right:-60px;top:30%;animation-delay:-4s}
+.lg-art .b3{width:300px;height:300px;background:#22d3ee;left:20%;bottom:-120px;animation-delay:-8s;opacity:.45}
+@keyframes blob{33%{transform:translate(40px,-30px) scale(1.08)}66%{transform:translate(-30px,40px) scale(.94)}}
+.lg-art>*{position:relative;z-index:1}
+.lg-logo{display:flex;align-items:center;gap:12px;font-weight:800;font-size:22px}
+.mk{width:40px;height:40px;border-radius:12px;background:var(--grad);display:grid;place-items:center;color:#fff;font-weight:800;box-shadow:0 8px 24px -6px rgba(91,91,247,.6)}
+.lg-art h1{font-size:clamp(38px,4.6vw,64px);line-height:1.02;letter-spacing:-.04em;font-weight:800;max-width:560px}
+.lg-art h1 span{background:linear-gradient(90deg,#c7c7ff,#f0abfc,#a5f3fc);-webkit-background-clip:text;background-clip:text;color:transparent}
+.lg-art p{color:rgba(255,255,255,.72);max-width:460px;margin-top:18px;font-size:17px}
+.fc{display:flex;flex-wrap:wrap;gap:10px;margin-top:30px}
+.fc span{padding:9px 14px;border-radius:99px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.14);font-size:13px;font-weight:600;backdrop-filter:blur(8px)}
+.mock{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;max-width:520px}
+.mock div{border-radius:16px;padding:14px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);backdrop-filter:blur(10px);animation:fl 6s ease-in-out infinite}
+.mock div:nth-child(2){animation-delay:-2s}.mock div:nth-child(3){animation-delay:-4s}
+.mock b{font-size:26px;display:block}.mock small{color:rgba(255,255,255,.6);font-size:12px}
+@keyframes fl{50%{transform:translateY(-8px)}}
+.lg-form{display:flex;flex-direction:column;justify-content:center;padding:48px clamp(20px,6vw,80px);background:var(--sf)}
+.lg-form h2{font-size:30px;letter-spacing:-.03em;font-weight:800}
+.lg-form>p{color:var(--mute);margin:8px 0 26px}
+.roles{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.role{position:relative;text-align:left;padding:18px;border-radius:18px;border:1.5px solid var(--line);background:var(--sf);transition:.3s var(--ease);opacity:0;transform:translateY(16px);animation:up .6s var(--ease) forwards;animation-delay:calc(var(--i)*.07s + .1s)}
+.role:hover{border-color:var(--br);transform:translateY(-3px);box-shadow:var(--sh)}
+.role .ri{width:44px;height:44px;border-radius:14px;display:grid;place-items:center;margin-bottom:14px;color:#fff}
+.role b{display:block;font-size:16px}
+.role small{color:var(--mute);font-size:13px;display:block;margin-top:2px}
+.role .who{font-size:12px;color:var(--dim);margin-top:10px;font-weight:600}
+@keyframes up{to{opacity:1;transform:none}}
+.lg-note{margin-top:22px;padding:14px 16px;border-radius:14px;background:var(--brs);color:var(--mute);font-size:13px;display:flex;gap:10px}
+.lg-note .ic{color:var(--br);width:18px;height:18px;margin-top:1px}
+@media (max-width:900px){.login{grid-template-columns:1fr}.lg-art{padding:28px 20px 32px;min-height:auto;gap:28px}.mock{display:none}.lg-form{padding:28px 16px 40px}}
+@media (max-width:420px){.roles{grid-template-columns:1fr}}
+
+/* ── powłoka ── */
+.app{display:grid;grid-template-columns:264px 1fr;min-height:100svh}
+.side{position:sticky;top:0;height:100svh;display:flex;flex-direction:column;padding:20px 14px;background:var(--sf);border-right:1px solid var(--line);z-index:40}
+.side .lg-logo{padding:4px 8px 18px;font-size:20px}
+.side .lg-logo small{display:block;font-size:11px;color:var(--dim);font-weight:600;letter-spacing:.02em}
+.nv{display:flex;flex-direction:column;gap:2px;overflow-y:auto;flex:1;margin:0 -4px;padding:0 4px}
+.nv a{position:relative;display:flex;align-items:center;gap:12px;padding:11px 12px;border-radius:12px;color:var(--mute);font-weight:600;font-size:14px;transition:background .2s,color .2s}
+.nv a:hover{background:var(--sf2);color:var(--ink)}
+.nv a.on{background:var(--brs);color:var(--br)}
+.nv a.on::before{content:"";position:absolute;left:-4px;top:10px;bottom:10px;width:3px;border-radius:3px;background:var(--grad)}
+.nv .bd{margin-left:auto;min-width:22px;height:22px;padding:0 7px;border-radius:99px;background:var(--bad);color:#fff;font-size:11px;font-weight:700;display:grid;place-items:center}
+.nv .sec{font-size:11px;font-weight:700;letter-spacing:.12em;color:var(--dim);padding:16px 12px 6px;text-transform:uppercase}
+.me{display:flex;align-items:center;gap:10px;padding:10px;border-radius:14px;border:1px solid var(--line);margin-top:12px}
+.me b{font-size:14px;display:block;line-height:1.2}
+.me small{font-size:12px;color:var(--mute)}
+.me button{margin-left:auto;width:36px;height:36px;border-radius:10px;display:grid;place-items:center;color:var(--mute)}
+.me button:hover{background:var(--sf2);color:var(--bad)}
+.av{width:38px;height:38px;border-radius:12px;display:grid;place-items:center;color:#fff;font-weight:700;font-size:13px;flex:none;letter-spacing:.02em}
+.av.sm{width:30px;height:30px;border-radius:10px;font-size:11px}
+.av.lg{width:56px;height:56px;border-radius:18px;font-size:18px}
+.main{min-width:0;display:flex;flex-direction:column}
+.top{position:sticky;top:0;z-index:30;display:flex;align-items:center;gap:12px;padding:14px 28px;background:color-mix(in srgb,var(--bg) 80%,transparent);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-bottom:1px solid transparent;transition:border-color .3s}
+.top.sc{border-color:var(--line)}
+.top h1{font-size:22px;letter-spacing:-.03em;font-weight:800;line-height:1.1}
+.top h1 small{display:block;font-size:12px;color:var(--mute);font-weight:600;letter-spacing:0}
+.tb{display:flex;gap:8px;margin-left:auto;align-items:center}
+.ib{position:relative;width:42px;height:42px;border-radius:12px;display:grid;place-items:center;background:var(--sf);border:1px solid var(--line);color:var(--mute);transition:.2s}
+.ib:hover{color:var(--ink);border-color:var(--dim)}
+.ib .dot{position:absolute;top:8px;right:9px;width:8px;height:8px;border-radius:50%;background:var(--bad);box-shadow:0 0 0 2px var(--sf)}
+.srch{display:flex;align-items:center;gap:10px;height:42px;padding:0 12px 0 14px;border-radius:12px;background:var(--sf);border:1px solid var(--line);color:var(--dim);font-size:14px;min-width:240px;transition:.2s}
+.srch:hover{border-color:var(--dim)}
+.srch kbd{margin-left:auto;font-family:inherit;font-size:11px;font-weight:700;padding:2px 7px;border-radius:6px;border:1px solid var(--line);color:var(--mute)}
+.burger{display:none}
+.content{padding:8px 28px 48px;max-width:1320px;width:100%}
+.pg{animation:pg .45s var(--ease)}
+@keyframes pg{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+.scrim{display:none}
+@media (max-width:1000px){
+  .app{grid-template-columns:1fr}
+  .side{position:fixed;left:0;top:0;bottom:0;width:280px;transform:translateX(-102%);transition:transform .4s var(--ease);box-shadow:var(--sh2)}
+  .side.on{transform:none}
+  .scrim{display:block;position:fixed;inset:0;background:rgba(10,12,24,.45);z-index:35;opacity:0;visibility:hidden;transition:.3s}
+  .scrim.on{opacity:1;visibility:visible}
+  .burger{display:grid}
+  .srch{min-width:0;width:42px;padding:0;justify-content:center}.srch span,.srch kbd{display:none}
+  .top{padding:12px 16px}.content{padding:6px 16px 40px}
+  .top h1{font-size:19px}
+}
+
+/* ── elementy ── */
+.grid{display:grid;gap:16px}
+.g4{grid-template-columns:repeat(4,1fr)}.g3{grid-template-columns:repeat(3,1fr)}.g2{grid-template-columns:repeat(2,1fr)}
+.g21{grid-template-columns:2fr 1fr}.g12{grid-template-columns:1fr 2fr}
+@media (max-width:1100px){.g4{grid-template-columns:repeat(2,1fr)}.g3,.g21,.g12{grid-template-columns:1fr}}
+@media (max-width:640px){.g2{grid-template-columns:1fr}.g4{grid-template-columns:1fr 1fr;gap:10px}.g4 .stat{padding:14px}.g4 .stat .si{width:36px;height:36px;margin-bottom:10px}.g4 .stat b{font-size:24px}.g4 .stat small{display:none}.g3{gap:10px}}
+.card{background:var(--sf);border:1px solid var(--line);border-radius:var(--r);padding:20px;box-shadow:var(--sh);min-width:0}
+.ch{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}
+.ch h3{font-size:16px;font-weight:800;letter-spacing:-.01em;display:flex;align-items:center;gap:8px}
+.ch h3 .ic{color:var(--br)}
+.ch a,.lnk{font-size:13px;font-weight:700;color:var(--br)}
+.stat{position:relative;overflow:hidden}
+.stat .si{width:44px;height:44px;border-radius:14px;display:grid;place-items:center;margin-bottom:16px}
+.stat span{font-size:13px;color:var(--mute);font-weight:600}
+.stat b{display:block;font-size:30px;font-weight:800;letter-spacing:-.03em;line-height:1.15;font-variant-numeric:tabular-nums}
+.stat small{font-size:12px;color:var(--dim);font-weight:600}
+.stat::after{content:"";position:absolute;right:-30px;top:-30px;width:110px;height:110px;border-radius:50%;background:var(--c,var(--br));opacity:.07}
+.hero{position:relative;overflow:hidden;border-radius:22px;padding:24px 26px;color:#fff;background:var(--grad);box-shadow:0 20px 50px -24px rgba(91,91,247,.8)}
+.hero::before{content:"";position:absolute;right:-60px;top:-80px;width:280px;height:280px;border-radius:50%;background:rgba(255,255,255,.12)}
+.hero::after{content:"";position:absolute;right:120px;bottom:-120px;width:220px;height:220px;border-radius:50%;background:rgba(255,255,255,.08)}
+.hero>*{position:relative;z-index:1}
+.hero h2{font-size:clamp(22px,2.6vw,30px);letter-spacing:-.03em;font-weight:800}
+.hero p{opacity:.85;margin-top:4px}
+.live{margin-top:18px;display:flex;flex-wrap:wrap;gap:14px;align-items:center;padding:14px 16px;border-radius:16px;background:rgba(255,255,255,.14);backdrop-filter:blur(8px)}
+.live b{font-size:17px}
+.live small{opacity:.85}
+.pbar{flex:1;min-width:160px;height:8px;border-radius:99px;background:rgba(255,255,255,.25);overflow:hidden}
+.pbar i{display:block;height:100%;background:#fff;border-radius:99px;transition:width 1s var(--ease)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:42px;padding:0 16px;border-radius:12px;font-weight:700;font-size:14px;background:var(--grad);color:#fff;transition:.2s var(--ease);white-space:nowrap;box-shadow:0 8px 20px -10px rgba(91,91,247,.8)}
+.btn:hover{transform:translateY(-1px);filter:brightness(1.06)}
+.btn:active{transform:scale(.98)}
+.btn.gh{background:var(--sf);color:var(--ink);border:1px solid var(--line);box-shadow:none}
+.btn.gh:hover{border-color:var(--dim)}
+.btn.sm{height:34px;padding:0 12px;font-size:13px;border-radius:10px}
+.btn.ok{background:var(--ok);box-shadow:none}.btn.bad{background:var(--bad);box-shadow:none}
+.btn .ic{width:18px;height:18px}
+.btn[disabled]{opacity:.5;pointer-events:none}
+.pill{display:inline-flex;align-items:center;gap:6px;padding:3px 10px;border-radius:99px;font-size:12px;font-weight:700;background:var(--sf2);color:var(--mute);white-space:nowrap}
+.pill.ok{background:rgba(22,163,74,.12);color:var(--ok)}.pill.bad{background:rgba(225,29,72,.12);color:var(--bad)}.pill.warn{background:rgba(245,158,11,.14);color:#b45309}.pill.info{background:rgba(37,99,235,.12);color:var(--info)}.pill.br{background:var(--brs);color:var(--br)}
+[data-theme=dark] .pill.warn{color:#fbbf24}
+.tabs{display:inline-flex;gap:4px;padding:4px;border-radius:14px;background:var(--sf2);border:1px solid var(--line);flex-wrap:wrap}
+.tabs button{padding:8px 14px;border-radius:10px;font-size:13px;font-weight:700;color:var(--mute);transition:.2s}
+.tabs button.on{background:var(--sf);color:var(--ink);box-shadow:var(--sh)}
+.fl{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.sp{flex:1}
+.mt{margin-top:16px}.mt2{margin-top:24px}
+.mute{color:var(--mute)}.dim{color:var(--dim)}
+.sel,.inp{height:42px;border-radius:12px;border:1px solid var(--line);background:var(--sf);padding:0 12px;font-size:14px;outline:0;transition:border-color .2s;min-width:0}
+.sel:focus,.inp:focus,textarea.inp:focus{border-color:var(--br)}
+textarea.inp{height:auto;padding:12px;resize:vertical;width:100%}
+.field{display:grid;gap:6px;margin-bottom:14px}
+.field label{font-size:13px;font-weight:700}
+.field .inp,.field .sel{width:100%}
+.empty{padding:30px 10px;text-align:center;color:var(--dim);font-size:14px}
+.list{display:flex;flex-direction:column}
+.li{display:flex;align-items:center;gap:12px;padding:12px 4px;border-bottom:1px solid var(--line)}
+.li:last-child{border-bottom:0}
+.li .t{min-width:0;flex:1}
+.li .t b{display:block;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.li .t small{color:var(--mute);font-size:12px}
+.sdot{width:10px;height:10px;border-radius:50%;flex:none}
+.num{width:30px;height:30px;border-radius:10px;display:grid;place-items:center;font-size:12px;font-weight:800;background:var(--sf2);color:var(--mute);flex:none}
+.li.now{background:var(--brs);border-radius:12px;padding-left:10px;padding-right:10px;border-color:transparent}
+.li.now .num{background:var(--grad);color:#fff}
+.li.past{opacity:.55}
+
+/* oceny */
+.g{--c:#94a3b8;display:inline-grid;place-items:center;min-width:34px;height:30px;padding:0 8px;border-radius:9px;font-weight:800;font-size:13px;background:color-mix(in srgb,var(--c) 14%,transparent);color:var(--c);transition:transform .2s var(--ease);cursor:pointer;border:1px solid color-mix(in srgb,var(--c) 25%,transparent)}
+.g:hover{transform:translateY(-2px) scale(1.06)}
+.g.gr6{--c:#059669}.g.gr5{--c:#16a34a}.g.gr4{--c:#0284c7}.g.gr3{--c:#d97706}.g.gr2{--c:#ea580c}.g.gr1{--c:#e11d48}
+[data-theme=dark] .g.gr6{--c:#34d399}[data-theme=dark] .g.gr5{--c:#4ade80}[data-theme=dark] .g.gr4{--c:#38bdf8}[data-theme=dark] .g.gr3{--c:#fbbf24}[data-theme=dark] .g.gr2{--c:#fb923c}[data-theme=dark] .g.gr1{--c:#fb7185}
+.gs{display:flex;flex-wrap:wrap;gap:6px}
+.tbl{width:100%;border-collapse:collapse;font-size:14px}
+.tbl th{text-align:left;font-size:12px;font-weight:700;color:var(--dim);padding:10px 10px;border-bottom:1px solid var(--line);white-space:nowrap;letter-spacing:.02em}
+.tbl td{padding:12px 10px;border-bottom:1px solid var(--line);vertical-align:middle}
+.tbl tr:last-child td{border-bottom:0}
+.tbl tr.click{cursor:pointer;transition:background .2s}
+.tbl tr.click:hover td{background:var(--sf2)}
+.tw{overflow-x:auto;margin:0 -20px;padding:0 20px}
+.sub{display:flex;align-items:center;gap:10px;font-weight:700;white-space:nowrap}
+.sub i{width:10px;height:10px;border-radius:4px;flex:none}
+.avg{font-weight:800;font-variant-numeric:tabular-nums}
+/* siatka nauczyciela */
+.gg{border-collapse:separate;border-spacing:0;font-size:13px;min-width:100%}
+.gg th,.gg td{padding:6px;border-bottom:1px solid var(--line);text-align:center;white-space:nowrap}
+.gg th{font-size:11px;color:var(--mute);font-weight:700;vertical-align:bottom;cursor:pointer}
+.gg th small{display:block;color:var(--dim);font-weight:600}
+.gg th .w{display:inline-block;margin-top:3px;padding:1px 6px;border-radius:6px;background:var(--sf2);font-size:10px}
+.gg .st{position:sticky;left:0;background:var(--sf);text-align:left;z-index:1;min-width:200px;box-shadow:1px 0 0 var(--line)}
+.gg td.cell{cursor:pointer;min-width:52px;transition:background .2s}
+.gg td.cell:hover{background:var(--brs)}
+.gg td.cell .add{color:var(--dim);opacity:0;font-weight:700;transition:.2s}
+.gg td.cell:hover .add{opacity:1}
+.gg tr.foot td{font-weight:800;background:var(--sf2)}
+.gg .flash{animation:flash 1s var(--ease)}
+@keyframes flash{from{background:color-mix(in srgb,var(--br) 30%,transparent)}}
+/* popover */
+.pop{position:fixed;z-index:120;background:var(--sf);border:1px solid var(--line);border-radius:16px;box-shadow:var(--sh2);padding:12px;width:248px;animation:popin .2s var(--ease)}
+@keyframes popin{from{opacity:0;transform:translateY(-6px) scale(.97)}}
+.pop .pg6{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+.pop .g{width:100%}
+.pop h5{font-size:12px;color:var(--mute);margin-bottom:8px}
+
+/* frekwencja */
+.att{display:inline-grid;place-items:center;min-width:28px;height:26px;padding:0 6px;border-radius:8px;font-size:11px;font-weight:800}
+.a-ob{background:rgba(22,163,74,.13);color:var(--ok)}.a-nb{background:rgba(225,29,72,.13);color:var(--bad)}.a-u{background:rgba(37,99,235,.13);color:var(--info)}.a-sp{background:rgba(245,158,11,.16);color:#b45309}.a-zw{background:var(--sf2);color:var(--mute)}
+[data-theme=dark] .a-sp{color:#fbbf24}
+.seg{display:inline-flex;gap:4px;flex-wrap:wrap}
+.seg button{min-width:38px;height:34px;padding:0 8px;border-radius:10px;font-size:12px;font-weight:800;border:1px solid var(--line);color:var(--mute);transition:.15s}
+.seg button:hover{border-color:var(--dim)}
+.seg button.on.a-ob{background:var(--ok);color:#fff;border-color:var(--ok)}
+.seg button.on.a-nb{background:var(--bad);color:#fff;border-color:var(--bad)}
+.seg button.on.a-u{background:var(--info);color:#fff;border-color:var(--info)}
+.seg button.on.a-sp{background:var(--warn);color:#fff;border-color:var(--warn)}
+.seg button.on.a-zw{background:var(--mute);color:#fff;border-color:var(--mute)}
+.seg button:not(.on){background:transparent}
+/* kalendarz */
+.cal{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
+.cal .dh{font-size:12px;font-weight:700;color:var(--dim);text-align:center;padding:4px 0}
+.cal .d{min-height:92px;border-radius:12px;border:1px solid var(--line);padding:8px;display:flex;flex-direction:column;gap:4px;text-align:left;transition:.2s;background:var(--sf);overflow:hidden}
+.cal .d:hover{border-color:var(--dim)}
+.cal .d.out{opacity:.4}
+.cal .d.we{background:var(--sf2)}
+.cal .d.today .n{background:var(--grad);color:#fff}
+.cal .d.sel{border-color:var(--br);box-shadow:0 0 0 3px var(--brs)}
+.cal .n{width:26px;height:26px;border-radius:8px;display:grid;place-items:center;font-size:12px;font-weight:800}
+.cal .ev{font-size:11px;font-weight:700;padding:2px 6px;border-radius:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;background:color-mix(in srgb,var(--c) 15%,transparent);color:var(--c)}
+.cal .more{font-size:11px;color:var(--dim);font-weight:700}
+.cal .dots{display:none;gap:3px;flex-wrap:wrap}
+.cal .dots i{width:6px;height:6px;border-radius:50%;background:var(--c)}
+@media (max-width:700px){.cal{gap:3px}.cal .d{min-height:54px;padding:5px;align-items:center}.cal .ev,.cal .more{display:none}.cal .dots{display:flex}.cal .n{width:24px;height:24px}}
+.mcal .d{min-height:46px;align-items:center;justify-content:center;gap:3px}
+.mcal .d .dots{display:flex}
+/* plan */
+.plan{display:grid;grid-template-columns:70px repeat(5,minmax(130px,1fr));gap:6px;min-width:720px}
+.plan .h{font-size:12px;font-weight:700;color:var(--mute);text-align:center;padding:8px 4px;border-radius:12px}
+.plan .h b{display:block;color:var(--ink);font-size:14px}
+.plan .h.today{background:var(--brs);color:var(--br)}.plan .h.today b{color:var(--br)}
+.plan .tm{font-size:11px;color:var(--dim);font-weight:700;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center}
+.plan .tm b{font-size:16px;color:var(--mute)}
+.plan .c{border-radius:12px;padding:10px;min-height:68px;background:color-mix(in srgb,var(--c) 11%,var(--sf));border-left:3px solid var(--c);font-size:12px;transition:.2s}
+.plan .c:hover{transform:translateY(-2px);box-shadow:var(--sh)}
+.plan .c b{display:block;font-size:13px;color:var(--ink)}
+.plan .c span{color:var(--mute)}
+.plan .c.now{box-shadow:0 0 0 2px var(--c);animation:nowp 2s infinite}
+@keyframes nowp{50%{box-shadow:0 0 0 5px color-mix(in srgb,var(--c) 25%,transparent)}}
+.plan .e{border-radius:12px;border:1px dashed var(--line);min-height:68px}
+/* wiadomości */
+.msg{display:grid;grid-template-columns:360px 1fr;gap:0;padding:0;overflow:hidden;min-height:560px}
+.ml{border-right:1px solid var(--line);display:flex;flex-direction:column;min-width:0}
+.ml .hd{padding:16px;border-bottom:1px solid var(--line);display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.ml .its{overflow-y:auto;max-height:620px}
+.mi{display:flex;gap:12px;padding:14px 16px;border-bottom:1px solid var(--line);text-align:left;width:100%;transition:background .2s;position:relative}
+.mi:hover{background:var(--sf2)}
+.mi.on{background:var(--brs)}
+.mi .t{min-width:0;flex:1}
+.mi .t b{font-size:14px;display:flex;justify-content:space-between;gap:8px}
+.mi .t b small{font-weight:600;color:var(--dim);font-size:11px;white-space:nowrap}
+.mi .t .s{font-size:13px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mi .t .p{font-size:12px;color:var(--mute);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mi.unr::before{content:"";position:absolute;left:6px;top:50%;width:6px;height:6px;margin-top:-3px;border-radius:50%;background:var(--br)}
+.mr{padding:26px;min-width:0}
+.mr h2{font-size:22px;letter-spacing:-.02em}
+.mr .meta{display:flex;gap:12px;align-items:center;margin:16px 0 20px;padding-bottom:18px;border-bottom:1px solid var(--line)}
+.mr .body{white-space:pre-wrap;line-height:1.75}
+.mr .bk{display:none}
+@media (max-width:900px){.mr .bk{display:inline-flex}.msg{grid-template-columns:1fr}.msg.reading .ml{display:none}.msg:not(.reading) .mr{display:none}}
+/* ogłoszenia */
+.ann{border-left:4px solid var(--br)}
+.ann h4{font-size:17px;letter-spacing:-.01em}
+.ann p{color:var(--mute);margin-top:6px;white-space:pre-wrap}
+.ann .fl{margin-top:12px;font-size:12px;color:var(--dim)}
+/* wykresy */
+.bars{display:flex;align-items:flex-end;gap:10px;height:200px;padding-top:20px}
+.bars .b{flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;height:100%;justify-content:flex-end;min-width:0}
+.bars .b i{display:block;width:100%;max-width:46px;border-radius:10px 10px 4px 4px;background:var(--c,var(--grad));height:var(--h);animation:grow 1s var(--ease) both;animation-delay:calc(var(--i)*.05s);position:relative}
+.bars .b i::after{content:attr(data-v);position:absolute;top:-20px;left:50%;transform:translateX(-50%);font-size:11px;font-weight:800;color:var(--ink);font-style:normal}
+.bars .b small{font-size:11px;font-weight:700;color:var(--mute);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+@keyframes grow{from{height:0}}
+.donut{position:relative;width:170px;height:170px;flex:none}
+.donut svg{width:100%;height:100%;transform:rotate(-90deg)}
+.donut circle{fill:none;stroke-width:16;animation:dn 1.2s var(--ease) both}
+@keyframes dn{from{stroke-dasharray:0 1000}}
+.donut .c{position:absolute;inset:0;display:grid;place-items:center;text-align:center}
+.donut .c b{font-size:30px;font-weight:800;letter-spacing:-.03em;display:block;line-height:1}
+.donut .c small{font-size:12px;color:var(--mute);font-weight:600}
+.leg{display:grid;gap:10px;flex:1;min-width:180px}
+.leg div{display:flex;align-items:center;gap:10px;font-size:14px}
+.leg div b{margin-left:auto;font-variant-numeric:tabular-nums}
+.meter{height:8px;border-radius:99px;background:var(--sf2);overflow:hidden}
+.meter i{display:block;height:100%;border-radius:99px;background:var(--c,var(--grad));animation:grow2 1s var(--ease) both}
+@keyframes grow2{from{width:0}}
+/* modal / toast / paleta */
+.ov{position:fixed;inset:0;z-index:100;background:rgba(10,12,24,.5);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);display:grid;place-items:center;padding:16px;animation:fade .25s}
+@keyframes fade{from{opacity:0}}
+.md{width:min(560px,100%);max-height:calc(100svh - 32px);overflow:auto;background:var(--sf);border-radius:22px;box-shadow:var(--sh2);border:1px solid var(--line);animation:mdin .4s var(--ease)}
+.md.wide{width:min(760px,100%)}
+@keyframes mdin{from{opacity:0;transform:translateY(20px) scale(.97)}}
+.md .mh{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:20px 22px 0}
+.md .mh h3{font-size:19px;letter-spacing:-.02em}
+.md .mb{padding:18px 22px}
+.md .mf{display:flex;justify-content:flex-end;gap:10px;padding:0 22px 22px;flex-wrap:wrap}
+.toast{position:fixed;left:50%;bottom:22px;z-index:200;transform:translate(-50%,20px);opacity:0;display:flex;align-items:center;gap:10px;padding:12px 18px;border-radius:14px;background:var(--ink);color:var(--bg);font-weight:700;font-size:14px;box-shadow:var(--sh2);transition:.35s var(--ease);pointer-events:none;max-width:calc(100% - 32px)}
+.toast.on{opacity:1;transform:translate(-50%,0)}
+.toast .ic{color:#4ade80}
+.pal{position:fixed;inset:0;z-index:150;background:rgba(10,12,24,.45);backdrop-filter:blur(4px);display:flex;justify-content:center;align-items:flex-start;padding:12vh 16px 16px;animation:fade .2s}
+.pal .bx{width:min(580px,100%);background:var(--sf);border-radius:20px;box-shadow:var(--sh2);border:1px solid var(--line);overflow:hidden;animation:mdin .3s var(--ease)}
+.pal input{width:100%;height:58px;border:0;border-bottom:1px solid var(--line);background:transparent;padding:0 20px;font-size:16px;outline:0}
+.pal .rs{max-height:52vh;overflow-y:auto;padding:8px}
+.pal .r{display:flex;align-items:center;gap:12px;width:100%;padding:10px 12px;border-radius:12px;text-align:left;font-size:14px;font-weight:600}
+.pal .r small{margin-left:auto;color:var(--dim);font-size:12px}
+.pal .r.on{background:var(--brs);color:var(--br)}
+.dd{position:absolute;right:0;top:50px;width:340px;background:var(--sf);border:1px solid var(--line);border-radius:18px;box-shadow:var(--sh2);padding:8px;z-index:60;animation:popin .2s var(--ease)}
+.dd h5{font-size:13px;padding:10px 12px 6px}
+.dd .li{padding:10px 12px;border-radius:12px;border:0}
+.dd .li:hover{background:var(--sf2)}
+@media (max-width:500px){.dd{position:fixed;left:12px;right:12px;width:auto;top:64px}}
+.chk{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:12px;border:1px solid var(--line);margin-bottom:8px;cursor:pointer}
+.chk input{width:18px;height:18px;accent-color:var(--br)}
+.done .t b{text-decoration:line-through;color:var(--dim)}
+.cbx{width:24px;height:24px;border-radius:8px;border:2px solid var(--line);display:grid;place-items:center;flex:none;transition:.2s;color:#fff}
+.cbx .ic{width:14px;height:14px;opacity:0}
+.cbx.on{background:var(--ok);border-color:var(--ok)}.cbx.on .ic{opacity:1}
+.kpi{display:flex;gap:6px;align-items:baseline}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<script>
+(() => {
+'use strict';
+/* ═══════════ KONFIGURACJA ═══════════ */
+const CONF = { app: 'Edzio', school: 'Szkoła Podstawowa nr 7', year: '2026/2027', storeKey: 'edzio-demo-v1' };
+
+/* ═══════════ narzędzia ═══════════ */
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const pad = n => String(n).padStart(2, '0');
+const ds = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+const pd = s => { const [y, m, d] = s.split('-').map(Number); return new Date(y, m - 1, d); };
+const addD = (s, n) => { const d = pd(s); d.setDate(d.getDate() + n); return ds(d); };
+const NOW = new Date(), TODAY = ds(NOW), nowMin = () => { const n = new Date(); return n.getHours() * 60 + n.getMinutes(); };
+const DN = ['niedziela', 'poniedziałek', 'wtorek', 'środa', 'czwartek', 'piątek', 'sobota'];
+const DS = ['Pn', 'Wt', 'Śr', 'Cz', 'Pt', 'Sb', 'Nd'];
+const MN = ['styczeń', 'luty', 'marzec', 'kwiecień', 'maj', 'czerwiec', 'lipiec', 'sierpień', 'wrzesień', 'październik', 'listopad', 'grudzień'];
+const MG = ['stycznia', 'lutego', 'marca', 'kwietnia', 'maja', 'czerwca', 'lipca', 'sierpnia', 'września', 'października', 'listopada', 'grudnia'];
+const fD = s => { const d = pd(s); return `${d.getDate()} ${MG[d.getMonth()]}`; };
+const fDs = s => { const d = pd(s); return `${pad(d.getDate())}.${pad(d.getMonth() + 1)}`; };
+const fDl = s => { const d = pd(s); return `${DN[d.getDay()]}, ${d.getDate()} ${MG[d.getMonth()]}`; };
+const dow = s => (pd(s).getDay() + 6) % 7; // 0 = pon
+const HOL = ['01-01', '01-06', '05-01', '05-03', '08-15', '11-01', '11-11', '12-24', '12-25', '12-26'];
+const isSchool = s => dow(s) < 5 && !HOL.includes(s.slice(5));
+const LT = [[480, 525], [535, 580], [590, 635], [655, 700], [710, 755], [765, 810], [820, 865], [875, 920]];
+const fT = m => `${Math.floor(m / 60)}:${pad(m % 60)}`;
+function rng(a) { return () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+const uid = () => Math.random().toString(36).slice(2, 9);
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const plural = (n, a, b, c) => n === 1 ? a : (n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 10 || n % 100 >= 20)) ? b : c;
+
+const I = {
+  home: '<path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/>',
+  award: '<circle cx="12" cy="9" r="6"/><path d="m8.5 14-1.5 7 5-3 5 3-1.5-7"/>',
+  att: '<rect x="3" y="4" width="18" height="17" rx="2"/><path d="M16 2v4M8 2v4M3 10h18M9 15l2 2 4-4"/>',
+  grid: '<rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/>',
+  cal: '<rect x="3" y="4" width="18" height="17" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/>',
+  book: '<path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20V3H6.5A2.5 2.5 0 0 0 4 5.5z"/><path d="M4 19.5A2.5 2.5 0 0 0 6.5 22H20v-5"/>',
+  flag: '<path d="M4 22V4s1.5-1 4-1 5 2 8 2 4-1 4-1v11s-1 1-4 1-5-2-8-2-4 1-4 1"/>',
+  mail: '<rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 6-10 7L2 6"/>',
+  mega: '<path d="m3 11 15-6v14L3 13z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/>',
+  journal: '<path d="M12 7v14M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"/>',
+  edit: '<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/>',
+  users: '<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.9M16 3.1a4 4 0 0 1 0 7.8"/>',
+  brief: '<rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>',
+  search: '<circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/>',
+  bell: '<path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/>',
+  sun: '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',
+  moon: '<path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/>',
+  out: '<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/>',
+  plus: '<path d="M12 5v14M5 12h14"/>', check: '<path d="M20 6 9 17l-5-5"/>', x: '<path d="M18 6 6 18M6 6l12 12"/>',
+  l: '<path d="m15 18-6-6 6-6"/>', r: '<path d="m9 18 6-6-6-6"/>', menu: '<path d="M3 6h18M3 12h18M3 18h18"/>',
+  clock: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>', send: '<path d="m22 2-7 20-4-9-9-4z"/><path d="M22 2 11 13"/>',
+  trash: '<path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/>', refresh: '<path d="M21 12a9 9 0 1 1-3-6.7L21 8"/><path d="M21 3v5h-5"/>',
+  trend: '<path d="m22 7-8.5 8.5-5-5L2 17"/><path d="M16 7h6v6"/>', info: '<circle cx="12" cy="12" r="9"/><path d="M12 16v-4M12 8h.01"/>',
+  reply: '<path d="M9 17 4 12l5-5"/><path d="M20 18v-2a4 4 0 0 0-4-4H4"/>', cap: '<path d="M22 10 12 5 2 10l10 5 10-5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/>',
+  heart: '<path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8L12 21l8.8-8.6a5.5 5.5 0 0 0 0-7.8z"/>',
+  shield: '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>', alert: '<path d="M12 9v4M12 17h.01"/><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/>',
+};
+const ic = (n, c = '') => `<svg class="ic ${c}" viewBox="0 0 24 24" aria-hidden="true">${I[n] || ''}</svg>`;
+
+/* ═══════════ słowniki ═══════════ */
+const SUB = [
+  ['pol', 'Język polski', '#6366f1', '12'], ['mat', 'Matematyka', '#0ea5e9', '21'], ['ang', 'Język angielski', '#10b981', '8'],
+  ['his', 'Historia', '#f59e0b', '15'], ['bio', 'Biologia', '#22c55e', '31'], ['geo', 'Geografia', '#14b8a6', '15'],
+  ['fiz', 'Fizyka', '#8b5cf6', '24'], ['che', 'Chemia', '#ec4899', '31'], ['inf', 'Informatyka', '#3b82f6', 'Lab 2'], ['wf', 'Wychowanie fizyczne', '#ef4444', 'Sala gim.'],
+];
+const SHORT = { pol: 'Polski', mat: 'Matematyka', ang: 'Angielski', his: 'Historia', bio: 'Biologia', geo: 'Geografia', fiz: 'Fizyka', che: 'Chemia', inf: 'Informatyka', wf: 'WF' };
+const SM = Object.fromEntries(SUB.map(([id, n, c, room]) => [id, { id, n, c, room, s: SHORT[id] }]));
+const HOURS = { pol: 5, mat: 5, ang: 3, his: 2, bio: 2, geo: 2, fiz: 2, che: 2, inf: 1, wf: 3 };
+const CATS = { 'Sprawdzian': 3, 'Kartkówka': 2, 'Odpowiedź': 2, 'Praca domowa': 1, 'Aktywność': 1, 'Projekt': 2 };
+const CATS_S = { 'Sprawdzian': 'Spr', 'Kartkówka': 'Kart', 'Odpowiedź': 'Odp', 'Praca domowa': 'PD', 'Aktywność': 'Akt', 'Projekt': 'Proj' };
+const GRADES = ['6', '6-', '5+', '5', '5-', '4+', '4', '4-', '3+', '3', '3-', '2+', '2', '2-', '1+', '1', 'np', '+', '-'];
+const ATT = { ob: ['Obecny', 'ob'], nb: ['Nieobecny', 'nb'], u: ['Usprawiedliwiony', 'u'], sp: ['Spóźniony', 'sp'], zw: ['Zwolniony', 'zw'] };
+const ATTC = { ob: '#16a34a', nb: '#e11d48', u: '#2563eb', sp: '#f59e0b', zw: '#94a3b8' };
+const EVT = { 'Sprawdzian': '#e11d48', 'Kartkówka': '#f97316', 'Zadanie domowe': '#2563eb', 'Wycieczka': '#16a34a', 'Zebranie': '#8b5cf6', 'Inne': '#64748b' };
+const ROLE = {
+  uczen: { n: 'Uczeń', c: 'linear-gradient(135deg,#5b5bf7,#8b5cf6)', i: 'cap' },
+  rodzic: { n: 'Rodzic', c: 'linear-gradient(135deg,#ec4899,#f97316)', i: 'heart' },
+  nauczyciel: { n: 'Nauczyciel', c: 'linear-gradient(135deg,#0ea5e9,#10b981)', i: 'journal' },
+  dyrektor: { n: 'Dyrektor', c: 'linear-gradient(135deg,#f59e0b,#ef4444)', i: 'shield' },
+};
+function gnum(v) { if (!v || !/^[1-6][+-]?$/.test(v)) return null; const b = +v[0]; return v[1] === '+' ? b + .5 : v[1] === '-' ? b - .25 : b; }
+function gcls(v) { const n = gnum(v); return n == null ? '' : 'gr' + clamp(Math.round(n - .01), 1, 6); }
+function avgOf(list) { let s = 0, w = 0; list.forEach(g => { const n = gnum(g.v); if (n != null) { s += n * g.w; w += g.w; } }); return w ? s / w : null; }
+const fA = a => a == null ? '—' : a.toFixed(2).replace('.', ',');
+const finalOf = a => a == null ? '—' : a >= 5.5 ? '6' : a >= 4.6 ? '5' : a >= 3.6 ? '4' : a >= 2.6 ? '3' : a >= 1.75 ? '2' : '1';
+const aColor = a => a == null ? 'var(--dim)' : a >= 4.6 ? 'var(--ok)' : a >= 3.6 ? '#0284c7' : a >= 2.6 ? 'var(--warn)' : 'var(--bad)';
+
+/* ═══════════ generowanie danych demo ═══════════ */
+const TOP = {
+  pol: ['„Dziady” cz. II – obrzęd i jego sens', 'Środki stylistyczne w poezji', 'Rozprawka – jak budować argumenty', 'Ballady Mickiewicza', 'Części mowy – powtórzenie', 'Opowiadanie z dialogiem', 'Lektura: „Kamienie na szaniec”', 'Interpunkcja w zdaniu złożonym'],
+  mat: ['Równania liniowe', 'Własności funkcji', 'Twierdzenie Pitagorasa', 'Pola wielokątów', 'Procenty w praktyce', 'Potęgi i pierwiastki', 'Układy równań', 'Statystyka – średnia i mediana'],
+  ang: ['Present Perfect vs Past Simple', 'Vocabulary: travelling', 'Reading comprehension', 'Writing an email', 'Modal verbs', 'Listening practice', 'Conditionals'],
+  his: ['Rewolucja przemysłowa', 'Wiosna Ludów', 'Powstanie styczniowe', 'Polska pod zaborami', 'Kultura XIX wieku'],
+  bio: ['Budowa komórki', 'Układ krążenia', 'Fotosynteza', 'Genetyka – podstawy', 'Ekosystemy'],
+  geo: ['Klimat Europy', 'Ludność świata', 'Rzeźba terenu Polski', 'Mapa i skala', 'Rolnictwo w Polsce'],
+  fiz: ['Ruch jednostajny', 'Siły i ich pomiar', 'Praca i moc', 'Energia mechaniczna', 'Ciśnienie'],
+  che: ['Układ okresowy', 'Wiązania chemiczne', 'Reakcje chemiczne', 'Tlenki i ich właściwości', 'Mieszaniny'],
+  inf: ['Algorytmy i schematy blokowe', 'Arkusz kalkulacyjny', 'Programowanie w Pythonie', 'Bezpieczeństwo w sieci'],
+  wf: ['Gry zespołowe – siatkówka', 'Lekkoatletyka', 'Ćwiczenia ogólnorozwojowe', 'Koszykówka – kozłowanie', 'Gimnastyka'],
+};
+const FN_M = ['Jan', 'Kacper', 'Antoni', 'Filip', 'Szymon', 'Jakub', 'Mikołaj', 'Wojciech', 'Franciszek', 'Igor', 'Stanisław', 'Tymon', 'Oskar', 'Aleksander', 'Bartosz'];
+const FN_F = ['Zofia', 'Maja', 'Lena', 'Julia', 'Hanna', 'Alicja', 'Oliwia', 'Nadia', 'Pola', 'Amelia', 'Laura', 'Emilia', 'Natalia', 'Wiktoria', 'Zuzanna'];
+const LN = ['Nowak', 'Kowalski', 'Wiśniewski', 'Wójcik', 'Kamiński', 'Lewandowski', 'Zieliński', 'Szymański', 'Woźniak', 'Dąbrowski', 'Kozłowski', 'Jankowski', 'Mazur', 'Krawczyk', 'Piotrowski', 'Grabowski', 'Pawłowski', 'Michalski', 'Król', 'Wieczorek', 'Jabłoński', 'Majewski', 'Olszewski', 'Stępień', 'Adamczyk', 'Dudek', 'Zając', 'Sikora', 'Baran', 'Rutkowski'];
+const fem = l => l.replace(/ski$/, 'ska').replace(/cki$/, 'cka').replace(/dzki$/, 'dzka');
+
+function gen() {
+  const R = rng(20261110), pick = a => a[Math.floor(R() * a.length)];
+  const teachers = [
+    { id: 't1', first: 'Anna', last: 'Kowalczyk', subs: ['pol'], wych: '2A' },
+    { id: 't2', first: 'Marek', last: 'Wiśniewski', subs: ['mat'], wych: '3B' },
+    { id: 't3', first: 'Ewa', last: 'Zielińska', subs: ['ang'] },
+    { id: 't4', first: 'Piotr', last: 'Lewandowski', subs: ['his', 'geo'] },
+    { id: 't5', first: 'Katarzyna', last: 'Wójcik', subs: ['bio', 'che'] },
+    { id: 't6', first: 'Tomasz', last: 'Kamiński', subs: ['fiz', 'inf'] },
+    { id: 't7', first: 'Michał', last: 'Dąbrowski', subs: ['wf'] },
+  ];
+  const director = { id: 'd1', first: 'Barbara', last: 'Mazur' };
+  const subT = {}; teachers.forEach(t => t.subs.forEach(s => subT[s] = t.id));
+  const classes = [{ id: '2A', wych: 't1' }, { id: '3B', wych: 't2' }];
+  const students = [], parents = [], used = new Set();
+  classes.forEach(c => {
+    const list = [];
+    for (let i = 0; i < 14; i++) {
+      let f, l, k; do { const female = R() < .5; f = pick(female ? FN_F : FN_M); l = pick(LN); if (female) l = fem(l); k = f + l; } while (used.has(k)); used.add(k);
+      const abil = {}; const base = 2.7 + R() * 2.6; SUB.forEach(([s]) => abil[s] = clamp(base + (R() - .5) * 1.4, 1.6, 5.9));
+      list.push({ first: f, last: l, cls: c.id, abil, abs: .015 + R() * .07 });
+    }
+    list.sort((a, b) => a.last.localeCompare(b.last, 'pl') || a.first.localeCompare(b.first, 'pl'));
+    list.forEach((s, i) => {
+      s.id = `s${c.id}${pad(i + 1)}`; s.nr = i + 1; s.parent = 'p' + s.id.slice(1);
+      const female = R() < .5, pl = female ? fem(s.last.replace(/ska$/, 'ski').replace(/cka$/, 'cki').replace(/dzka$/, 'dzki')) : s.last.replace(/ska$/, 'ski').replace(/cka$/, 'cki').replace(/dzka$/, 'dzki');
+      parents.push({ id: s.parent, first: pick(female ? FN_F : FN_M), last: pl, child: s.id });
+      students.push(s);
+    });
+  });
+  // plan lekcji
+  const tt = {}, counts = [6, 6, 5, 5, 5], busy = {};
+  classes.forEach((c, ci) => {
+    for (let attempt = 0; attempt < 500; attempt++) {
+      const R2 = rng(77 + ci * 1000 + attempt), pool = [];
+      Object.entries(HOURS).forEach(([s, h]) => { for (let i = 0; i < h; i++) pool.push(s); });
+      const plan = [], used = {}; let ok = true;
+      for (let d = 0; d < 5 && ok; d++) {
+        const day = [];
+        for (let n = 0; n < counts[d]; n++) {
+          const cand = pool.map((s, i) => [s, i]).filter(([s]) => !busy[`${d}|${n}|${subT[s]}`] && day.filter(x => x === s).length < (s === 'pol' || s === 'mat' ? 2 : 1));
+          if (!cand.length) { ok = false; break; }
+          const [s, i] = cand[Math.floor(R2() * cand.length)]; day.push(s); pool.splice(i, 1); used[`${d}|${n}|${subT[s]}`] = 1;
+        }
+        plan.push(day);
+      }
+      if (ok) { tt[c.id] = plan; Object.assign(busy, used); break; }
+    }
+  });
+  // dni szkolne
+  const y = NOW.getMonth() >= 8 ? NOW.getFullYear() : NOW.getFullYear() - 1;
+  let start = `${y}-09-01`; const days = [];
+  for (let d = start; d <= TODAY; d = addD(d, 1)) if (isSchool(d)) days.push(d);
+  while (days.length > 90) days.shift();
+  // dziennik lekcji (frekwencja + tematy)
+  const logs = {}, topicN = {}, nm = nowMin(), RL = rng(4242);
+  days.forEach(d => {
+    classes.forEach(c => {
+      const st = students.filter(s => s.cls === c.id);
+      const absent = {}; st.forEach(s => { if (RL() < s.abs) absent[s.id] = true; });
+      tt[c.id][dow(d)].forEach((sub, i) => {
+        const n = i + 1, tid = subT[sub];
+        if (d === TODAY && (LT[i][1] > nm || tid === 't1')) return;
+        const a = {}, old = d < addD(TODAY, -10);
+        st.forEach(s => {
+          if (absent[s.id]) a[s.id] = old && RL() < .85 ? 'u' : 'nb';
+          else if (i === 0 && RL() < .03) a[s.id] = 'sp';
+          else if (sub === 'wf' && RL() < .03) a[s.id] = 'zw';
+        });
+        const tk = c.id + sub; topicN[tk] = (topicN[tk] || 0) + 1;
+        logs[`${d}|${c.id}|${n}`] = { s: sub, t: TOP[sub][(topicN[tk] - 1) % TOP[sub].length], a };
+      });
+    });
+  });
+  // demo: nieusprawiedliwiona nieobecność ucznia demo + prośba innego rodzica
+  const mAb = s => Object.values(s.abil).reduce((a, b) => a + b, 0) / SUB.length;
+  const demo = students.filter(s => s.cls === '2A').sort((a, b) => Math.abs(mAb(a) - 4.4) - Math.abs(mAb(b) - 4.4))[0], other = students.filter(s => s.cls === '2A' && s !== demo)[3];
+  const mark = (sid, d, code) => Object.keys(logs).filter(k => k.startsWith(d + '|2A|')).forEach(k => logs[k].a[sid] = code);
+  const d3 = days[days.length - 4], d5 = days[days.length - 6];
+  if (d3) mark(demo.id, d3, 'nb');
+  if (d5) mark(other.id, d5, 'nb');
+  // oceny
+  const cols = [];
+  classes.forEach(c => SUB.forEach(([sub]) => {
+    const subDays = days.filter(d => tt[c.id][dow(d)].includes(sub) && d < TODAY);
+    const n = Math.min(subDays.length, 3 + HOURS[sub] + Math.floor(days.length / 25));
+    const cats = sub === 'wf' ? ['Aktywność', 'Aktywność', 'Odpowiedź', 'Projekt'] : ['Sprawdzian', 'Kartkówka', 'Kartkówka', 'Odpowiedź', 'Praca domowa', 'Aktywność', 'Praca domowa', 'Kartkówka', 'Sprawdzian', 'Projekt'];
+    const picked = []; for (let i = 0; i < n; i++) picked.push(subDays[Math.floor((i + .5) / n * subDays.length)]);
+    picked.forEach((d, i) => {
+      const cat = cats[i % cats.length], g = {};
+      students.filter(s => s.cls === c.id).forEach(s => {
+        if (cat === 'Odpowiedź' && R() > .35) return;
+        if (R() < .04) return;
+        if ((cat === 'Praca domowa' || cat === 'Odpowiedź') && R() < .03) { g[s.id] = 'np'; return; }
+        if (cat === 'Aktywność' && R() < .4) { g[s.id] = '+'; return; }
+        let v = s.abil[sub] + (R() - .5) * (cat === 'Sprawdzian' ? 2 : 1.5) + (cat === 'Aktywność' ? .6 : 0);
+        v = clamp(v, 1, 6); const b = Math.round(v), df = v - b;
+        g[s.id] = b + (df > .22 && b < 6 ? '+' : df < -.22 && b > 1 ? '-' : '');
+      });
+      cols.push({ id: uid(), cls: c.id, sub, cat, w: CATS[cat], date: d, desc: cat === 'Aktywność' ? 'Praca na lekcji' : TOP[sub][i % TOP[sub].length], g });
+    });
+  }));
+  // terminarz
+  const events = [];
+  const subDaysAhead = (cls, sub, from, to) => { const r = []; for (let d = addD(TODAY, from); d <= addD(TODAY, to); d = addD(d, 1)) if (isSchool(d) && tt[cls][dow(d)].includes(sub)) r.push(d); return r; };
+  classes.forEach(c => {
+    const add = (type, sub, from, to, title, desc) => { const ds2 = subDaysAhead(c.id, sub, from, to); if (ds2.length) events.push({ id: uid(), cls: c.id, sub, type, date: pick(ds2), title, desc, by: subT[sub] }); };
+    add('Sprawdzian', 'mat', 2, 12, 'Sprawdzian: równania i funkcje', 'Zakres: rozdział 3, zadania 1–40.');
+    add('Sprawdzian', 'his', 6, 20, 'Sprawdzian: XIX wiek', 'Rewolucja przemysłowa, Wiosna Ludów, powstania.');
+    add('Kartkówka', 'ang', 1, 8, 'Kartkówka: Present Perfect', 'Ostatnie 3 lekcje.');
+    add('Kartkówka', 'bio', 3, 14, 'Kartkówka: układ krążenia', '');
+    add('Sprawdzian', 'pol', 8, 25, 'Wypracowanie klasowe', 'Rozprawka na podstawie lektury.');
+    add('Kartkówka', 'che', 5, 18, 'Kartkówka: wiązania', '');
+    add('Zadanie domowe', 'pol', -6, -2, 'Plan wydarzeń w lekturze', 'Napisz szczegółowy plan wydarzeń (min. 12 punktów).');
+    add('Zadanie domowe', 'mat', 0, 4, 'Zadania 12–18, str. 84', 'Pokaż wszystkie obliczenia.');
+    add('Zadanie domowe', 'ang', 1, 6, 'Email do kolegi (120 słów)', 'Temat: wakacje marzeń.');
+    add('Zadanie domowe', 'inf', 3, 12, 'Arkusz z budżetem klasy', 'Wykres i formuły SUMA, ŚREDNIA.');
+    add('Zadanie domowe', 'geo', 2, 9, 'Mapa konturowa Polski', 'Zaznacz główne rzeki i pasma górskie.');
+    add('Projekt', 'fiz', 10, 26, 'Projekt: własny model', 'Praca w parach, prezentacja 5 minut.');
+    events.push({ id: uid(), cls: c.id, sub: null, type: 'Wycieczka', date: subDaysAhead(c.id, 'his', 14, 30)[0] || addD(TODAY, 21), title: 'Wycieczka do muzeum', desc: 'Zbiórka 7:45 przed szkołą.', by: c.wych });
+  });
+  const firstThu = (() => { for (let d = addD(TODAY, 3); ; d = addD(d, 1)) if (dow(d) === 3) return d; })();
+  events.push({ id: uid(), cls: '2A', sub: null, type: 'Zebranie', date: firstThu, title: 'Zebranie z rodzicami', desc: 'Godz. 17:30, sala 12. Omówienie ocen śródsemestralnych.', by: 't1' });
+  events.forEach(e => { if (e.type === 'Projekt') e.type = 'Inne'; });
+  // uwagi
+  const notes = [];
+  const NT = { p: ['Pomoc w organizacji apelu szkolnego.', 'Bardzo aktywna praca na lekcji, świetne pomysły.', 'Udział w konkursie przedmiotowym.', 'Wzorowa postawa podczas wycieczki.'], n: ['Rozmowy podczas lekcji mimo upomnień.', 'Brak stroju na zajęcia wychowania fizycznego.', 'Korzystanie z telefonu na lekcji.'] };
+  notes.push({ id: uid(), sid: demo.id, by: 't3', date: days[days.length - 12] || TODAY, type: 'p', text: NT.p[2] });
+  notes.push({ id: uid(), sid: demo.id, by: 't6', date: days[days.length - 20] || TODAY, type: 'n', text: NT.n[2] });
+  for (let i = 0; i < 12; i++) { const s = pick(students), t = pick(teachers), ty = R() < .6 ? 'p' : 'n'; notes.push({ id: uid(), sid: s.id, by: t.id, date: pick(days), type: ty, text: pick(NT[ty]) }); }
+  // wiadomości
+  const msgs = [], ago = n => addD(TODAY, -n), dp = parents.find(p => p.child === demo.id);
+  const M = (from, to, subj, body, d, r) => msgs.push({ id: uid(), from, to, subj, body, date: d, r: r || {} });
+  M('t1', [dp.id], 'Zebranie z rodzicami', `Dzień dobry,\n\nzapraszam na zebranie klasy 2A w czwartek (${fD(firstThu)}) o 17:30 w sali 12. Omówimy oceny śródsemestralne i plan wycieczki.\n\nPozdrawiam\nAnna Kowalczyk`, ago(1));
+  M('t2', students.filter(s => s.cls === '2A').map(s => s.id), 'Sprawdzian z matematyki', 'Cześć!\n\nPrzypominam o zbliżającym się sprawdzianie z równań i funkcji. Na stronie 84 są zadania powtórzeniowe. W razie pytań piszcie śmiało.\n\nM. Wiśniewski', ago(2));
+  M('t3', [demo.id], 'Konkurs z angielskiego', 'Hi!\n\nZapraszam do udziału w szkolnym konkursie języka angielskiego. Zapisy u mnie do końca tygodnia. Myślę, że świetnie sobie poradzisz!\n\nEwa Zielińska', ago(4), { [demo.id]: 1 });
+  M(demo.id, ['t6'], 'Pytanie o projekt z fizyki', 'Dzień dobry,\n\nczy projekt możemy zrobić w grupie trzyosobowej?\n\nPozdrawiam', ago(3), { t6: 1 });
+  M('d1', teachers.map(t => t.id), 'Rada pedagogiczna', 'Szanowni Państwo,\n\nuprzejmie przypominam o radzie pedagogicznej w przyszły poniedziałek o 15:00 w pokoju nauczycielskim.\n\nBarbara Mazur, dyrektor', ago(2));
+  M(dp.id, ['t1'], 'Nieobecność dziecka', 'Dzień dobry,\n\nuprzejmie informuję, że nieobecność mojego dziecka wynikała z wizyty u lekarza. Wkrótce złożę usprawiedliwienie w dzienniku.\n\nZ wyrazami szacunku', ago(1));
+  M('t4', ['t1'], 'Wycieczka 2A', 'Aniu, potwierdzam muzeum na wycieczkę. Bilety zarezerwowane, opiekunami będziemy my dwoje.\n\nPiotr', ago(5), { t1: 1 });
+  // ogłoszenia
+  const ann = [
+    { id: uid(), title: 'Dzień wolny 11 listopada', body: 'Przypominamy, że 11 listopada (Narodowe Święto Niepodległości) jest dniem wolnym od zajęć. Zapraszamy na szkolną akademię w dniu poprzedzającym święto.', by: 'd1', date: ago(3), target: 'all' },
+    { id: uid(), title: 'Konkursy przedmiotowe', body: 'Ruszyły zapisy na konkursy z matematyki, języka angielskiego i biologii. Zgłoszenia przyjmują nauczyciele przedmiotów do końca miesiąca.', by: 'd1', date: ago(8), target: 'all' },
+    { id: uid(), title: 'Wycieczka klasy 2A', body: 'Szczegóły wycieczki do muzeum są w terminarzu. Prosimy o dostarczenie zgód rodziców do wychowawczyni.', by: 't1', date: ago(2), target: '2A' },
+    { id: uid(), title: 'Nowe godziny biblioteki', body: 'Od przyszłego tygodnia biblioteka szkolna czynna jest od 7:30 do 15:30.', by: 'd1', date: ago(12), target: 'all' },
+  ];
+  const just = [{ id: uid(), sid: other.id, by: other.parent, dates: d5 ? [d5] : [], reason: 'Infekcja, dziecko zostało w domu.', status: 'pending', date: ago(1) }];
+  return { v: 2, created: TODAY, teachers, director, subT, classes, students, parents, tt, logs, cols, events, notes, msgs, ann, just, hw: {}, demo: demo.id };
+}
+
+/* ═══════════ stan ═══════════ */
+let D;
+const store = { get(k) { try { return JSON.parse(localStorage.getItem(k)); } catch { return null; } }, set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} } };
+function load() { const s = store.get(CONF.storeKey); D = s && s.v === 2 && s.created >= addD(TODAY, -7) ? s : gen(); save(); }
+let MC = {};
+function save() { MC = {}; store.set(CONF.storeKey, D); }
+const memo = (k, f) => (k in MC ? MC[k] : (MC[k] = f()));
+let S = store.get('edzio-session') || null; // {role,id}
+const U = { cal: null, calSel: TODAY, week: 0, mTab: 'in', mSel: null, oView: 'tabela', hw: 'todo', dDate: null, dKey: null, draft: null, oCls: null, oSub: null, kCls: null, uTab: 'all', pDay: null };
+
+/* zapytania */
+const allUsers = () => [...D.teachers, D.director, ...D.students, ...D.parents];
+const user = id => memo('u' + id, () => allUsers().find(u => u.id === id));
+const nameOf = id => { const u = user(id); return u ? `${u.first} ${u.last}` : id; };
+const roleOf = id => id[0] === 't' ? 'nauczyciel' : id[0] === 'd' ? 'dyrektor' : id[0] === 'p' ? 'rodzic' : 'uczen';
+const hue = id => { let h = 2166136261; for (const c of id) h = Math.imul(h ^ c.charCodeAt(0), 16777619); return (h >>> 0) % 360; };
+const av = (id, cls = '') => { const u = user(id); const t = u ? u.first[0] + u.last[0] : '?'; const h = hue(id); return `<span class="av ${cls}" style="background:linear-gradient(135deg,hsl(${h} 70% 55%),hsl(${(h + 40) % 360} 70% 50%))">${esc(t)}</span>`; };
+const student = id => D.students.find(s => s.id === id);
+const studentsOf = cls => D.students.filter(s => s.cls === cls);
+const viewSid = () => S.role === 'uczen' ? S.id : S.role === 'rodzic' ? user(S.id).child : null;
+const me = () => user(S.id);
+const tClasses = tid => D.classes.filter(c => D.tt[c.id].some(day => day.some(s => D.subT[s] === tid))).map(c => c.id);
+const tSubs = tid => (D.teachers.find(t => t.id === tid) || { subs: [] }).subs;
+function lessonsOn(cls, date) { if (!isSchool(date)) return []; return D.tt[cls][dow(date)].map((sub, i) => { const key = `${date}|${cls}|${i + 1}`; return { n: i + 1, sub, cls, date, key, log: D.logs[key], t: D.subT[sub] }; }); }
+function tLessonsOn(tid, date) { return D.classes.flatMap(c => lessonsOn(c.id, date).filter(l => l.t === tid)).sort((a, b) => a.n - b.n); }
+const lessonState = (date, n) => { if (date < TODAY) return 'past'; if (date > TODAY) return 'future'; const m = nowMin(), [a, b] = LT[n - 1]; return m >= b ? 'past' : m >= a ? 'now' : 'future'; };
+function attOf(sid) {
+  return memo('att' + sid, () => { const s = student(sid), out = []; Object.entries(D.logs).forEach(([k, l]) => { const [d, c, n] = k.split('|'); if (c === s.cls) out.push({ date: d, n: +n, sub: l.s, code: l.a[sid] || 'ob', key: k }); }); return out.sort((a, b) => a.date < b.date ? 1 : a.date > b.date ? -1 : a.n - b.n); });
+}
+function attStats(list) { const c = { ob: 0, nb: 0, u: 0, sp: 0, zw: 0 }; list.forEach(a => c[a.code]++); const tot = list.length - c.zw; return { c, tot: list.length, pct: tot ? (c.ob + c.sp) / tot * 100 : 100 }; }
+function gradesOf(sid, sub) { const s = student(sid); return D.cols.filter(c => c.cls === s.cls && (!sub || c.sub === sub) && c.g[sid] != null).map(c => ({ v: c.g[sid], w: c.w, cat: c.cat, date: c.date, desc: c.desc, sub: c.sub, col: c.id, by: D.subT[c.sub] })).sort((a, b) => a.date < b.date ? -1 : 1); }
+function overall(sid) { return memo('ov' + sid, () => { const a = SUB.map(([s]) => avgOf(gradesOf(sid, s))).filter(x => x != null); return a.length ? a.reduce((x, y) => x + y, 0) / a.length : null; }); }
+function eventsFor(clsList) { return D.events.filter(e => clsList.includes(e.cls)).sort((a, b) => a.date < b.date ? -1 : 1); }
+function myClasses() { if (S.role === 'uczen' || S.role === 'rodzic') return [student(viewSid()).cls]; if (S.role === 'nauczyciel') return tClasses(S.id); return D.classes.map(c => c.id); }
+const unread = () => D.msgs.filter(m => m.to.includes(S.id) && !m.r[S.id]).length;
+const pendingJust = () => S.role === 'nauczyciel' ? D.just.filter(j => j.status === 'pending' && student(j.sid).cls === (D.teachers.find(t => t.id === S.id).wych)).length : S.role === 'dyrektor' ? D.just.filter(j => j.status === 'pending').length : 0;
+function lastSchoolDay(d) { while (!isSchool(d)) d = addD(d, -1); return d; }
+function nextSchoolDay(d) { do { d = addD(d, 1); } while (!isSchool(d)); return d; }
+
+/* ═══════════ UI: toast, modal, popover ═══════════ */
+let tt0;
+function toast(m) { const t = $('#toast'); t.innerHTML = ic('check') + esc(m); t.classList.add('on'); clearTimeout(tt0); tt0 = setTimeout(() => t.classList.remove('on'), 2400); }
+function modal(title, body, foot = '', wide = false) {
+  closeModal();
+  const o = document.createElement('div'); o.className = 'ov'; o.id = 'ov';
+  o.innerHTML = `<div class="md${wide ? ' wide' : ''}" role="dialog" aria-modal="true" aria-label="${esc(title)}"><div class="mh"><h3>${title}</h3><button class="ib" data-a="closeModal" aria-label="Zamknij">${ic('x')}</button></div><div class="mb">${body}</div>${foot ? `<div class="mf">${foot}</div>` : ''}</div>`;
+  o.addEventListener('mousedown', e => { if (e.target === o) closeModal(); });
+  document.body.appendChild(o);
+  setTimeout(() => { const f = o.querySelector('input:not([type=checkbox]),textarea,select'); if (f) f.focus(); }, 60);
+  return o;
+}
+function closeModal() { $('#ov')?.remove(); }
+function closePop() { $('#pop')?.remove(); $('#dd')?.remove(); }
+function pop(anchor, html) {
+  closePop(); const p = document.createElement('div'); p.className = 'pop'; p.id = 'pop'; p.innerHTML = html; document.body.appendChild(p);
+  const r = anchor.getBoundingClientRect(), w = p.offsetWidth, h = p.offsetHeight;
+  let x = r.left + r.width / 2 - w / 2, y = r.bottom + 8; if (y + h > innerHeight - 10) y = r.top - h - 8;
+  p.style.left = clamp(x, 10, innerWidth - w - 10) + 'px'; p.style.top = clamp(y, 10, innerHeight - h - 10) + 'px';
+  return p;
+}
+
+/* ═══════════ komponenty ═══════════ */
+const gchip = (g, attrs = '') => `<button class="g ${gcls(g.v)}" ${attrs} title="${esc(`${g.cat} (waga ${g.w}) · ${fDs(g.date)}${g.desc ? ' · ' + g.desc : ''}`)}">${esc(g.v)}</button>`;
+const subLbl = sub => `<span class="sub"><i style="background:${SM[sub].c}"></i>${esc(SM[sub].n)}</span>`;
+const stat = (icn, color, label, val, sub, cnt) => `<div class="card stat" style="--c:${color}"><div class="si" style="background:color-mix(in srgb,${color} 14%,transparent);color:${color}">${ic(icn)}</div><span>${label}</span><b ${cnt != null ? `data-cnt="${cnt}"` : ''}>${val}</b><small>${sub}</small></div>`;
+function donut(segs, center, label) {
+  const tot = segs.reduce((a, s) => a + s.v, 0) || 1, R = 60, C = 2 * Math.PI * R; let off = 0;
+  const cs = segs.filter(s => s.v > 0).map(s => { const len = s.v / tot * C, el = `<circle r="${R}" cx="85" cy="85" stroke="${s.c}" stroke-dasharray="${len} ${C - len}" stroke-dashoffset="${-off}"/>`; off += len; return el; }).join('');
+  return `<div class="donut"><svg viewBox="0 0 170 170"><circle r="${R}" cx="85" cy="85" stroke="var(--sf2)"/>${cs}</svg><div class="c"><div><b>${center}</b><small>${label}</small></div></div></div>`;
+}
+const bars = (data, max) => `<div class="bars">${data.map((d, i) => `<div class="b" title="${esc(d.l)}: ${d.t}"><i style="--h:${Math.max(3, d.v / max * 100)}%;--c:${d.c};--i:${i}" data-v="${d.t}"></i><small>${esc(d.s)}</small></div>`).join('')}</div>`;
+const evC = x => x.code ? ATTC[x.code] : (EVT[x.type] || EVT.Inne);
+function calendar(evs, opts = {}) {
+  const m = U.cal || (U.cal = TODAY.slice(0, 8) + '01'); const f = pd(m), y = f.getFullYear(), mo = f.getMonth();
+  const start = addD(m, -dow(m)); const cells = [];
+  for (let i = 0; i < 42; i++) { const d = addD(start, i); if (i >= 35 && pd(d).getMonth() !== mo) break; cells.push(d); }
+  const by = {}; evs.forEach(e => (by[e.date] = by[e.date] || []).push(e));
+  return `<div class="fl" style="margin-bottom:14px"><button class="ib" data-a="calNav" data-v="-1" aria-label="Poprzedni miesiąc">${ic('l')}</button><b style="font-size:17px;text-transform:capitalize;min-width:160px;text-align:center">${MN[mo]} ${y}</b><button class="ib" data-a="calNav" data-v="1" aria-label="Następny miesiąc">${ic('r')}</button><button class="btn gh sm" data-a="calToday">Dziś</button><span class="sp"></span>${opts.right || ''}</div>
+  <div class="cal ${opts.mini ? 'mcal' : ''}">${DS.map(d => `<div class="dh">${d}</div>`).join('')}${cells.map(d => { const e = by[d] || [], dd = pd(d); return `<button class="d${dd.getMonth() !== mo ? ' out' : ''}${dow(d) > 4 ? ' we' : ''}${d === TODAY ? ' today' : ''}${d === U.calSel ? ' sel' : ''}" data-a="calSel" data-v="${d}"><span class="n">${dd.getDate()}</span>${e.slice(0, 2).map(x => `<span class="ev" style="--c:${evC(x)}">${esc(x.label || (x.sub ? SM[x.sub].s : x.type))}</span>`).join('')}${e.length > 2 ? `<span class="more">+${e.length - 2}</span>` : ''}<span class="dots">${e.slice(0, 4).map(x => `<i style="--c:${evC(x)}"></i>`).join('')}</span></button>`; }).join('')}</div>`;
+}
+const evItem = (e, del) => `<div class="li"><span class="sdot" style="background:${EVT[e.type] || EVT.Inne}"></span><div class="t"><b>${esc(e.title)}</b><small>${esc(e.type)} · ${e.sub ? esc(SM[e.sub].n) + ' · ' : ''}${fDl(e.date)} · kl. ${esc(e.cls)}</small>${e.desc ? `<small style="display:block;margin-top:2px">${esc(e.desc)}</small>` : ''}</div>${del ? `<button class="ib" data-a="delEv" data-v="${e.id}" aria-label="Usuń">${ic('trash')}</button>` : ''}</div>`;
+
+/* ═══════════ nawigacja ═══════════ */
+const PAGES = {
+  pulpit: ['Pulpit', 'home'], oceny: ['Oceny', 'award'], frekwencja: ['Frekwencja', 'att'], plan: ['Plan lekcji', 'grid'], terminarz: ['Terminarz', 'cal'],
+  zadania: ['Zadania domowe', 'book'], uwagi: ['Uwagi', 'flag'], wiadomosci: ['Wiadomości', 'mail'], ogloszenia: ['Ogłoszenia', 'mega'],
+  dziennik: ['Dziennik lekcji', 'journal'], ocenianie: ['Ocenianie', 'edit'], klasa: ['Klasa', 'users'], nauczyciele: ['Nauczyciele', 'brief'],
+};
+const NAV = {
+  uczen: [['Nauka', ['pulpit', 'oceny', 'frekwencja', 'plan', 'terminarz', 'zadania', 'uwagi']], ['Komunikacja', ['wiadomosci', 'ogloszenia']]],
+  nauczyciel: [['Praca', ['pulpit', 'dziennik', 'ocenianie', 'plan', 'terminarz', 'uwagi', 'klasa']], ['Komunikacja', ['wiadomosci', 'ogloszenia']]],
+  dyrektor: [['Szkoła', ['pulpit', 'klasa', 'nauczyciele', 'terminarz']], ['Komunikacja', ['wiadomosci', 'ogloszenia']]],
+};
+NAV.rodzic = NAV.uczen;
+const pagesFor = r => NAV[r].flatMap(x => x[1]);
+const route = () => { const p = (location.hash.match(/^#\/(\w+)/) || [])[1]; return S && pagesFor(S.role).includes(p) ? p : 'pulpit'; };
+const go = p => { if (location.hash !== '#/' + p) location.hash = '#/' + p; else render(); };
+
+/* ═══════════ logowanie ═══════════ */
+function loginView() {
+  const ds0 = student(D.demo), par = D.parents.find(p => p.child === D.demo);
+  const R0 = [['uczen', D.demo, 'Oceny, plan, frekwencja, zadania', `${ds0.first} ${ds0.last}, kl. ${ds0.cls}`], ['rodzic', par.id, 'Postępy dziecka i usprawiedliwienia', `${par.first} ${par.last}`], ['nauczyciel', 't1', 'Dziennik, oceny, uwagi, terminarz', 'Anna Kowalczyk, j. polski'], ['dyrektor', 'd1', 'Statystyki szkoły i ogłoszenia', 'Barbara Mazur']];
+  return `<div class="login">
+  <div class="lg-art"><span class="bl b1"></span><span class="bl b2"></span><span class="bl b3"></span>
+    <div class="lg-logo"><span class="mk">E</span>${CONF.app}</div>
+    <div><h1>Szkoła w jednym miejscu. <span>Prosto i pięknie.</span></h1><p>Oceny, frekwencja, plan lekcji, terminarz i wiadomości dla uczniów, rodziców, nauczycieli i dyrekcji.</p>
+      <div class="fc"><span>📊 Średnie na żywo</span><span>📅 Terminarz</span><span>✉️ Wiadomości</span><span>✅ Usprawiedliwienia</span><span>🌙 Tryb ciemny</span></div></div>
+    <div class="mock"><div><small>Średnia</small><b>4,62</b></div><div><small>Frekwencja</small><b>96%</b></div><div><small>Nowe oceny</small><b>+3</b></div></div>
+  </div>
+  <div class="lg-form">
+    <h2>Witaj w ${CONF.app} 👋</h2><p>${esc(CONF.school)} · rok szkolny ${CONF.year}. Wybierz konto, aby się zalogować.</p>
+    <div class="roles">${R0.map(([r, id, d, who], i) => `<button class="role" style="--i:${i}" data-a="login" data-r="${r}" data-v="${id}"><span class="ri" style="background:${ROLE[r].c}">${ic(ROLE[r].i)}</span><b>${ROLE[r].n}</b><small>${d}</small><div class="who">${esc(who)}</div></button>`).join('')}</div>
+    <div class="lg-note">${ic('info')}<span><b>Wersja demonstracyjna.</b> Wszystkie osoby i dane są fikcyjne. Zmiany zapisują się tylko w Twojej przeglądarce.</span></div>
+  </div></div>`;
+}
+
+/* ═══════════ powłoka ═══════════ */
+function shell(page, html) {
+  const u = me(), r = S.role, un = unread(), pj = pendingJust();
+  const badge = { wiadomosci: un, klasa: pj };
+  const sub = r === 'uczen' ? `Uczeń · kl. ${u.cls}` : r === 'rodzic' ? `Rodzic · ${nameOf(u.child)}` : r === 'nauczyciel' ? `Nauczyciel${u.wych ? ' · wych. ' + u.wych : ''}` : 'Dyrektor';
+  const notif = notifs();
+  const title = r === 'rodzic' && ['oceny', 'frekwencja', 'uwagi'].includes(page) ? `${PAGES[page][0]} <small>${esc(nameOf(viewSid()))}</small>` : `${PAGES[page][0]}<small>${fDl(TODAY)}</small>`;
+  return `<div class="app">
+  <aside class="side" id="side"><div class="lg-logo"><span class="mk">E</span><div>${CONF.app}<small>${esc(CONF.school)}</small></div></div>
+    <nav class="nv" aria-label="Menu">${NAV[r].map(([sec, ps]) => `<div class="sec">${sec}</div>${ps.map(p => `<a href="#/${p}" class="${p === page ? 'on' : ''}">${ic(PAGES[p][1])}${PAGES[p][0]}${badge[p] ? `<span class="bd">${badge[p]}</span>` : ''}</a>`).join('')}`).join('')}</nav>
+    <div class="me">${av(S.id)}<div style="min-width:0"><b>${esc(nameOf(S.id))}</b><small>${esc(sub)}</small></div><button data-a="logout" title="Wyloguj" aria-label="Wyloguj">${ic('out')}</button></div>
+  </aside><div class="scrim" id="scrim" data-a="menu"></div>
+  <div class="main"><div class="top" id="top"><button class="ib burger" data-a="menu" aria-label="Menu">${ic('menu')}</button><h1>${title}</h1>
+    <div class="tb"><button class="srch" data-a="palette">${ic('search')}<span>Szukaj…</span><kbd>Ctrl K</kbd></button>
+    <div style="position:relative"><button class="ib" data-a="notif" aria-label="Powiadomienia">${ic('bell')}${notif.length ? '<span class="dot"></span>' : ''}</button></div>
+    <button class="ib" data-a="theme" aria-label="Zmień motyw">${ic(document.documentElement.dataset.theme === 'dark' ? 'sun' : 'moon')}</button></div></div>
+  <div class="content"><div class="pg">${html}</div></div></div></div>`;
+}
+function notifs() {
+  const r = S.role, out = [];
+  if (r === 'uczen' || r === 'rodzic') {
+    const sid = viewSid();
+    gradesOf(sid).slice(-4).reverse().forEach(g => out.push({ i: 'award', c: SM[g.sub].c, t: `Ocena ${g.v} · ${SM[g.sub].n}`, s: `${g.cat} · ${fD(g.date)}`, p: 'oceny' }));
+    eventsFor(myClasses()).filter(e => e.date >= TODAY && e.date <= addD(TODAY, 4) && e.type !== 'Zadanie domowe').forEach(e => out.push({ i: 'cal', c: EVT[e.type], t: e.title, s: fDl(e.date), p: 'terminarz' }));
+  }
+  if (r === 'nauczyciel') {
+    const miss = missingLessons(S.id); if (miss.length) out.push({ i: 'journal', c: '#f59e0b', t: `${miss.length} ${plural(miss.length, 'lekcja', 'lekcje', 'lekcji')} do uzupełnienia`, s: 'Temat i frekwencja', p: 'dziennik' });
+  }
+  const pj = pendingJust(); if (pj) out.push({ i: 'att', c: '#2563eb', t: `Usprawiedliwienia: ${pj}`, s: 'Czekają na decyzję', p: 'klasa' });
+  const un = unread(); if (un) out.push({ i: 'mail', c: '#5b5bf7', t: `Nieprzeczytane wiadomości: ${un}`, s: 'Skrzynka odbiorcza', p: 'wiadomosci' });
+  return out;
+}
+function missingLessons(tid) { const out = []; for (let i = 0, d = TODAY; i < 14; i++, d = addD(d, -1)) tLessonsOn(tid, d).forEach(l => { if (!l.log && lessonState(d, l.n) === 'past') out.push(l); }); return out; }
+
+/* ═══════════ strony: uczeń / rodzic ═══════════ */
+function liveCard(lessons, isTeacher) {
+  const m = nowMin(), today = lessons.filter(l => l.date === TODAY);
+  const cur = today.find(l => m >= LT[l.n - 1][0] && m < LT[l.n - 1][1]), nx = today.find(l => LT[l.n - 1][0] > m);
+  const who = l => isTeacher ? `kl. ${l.cls}` : nameOf(l.t);
+  if (cur) { const [a, b] = LT[cur.n - 1], p = (m - a) / (b - a) * 100; return `<div><small>Trwa lekcja ${cur.n}</small><br><b>${esc(SM[cur.sub].n)}</b> <small>· sala ${SM[cur.sub].room} · ${esc(who(cur))}</small></div><div class="pbar"><i style="width:${p}%"></i></div><small>do ${fT(b)} (${b - m} min)</small>`; }
+  if (nx) { const a = LT[nx.n - 1][0]; return `<div><small>Następna lekcja o ${fT(a)}</small><br><b>${esc(SM[nx.sub].n)}</b> <small>· sala ${SM[nx.sub].room} · ${esc(who(nx))}</small></div><span class="sp"></span><small>za ${a - m} min</small>`; }
+  return `<div><small>${today.length ? 'Na dziś to koniec lekcji 🎉' : 'Dziś nie ma lekcji'}</small><br><b>Następny dzień: ${fDl(nextSchoolDay(TODAY))}</b></div>`;
+}
+function pStudentHome() {
+  const sid = viewSid(), s = student(sid), parent = S.role === 'rodzic';
+  const att = attStats(attOf(sid)), ov = overall(sid), gr = gradesOf(sid), month = gr.filter(g => g.date >= addD(TODAY, -30)).length;
+  const evs = eventsFor([s.cls]).filter(e => e.date >= TODAY && e.date <= addD(TODAY, 14)), tests = evs.filter(e => e.type === 'Sprawdzian' || e.type === 'Kartkówka');
+  const td = isSchool(TODAY) ? TODAY : nextSchoolDay(TODAY), ls = lessonsOn(s.cls, td);
+  const u = me(), hi = NOW.getHours() < 12 ? 'Dzień dobry' : NOW.getHours() < 18 ? 'Cześć' : 'Dobry wieczór';
+  const anns = D.ann.filter(a => a.target === 'all' || a.target === s.cls).sort((a, b) => a.date < b.date ? 1 : -1).slice(0, 2);
+  return `<div class="hero"><h2>${hi}, ${esc(u.first)}! 👋</h2><p>${parent ? `Podgląd postępów: ${esc(s.first)} ${esc(s.last)}, klasa ${s.cls}` : `Klasa ${s.cls} · wychowawca: ${esc(nameOf(D.classes.find(c => c.id === s.cls).wych))}`}</p><div class="live" id="live">${liveCard(lessonsOn(s.cls, TODAY))}</div></div>
+  <div class="grid g4 mt">${stat('trend', '#5b5bf7', 'Średnia ogólna', fA(ov), 'ze wszystkich przedmiotów', ov != null ? ov.toFixed(2) : null)}${stat('att', '#16a34a', 'Frekwencja', att.pct.toFixed(1).replace('.', ',') + '%', `${att.c.nb} nieusprawiedliwionych`, att.pct.toFixed(1))}${stat('award', '#f59e0b', 'Oceny w 30 dni', month, `łącznie ${gr.length}`, month)}${stat('alert', '#e11d48', 'Sprawdziany i kartkówki', tests.length, 'w ciągu 2 tygodni', tests.length)}</div>
+  <div class="grid g21 mt">
+    <div class="card"><div class="ch"><h3>${ic('award')}Ostatnie oceny</h3><a href="#/oceny">Wszystkie</a></div><div class="list">${gr.slice(-6).reverse().map(g => `<div class="li">${gchip(g, `data-a="grade" data-v="${g.col}"`)}<div class="t"><b>${esc(SM[g.sub].n)}</b><small>${esc(g.cat)} · ${esc(g.desc)} · ${fD(g.date)}</small></div><span class="pill">waga ${g.w}</span></div>`).join('') || '<div class="empty">Brak ocen</div>'}</div></div>
+    <div class="card"><div class="ch"><h3>${ic('grid')}${td === TODAY ? 'Dzisiejsze lekcje' : 'Lekcje: ' + fDl(td)}</h3><a href="#/plan">Plan</a></div><div class="list">${ls.map(l => { const st = lessonState(td, l.n), code = l.log ? (l.log.a[sid] || 'ob') : null; return `<div class="li ${st}"><span class="num">${l.n}</span><div class="t"><b>${esc(SM[l.sub].n)}</b><small>${fT(LT[l.n - 1][0])}–${fT(LT[l.n - 1][1])} · sala ${SM[l.sub].room}</small></div>${code ? `<span class="att a-${code}">${code}</span>` : ''}</div>`; }).join('') || '<div class="empty">Brak lekcji</div>'}</div></div>
+  </div>
+  <div class="grid g2 mt">
+    <div class="card"><div class="ch"><h3>${ic('cal')}Nadchodzące</h3><a href="#/terminarz">Terminarz</a></div><div class="list">${evs.slice(0, 5).map(e => evItem(e)).join('') || '<div class="empty">Nic w najbliższych dniach</div>'}</div></div>
+    <div class="card"><div class="ch"><h3>${ic('mega')}Ogłoszenia</h3><a href="#/ogloszenia">Wszystkie</a></div>${anns.map(a => `<div class="li"><span class="num">${ic('mega')}</span><div class="t"><b>${esc(a.title)}</b><small>${fD(a.date)} · ${esc(nameOf(a.by))}</small></div></div>`).join('')}</div>
+  </div>`;
+}
+function pGrades() {
+  const sid = viewSid(), ov = overall(sid);
+  const rows = SUB.map(([sub]) => { const g = gradesOf(sid, sub); return { sub, g, a: avgOf(g) }; });
+  const tbl = `<div class="tw"><table class="tbl"><thead><tr><th>Przedmiot</th><th>Oceny</th><th>Średnia</th><th>Przewidywana</th></tr></thead><tbody>${rows.map(r => `<tr><td>${subLbl(r.sub)}<small class="dim" style="display:block;margin-left:20px">${esc(nameOf(D.subT[r.sub]))}</small></td><td><div class="gs">${r.g.map(g => gchip(g, `data-a="grade" data-v="${g.col}"`)).join('') || '<span class="dim">brak</span>'}</div></td><td class="avg" style="color:${aColor(r.a)}">${fA(r.a)}</td><td><span class="g ${gcls(finalOf(r.a))}" style="cursor:default">${finalOf(r.a)}</span></td></tr>`).join('')}</tbody></table></div>`;
+  const chart = bars(rows.map(r => ({ l: SM[r.sub].n, s: SM[r.sub].s.slice(0, 7), v: r.a || 0, t: fA(r.a), c: SM[r.sub].c })), 6);
+  return `<div class="grid g4">${stat('trend', '#5b5bf7', 'Średnia ogólna', fA(ov), 'semestr 1', ov != null ? ov.toFixed(2) : null)}${stat('award', '#16a34a', 'Najlepszy przedmiot', esc(SM[rows.filter(r => r.a).sort((a, b) => b.a - a.a)[0]?.sub || 'pol'].s), fA(rows.filter(r => r.a).sort((a, b) => b.a - a.a)[0]?.a))}${stat('alert', '#f59e0b', 'Do poprawy', rows.filter(r => r.a != null && r.a < 3).length, 'przedmioty ze średnią < 3', rows.filter(r => r.a != null && r.a < 3).length)}${stat('book', '#0ea5e9', 'Liczba ocen', gradesOf(sid).length, 'w tym semestrze', gradesOf(sid).length)}</div>
+  <div class="card mt"><div class="ch"><h3>${ic('award')}Oceny bieżące</h3><div class="tabs"><button class="${U.oView === 'tabela' ? 'on' : ''}" data-a="oView" data-v="tabela">Tabela</button><button class="${U.oView === 'wykres' ? 'on' : ''}" data-a="oView" data-v="wykres">Wykres</button></div></div>${U.oView === 'tabela' ? tbl : chart}</div>
+  <p class="dim mt" style="font-size:13px">Średnia ważona: Sprawdzian ×3, Kartkówka/Odpowiedź/Projekt ×2, Praca domowa/Aktywność ×1. „+”, „−” i „np” nie wliczają się do średniej.</p>`;
+}
+function gradeModal(colId) {
+  const c = D.cols.find(x => x.id === colId); if (!c) return;
+  const sid = viewSid() || null, v = sid ? c.g[sid] : null;
+  const vals = Object.values(c.g).map(gnum).filter(x => x != null), ca = vals.length ? vals.reduce((a, b) => a + b, 0) / vals.length : null;
+  modal('Szczegóły oceny', `<div class="fl" style="gap:16px"><span class="g ${gcls(v)}" style="min-width:64px;height:64px;font-size:26px;border-radius:18px">${esc(v || '—')}</span><div><b style="font-size:17px">${esc(SM[c.sub].n)}</b><div class="mute">${esc(c.cat)} · waga ${c.w}</div></div></div>
+  <div class="list mt"><div class="li"><div class="t"><small>Opis</small><b>${esc(c.desc || '—')}</b></div></div><div class="li"><div class="t"><small>Data</small><b>${fDl(c.date)}</b></div></div><div class="li"><div class="t"><small>Nauczyciel</small><b>${esc(nameOf(D.subT[c.sub]))}</b></div></div><div class="li"><div class="t"><small>Średnia klasy z tej pracy</small><b>${fA(ca)}</b></div></div></div>`);
+}
+function pAttendance() {
+  const sid = viewSid(), s = student(sid), list = attOf(sid), st = attStats(list), parent = S.role === 'rodzic';
+  const segs = ['ob', 'sp', 'u', 'nb', 'zw'].map(k => ({ v: st.c[k], c: ATTC[k] }));
+  const bySub = SUB.map(([sub]) => { const l = list.filter(a => a.sub === sub); return { sub, s: attStats(l), n: l.length }; }).filter(x => x.n);
+  const byDay = {}; list.forEach(a => { const w = { nb: 4, u: 3, sp: 2, zw: 1, ob: 0 }; if (!byDay[a.date] || w[a.code] > w[byDay[a.date]]) byDay[a.date] = a.code; });
+  const evs = Object.entries(byDay).filter(([, c]) => c !== 'ob').map(([d, c]) => ({ date: d, code: c, label: ATT[c][0] }));
+  const reqs = D.just.filter(j => j.sid === sid).sort((a, b) => a.date < b.date ? 1 : -1);
+  const sel = U.pDay && byDay[U.pDay] ? U.pDay : null;
+  return `<div class="grid g21">
+    <div class="card"><div class="ch"><h3>${ic('att')}Podsumowanie</h3>${parent ? `<button class="btn sm" data-a="justNew">${ic('plus')}Usprawiedliw</button>` : ''}</div>
+      <div class="fl" style="gap:28px;align-items:center">${donut(segs, st.pct.toFixed(1).replace('.', ',') + '%', 'frekwencja')}<div class="leg">${['ob', 'sp', 'u', 'nb', 'zw'].map(k => `<div><span class="att a-${k}">${k}</span>${ATT[k][0]}<b>${st.c[k]}</b></div>`).join('')}</div></div>
+    </div>
+    <div class="card"><div class="ch"><h3>${ic('shield')}Usprawiedliwienia</h3></div><div class="list">${reqs.map(j => `<div class="li"><div class="t"><b>${j.dates.map(fDs).join(', ')}</b><small>${esc(j.reason)}</small></div><span class="pill ${j.status === 'ok' ? 'ok' : j.status === 'no' ? 'bad' : 'warn'}">${j.status === 'ok' ? 'Przyjęte' : j.status === 'no' ? 'Odrzucone' : 'Oczekuje'}</span></div>`).join('') || `<div class="empty">${parent ? 'Brak wniosków. Kliknij „Usprawiedliw”, aby złożyć wniosek.' : 'Brak wniosków'}</div>`}</div></div>
+  </div>
+  <div class="grid g2 mt">
+    <div class="card"><div class="ch"><h3>${ic('cal')}Kalendarz obecności</h3></div>${calendar(evs, { mini: true })}
+      <div class="mt">${sel ? `<b>${fDl(sel)}</b><div class="list">${list.filter(a => a.date === sel).sort((a, b) => a.n - b.n).map(a => `<div class="li"><span class="num">${a.n}</span><div class="t"><b>${esc(SM[a.sub].n)}</b></div><span class="att a-${a.code}">${ATT[a.code][0]}</span></div>`).join('')}</div>` : '<p class="dim" style="font-size:13px">Kliknij zaznaczony dzień, aby zobaczyć szczegóły. Kolory: czerwony nieobecność, niebieski usprawiedliwiona, pomarańczowy spóźnienie.</p>'}</div></div>
+    <div class="card"><div class="ch"><h3>${ic('trend')}Frekwencja wg przedmiotu</h3></div><div class="list">${bySub.map(x => `<div class="li" style="display:grid;grid-template-columns:1fr 60px;gap:6px">${subLbl(x.sub)}<b style="text-align:right">${x.s.pct.toFixed(0)}%</b><div class="meter" style="grid-column:span 2"><i style="width:${x.s.pct}%;--c:${SM[x.sub].c}"></i></div></div>`).join('')}</div></div>
+  </div>`;
+}
+function justModal() {
+  const sid = viewSid(), pending = new Set(D.just.filter(j => j.sid === sid && j.status === 'pending').flatMap(j => j.dates));
+  const days = [...new Set(attOf(sid).filter(a => a.code === 'nb').map(a => a.date))].filter(d => !pending.has(d)).sort().reverse();
+  if (!days.length) { modal('Usprawiedliwienie', '<div class="empty">Brak nieusprawiedliwionych nieobecności. 🎉</div>', '<button class="btn" data-a="closeModal">OK</button>'); return; }
+  modal('Nowe usprawiedliwienie', `<p class="mute" style="margin-bottom:14px">Zaznacz dni nieobecności i podaj powód. Wniosek trafi do wychowawcy.</p>${days.map(d => `<label class="chk"><input type="checkbox" name="jd" value="${d}" checked> <b>${fDl(d)}</b><span class="sp"></span><span class="pill bad">${attOf(sid).filter(a => a.date === d && a.code === 'nb').length} godz.</span></label>`).join('')}<div class="field mt"><label for="jr">Powód</label><textarea class="inp" id="jr" rows="3" placeholder="Np. wizyta u lekarza"></textarea></div>`, `<button class="btn gh" data-a="closeModal">Anuluj</button><button class="btn" data-a="justSend">${ic('send')}Wyślij wniosek</button>`);
+}
+function pPlan() {
+  const isT = S.role === 'nauczyciel', cls = isT ? null : myClasses()[0];
+  const base = addD(TODAY, -dow(TODAY) + U.week * 7 + (dow(TODAY) > 4 && U.week === 0 ? 7 : 0));
+  const days = [0, 1, 2, 3, 4].map(i => addD(base, i));
+  const rows = isT ? 8 : Math.max(...D.tt[cls].map(d => d.length));
+  const lessonAt = (d, n) => isT ? tLessonsOn(S.id, d).find(l => l.n === n) : lessonsOn(cls, d).find(l => l.n === n);
+  let html = `<div class="plan"><div></div>${days.map(d => `<div class="h${d === TODAY ? ' today' : ''}">${DN[pd(d).getDay()]}<b>${fDs(d)}</b></div>`).join('')}`;
+  for (let n = 1; n <= rows; n++) {
+    html += `<div class="tm"><b>${n}</b>${fT(LT[n - 1][0])}<br>${fT(LT[n - 1][1])}</div>`;
+    days.forEach(d => { const l = lessonAt(d, n); html += l ? `<div class="c${lessonState(d, n) === 'now' ? ' now' : ''}" style="--c:${SM[l.sub].c}"><b>${esc(SM[l.sub].n)}</b><span>${isT ? 'kl. ' + l.cls : esc(nameOf(l.t))}</span><br><span>sala ${SM[l.sub].room}</span></div>` : '<div class="e"></div>'; });
+  }
+  html += '</div>';
+  return `<div class="card"><div class="ch"><h3>${ic('grid')}${isT ? 'Mój plan' : 'Plan klasy ' + cls}</h3><div class="fl"><button class="ib" data-a="week" data-v="-1" aria-label="Poprzedni tydzień">${ic('l')}</button><b>${fD(days[0])} – ${fD(days[4])}</b><button class="ib" data-a="week" data-v="1" aria-label="Następny tydzień">${ic('r')}</button>${U.week ? '<button class="btn gh sm" data-a="week" data-v="0">Ten tydzień</button>' : ''}</div></div><div class="tw">${html}</div></div>`;
+}
+function pCalendar() {
+  const cls = myClasses(), evs = eventsFor(cls), canAdd = S.role === 'nauczyciel' || S.role === 'dyrektor';
+  const dayEv = evs.filter(e => e.date === U.calSel), up = evs.filter(e => e.date >= TODAY).slice(0, 8);
+  return `<div class="grid g21"><div class="card">${calendar(evs, { right: canAdd ? `<button class="btn sm" data-a="evNew">${ic('plus')}Dodaj</button>` : '' })}</div>
+  <div class="grid" style="align-content:start"><div class="card"><div class="ch"><h3>${ic('cal')}${fDl(U.calSel)}</h3></div><div class="list">${dayEv.map(e => evItem(e, canAdd && (S.role === 'dyrektor' || e.by === S.id))).join('') || '<div class="empty">Brak wydarzeń tego dnia</div>'}</div></div>
+  <div class="card"><div class="ch"><h3>${ic('clock')}Najbliższe</h3></div><div class="list">${up.map(e => evItem(e)).join('') || '<div class="empty">Brak</div>'}</div>
+  <div class="fl mt" style="font-size:12px">${Object.entries(EVT).map(([k, c]) => `<span class="fl" style="gap:5px"><span class="sdot" style="background:${c}"></span>${k}</span>`).join('')}</div></div></div></div>`;
+}
+function pHomework() {
+  const sid = viewSid(), s = student(sid), done = D.hw[sid] || {}, canTick = S.role === 'uczen';
+  let list = eventsFor([s.cls]).filter(e => e.type === 'Zadanie domowe');
+  const f = U.hw; if (f === 'todo') list = list.filter(e => !done[e.id]); else if (f === 'done') list = list.filter(e => done[e.id]);
+  const cnt = eventsFor([s.cls]).filter(e => e.type === 'Zadanie domowe'), nd = cnt.filter(e => done[e.id]).length;
+  return `<div class="grid g3">${stat('book', '#2563eb', 'Wszystkie zadania', cnt.length, 'w tym semestrze', cnt.length)}${stat('check', '#16a34a', 'Zrobione', nd, `${cnt.length ? Math.round(nd / cnt.length * 100) : 0}% ukończonych`, nd)}${stat('alert', '#e11d48', 'Po terminie', cnt.filter(e => !done[e.id] && e.date < TODAY).length, 'nieoddane', cnt.filter(e => !done[e.id] && e.date < TODAY).length)}</div>
+  <div class="card mt"><div class="ch"><h3>${ic('book')}Zadania</h3><div class="tabs">${[['todo', 'Do zrobienia'], ['done', 'Zrobione'], ['all', 'Wszystkie']].map(([k, n]) => `<button class="${f === k ? 'on' : ''}" data-a="hwTab" data-v="${k}">${n}</button>`).join('')}</div></div>
+  <div class="list">${list.map(e => { const dn = !!done[e.id], late = !dn && e.date < TODAY; return `<div class="li${dn ? ' done' : ''}">${canTick ? `<button class="cbx${dn ? ' on' : ''}" data-a="hwTick" data-v="${e.id}" aria-label="Oznacz jako zrobione" aria-pressed="${dn}">${ic('check')}</button>` : `<span class="cbx${dn ? ' on' : ''}">${ic('check')}</span>`}<div class="t"><b>${esc(e.title)}</b><small>${esc(SM[e.sub].n)} · termin: ${fDl(e.date)}${e.desc ? ' · ' + esc(e.desc) : ''}</small></div>${late ? '<span class="pill bad">Po terminie</span>' : dn ? '<span class="pill ok">Zrobione</span>' : e.date <= addD(TODAY, 1) ? '<span class="pill warn">Na jutro</span>' : '<span class="pill">' + fDs(e.date) + '</span>'}</div>`; }).join('') || '<div class="empty">Brak zadań w tym widoku 🎉</div>'}</div></div>`;
+}
+function pNotes() {
+  const isT = S.role === 'nauczyciel' || S.role === 'dyrektor';
+  let list = isT ? D.notes.filter(n => S.role === 'dyrektor' || n.by === S.id || student(n.sid).cls === D.teachers.find(t => t.id === S.id).wych) : D.notes.filter(n => n.sid === viewSid());
+  list = list.slice().sort((a, b) => a.date < b.date ? 1 : -1);
+  if (U.uTab !== 'all') list = list.filter(n => n.type === U.uTab);
+  const p = list.filter(n => n.type === 'p').length, ng = list.filter(n => n.type === 'n').length;
+  return `<div class="card"><div class="ch"><h3>${ic('flag')}${isT ? 'Uwagi uczniów' : 'Uwagi i pochwały'}</h3><div class="fl"><div class="tabs">${[['all', 'Wszystkie'], ['p', `Pozytywne`], ['n', `Negatywne`]].map(([k, n]) => `<button class="${U.uTab === k ? 'on' : ''}" data-a="uTab" data-v="${k}">${n}</button>`).join('')}</div>${S.role === 'nauczyciel' ? `<button class="btn sm" data-a="noteNew">${ic('plus')}Dodaj uwagę</button>` : ''}</div></div>
+  <div class="list">${list.map(n => `<div class="li">${isT ? av(n.sid, 'sm') : `<span class="num" style="color:${n.type === 'p' ? 'var(--ok)' : 'var(--bad)'}">${ic(n.type === 'p' ? 'heart' : 'alert')}</span>`}<div class="t"><b>${isT ? esc(nameOf(n.sid)) + ' · kl. ' + student(n.sid).cls : esc(n.text)}</b><small>${isT ? esc(n.text) + ' · ' : ''}${esc(nameOf(n.by))} · ${fD(n.date)}</small></div><span class="pill ${n.type === 'p' ? 'ok' : 'bad'}">${n.type === 'p' ? 'Pozytywna' : 'Negatywna'}</span></div>`).join('') || '<div class="empty">Brak uwag</div>'}</div>
+  ${!isT ? `<p class="dim mt" style="font-size:13px">Pozytywnych: ${p} · negatywnych: ${ng}</p>` : ''}</div>`;
+}
+function pMessages() {
+  const tab = U.mTab, list = D.msgs.filter(m => tab === 'in' ? m.to.includes(S.id) : m.from === S.id).sort((a, b) => a.date < b.date ? 1 : -1);
+  const sel = list.find(m => m.id === U.mSel);
+  if (sel && tab === 'in' && !sel.r[S.id]) { sel.r[S.id] = 1; save(); }
+  const toTxt = m => m.to.length > 3 ? `${nameOf(m.to[0])} i ${m.to.length - 1} innych` : m.to.map(nameOf).join(', ');
+  return `<div class="card msg${sel ? ' reading' : ''}"><div class="ml"><div class="hd"><div class="tabs"><button class="${tab === 'in' ? 'on' : ''}" data-a="mTab" data-v="in">Odebrane${unread() ? ` (${unread()})` : ''}</button><button class="${tab === 'out' ? 'on' : ''}" data-a="mTab" data-v="out">Wysłane</button></div><span class="sp"></span><button class="btn sm" data-a="compose">${ic('edit')}Napisz</button></div>
+    <div class="its">${list.map(m => { const other = tab === 'in' ? m.from : m.to[0]; return `<button class="mi${m.id === U.mSel ? ' on' : ''}${tab === 'in' && !m.r[S.id] ? ' unr' : ''}" data-a="mOpen" data-v="${m.id}">${av(other, 'sm')}<div class="t"><b><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(tab === 'in' ? nameOf(m.from) : toTxt(m))}</span><small>${fDs(m.date)}</small></b><div class="s">${esc(m.subj)}</div><div class="p">${esc(m.body.replace(/\n+/g, ' '))}</div></div></button>`; }).join('') || '<div class="empty">Brak wiadomości</div>'}</div></div>
+    <div class="mr">${sel ? `<button class="btn gh sm bk" data-a="mBack" style="margin-bottom:14px">${ic('l')}Wróć</button><h2>${esc(sel.subj)}</h2><div class="meta">${av(sel.from)}<div><b>${esc(nameOf(sel.from))}</b><div class="mute" style="font-size:13px">do: ${esc(toTxt(sel))} · ${fDl(sel.date)}</div></div><span class="sp"></span>${sel.from !== S.id ? `<button class="btn gh sm" data-a="reply" data-v="${sel.id}">${ic('reply')}Odpowiedz</button>` : ''}</div><div class="body">${esc(sel.body)}</div>` : `<div class="empty" style="padding-top:120px">${ic('mail')}<br>Wybierz wiadomość z listy</div>`}</div></div>`;
+}
+function recipients() {
+  const r = S.role, out = [];
+  const T = D.teachers.map(t => [t.id, `${t.first} ${t.last} (${t.subs.map(s => SM[s].n).join(', ')})`]);
+  if (r === 'uczen' || r === 'rodzic') { out.push(['Nauczyciele', T]); out.push(['Dyrekcja', [['d1', nameOf('d1') + ' (dyrektor)']]]); }
+  if (r === 'nauczyciel' || r === 'dyrektor') {
+    out.push(['Nauczyciele', T.filter(x => x[0] !== S.id)]); if (r === 'nauczyciel') out.push(['Dyrekcja', [['d1', nameOf('d1') + ' (dyrektor)']]]);
+    const cl = r === 'nauczyciel' ? tClasses(S.id) : D.classes.map(c => c.id);
+    out.push(['Grupy', [...(r === 'dyrektor' ? [['g:t', 'Wszyscy nauczyciele']] : []), ...cl.flatMap(c => [[`g:s:${c}`, `Uczniowie klasy ${c}`], [`g:p:${c}`, `Rodzice klasy ${c}`]])]]);
+    cl.forEach(c => out.push([`Klasa ${c}`, studentsOf(c).flatMap(s => [[s.id, `${s.first} ${s.last} (uczeń)`], [s.parent, `${nameOf(s.parent)} (rodzic: ${s.first})`]])]));
+  }
+  return out;
+}
+function composeModal(to = '', subj = '', body = '') {
+  modal('Nowa wiadomość', `<div class="field"><label for="cTo">Do</label><select class="sel" id="cTo">${recipients().map(([g, l]) => `<optgroup label="${esc(g)}">${l.map(([id, n]) => `<option value="${id}"${id === to ? ' selected' : ''}>${esc(n)}</option>`).join('')}</optgroup>`).join('')}</select></div>
+  <div class="field"><label for="cSu">Temat</label><input class="inp" id="cSu" maxlength="120" value="${esc(subj)}"></div><div class="field"><label for="cBo">Treść</label><textarea class="inp" id="cBo" rows="7" maxlength="4000">${esc(body)}</textarea></div>`, `<button class="btn gh" data-a="closeModal">Anuluj</button><button class="btn" data-a="send">${ic('send')}Wyślij</button>`);
+}
+function pAnn() {
+  const canAdd = S.role === 'nauczyciel' || S.role === 'dyrektor', cls = myClasses();
+  const list = D.ann.filter(a => a.target === 'all' || cls.includes(a.target) || a.by === S.id).sort((a, b) => a.date < b.date ? 1 : -1);
+  return `<div class="fl" style="margin-bottom:16px"><span class="mute">${list.length} ${plural(list.length, 'ogłoszenie', 'ogłoszenia', 'ogłoszeń')}</span><span class="sp"></span>${canAdd ? `<button class="btn" data-a="annNew">${ic('plus')}Nowe ogłoszenie</button>` : ''}</div>
+  <div class="grid g2">${list.map(a => `<div class="card ann"><div class="fl"><span class="pill ${a.target === 'all' ? 'br' : 'info'}">${a.target === 'all' ? 'Cała szkoła' : 'Klasa ' + a.target}</span>${a.date >= addD(TODAY, -3) ? '<span class="pill warn">Nowe</span>' : ''}<span class="sp"></span>${(a.by === S.id || S.role === 'dyrektor') ? `<button class="ib" data-a="annDel" data-v="${a.id}" aria-label="Usuń">${ic('trash')}</button>` : ''}</div><h4 class="mt">${esc(a.title)}</h4><p>${esc(a.body)}</p><div class="fl">${av(a.by, 'sm')}<span>${esc(nameOf(a.by))} · ${fDl(a.date)}</span></div></div>`).join('') || '<div class="card empty">Brak ogłoszeń</div>'}</div>`;
+}
+
+/* ═══════════ strony: nauczyciel ═══════════ */
+function pTeacherHome() {
+  const t = me(), td = TODAY, ls = tLessonsOn(S.id, td), miss = missingLessons(S.id), un = unread(), pj = pendingJust();
+  const evs = eventsFor(tClasses(S.id)).filter(e => e.date >= TODAY && e.date <= addD(TODAY, 14));
+  const hi = NOW.getHours() < 12 ? 'Dzień dobry' : NOW.getHours() < 18 ? 'Cześć' : 'Dobry wieczór';
+  return `<div class="hero" style="background:linear-gradient(135deg,#0ea5e9,#10b981)"><h2>${hi}, ${esc(t.first)}! ☕</h2><p>${t.subs.map(s => SM[s].n).join(', ')}${t.wych ? ' · wychowawca klasy ' + t.wych : ''}</p><div class="live">${liveCard(ls, true)}</div></div>
+  <div class="grid g4 mt">${stat('grid', '#0ea5e9', 'Lekcje dziś', ls.length, isSchool(td) ? fDl(td) : 'weekend', ls.length)}${stat('journal', '#f59e0b', 'Do uzupełnienia', miss.length, 'z ostatnich 2 tygodni', miss.length)}${stat('mail', '#5b5bf7', 'Nieprzeczytane', un, 'wiadomości', un)}${stat('att', '#2563eb', 'Usprawiedliwienia', pj, 'czekają na decyzję', pj)}</div>
+  <div class="grid g21 mt"><div class="card"><div class="ch"><h3>${ic('journal')}Moje lekcje dziś</h3><a href="#/dziennik">Dziennik</a></div><div class="list">${ls.map(l => { const st = lessonState(td, l.n); return `<div class="li ${st}"><span class="num">${l.n}</span><div class="t"><b>${esc(SM[l.sub].n)} · kl. ${l.cls}</b><small>${fT(LT[l.n - 1][0])}–${fT(LT[l.n - 1][1])} · sala ${SM[l.sub].room}${l.log ? ' · ' + esc(l.log.t) : ''}</small></div>${l.log ? '<span class="pill ok">Uzupełniona</span>' : `<button class="btn sm${st === 'future' ? ' gh' : ''}" data-a="openLesson" data-v="${l.key}">${st === 'future' ? 'Przygotuj' : 'Uzupełnij'}</button>`}</div>`; }).join('') || '<div class="empty">Dziś nie masz lekcji</div>'}</div></div>
+  <div class="card"><div class="ch"><h3>${ic('cal')}Terminarz klas</h3><a href="#/terminarz">Więcej</a></div><div class="list">${evs.slice(0, 5).map(e => evItem(e)).join('') || '<div class="empty">Brak</div>'}</div></div></div>
+  ${miss.length ? `<div class="card mt"><div class="ch"><h3>${ic('alert')}Lekcje bez tematu i frekwencji</h3></div><div class="list">${miss.slice(0, 6).map(l => `<div class="li"><span class="num">${l.n}</span><div class="t"><b>${esc(SM[l.sub].n)} · kl. ${l.cls}</b><small>${fDl(l.date)}</small></div><button class="btn sm" data-a="openLesson" data-v="${l.key}">Uzupełnij</button></div>`).join('')}</div></div>` : ''}`;
+}
+function pJournal() {
+  const d = U.dDate || (U.dDate = lastSchoolDay(TODAY)), ls = tLessonsOn(S.id, d);
+  if (!ls.find(l => l.key === U.dKey)) U.dKey = (ls.find(l => !l.log && lessonState(d, l.n) !== 'future') || ls[0] || {}).key || null;
+  const L = ls.find(l => l.key === U.dKey);
+  let panel = '<div class="empty">Brak lekcji w tym dniu</div>';
+  if (L) {
+    const st = studentsOf(L.cls);
+    if (!U.draft || U.draft.key !== L.key) U.draft = { key: L.key, a: { ...(L.log ? L.log.a : {}) } };
+    const a = U.draft.a, cnt = { ob: 0, nb: 0, u: 0, sp: 0, zw: 0 }; st.forEach(s => cnt[a[s.id] || 'ob']++);
+    panel = `<div class="fl"><span class="num" style="background:${SM[L.sub].c};color:#fff">${L.n}</span><div><b style="font-size:17px">${esc(SM[L.sub].n)} · klasa ${L.cls}</b><div class="mute" style="font-size:13px">${fDl(d)} · ${fT(LT[L.n - 1][0])}–${fT(LT[L.n - 1][1])} · sala ${SM[L.sub].room}</div></div><span class="sp"></span>${L.log ? '<span class="pill ok">Zapisana</span>' : '<span class="pill warn">Nieuzupełniona</span>'}</div>
+    <div class="field mt"><label for="dTopic">Temat lekcji</label><input class="inp" id="dTopic" maxlength="160" placeholder="Wpisz temat" value="${esc(L.log ? L.log.t : '')}"></div>
+    <div class="fl" style="margin:6px 0 10px"><b>Frekwencja</b><span class="sp"></span><span id="dCnt" class="fl" style="gap:6px">${Object.entries(cnt).map(([k, v]) => `<span class="att a-${k}" title="${ATT[k][0]}">${k} ${v}</span>`).join('')}</span><button class="btn gh sm" data-a="allPresent">${ic('check')}Wszyscy obecni</button></div>
+    <div class="list">${st.map(s => { const c = a[s.id] || 'ob'; return `<div class="li"><span class="num">${s.nr}</span>${av(s.id, 'sm')}<div class="t"><b>${esc(s.last)} ${esc(s.first)}</b></div><div class="seg" data-sid="${s.id}">${Object.keys(ATT).map(k => `<button class="a-${k}${c === k ? ' on' : ''}" data-a="setAtt" data-v="${k}" title="${ATT[k][0]}" aria-pressed="${c === k}">${k}</button>`).join('')}</div></div>`; }).join('')}</div>
+    <div class="fl mt"><span class="dim" style="font-size:13px">ob – obecny, nb – nieobecny, u – usprawiedliwiony, sp – spóźniony, zw – zwolniony</span><span class="sp"></span><button class="btn" data-a="saveLesson">${ic('check')}Zapisz lekcję</button></div>`;
+  }
+  return `<div class="grid g12"><div class="card"><div class="ch"><h3>${ic('cal')}Dzień</h3></div><div class="fl"><button class="ib" data-a="dDay" data-v="-1" aria-label="Poprzedni dzień">${ic('l')}</button><input type="date" class="inp" id="dDate" value="${d}" style="flex:1"><button class="ib" data-a="dDay" data-v="1" aria-label="Następny dzień">${ic('r')}</button></div>
+    <div class="list mt">${ls.map(l => `<button class="li${l.key === U.dKey ? ' now' : ''}" style="width:100%;text-align:left" data-a="pickLesson" data-v="${l.key}"><span class="num">${l.n}</span><div class="t"><b>${esc(SM[l.sub].n)} · ${l.cls}</b><small>${l.log ? esc(l.log.t) : fT(LT[l.n - 1][0])}</small></div>${l.log ? `<span class="pill ok">${ic('check')}</span>` : lessonState(d, l.n) === 'future' ? '<span class="pill">plan</span>' : '<span class="pill warn">!</span>'}</button>`).join('') || `<div class="empty">${isSchool(d) ? 'Brak Twoich lekcji' : 'Weekend'}</div>`}</div></div>
+    <div class="card">${panel}</div></div>`;
+}
+function pGrading() {
+  const subs = tSubs(S.id), cls = tClasses(S.id);
+  if (!subs.includes(U.oSub)) U.oSub = subs[0]; if (!cls.includes(U.oCls)) U.oCls = me().wych && cls.includes(me().wych) ? me().wych : cls[0];
+  const cols = D.cols.filter(c => c.cls === U.oCls && c.sub === U.oSub).sort((a, b) => a.date < b.date ? -1 : 1), st = studentsOf(U.oCls);
+  const rowAvg = s => avgOf(cols.filter(c => c.g[s.id] != null).map(c => ({ v: c.g[s.id], w: c.w })));
+  const avgs = st.map(rowAvg).filter(x => x != null), ca = avgs.length ? avgs.reduce((a, b) => a + b, 0) / avgs.length : null;
+  return `<div class="card"><div class="ch" style="flex-wrap:wrap"><div class="fl"><select class="sel" data-on="oCls" aria-label="Klasa">${cls.map(c => `<option${c === U.oCls ? ' selected' : ''}>${c}</option>`).join('')}</select><select class="sel" data-on="oSub" aria-label="Przedmiot">${subs.map(s => `<option value="${s}"${s === U.oSub ? ' selected' : ''}>${SM[s].n}</option>`).join('')}</select></div><div class="fl"><span class="pill br">Średnia klasy: ${fA(ca)}</span><button class="btn sm" data-a="colNew">${ic('plus')}Nowa kolumna</button></div></div>
+  <div class="tw" id="gw"><table class="gg"><thead><tr><th class="st">Uczeń</th>${cols.map(c => `<th data-a="colEdit" data-v="${c.id}" title="${esc(c.desc)}">${CATS_S[c.cat] || c.cat}<small>${fDs(c.date)}</small><span class="w">×${c.w}</span></th>`).join('')}<th>Średnia</th><th>Przewid.</th></tr></thead>
+  <tbody>${st.map(s => { const a = rowAvg(s); return `<tr><td class="st"><div class="fl" style="gap:8px;flex-wrap:nowrap"><span class="num">${s.nr}</span>${esc(s.last)} ${esc(s.first)}</div></td>${cols.map(c => `<td class="cell" data-a="cell" data-c="${c.id}" data-s="${s.id}">${c.g[s.id] != null ? `<span class="g ${gcls(c.g[s.id])}">${esc(c.g[s.id])}</span>` : '<span class="add">+</span>'}</td>`).join('')}<td class="avg" style="color:${aColor(a)}">${fA(a)}</td><td><span class="g ${gcls(finalOf(a))}" style="cursor:default">${finalOf(a)}</span></td></tr>`; }).join('')}
+  <tr class="foot"><td class="st">Średnia kolumny</td>${cols.map(c => { const v = Object.values(c.g).map(gnum).filter(x => x != null); return `<td>${v.length ? fA(v.reduce((a, b) => a + b, 0) / v.length) : '—'}</td>`; }).join('')}<td>${fA(ca)}</td><td></td></tr></tbody></table></div>
+  <p class="dim mt" style="font-size:13px">Kliknij komórkę, aby wstawić lub zmienić ocenę. Kliknij nagłówek kolumny, aby ją edytować.</p></div>`;
+}
+function colModal(c) {
+  const cls = c ? c.cls : U.oCls, sub = c ? c.sub : U.oSub;
+  modal(c ? 'Edytuj kolumnę' : 'Nowa kolumna ocen', `<p class="mute" style="margin-bottom:14px">${esc(SM[sub].n)} · klasa ${cls}</p>
+  <div class="grid g2" style="gap:12px"><div class="field"><label for="kCat">Kategoria</label><select class="sel" id="kCat">${Object.keys(CATS).map(k => `<option${c && c.cat === k ? ' selected' : ''}>${k}</option>`).join('')}</select></div><div class="field"><label for="kW">Waga</label><input type="number" class="inp" id="kW" min="1" max="5" value="${c ? c.w : 3}"></div></div>
+  <div class="grid g2" style="gap:12px"><div class="field"><label for="kD">Data</label><input type="date" class="inp" id="kD" value="${c ? c.date : TODAY}"></div><div class="field"><label for="kDesc">Opis</label><input class="inp" id="kDesc" maxlength="80" value="${esc(c ? c.desc : '')}" placeholder="Np. Równania liniowe"></div></div>`,
+  `${c ? `<button class="btn bad" data-a="colDel" data-v="${c.id}" style="margin-right:auto">${ic('trash')}Usuń kolumnę</button>` : ''}<button class="btn gh" data-a="closeModal">Anuluj</button><button class="btn" data-a="colSave" data-v="${c ? c.id : ''}">${ic('check')}Zapisz</button>`);
+  $('#kCat').addEventListener('change', e => { $('#kW').value = CATS[e.target.value]; });
+}
+function evModal() {
+  const isD = S.role === 'dyrektor', cls = isD ? D.classes.map(c => c.id) : tClasses(S.id), subs = isD ? SUB.map(s => s[0]) : tSubs(S.id);
+  modal('Nowe wydarzenie', `<div class="grid g2" style="gap:12px"><div class="field"><label for="eT">Rodzaj</label><select class="sel" id="eT">${Object.keys(EVT).map(k => `<option>${k}</option>`).join('')}</select></div><div class="field"><label for="eD">Data</label><input type="date" class="inp" id="eD" value="${U.calSel >= TODAY ? U.calSel : TODAY}"></div></div>
+  <div class="grid g2" style="gap:12px"><div class="field"><label for="eC">Klasa</label><select class="sel" id="eC">${cls.map(c => `<option>${c}</option>`).join('')}</select></div><div class="field"><label for="eS">Przedmiot</label><select class="sel" id="eS"><option value="">— brak —</option>${subs.map(s => `<option value="${s}">${SM[s].n}</option>`).join('')}</select></div></div>
+  <div class="field"><label for="eTi">Tytuł</label><input class="inp" id="eTi" maxlength="80" placeholder="Np. Sprawdzian z działu 3"></div><div class="field"><label for="eDe">Opis</label><textarea class="inp" id="eDe" rows="3" maxlength="400"></textarea></div>`, `<button class="btn gh" data-a="closeModal">Anuluj</button><button class="btn" data-a="evSave">${ic('check')}Dodaj</button>`);
+}
+function noteModal() {
+  const cls = tClasses(S.id);
+  modal('Nowa uwaga', `<div class="grid g2" style="gap:12px"><div class="field"><label for="nC">Klasa</label><select class="sel" id="nC">${cls.map(c => `<option>${c}</option>`).join('')}</select></div><div class="field"><label for="nS">Uczeń</label><select class="sel" id="nS"></select></div></div>
+  <div class="field"><label>Rodzaj</label><div class="tabs" id="nT"><button class="on" data-v="p" type="button">Pozytywna</button><button data-v="n" type="button">Negatywna</button></div></div>
+  <div class="field"><label for="nX">Treść</label><textarea class="inp" id="nX" rows="3" maxlength="300"></textarea></div>`, `<button class="btn gh" data-a="closeModal">Anuluj</button><button class="btn" data-a="noteSave">${ic('check')}Dodaj</button>`);
+  const fill = () => { $('#nS').innerHTML = studentsOf($('#nC').value).map(s => `<option value="${s.id}">${s.nr}. ${esc(s.last)} ${esc(s.first)}</option>`).join(''); };
+  $('#nC').addEventListener('change', fill); fill();
+  $('#nT').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; $$('#nT button').forEach(x => x.classList.toggle('on', x === b)); });
+}
+function annModal() {
+  const cls = S.role === 'dyrektor' ? D.classes.map(c => c.id) : tClasses(S.id);
+  modal('Nowe ogłoszenie', `<div class="field"><label for="aT">Tytuł</label><input class="inp" id="aT" maxlength="100"></div><div class="field"><label for="aB">Treść</label><textarea class="inp" id="aB" rows="5" maxlength="2000"></textarea></div><div class="field"><label for="aG">Dla kogo</label><select class="sel" id="aG"><option value="all">Cała szkoła</option>${cls.map(c => `<option value="${c}">Klasa ${c}</option>`).join('')}</select></div>`, `<button class="btn gh" data-a="closeModal">Anuluj</button><button class="btn" data-a="annSave">${ic('send')}Opublikuj</button>`);
+}
+function pClass() {
+  const isD = S.role === 'dyrektor', opts = isD ? D.classes.map(c => c.id) : tClasses(S.id);
+  if (!opts.includes(U.kCls)) U.kCls = (!isD && me().wych) || opts[0];
+  const cls = U.kCls, st = studentsOf(cls), canJ = isD || me().wych === cls;
+  const rows = st.map(s => ({ s, a: overall(s.id), at: attStats(attOf(s.id)), np: D.notes.filter(n => n.sid === s.id && n.type === 'p').length, nn: D.notes.filter(n => n.sid === s.id && n.type === 'n').length }));
+  const ca = rows.map(r => r.a).filter(x => x != null), cAvg = ca.length ? ca.reduce((a, b) => a + b, 0) / ca.length : null, cAtt = rows.reduce((a, r) => a + r.at.pct, 0) / rows.length;
+  const js = D.just.filter(j => student(j.sid).cls === cls).sort((a, b) => (a.status === 'pending' ? 0 : 1) - (b.status === 'pending' ? 0 : 1) || (a.date < b.date ? 1 : -1));
+  return `<div class="fl" style="margin-bottom:16px"><select class="sel" data-on="kCls" aria-label="Klasa">${opts.map(c => `<option${c === cls ? ' selected' : ''}>${c}</option>`).join('')}</select><span class="mute">Wychowawca: <b>${esc(nameOf(D.classes.find(c => c.id === cls).wych))}</b></span></div>
+  <div class="grid g4">${stat('users', '#5b5bf7', 'Uczniowie', st.length, 'w klasie', st.length)}${stat('trend', '#16a34a', 'Średnia klasy', fA(cAvg), 'ze wszystkich przedmiotów', cAvg != null ? cAvg.toFixed(2) : null)}${stat('att', '#0ea5e9', 'Frekwencja', cAtt.toFixed(1).replace('.', ',') + '%', 'średnia klasy', cAtt.toFixed(1))}${stat('flag', '#f59e0b', 'Uwagi', D.notes.filter(n => student(n.sid).cls === cls).length, 'pozytywne i negatywne', D.notes.filter(n => student(n.sid).cls === cls).length)}</div>
+  <div class="grid g21 mt"><div class="card"><div class="ch"><h3>${ic('users')}Uczniowie</h3></div><div class="tw"><table class="tbl"><thead><tr><th>Nr</th><th>Uczeń</th><th>Średnia</th><th>Frekwencja</th><th>Uwagi</th></tr></thead><tbody>${rows.map(r => `<tr class="click" data-a="stuCard" data-v="${r.s.id}"><td><span class="num">${r.s.nr}</span></td><td><div class="fl" style="flex-wrap:nowrap">${av(r.s.id, 'sm')}<b>${esc(r.s.last)} ${esc(r.s.first)}</b></div></td><td class="avg" style="color:${aColor(r.a)}">${fA(r.a)}</td><td><div style="min-width:110px"><b style="font-size:13px">${r.at.pct.toFixed(0)}%</b><div class="meter"><i style="width:${r.at.pct}%;--c:${r.at.pct < 90 ? 'var(--bad)' : 'var(--ok)'}"></i></div></div></td><td><span class="pill ok">+${r.np}</span> <span class="pill bad">−${r.nn}</span></td></tr>`).join('')}</tbody></table></div></div>
+  <div class="card"><div class="ch"><h3>${ic('shield')}Usprawiedliwienia</h3></div><div class="list">${js.map(j => `<div class="li" style="flex-wrap:wrap">${av(j.sid, 'sm')}<div class="t"><b>${esc(nameOf(j.sid))}</b><small>${j.dates.map(fDs).join(', ')} · ${esc(j.reason)}</small></div>${j.status === 'pending' ? (canJ && !isD ? `<div class="fl" style="gap:6px"><button class="btn ok sm" data-a="justOk" data-v="${j.id}">${ic('check')}</button><button class="btn bad sm" data-a="justNo" data-v="${j.id}">${ic('x')}</button></div>` : '<span class="pill warn">Oczekuje</span>') : `<span class="pill ${j.status === 'ok' ? 'ok' : 'bad'}">${j.status === 'ok' ? 'Przyjęte' : 'Odrzucone'}</span>`}</div>`).join('') || '<div class="empty">Brak wniosków</div>'}</div></div></div>`;
+}
+function stuCard(sid) {
+  const s = student(sid), at = attStats(attOf(sid));
+  modal(`${esc(s.first)} ${esc(s.last)}`, `<div class="fl" style="gap:14px">${av(sid, 'lg')}<div><b style="font-size:17px">Klasa ${s.cls} · nr ${s.nr}</b><div class="mute">Rodzic: ${esc(nameOf(s.parent))}</div></div><span class="sp"></span><span class="pill br">Średnia ${fA(overall(sid))}</span><span class="pill ${at.pct < 90 ? 'bad' : 'ok'}">Frekwencja ${at.pct.toFixed(0)}%</span></div>
+  <div class="tw mt"><table class="tbl"><thead><tr><th>Przedmiot</th><th>Oceny</th><th>Średnia</th></tr></thead><tbody>${SUB.map(([sub]) => { const g = gradesOf(sid, sub), a = avgOf(g); return `<tr><td>${subLbl(sub)}</td><td><div class="gs">${g.map(x => `<span class="g ${gcls(x.v)}" style="cursor:default" title="${esc(x.cat)}">${esc(x.v)}</span>`).join('')}</div></td><td class="avg" style="color:${aColor(a)}">${fA(a)}</td></tr>`; }).join('')}</tbody></table></div>`,
+  S.role !== 'dyrektor' || true ? `<button class="btn gh" data-a="msgTo" data-v="${s.parent}">${ic('mail')}Napisz do rodzica</button><button class="btn" data-a="closeModal">Zamknij</button>` : '', true);
+}
+
+/* ═══════════ strony: dyrektor ═══════════ */
+function pDirectorHome() {
+  const st = D.students, avgs = st.map(s => overall(s.id)).filter(x => x != null), sAvg = avgs.reduce((a, b) => a + b, 0) / avgs.length;
+  const sAtt = st.reduce((a, s) => a + attStats(attOf(s.id)).pct, 0) / st.length;
+  const subAvg = SUB.map(([sub]) => { const v = st.map(s => avgOf(gradesOf(s.id, sub))).filter(x => x != null); return { sub, a: v.length ? v.reduce((a, b) => a + b, 0) / v.length : 0 }; });
+  const tStats = D.teachers.map(t => { let tot = 0, done = 0; for (let i = 0, d = TODAY; i < 14; i++, d = addD(d, -1)) tLessonsOn(t.id, d).forEach(l => { if (lessonState(d, l.n) === 'past') { tot++; if (l.log) done++; } }); return { t, p: tot ? done / tot * 100 : 100 }; });
+  return `<div class="hero" style="background:linear-gradient(135deg,#f59e0b,#ef4444)"><h2>Dzień dobry, ${esc(me().first)}! 🏫</h2><p>${esc(CONF.school)} · rok szkolny ${CONF.year}</p></div>
+  <div class="grid g4 mt">${stat('users', '#5b5bf7', 'Uczniowie', st.length, `${D.classes.length} ${plural(D.classes.length, 'klasa', 'klasy', 'klas')}`, st.length)}${stat('brief', '#0ea5e9', 'Nauczyciele', D.teachers.length, 'w kadrze', D.teachers.length)}${stat('trend', '#16a34a', 'Średnia szkoły', fA(sAvg), 'wszystkie przedmioty', sAvg.toFixed(2))}${stat('att', '#f59e0b', 'Frekwencja', sAtt.toFixed(1).replace('.', ',') + '%', 'średnia szkoły', sAtt.toFixed(1))}</div>
+  <div class="grid g21 mt"><div class="card"><div class="ch"><h3>${ic('trend')}Średnie wg przedmiotów</h3></div>${bars(subAvg.map(x => ({ l: SM[x.sub].n, s: SM[x.sub].s.slice(0, 7), v: x.a, t: fA(x.a), c: SM[x.sub].c })), 6)}</div>
+  <div class="card"><div class="ch"><h3>${ic('journal')}Uzupełnianie dziennika</h3></div><div class="list">${tStats.map(x => `<div class="li" style="display:grid;grid-template-columns:auto 1fr auto;gap:10px">${av(x.t.id, 'sm')}<div class="t"><b>${esc(x.t.first)} ${esc(x.t.last)}</b><div class="meter mt" style="margin-top:6px"><i style="width:${x.p}%;--c:${x.p < 90 ? 'var(--warn)' : 'var(--ok)'}"></i></div></div><b style="font-size:13px">${x.p.toFixed(0)}%</b></div>`).join('')}</div></div></div>
+  <div class="grid g2 mt">${D.classes.map(c => { const s2 = studentsOf(c.id), a = s2.map(s => overall(s.id)).filter(x => x != null), at = s2.reduce((x, s) => x + attStats(attOf(s.id)).pct, 0) / s2.length; return `<div class="card"><div class="ch"><h3>${ic('users')}Klasa ${c.id}</h3><a href="#/klasa" data-a="goClass" data-v="${c.id}">Szczegóły</a></div><div class="fl" style="gap:24px"><div><span class="mute" style="font-size:13px">Średnia</span><b style="display:block;font-size:26px">${fA(a.reduce((x, y) => x + y, 0) / a.length)}</b></div><div><span class="mute" style="font-size:13px">Frekwencja</span><b style="display:block;font-size:26px">${at.toFixed(1).replace('.', ',')}%</b></div><div><span class="mute" style="font-size:13px">Wychowawca</span><b style="display:block">${esc(nameOf(c.wych))}</b></div></div></div>`; }).join('')}</div>`;
+}
+function pTeachers() {
+  return `<div class="card"><div class="ch"><h3>${ic('brief')}Kadra nauczycielska</h3></div><div class="tw"><table class="tbl"><thead><tr><th>Nauczyciel</th><th>Przedmioty</th><th>Klasy</th><th>Wychowawstwo</th><th>Lekcji / tydz.</th><th></th></tr></thead><tbody>${D.teachers.map(t => `<tr><td><div class="fl" style="flex-wrap:nowrap">${av(t.id, 'sm')}<b>${esc(t.first)} ${esc(t.last)}</b></div></td><td><div class="fl" style="gap:6px">${t.subs.map(s => `<span class="pill" style="background:color-mix(in srgb,${SM[s].c} 14%,transparent);color:${SM[s].c}">${SM[s].n}</span>`).join('')}</div></td><td>${tClasses(t.id).join(', ')}</td><td>${t.wych ? `<span class="pill br">${t.wych}</span>` : '<span class="dim">—</span>'}</td><td><b>${D.classes.reduce((a, c) => a + D.tt[c.id].flat().filter(s => D.subT[s] === t.id).length, 0)}</b></td><td><button class="btn gh sm" data-a="msgTo" data-v="${t.id}">${ic('mail')}</button></td></tr>`).join('')}</tbody></table></div></div>`;
+}
+
+/* ═══════════ render ═══════════ */
+function render() {
+  closePop();
+  const root = $('#root');
+  if (!S || !user(S.id)) { S = null; root.innerHTML = loginView(); return; }
+  const p = route(), r = S.role;
+  const P = {
+    pulpit: r === 'nauczyciel' ? pTeacherHome : r === 'dyrektor' ? pDirectorHome : pStudentHome,
+    oceny: pGrades, frekwencja: pAttendance, plan: pPlan, terminarz: pCalendar, zadania: pHomework, uwagi: pNotes,
+    wiadomosci: pMessages, ogloszenia: pAnn, dziennik: pJournal, ocenianie: pGrading, klasa: pClass, nauczyciele: pTeachers,
+  };
+  root.innerHTML = shell(p, P[p]());
+  document.title = `${PAGES[p][0]} · ${CONF.app}`;
+  countUp(); onScroll();
+}
+function rerender() { const y = scrollY, gw = $('#gw')?.scrollLeft; render(); scrollTo(0, y); if (gw != null && $('#gw')) $('#gw').scrollLeft = gw; }
+function countUp() {
+  if (reduce) return;
+  $$('[data-cnt]').forEach(el => {
+    const to = parseFloat(el.dataset.cnt), txt = el.textContent, dec = (el.dataset.cnt.split('.')[1] || '').length, suf = txt.endsWith('%') ? '%' : '', comma = txt.includes(',');
+    const t0 = performance.now(); (function f(now) { const p = Math.min(1, (now - t0) / 900), v = to * (1 - Math.pow(1 - p, 3)); el.textContent = (dec ? v.toFixed(dec) : Math.round(v)).toString().replace('.', comma || dec ? ',' : '.') + suf; if (p < 1) requestAnimationFrame(f); else el.textContent = txt; })(t0);
+  });
+}
+function onScroll() { $('#top')?.classList.toggle('sc', scrollY > 8); }
+addEventListener('scroll', onScroll, { passive: true });
+addEventListener('hashchange', () => { $('#side')?.classList.remove('on'); render(); scrollTo(0, 0); });
+setInterval(() => { const l = $('#live'); if (l && S && (S.role === 'uczen' || S.role === 'rodzic')) l.innerHTML = liveCard(lessonsOn(student(viewSid()).cls, TODAY)); }, 30000);
+
+/* motyw */
+const th = localStorage.getItem('edzio-theme'); document.documentElement.dataset.theme = th || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+
+/* ═══════════ akcje ═══════════ */
+const A = {
+  login(el) { S = { role: el.dataset.r, id: el.dataset.v }; store.set('edzio-session', S); location.hash = '#/pulpit'; render(); toast(`Zalogowano: ${nameOf(S.id)}`); },
+  logout() { S = null; store.set('edzio-session', null); history.replaceState(null, '', location.pathname); render(); },
+  menu() { $('#side').classList.toggle('on'); $('#scrim').classList.toggle('on'); },
+  theme() { const t = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark'; document.documentElement.dataset.theme = t; try { localStorage.setItem('edzio-theme', t); } catch {} rerender(); },
+  closeModal, palette,
+  notif(el) {
+    if ($('#dd')) return closePop(); closePop();
+    const n = notifs(), d = document.createElement('div'); d.className = 'dd'; d.id = 'dd';
+    d.innerHTML = `<h5>Powiadomienia</h5>${n.map(x => `<a class="li" href="#/${x.p}"><span class="num" style="color:${x.c}">${ic(x.i)}</span><div class="t"><b>${esc(x.t)}</b><small>${esc(x.s)}</small></div></a>`).join('') || '<div class="empty">Wszystko przeczytane ✨</div>'}`;
+    el.parentElement.appendChild(d);
+  },
+  grade(el) { gradeModal(el.dataset.v); },
+  oView(el) { U.oView = el.dataset.v; rerender(); },
+  calNav(el) { const d = pd(U.cal); d.setMonth(d.getMonth() + +el.dataset.v); U.cal = ds(d); rerender(); },
+  calToday() { U.cal = TODAY.slice(0, 8) + '01'; U.calSel = TODAY; U.pDay = TODAY; rerender(); },
+  calSel(el) { U.calSel = U.pDay = el.dataset.v; rerender(); },
+  week(el) { U.week = +el.dataset.v === 0 ? 0 : U.week + +el.dataset.v; rerender(); },
+  hwTab(el) { U.hw = el.dataset.v; rerender(); },
+  hwTick(el) { const sid = viewSid(), h = D.hw[sid] = D.hw[sid] || {}; h[el.dataset.v] ? delete h[el.dataset.v] : h[el.dataset.v] = 1; save(); if (h[el.dataset.v]) toast('Zadanie oznaczone jako zrobione'); rerender(); },
+  uTab(el) { U.uTab = el.dataset.v; rerender(); },
+  mTab(el) { U.mTab = el.dataset.v; U.mSel = null; rerender(); },
+  mOpen(el) { U.mSel = el.dataset.v; rerender(); },
+  mBack() { U.mSel = null; rerender(); },
+  compose() { composeModal(); },
+  msgTo(el) { closeModal(); composeModal(el.dataset.v); },
+  reply(el) { const m = D.msgs.find(x => x.id === el.dataset.v); composeModal(m.from, m.subj.startsWith('Re: ') ? m.subj : 'Re: ' + m.subj, `\n\n— ${nameOf(m.from)} napisał(a):\n${m.body.split('\n').map(l => '> ' + l).join('\n')}`); },
+  send() {
+    const to = $('#cTo').value, su = $('#cSu').value.trim(), bo = $('#cBo').value.trim();
+    if (!su || !bo) return toast('Uzupełnij temat i treść');
+    let ids = [to];
+    if (to === 'g:t') ids = D.teachers.map(t => t.id); else if (to.startsWith('g:s:')) ids = studentsOf(to.slice(4)).map(s => s.id); else if (to.startsWith('g:p:')) ids = studentsOf(to.slice(4)).map(s => s.parent);
+    D.msgs.push({ id: uid(), from: S.id, to: ids, subj: su, body: bo, date: TODAY, r: {} }); save(); closeModal(); U.mTab = 'out'; toast('Wiadomość wysłana'); if (route() === 'wiadomosci') rerender();
+  },
+  justNew: justModal,
+  justSend() {
+    const dates = $$('input[name=jd]:checked').map(i => i.value), r = $('#jr').value.trim();
+    if (!dates.length) return toast('Zaznacz co najmniej jeden dzień'); if (!r) return toast('Podaj powód nieobecności');
+    D.just.push({ id: uid(), sid: viewSid(), by: S.id, dates, reason: r, status: 'pending', date: TODAY }); save(); closeModal(); toast('Wniosek wysłany do wychowawcy'); rerender();
+  },
+  justOk(el) { const j = D.just.find(x => x.id === el.dataset.v), s = student(j.sid); j.status = 'ok'; j.dates.forEach(d => Object.keys(D.logs).filter(k => k.startsWith(d + '|' + s.cls + '|')).forEach(k => { if (D.logs[k].a[j.sid] === 'nb') D.logs[k].a[j.sid] = 'u'; })); save(); toast('Usprawiedliwienie przyjęte'); rerender(); },
+  justNo(el) { D.just.find(x => x.id === el.dataset.v).status = 'no'; save(); toast('Usprawiedliwienie odrzucone'); rerender(); },
+  openLesson(el) { const [d] = el.dataset.v.split('|'); U.dDate = d; U.dKey = el.dataset.v; U.draft = null; go('dziennik'); },
+  pickLesson(el) { U.dKey = el.dataset.v; U.draft = null; rerender(); },
+  dDay(el) { let d = U.dDate; do { d = addD(d, +el.dataset.v); } while (!isSchool(d)); U.dDate = d; U.dKey = null; U.draft = null; rerender(); },
+  setAtt(el) {
+    const seg = el.closest('.seg'), sid = seg.dataset.sid, v = el.dataset.v;
+    if (v === 'ob') delete U.draft.a[sid]; else U.draft.a[sid] = v;
+    $$('button', seg).forEach(b => { const on = b === el; b.classList.toggle('on', on); b.setAttribute('aria-pressed', on); });
+    updCnt();
+  },
+  allPresent() { U.draft.a = {}; $$('.seg').forEach(seg => $$('button', seg).forEach(b => { const on = b.dataset.v === 'ob'; b.classList.toggle('on', on); b.setAttribute('aria-pressed', on); })); updCnt(); },
+  saveLesson() {
+    const L = tLessonsOn(S.id, U.dDate).find(l => l.key === U.dKey); if (!L) return;
+    const t = $('#dTopic').value.trim(); if (!t) { $('#dTopic').focus(); return toast('Wpisz temat lekcji'); }
+    D.logs[L.key] = { s: L.sub, t, a: { ...U.draft.a } }; save(); toast('Lekcja zapisana');
+    const next = tLessonsOn(S.id, U.dDate).find(l => !l.log && lessonState(U.dDate, l.n) !== 'future'); if (next) { U.dKey = next.key; U.draft = null; } rerender();
+  },
+  cell(el) {
+    const c = D.cols.find(x => x.id === el.dataset.c), sid = el.dataset.s, cur = c.g[sid];
+    const p = pop(el, `<h5>${esc(nameOf(sid))} · ${esc(c.cat)}</h5><div class="pg6">${GRADES.map(g => `<button class="g ${gcls(g)}${g === cur ? ' on' : ''}" data-a="setGrade" data-v="${esc(g)}" style="${g === cur ? 'outline:2px solid var(--br)' : ''}">${esc(g)}</button>`).join('')}</div>${cur != null ? `<button class="btn gh sm mt" style="width:100%" data-a="setGrade" data-v="">${ic('trash')}Usuń ocenę</button>` : ''}`);
+    p.dataset.c = c.id; p.dataset.s = sid;
+  },
+  setGrade(el) {
+    const p = $('#pop'), c = D.cols.find(x => x.id === p.dataset.c), sid = p.dataset.s, v = el.dataset.v;
+    if (v) c.g[sid] = v; else delete c.g[sid]; save(); closePop(); rerender();
+    const cell = $(`td[data-c="${c.id}"][data-s="${sid}"]`); if (cell) cell.classList.add('flash');
+    toast(v ? `Ocena ${v}: ${nameOf(sid)}` : 'Ocena usunięta');
+  },
+  colNew() { colModal(null); },
+  colEdit(el) { colModal(D.cols.find(c => c.id === el.dataset.v)); },
+  colSave(el) {
+    const cat = $('#kCat').value, w = clamp(+$('#kW').value || 1, 1, 5), date = $('#kD').value || TODAY, desc = $('#kDesc').value.trim();
+    if (el.dataset.v) Object.assign(D.cols.find(c => c.id === el.dataset.v), { cat, w, date, desc });
+    else D.cols.push({ id: uid(), cls: U.oCls, sub: U.oSub, cat, w, date, desc, g: {} });
+    save(); closeModal(); toast('Kolumna zapisana'); rerender();
+    if (!el.dataset.v) setTimeout(() => { const g = $('#gw'); if (g) g.scrollLeft = g.scrollWidth; }, 50);
+  },
+  colDel(el) { const c = D.cols.find(x => x.id === el.dataset.v); if (Object.keys(c.g).length && !confirm('Kolumna zawiera oceny. Usunąć ją razem z ocenami?')) return; D.cols = D.cols.filter(x => x !== c); save(); closeModal(); toast('Kolumna usunięta'); rerender(); },
+  evNew: evModal,
+  evSave() {
+    const t = $('#eTi').value.trim(); if (!t) return toast('Podaj tytuł');
+    const e = { id: uid(), type: $('#eT').value, date: $('#eD').value || TODAY, cls: $('#eC').value, sub: $('#eS').value || null, title: t, desc: $('#eDe').value.trim(), by: S.id };
+    D.events.push(e); save(); closeModal(); U.calSel = e.date; U.cal = e.date.slice(0, 8) + '01'; toast('Wydarzenie dodane'); rerender();
+  },
+  delEv(el) { D.events = D.events.filter(e => e.id !== el.dataset.v); save(); toast('Wydarzenie usunięte'); rerender(); },
+  noteNew: noteModal,
+  noteSave() { const x = $('#nX').value.trim(); if (!x) return toast('Wpisz treść uwagi'); D.notes.push({ id: uid(), sid: $('#nS').value, by: S.id, date: TODAY, type: $('#nT .on').dataset.v, text: x }); save(); closeModal(); toast('Uwaga dodana'); rerender(); },
+  annNew: annModal,
+  annSave() { const t = $('#aT').value.trim(), b = $('#aB').value.trim(); if (!t || !b) return toast('Uzupełnij tytuł i treść'); D.ann.push({ id: uid(), title: t, body: b, by: S.id, date: TODAY, target: $('#aG').value }); save(); closeModal(); toast('Ogłoszenie opublikowane'); rerender(); },
+  annDel(el) { D.ann = D.ann.filter(a => a.id !== el.dataset.v); save(); toast('Ogłoszenie usunięte'); rerender(); },
+  stuCard(el) { stuCard(el.dataset.v); },
+  goClass(el) { U.kCls = el.dataset.v; },
+  reset() { if (!confirm('Przywrócić dane demonstracyjne? Twoje zmiany zostaną usunięte.')) return; D = gen(); save(); closeModal(); toast('Dane przywrócone'); rerender(); },
+};
+function updCnt() { const st = studentsOf(tLessonsOn(S.id, U.dDate).find(l => l.key === U.dKey).cls), c = { ob: 0, nb: 0, u: 0, sp: 0, zw: 0 }; st.forEach(s => c[U.draft.a[s.id] || 'ob']++); $('#dCnt').innerHTML = Object.entries(c).map(([k, v]) => `<span class="att a-${k}" title="${ATT[k][0]}">${k} ${v}</span>`).join(''); }
+document.addEventListener('click', e => {
+  const el = e.target.closest('[data-a]');
+  if (!e.target.closest('#pop,#dd,[data-a=cell],[data-a=notif]')) closePop();
+  if (!el) return;
+  const fn = A[el.dataset.a]; if (!fn) return;
+  if (el.tagName === 'A' && el.getAttribute('href') === '#') e.preventDefault();
+  fn(el, e);
+});
+document.addEventListener('change', e => {
+  const k = e.target.dataset.on; if (k) { U[k] = e.target.value; rerender(); return; }
+  if (e.target.id === 'dDate' && e.target.value) { U.dDate = e.target.value; U.dKey = null; U.draft = null; rerender(); }
+});
+document.addEventListener('keydown', e => {
+  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k' && S) { e.preventDefault(); palette(); }
+  if (e.key === 'Escape') { if ($('.pal')) $('.pal').remove(); else if ($('#pop,#dd')) closePop(); else closeModal(); }
+});
+
+/* paleta poleceń */
+function palette() {
+  if ($('.pal')) return; closePop();
+  const items = pagesFor(S.role).map(p => ({ t: PAGES[p][0], i: PAGES[p][1], s: 'Strona', go: () => go(p) }));
+  if (S.role === 'nauczyciel' || S.role === 'dyrektor') {
+    const cl = S.role === 'dyrektor' ? D.classes.map(c => c.id) : tClasses(S.id);
+    D.students.filter(s => cl.includes(s.cls)).forEach(s => items.push({ t: `${s.first} ${s.last}`, i: 'users', s: `Uczeń · ${s.cls}`, go: () => stuCard(s.id) }));
+    D.teachers.forEach(t => items.push({ t: `${t.first} ${t.last}`, i: 'brief', s: 'Nauczyciel · napisz', go: () => composeModal(t.id) }));
+  }
+  items.push({ t: 'Napisz wiadomość', i: 'edit', s: 'Akcja', go: () => composeModal() });
+  items.push({ t: 'Zmień motyw', i: 'moon', s: 'Akcja', go: () => A.theme() });
+  items.push({ t: 'Przywróć dane demo', i: 'refresh', s: 'Akcja', go: () => A.reset() });
+  items.push({ t: 'Wyloguj', i: 'out', s: 'Akcja', go: () => A.logout() });
+  const o = document.createElement('div'); o.className = 'pal';
+  o.innerHTML = `<div class="bx" role="dialog" aria-label="Szukaj"><input placeholder="Szukaj stron, uczniów, akcji…" aria-label="Szukaj"><div class="rs"></div></div>`;
+  document.body.appendChild(o);
+  const inp = $('input', o), rs = $('.rs', o); let sel = 0, cur = [];
+  const draw = () => { const q = inp.value.trim().toLowerCase(); cur = items.filter(x => !q || (x.t + ' ' + x.s).toLowerCase().includes(q)).slice(0, 40); sel = clamp(sel, 0, cur.length - 1); rs.innerHTML = cur.map((x, i) => `<button class="r${i === sel ? ' on' : ''}" data-i="${i}">${ic(x.i)}${esc(x.t)}<small>${esc(x.s)}</small></button>`).join('') || '<div class="empty">Brak wyników</div>'; };
+  const run = i => { const x = cur[i]; o.remove(); if (x) x.go(); };
+  inp.addEventListener('input', () => { sel = 0; draw(); });
+  inp.addEventListener('keydown', e => { if (e.key === 'ArrowDown') { sel = Math.min(sel + 1, cur.length - 1); draw(); e.preventDefault(); } if (e.key === 'ArrowUp') { sel = Math.max(sel - 1, 0); draw(); e.preventDefault(); } if (e.key === 'Enter') run(sel); });
+  rs.addEventListener('click', e => { const b = e.target.closest('[data-i]'); if (b) run(+b.dataset.i); });
+  o.addEventListener('mousedown', e => { if (e.target === o) o.remove(); });
+  draw(); inp.focus();
+}
+
+load(); render();
+})();
+</script>
+</body>
+</html>

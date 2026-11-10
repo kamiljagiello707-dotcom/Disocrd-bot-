@@ -1,0 +1,1136 @@
+<!doctype html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Montes.pl · Waluta Anarchia.gg</title>
+<meta name="description" content="Montes.pl — kup walutę na serwer Anarchia.gg. Kurs 13 000 $ za 1 zł, pakiety z bonusem, kalkulator i szybka realizacja.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#050505; --bg2:#0b0b0b; --panel:rgba(255,255,255,.035); --panel2:rgba(255,255,255,.06);
+  --line:rgba(255,255,255,.12); --line2:rgba(255,255,255,.22);
+  --fg:#f4f4f4; --mute:#9a9a9a; --dim:#5e5e5e; --inv:#050505;
+  --r:20px; --ease:cubic-bezier(.2,.8,.2,1);
+  --sans:'Space Grotesk',system-ui,sans-serif; --mono:'JetBrains Mono',ui-monospace,monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+body{background:var(--bg);color:var(--fg);font-family:var(--sans);line-height:1.5;overflow-x:hidden;cursor:none}
+@media (hover:none){body{cursor:auto}.cur,.cur-dot{display:none}}
+a{color:inherit;text-decoration:none}
+button,input,select{font:inherit;color:inherit}
+button{cursor:none;background:none;border:0}
+@media (hover:none){button{cursor:pointer}}
+::selection{background:#fff;color:#000}
+
+/* tło 3D */
+#gl{position:fixed;inset:0;width:100%;height:100%;z-index:0;display:block}
+.grain{position:fixed;inset:-50%;z-index:1;pointer-events:none;opacity:.07;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  animation:grain 1.2s steps(6) infinite}
+@keyframes grain{0%{transform:translate(0,0)}20%{transform:translate(-3%,2%)}40%{transform:translate(2%,-3%)}60%{transform:translate(-2%,-1%)}80%{transform:translate(3%,3%)}100%{transform:translate(0,0)}}
+.vign{position:fixed;inset:0;z-index:1;pointer-events:none;background:radial-gradient(120% 90% at 50% 40%,transparent 40%,rgba(0,0,0,.75))}
+main,header,footer{position:relative;z-index:2}
+
+/* kursor */
+.cur{position:fixed;left:0;top:0;width:38px;height:38px;border:1px solid #fff;border-radius:50%;z-index:100;pointer-events:none;mix-blend-mode:difference;transform:translate(-50%,-50%);transition:width .3s var(--ease),height .3s var(--ease),background .3s}
+.cur.big{width:74px;height:74px;background:#fff}
+.cur-dot{position:fixed;left:0;top:0;width:5px;height:5px;background:#fff;border-radius:50%;z-index:101;pointer-events:none;mix-blend-mode:difference;transform:translate(-50%,-50%)}
+
+/* loader */
+.loader{position:fixed;inset:0;z-index:200;background:#000;display:grid;place-items:center;transition:opacity .8s var(--ease),visibility .8s}
+.loader.done{opacity:0;visibility:hidden}
+.loader .lw{width:min(320px,70vw);text-align:center}
+.loader .lt{font-size:clamp(34px,8vw,56px);font-weight:700;letter-spacing:-.04em}
+.loader .lb{height:2px;background:var(--line);margin-top:18px;overflow:hidden}
+.loader .lb i{display:block;height:100%;width:0;background:#fff;transition:width .2s}
+.loader .lp{font-family:var(--mono);font-size:12px;color:var(--mute);margin-top:10px;letter-spacing:.2em}
+
+/* nawigacja */
+header{position:fixed;top:0;left:0;right:0;z-index:50;padding:16px 0;transition:background .4s,backdrop-filter .4s,border-color .4s;border-bottom:1px solid transparent}
+header.sc{background:rgba(5,5,5,.6);backdrop-filter:blur(16px) saturate(1.2);-webkit-backdrop-filter:blur(16px);border-color:var(--line)}
+.wrap{width:min(1200px,100% - 32px);margin:0 auto}
+.nav{display:flex;align-items:center;justify-content:space-between;gap:16px}
+.logo{display:flex;align-items:center;gap:10px;font-weight:700;font-size:20px;letter-spacing:-.03em}
+.logo .mk{width:34px;height:34px;border-radius:50%;border:1.5px solid #fff;display:grid;place-items:center;font-size:15px;position:relative}
+.logo .mk::after{content:"";position:absolute;inset:4px;border-radius:50%;border:1px dashed rgba(255,255,255,.4);animation:spin 12s linear infinite}
+.logo small{color:var(--mute);font-weight:500}
+@keyframes spin{to{transform:rotate(360deg)}}
+.links{display:flex;gap:4px}
+.links a{padding:8px 14px;border-radius:99px;font-size:14px;color:var(--mute);transition:color .2s,background .2s}
+.links a:hover{color:#fff;background:var(--panel2)}
+.burger{display:none;width:42px;height:42px;border:1px solid var(--line);border-radius:12px;position:relative}
+.burger i{position:absolute;left:11px;right:11px;height:1.5px;background:#fff;transition:transform .3s,top .3s}
+.burger i:nth-child(1){top:15px}.burger i:nth-child(2){top:25px}
+.burger.on i:nth-child(1){top:20px;transform:rotate(45deg)}.burger.on i:nth-child(2){top:20px;transform:rotate(-45deg)}
+@media (max-width:860px){
+  .links{position:fixed;top:74px;left:16px;right:16px;flex-direction:column;background:rgba(10,10,10,.95);backdrop-filter:blur(20px);border:1px solid var(--line);border-radius:var(--r);padding:10px;opacity:0;pointer-events:none;transform:translateY(-10px);transition:.3s var(--ease)}
+  .links.on{opacity:1;pointer-events:auto;transform:none}
+  .links a{padding:14px 16px;font-size:16px}
+  .burger{display:block}
+  .nav .btn.hide-m{display:none}
+}
+
+/* przyciski */
+.btn{position:relative;display:inline-flex;align-items:center;justify-content:center;gap:10px;height:52px;padding:0 26px;border-radius:99px;font-weight:600;font-size:15px;background:#fff;color:#000;overflow:hidden;isolation:isolate;transition:transform .3s var(--ease)}
+.btn::before{content:"";position:absolute;inset:0;background:#000;border-radius:inherit;transform:translateY(101%);transition:transform .45s var(--ease);z-index:-1}
+.btn:hover{color:#fff}.btn:hover::before{transform:none}
+.btn:hover{box-shadow:inset 0 0 0 1px #fff}
+.btn.line{background:transparent;color:#fff;box-shadow:inset 0 0 0 1px var(--line2)}
+.btn.line::before{background:#fff}.btn.line:hover{color:#000}
+.btn.sm{height:42px;padding:0 18px;font-size:14px}
+.btn svg{width:18px;height:18px}
+
+/* hero */
+.hero{min-height:100svh;display:flex;align-items:center;padding:120px 0 80px}
+.hero-g{display:grid;grid-template-columns:1.1fr .9fr;gap:40px;align-items:center}
+.tag{display:inline-flex;align-items:center;gap:10px;padding:7px 14px 7px 8px;border:1px solid var(--line);border-radius:99px;font-size:13px;color:var(--mute);background:var(--panel);backdrop-filter:blur(8px)}
+.tag b{background:#fff;color:#000;padding:3px 9px;border-radius:99px;font-size:11px;letter-spacing:.06em}
+.pulse{width:8px;height:8px;border-radius:50%;background:#fff;box-shadow:0 0 0 0 rgba(255,255,255,.6);animation:pulse 2s infinite}
+@keyframes pulse{70%{box-shadow:0 0 0 10px rgba(255,255,255,0)}100%{box-shadow:0 0 0 0 rgba(255,255,255,0)}}
+h1{font-size:clamp(46px,8.4vw,118px);line-height:.92;letter-spacing:-.055em;font-weight:700;margin:22px 0 22px}
+h1 .o{color:transparent;-webkit-text-stroke:1.4px #fff}
+h1 .w{display:inline-block;overflow:hidden;vertical-align:bottom}
+h1 .w>span{display:inline-block;transform:translateY(105%);transition:transform 1.1s var(--ease)}
+.ready h1 .w>span{transform:none}
+.lead{font-size:clamp(16px,1.6vw,19px);color:var(--mute);max-width:520px}
+.lead b{color:#fff;font-weight:600}
+.cta{display:flex;flex-wrap:wrap;gap:12px;margin-top:34px}
+.rate{margin-top:46px;display:flex;flex-wrap:wrap;gap:28px}
+.rate div{min-width:110px}
+.rate strong{display:block;font-size:30px;letter-spacing:-.03em;font-weight:700}
+.rate span{font-size:13px;color:var(--mute)}
+
+/* szybki kalkulator w hero */
+.qcard{position:relative;border:1px solid var(--line);border-radius:28px;padding:26px;background:linear-gradient(160deg,rgba(255,255,255,.08),rgba(255,255,255,.015));backdrop-filter:blur(18px) saturate(1.3);-webkit-backdrop-filter:blur(18px);box-shadow:0 40px 120px -30px rgba(0,0,0,.9),inset 0 1px 0 rgba(255,255,255,.12);transition:transform .2s}
+.qcard .hd{display:flex;justify-content:space-between;align-items:center;font-size:13px;color:var(--mute);font-family:var(--mono)}
+.qcard .hd i{font-style:normal;color:#fff}
+.fld{margin-top:16px;border:1px solid var(--line);border-radius:16px;padding:14px 16px;background:rgba(0,0,0,.35);transition:border-color .2s}
+.fld:focus-within{border-color:#fff}
+.fld label{display:block;font-size:12px;color:var(--mute);letter-spacing:.04em}
+.fld .row{display:flex;align-items:center;gap:10px}
+.fld input{width:100%;background:none;border:0;outline:0;font-size:32px;font-weight:700;letter-spacing:-.03em;padding:2px 0}
+.fld .u{font-family:var(--mono);font-size:14px;padding:6px 10px;border:1px solid var(--line);border-radius:10px;white-space:nowrap}
+.swap{display:grid;place-items:center;margin:-8px auto;position:relative;z-index:2;width:42px;height:42px;border-radius:50%;background:#fff;color:#000;transition:transform .5s var(--ease)}
+.swap:hover{transform:rotate(180deg)}
+.swap svg{width:18px;height:18px}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+.chip{padding:7px 12px;border:1px solid var(--line);border-radius:99px;font-size:13px;font-family:var(--mono);transition:.2s}
+.chip:hover,.chip.on{background:#fff;color:#000;border-color:#fff}
+.qsum{margin-top:16px;display:flex;justify-content:space-between;font-size:13px;color:var(--mute)}
+.qsum b{color:#fff}
+.qcard .btn{width:100%;margin-top:18px}
+@media (max-width:960px){.hero-g{grid-template-columns:1fr}.hero{padding-top:110px}}
+
+/* marquee */
+.mq{border-block:1px solid var(--line);overflow:hidden;padding:20px 0;background:rgba(0,0,0,.5);backdrop-filter:blur(6px)}
+.mq-t{display:flex;gap:48px;width:max-content;animation:mq 28s linear infinite;font-size:clamp(22px,3vw,34px);font-weight:600;letter-spacing:-.02em;white-space:nowrap}
+.mq-t span{display:flex;align-items:center;gap:48px}
+.mq-t span::after{content:"✦";font-size:.6em;color:var(--mute)}
+.mq-t .o{color:transparent;-webkit-text-stroke:1px #fff}
+@keyframes mq{to{transform:translateX(-50%)}}
+
+/* sekcje */
+section{padding:clamp(80px,12vw,150px) 0}
+.sh{display:flex;justify-content:space-between;align-items:flex-end;gap:24px;flex-wrap:wrap;margin-bottom:54px}
+.kick{font-family:var(--mono);font-size:12px;letter-spacing:.24em;color:var(--mute);text-transform:uppercase;display:flex;align-items:center;gap:10px}
+.kick::before{content:"";width:26px;height:1px;background:var(--mute)}
+h2{font-size:clamp(36px,5.6vw,76px);line-height:.95;letter-spacing:-.05em;font-weight:700;margin-top:14px}
+h2 .o{color:transparent;-webkit-text-stroke:1.2px #fff}
+.sh p{color:var(--mute);max-width:380px}
+.rv{opacity:0;transform:translateY(40px);transition:opacity 1s var(--ease),transform 1s var(--ease)}
+.rv.in{opacity:1;transform:none}
+
+/* oferty */
+.offers{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:18px;perspective:1400px}
+.card{position:relative;border:1px solid var(--line);border-radius:var(--r);padding:26px;background:linear-gradient(170deg,rgba(255,255,255,.06),rgba(255,255,255,.01));backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);transition:transform .25s ease-out,border-color .3s;overflow:hidden;display:flex;flex-direction:column}
+.card::before{content:"";position:absolute;inset:0;background:radial-gradient(420px circle at var(--mx,50%) var(--my,0%),rgba(255,255,255,.14),transparent 45%);opacity:0;transition:opacity .3s;pointer-events:none}
+.card:hover{border-color:var(--line2)}.card:hover::before{opacity:1}
+.card .top{display:flex;justify-content:space-between;align-items:center}
+.card .nm{font-family:var(--mono);font-size:12px;letter-spacing:.18em;color:var(--mute);text-transform:uppercase}
+.badge{font-size:11px;font-weight:700;padding:4px 10px;border-radius:99px;border:1px solid var(--line2);letter-spacing:.04em}
+.card.hot{background:#fff;color:#000;border-color:#fff}
+.card.hot .nm,.card.hot .sub,.card.hot .ft li{color:#555}
+.card.hot .badge{background:#000;color:#fff;border-color:#000}
+.card.hot .btn{background:#000;color:#fff}.card.hot .btn::before{background:#fff}.card.hot .btn:hover{color:#000;box-shadow:inset 0 0 0 1px #000}
+.card.hot::before{background:radial-gradient(420px circle at var(--mx,50%) var(--my,0%),rgba(0,0,0,.08),transparent 45%)}
+.card .amt{font-size:46px;font-weight:700;letter-spacing:-.05em;margin-top:26px;line-height:1}
+.card .amt small{font-size:20px;letter-spacing:-.02em}
+.card .sub{color:var(--mute);font-size:14px;margin-top:8px}
+.card .pr{display:flex;align-items:baseline;gap:8px;margin-top:22px;padding-top:18px;border-top:1px solid var(--line)}
+.card.hot .pr{border-color:rgba(0,0,0,.12)}
+.card .pr b{font-size:28px;letter-spacing:-.03em}
+.card .pr s{color:var(--dim);font-size:14px}
+.card .ft{list-style:none;margin:18px 0 24px;display:grid;gap:8px;font-size:14px}
+.card .ft li{display:flex;gap:8px;color:var(--mute)}
+.card .ft li::before{content:"→";color:currentColor}
+.card .btn{margin-top:auto;width:100%}
+.coin-ico{width:46px;height:46px;border-radius:50%;border:1.5px solid currentColor;display:grid;place-items:center;font-weight:700;position:relative;font-size:14px}
+.coin-ico::after{content:"";position:absolute;inset:5px;border-radius:50%;border:1px dashed currentColor;opacity:.4}
+
+/* symulator */
+.sim{display:grid;grid-template-columns:1.2fr .8fr;gap:18px}
+.pn{border:1px solid var(--line);border-radius:var(--r);background:linear-gradient(170deg,rgba(255,255,255,.05),rgba(255,255,255,.01));backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);padding:28px;position:relative;overflow:hidden}
+.pn h3{font-size:22px;letter-spacing:-.03em;display:flex;justify-content:space-between;align-items:center;gap:10px}
+.pn h3 small{font-family:var(--mono);font-size:11px;color:var(--mute);letter-spacing:.14em;font-weight:400}
+.big-out{font-size:clamp(44px,7vw,92px);font-weight:700;letter-spacing:-.06em;line-height:1;margin:26px 0 6px;font-variant-numeric:tabular-nums}
+.big-out small{font-size:.35em;color:var(--mute);letter-spacing:-.02em}
+.range{width:100%;-webkit-appearance:none;appearance:none;height:6px;border-radius:99px;background:linear-gradient(90deg,#fff var(--p,10%),rgba(255,255,255,.14) var(--p,10%));outline:0;margin:26px 0 10px}
+.range::-webkit-slider-thumb{-webkit-appearance:none;width:28px;height:28px;border-radius:50%;background:#000;border:2px solid #fff;box-shadow:0 0 0 6px rgba(255,255,255,.08);cursor:grab}
+.range::-moz-range-thumb{width:26px;height:26px;border-radius:50%;background:#000;border:2px solid #fff;cursor:grab}
+.ticks{display:flex;justify-content:space-between;font-family:var(--mono);font-size:11px;color:var(--dim)}
+.kv{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:26px}
+.kv div{border:1px solid var(--line);border-radius:14px;padding:14px;background:rgba(0,0,0,.3)}
+.kv span{display:block;font-size:12px;color:var(--mute)}
+.kv b{font-size:20px;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.tier{margin-top:22px;display:grid;gap:8px}
+.tier div{display:grid;grid-template-columns:80px 1fr 60px;align-items:center;gap:12px;font-size:13px;color:var(--mute);font-family:var(--mono)}
+.tier i{height:4px;border-radius:99px;background:rgba(255,255,255,.1);position:relative;overflow:hidden}
+.tier i::after{content:"";position:absolute;inset:0;width:var(--w,0%);background:#fff;transition:width .6s var(--ease)}
+.tier div.on{color:#fff}
+.ib{display:grid;gap:12px;margin-top:22px}
+.ib .ln{display:flex;justify-content:space-between;padding:14px 0;border-bottom:1px dashed var(--line);font-size:14px;color:var(--mute)}
+.ib .ln b{color:#fff;font-variant-numeric:tabular-nums}
+.ib .ln.tot{border:0;font-size:16px}.ib .ln.tot b{font-size:22px}
+#chart{width:100%;height:140px;display:block;margin-top:18px}
+@media (max-width:900px){.sim{grid-template-columns:1fr}.kv{grid-template-columns:1fr 1fr}.kv div:last-child{grid-column:span 2}}
+
+/* panel klienta */
+.dash{border:1px solid var(--line);border-radius:28px;background:rgba(8,8,8,.75);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);overflow:hidden;box-shadow:0 60px 140px -40px #000;transform:perspective(1600px) rotateX(10deg) scale(.96);transform-origin:50% 0;transition:transform 1.2s var(--ease)}
+.dash.in{transform:perspective(1600px) rotateX(0) scale(1)}
+.dbar{display:flex;align-items:center;gap:8px;padding:14px 18px;border-bottom:1px solid var(--line);font-family:var(--mono);font-size:12px;color:var(--mute)}
+.dbar i{width:11px;height:11px;border-radius:50%;border:1px solid var(--line2)}
+.dbar span{margin-left:12px;padding:5px 12px;border:1px solid var(--line);border-radius:8px;flex:1;max-width:340px}
+.dg{display:grid;grid-template-columns:220px 1fr}
+.side{border-right:1px solid var(--line);padding:18px;display:flex;flex-direction:column;gap:4px}
+.side a{display:flex;align-items:center;gap:10px;padding:11px 12px;border-radius:12px;font-size:14px;color:var(--mute);transition:.2s}
+.side a.on,.side a:hover{background:var(--panel2);color:#fff}
+.side a svg{width:16px;height:16px}
+.side .usr{margin-top:auto;display:flex;align-items:center;gap:10px;padding:12px;border:1px solid var(--line);border-radius:14px;font-size:13px}
+.side .av{width:34px;height:34px;border-radius:9px;background:repeating-conic-gradient(#fff 0 25%,#222 0 50%) 0 0/12px 12px;image-rendering:pixelated}
+.dm{padding:22px;display:grid;grid-template-columns:repeat(6,1fr);gap:14px}
+.dm .pn{padding:20px}
+.stat span{font-size:12px;color:var(--mute)}
+.stat b{display:block;font-size:28px;letter-spacing:-.03em;margin-top:6px;font-variant-numeric:tabular-nums}
+.stat em{font-style:normal;font-size:12px;font-family:var(--mono);color:#fff;border:1px solid var(--line);padding:2px 8px;border-radius:99px}
+.c2{grid-column:span 2}.c3{grid-column:span 3}.c4{grid-column:span 4}.c6{grid-column:span 6}
+.track{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:20px;position:relative}
+.track .st{position:relative;padding-top:30px;font-size:13px;color:var(--dim);transition:color .4s}
+.track .st::before{content:"";position:absolute;top:6px;left:0;width:14px;height:14px;border-radius:50%;border:1.5px solid var(--dim);background:var(--bg);transition:.4s;z-index:1}
+.track .st::after{content:"";position:absolute;top:12px;left:14px;right:-8px;height:2px;background:var(--line)}
+.track .st:last-child::after{display:none}
+.track .st.done{color:#fff}.track .st.done::before{background:#fff;border-color:#fff}
+.track .st.done::after{background:#fff}
+.track .st.now{color:#fff}.track .st.now::before{border-color:#fff;box-shadow:0 0 0 6px rgba(255,255,255,.12);animation:pulse 1.6s infinite}
+.track .st small{display:block;font-family:var(--mono);font-size:11px;color:var(--dim)}
+.term{font-family:var(--mono);font-size:13px;background:#000;border:1px solid var(--line);border-radius:14px;padding:16px;min-height:190px;margin-top:14px;line-height:1.75;overflow:hidden}
+.term .p{color:var(--dim)}.term .ok{color:#fff;font-weight:600}
+.term .caret{display:inline-block;width:8px;height:15px;background:#fff;vertical-align:-2px;animation:blink 1s steps(1) infinite}
+@keyframes blink{50%{opacity:0}}
+.tbl{width:100%;border-collapse:collapse;font-size:13px;margin-top:10px}
+.tbl th{text-align:left;font-weight:400;color:var(--dim);font-family:var(--mono);font-size:11px;letter-spacing:.1em;padding:8px 6px;border-bottom:1px solid var(--line)}
+.tbl td{padding:12px 6px;border-bottom:1px solid rgba(255,255,255,.06);font-variant-numeric:tabular-nums}
+.tbl td:last-child{text-align:right}
+.pill{font-size:11px;padding:3px 9px;border-radius:99px;border:1px solid var(--line2);font-family:var(--mono)}
+.pill.w{background:#fff;color:#000;border-color:#fff}
+.demo-note{font-family:var(--mono);font-size:11px;color:var(--dim);margin-top:14px;text-align:center;letter-spacing:.06em}
+@media (max-width:980px){.dg{grid-template-columns:1fr}.side{flex-direction:row;overflow-x:auto;border-right:0;border-bottom:1px solid var(--line)}.side a{white-space:nowrap}.side .usr{display:none}.dm{grid-template-columns:1fr 1fr}.c2,.c3,.c4,.c6{grid-column:span 2}.dm .stat{grid-column:span 1}}
+@media (max-width:520px){.track{grid-template-columns:1fr 1fr;row-gap:16px}.track .st::after{display:none}.dm{padding:14px}}
+
+/* jak to działa */
+.steps{display:grid;grid-template-columns:repeat(4,1fr);gap:18px;counter-reset:s}
+.step{border-top:1px solid var(--line2);padding-top:24px;position:relative}
+.step::before{counter-increment:s;content:"0" counter(s);font-family:var(--mono);font-size:13px;color:var(--mute)}
+.step h4{font-size:22px;letter-spacing:-.03em;margin:40px 0 10px}
+.step p{color:var(--mute);font-size:15px}
+.step .ico{position:absolute;top:20px;right:0;width:44px;height:44px;border:1px solid var(--line);border-radius:12px;display:grid;place-items:center}
+.step .ico svg{width:20px;height:20px}
+@media (max-width:900px){.steps{grid-template-columns:1fr 1fr}}
+@media (max-width:520px){.steps{grid-template-columns:1fr}}
+
+/* płatności + zalety */
+.feat{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+.feat .pn{min-height:220px;display:flex;flex-direction:column}
+.feat .pn h3{margin-top:auto;padding-top:40px}
+.feat .pn p{color:var(--mute);font-size:15px;margin-top:8px}
+.feat .pn .gi{width:56px;height:56px;border-radius:16px;border:1px solid var(--line);display:grid;place-items:center}
+.feat .pn .gi svg{width:24px;height:24px}
+.feat .wide{grid-column:span 2}
+.pays{display:flex;flex-wrap:wrap;gap:10px;margin-top:18px}
+.pays span{padding:10px 16px;border:1px solid var(--line);border-radius:12px;font-weight:600;font-size:14px;background:rgba(0,0,0,.3)}
+@media (max-width:900px){.feat{grid-template-columns:1fr}.feat .wide{grid-column:auto}}
+
+/* faq */
+.faq{display:grid;grid-template-columns:.8fr 1.2fr;gap:40px}
+.qa{border-top:1px solid var(--line)}
+.qa:last-child{border-bottom:1px solid var(--line)}
+.qa button{width:100%;display:flex;justify-content:space-between;align-items:center;gap:16px;padding:24px 0;text-align:left;font-size:19px;font-weight:500;letter-spacing:-.02em}
+.qa .pm{width:30px;height:30px;flex:none;border:1px solid var(--line2);border-radius:50%;position:relative;transition:transform .4s var(--ease),background .3s}
+.qa .pm::before,.qa .pm::after{content:"";position:absolute;left:50%;top:50%;width:11px;height:1.5px;background:currentColor;transform:translate(-50%,-50%)}
+.qa .pm::after{transform:translate(-50%,-50%) rotate(90deg)}
+.qa.on .pm{transform:rotate(45deg);background:#fff;color:#000}
+.qa .an{display:grid;grid-template-rows:0fr;transition:grid-template-rows .45s var(--ease)}
+.qa.on .an{grid-template-rows:1fr}
+.qa .an>div{overflow:hidden;color:var(--mute)}
+.qa .an p{padding-bottom:24px;max-width:620px}
+@media (max-width:900px){.faq{grid-template-columns:1fr}}
+
+/* cta + stopka */
+.big-cta{text-align:center;border:1px solid var(--line);border-radius:36px;padding:clamp(50px,9vw,110px) 24px;background:radial-gradient(80% 120% at 50% 0%,rgba(255,255,255,.12),transparent 60%),rgba(0,0,0,.4);backdrop-filter:blur(10px);position:relative;overflow:hidden}
+.big-cta h2{font-size:clamp(44px,9vw,130px)}
+.big-cta p{color:var(--mute);margin:22px auto 34px;max-width:460px}
+.big-cta .cta{justify-content:center}
+footer{border-top:1px solid var(--line);padding:40px 0 50px;background:rgba(0,0,0,.6);backdrop-filter:blur(10px)}
+.fg{display:flex;justify-content:space-between;gap:24px;flex-wrap:wrap;align-items:center}
+.fg p{color:var(--dim);font-size:13px;max-width:520px}
+.fg .fl{display:flex;gap:18px;font-size:14px;color:var(--mute)}
+.fg .fl a:hover{color:#fff}
+
+/* modal zamówienia */
+.ov{position:fixed;inset:0;z-index:150;background:rgba(0,0,0,.7);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);display:grid;place-items:center;padding:16px;opacity:0;visibility:hidden;transition:.35s var(--ease)}
+.ov.on{opacity:1;visibility:visible}
+.md{width:min(520px,100%);max-height:calc(100svh - 32px);overflow:auto;border:1px solid var(--line2);border-radius:28px;background:#0a0a0a;padding:28px;transform:translateY(30px) scale(.96);transition:transform .45s var(--ease)}
+.ov.on .md{transform:none}
+.md-h{display:flex;justify-content:space-between;align-items:center}
+.md-h h3{font-size:24px;letter-spacing:-.03em}
+.x{width:40px;height:40px;border-radius:50%;border:1px solid var(--line);display:grid;place-items:center;transition:.3s}
+.x:hover{background:#fff;color:#000;transform:rotate(90deg)}
+.prog{display:flex;gap:6px;margin:20px 0 24px}
+.prog i{flex:1;height:3px;border-radius:99px;background:var(--line);transition:background .4s}
+.prog i.on{background:#fff}
+.pane{display:none;animation:fade .45s var(--ease)}
+.pane.on{display:block}
+@keyframes fade{from{opacity:0;transform:translateX(16px)}to{opacity:1;transform:none}}
+.pane .lbl{font-size:13px;color:var(--mute);margin-bottom:8px;display:block}
+.inp{width:100%;height:54px;border:1px solid var(--line);border-radius:14px;background:#000;padding:0 16px;font-size:17px;outline:0;transition:border-color .2s}
+.inp:focus{border-color:#fff}
+.err{color:#fff;font-size:13px;margin-top:8px;min-height:20px;font-family:var(--mono)}
+.opts{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.opt{border:1px solid var(--line);border-radius:14px;padding:14px;text-align:left;transition:.2s}
+.opt b{display:block;font-size:16px}.opt span{font-size:12px;color:var(--mute)}
+.opt:hover{border-color:var(--line2)}
+.opt.on{background:#fff;color:#000;border-color:#fff}.opt.on span{color:#555}
+.md .nav-b{display:flex;gap:10px;margin-top:24px}
+.md .nav-b .btn{flex:1}
+.sumry .ln{display:flex;justify-content:space-between;padding:12px 0;border-bottom:1px dashed var(--line);font-size:14px;color:var(--mute)}
+.sumry .ln b{color:#fff;text-align:right}
+.proc{text-align:center;padding:20px 0}
+.ring{width:110px;height:110px;margin:0 auto 22px;position:relative}
+.ring svg{width:100%;height:100%;transform:rotate(-90deg)}
+.ring circle{fill:none;stroke-width:4}
+.ring .bg{stroke:var(--line)}.ring .fgc{stroke:#fff;stroke-linecap:round;stroke-dasharray:314;stroke-dashoffset:314;transition:stroke-dashoffset .3s}
+.ring b{position:absolute;inset:0;display:grid;place-items:center;font-size:24px;font-variant-numeric:tabular-nums}
+.proc p{color:var(--mute);font-family:var(--mono);font-size:13px;min-height:20px}
+.okk{width:84px;height:84px;margin:0 auto 18px;border-radius:50%;background:#fff;color:#000;display:grid;place-items:center}
+.okk svg{width:38px;height:38px;stroke-dasharray:40;stroke-dashoffset:40;animation:draw .6s .2s var(--ease) forwards}
+@keyframes draw{to{stroke-dashoffset:0}}
+.code{font-family:var(--mono);font-size:22px;letter-spacing:.12em;border:1px dashed var(--line2);border-radius:14px;padding:14px;margin:18px 0 6px}
+
+.toast{position:fixed;left:50%;bottom:24px;z-index:300;transform:translate(-50%,30px);opacity:0;background:#fff;color:#000;padding:12px 20px;border-radius:99px;font-weight:600;font-size:14px;transition:.35s var(--ease);pointer-events:none}
+.toast.on{opacity:1;transform:translate(-50%,0)}
+
+.scrl{position:fixed;left:0;top:0;height:2px;background:#fff;z-index:60;width:0}
+
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}
+  .rv{opacity:1;transform:none}
+  h1 .w>span{transform:none}
+}
+</style>
+</head>
+<body>
+<canvas id="gl" aria-hidden="true"></canvas>
+<div class="grain" aria-hidden="true"></div>
+<div class="vign" aria-hidden="true"></div>
+<div class="cur" aria-hidden="true"></div><div class="cur-dot" aria-hidden="true"></div>
+<div class="scrl" aria-hidden="true"></div>
+
+<div class="loader" id="loader">
+  <div class="lw">
+    <div class="lt">Montes<span style="color:var(--mute)">.pl</span></div>
+    <div class="lb"><i id="lbar"></i></div>
+    <div class="lp" id="lpct">000%</div>
+  </div>
+</div>
+
+<header id="hdr">
+  <div class="wrap nav">
+    <a href="#top" class="logo"><span class="mk">M</span>Montes<small>.pl</small></a>
+    <nav class="links" id="links">
+      <a href="#oferty">Oferty</a>
+      <a href="#symulator">Symulator</a>
+      <a href="#panel">Panel</a>
+      <a href="#jak">Jak to działa</a>
+      <a href="#faq">FAQ</a>
+    </nav>
+    <div style="display:flex;gap:10px;align-items:center">
+      <a href="#" class="btn sm line hide-m discord">Discord</a>
+      <button class="btn sm buy" data-zl="10">Kup teraz</button>
+      <button class="burger" id="burger" aria-label="Menu"><i></i><i></i></button>
+    </div>
+  </div>
+</header>
+
+<main id="top">
+<!-- HERO -->
+<section class="hero">
+  <div class="wrap hero-g">
+    <div>
+      <span class="tag"><b>LIVE</b><span class="pulse"></span>Sklep z walutą na Anarchia.gg</span>
+      <h1>
+        <span class="w"><span>Waluta</span></span><br>
+        <span class="w"><span class="o">Anarchia</span></span><br>
+        <span class="w"><span>w&nbsp;sekundę.</span></span>
+      </h1>
+      <p class="lead">Kurs <b>13 000 $ za każdą 1 zł</b>. Wybierz pakiet albo wpisz własną kwotę, opłać i odbierz kasę prosto na swój nick w grze.</p>
+      <div class="cta">
+        <a href="#oferty" class="btn">Zobacz oferty
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+        <a href="#symulator" class="btn line">Przelicz kwotę</a>
+      </div>
+      <div class="rate">
+        <div><strong>13k</strong><span>za 1 zł</span></div>
+        <div><strong>+15%</strong><span>max bonus</span></div>
+        <div><strong>24/7</strong><span>zamówienia</span></div>
+      </div>
+    </div>
+
+    <div class="qcard" id="qcard">
+      <div class="hd"><span>// szybki przelicznik</span><i>1 zł = 13 000 $</i></div>
+      <div class="fld">
+        <label for="qIn" id="qInL">Płacisz</label>
+        <div class="row"><input id="qIn" inputmode="decimal" value="10" autocomplete="off"><span class="u" id="qInU">PLN</span></div>
+      </div>
+      <button class="swap" id="qSwap" aria-label="Zamień kierunek">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 4v16M3 16l4 4 4-4M17 20V4M21 8l-4-4-4 4"/></svg>
+      </button>
+      <div class="fld">
+        <label id="qOutL">Otrzymujesz</label>
+        <div class="row"><input id="qOut" readonly tabindex="-1"><span class="u" id="qOutU">$ w grze</span></div>
+      </div>
+      <div class="chips" id="qChips"></div>
+      <div class="qsum"><span>Bonus pakietowy</span><b id="qBonus">—</b></div>
+      <button class="btn" id="qBuy">Zamów
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
+    </div>
+  </div>
+</section>
+
+<div class="mq" aria-hidden="true"><div class="mq-t" id="mq"></div></div>
+
+<!-- OFERTY -->
+<section id="oferty">
+  <div class="wrap">
+    <div class="sh rv">
+      <div><div class="kick">Cennik</div><h2>Wybierz <span class="o">pakiet</span></h2></div>
+      <p>Im większy pakiet, tym większy bonus. Bonus doliczamy automatycznie do każdego zamówienia.</p>
+    </div>
+    <div class="offers" id="offers"></div>
+  </div>
+</section>
+
+<!-- SYMULATOR -->
+<section id="symulator">
+  <div class="wrap">
+    <div class="sh rv">
+      <div><div class="kick">Symulacja</div><h2>Policz ile <span class="o">dostaniesz</span></h2></div>
+      <p>Przesuń suwak. Zobaczysz kwotę bazową, bonus i to, ile wynosi realny kurs po bonusie.</p>
+    </div>
+    <div class="sim">
+      <div class="pn rv">
+        <h3>Symulator zakupu <small>LIVE</small></h3>
+        <div class="big-out"><span id="sOut">130 000</span> <small>$</small></div>
+        <div style="color:var(--mute)">za <b id="sZl" style="color:#fff">10 zł</b></div>
+        <input type="range" class="range" id="sRange" min="1" max="500" value="10" aria-label="Kwota w złotówkach">
+        <div class="ticks"><span>1 zł</span><span>100</span><span>200</span><span>300</span><span>400</span><span>500 zł</span></div>
+        <div class="kv">
+          <div><span>Baza</span><b id="sBase">130k</b></div>
+          <div><span>Bonus</span><b id="sB">+0</b></div>
+          <div><span>Realny kurs</span><b id="sRate">13k/zł</b></div>
+        </div>
+        <canvas id="chart" aria-label="Wykres: ile waluty za ile złotych"></canvas>
+      </div>
+      <div class="pn rv">
+        <h3>Progi bonusów <small>AUTO</small></h3>
+        <div class="tier" id="tiers"></div>
+        <div class="ib">
+          <div class="ln"><span>Płacisz</span><b id="iZl">10,00 zł</b></div>
+          <div class="ln"><span>Waluta bazowa</span><b id="iBase">130 000 $</b></div>
+          <div class="ln"><span>Bonus</span><b id="iBon">0 $</b></div>
+          <div class="ln"><span>Do następnego progu</span><b id="iNext">—</b></div>
+          <div class="ln tot"><span>Razem w grze</span><b id="iTot">130 000 $</b></div>
+        </div>
+        <button class="btn" style="width:100%;margin-top:20px" id="sBuy">Zamów tę kwotę</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PANEL -->
+<section id="panel">
+  <div class="wrap">
+    <div class="sh rv">
+      <div><div class="kick">Panel klienta</div><h2>Śledź <span class="o">zamówienie</span></h2></div>
+      <p>Po zakupie widzisz status w czasie rzeczywistym, od płatności aż do momentu, w którym kasa ląduje na koncie w grze.</p>
+    </div>
+
+    <div class="dash" id="dash">
+      <div class="dbar"><i></i><i></i><i></i><span>montes.pl/panel</span></div>
+      <div class="dg">
+        <aside class="side">
+          <a class="on" href="#panel"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>Przegląd</a>
+          <a href="#panel"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4zM3 6h18M16 10a4 4 0 0 1-8 0"/></svg>Zamówienia</a>
+          <a href="#panel"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>Historia</a>
+          <a href="#panel"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>Wsparcie</a>
+          <div class="usr"><span class="av"></span><div><b id="dNick">Steve</b><br><span style="color:var(--mute);font-size:12px">Klient</span></div></div>
+        </aside>
+        <div class="dm">
+          <div class="pn stat c2"><span>Wydane łącznie</span><b id="dSpent">0 zł</b><em>demo</em></div>
+          <div class="pn stat c2"><span>Otrzymana waluta</span><b id="dGot">0 $</b><em>demo</em></div>
+          <div class="pn stat c2"><span>Zamówienia</span><b id="dCnt">0</b><em>demo</em></div>
+
+          <div class="pn c4">
+            <h3>Zamówienie <span id="dId" style="font-family:var(--mono);font-size:15px;color:var(--mute)">#MT-0000</span> <small id="dState">W TOKU</small></h3>
+            <div class="track" id="track">
+              <div class="st"><span>Opłacone</span><small>płatność</small></div>
+              <div class="st"><span>Weryfikacja</span><small>nick w grze</small></div>
+              <div class="st"><span>Wysyłanie</span><small>/pay w grze</small></div>
+              <div class="st"><span>Dostarczone</span><small>gotowe</small></div>
+            </div>
+            <div class="term" id="term"></div>
+          </div>
+          <div class="pn c2">
+            <h3>Ostatnie <small>DEMO</small></h3>
+            <table class="tbl"><thead><tr><th>KWOTA</th><th>STATUS</th></tr></thead><tbody id="hist"></tbody></table>
+          </div>
+        </div>
+      </div>
+    </div>
+    <p class="demo-note">Podgląd panelu działa w trybie symulacji. Dane są przykładowe.</p>
+  </div>
+</section>
+
+<!-- JAK TO DZIAŁA -->
+<section id="jak">
+  <div class="wrap">
+    <div class="sh rv">
+      <div><div class="kick">Proces</div><h2>4 kroki <span class="o">do kasy</span></h2></div>
+    </div>
+    <div class="steps">
+      <div class="step rv"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 12V8H6a2 2 0 0 1 0-4h12v4M4 6v12a2 2 0 0 0 2 2h14v-4"/><path d="M18 12a2 2 0 0 0 0 4h4v-4z"/></svg></span><h4>Wybierz kwotę</h4><p>Gotowy pakiet albo własna kwota z kalkulatora.</p></div>
+      <div class="step rv"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg></span><h4>Podaj nick</h4><p>Wpisz dokładny nick z Anarchia.gg, na który ma trafić waluta.</p></div>
+      <div class="step rv"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg></span><h4>Zapłać</h4><p>BLIK, PaySafeCard, PayPal albo przelew.</p></div>
+      <div class="step rv"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg></span><h4>Odbierz</h4><p>Wysyłamy walutę w grze i potwierdzamy na Discordzie.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ZALETY -->
+<section>
+  <div class="wrap">
+    <div class="feat">
+      <div class="pn rv wide">
+        <span class="gi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20M6 15h4"/></svg></span>
+        <h3>Płać jak chcesz</h3>
+        <p>Obsługujemy najpopularniejsze metody płatności w Polsce.</p>
+        <div class="pays"><span>BLIK</span><span>PaySafeCard</span><span>PayPal</span><span>Przelew</span></div>
+      </div>
+      <div class="pn rv">
+        <span class="gi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2 3 14h9l-1 8 10-12h-9z"/></svg></span>
+        <h3>Szybka realizacja</h3>
+        <p>Zamówienia realizujemy od razu, gdy tylko obsługa jest online.</p>
+      </div>
+      <div class="pn rv">
+        <span class="gi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></span>
+        <h3>Bezpiecznie</h3>
+        <p>Każde zamówienie ma numer i ticket na Discordzie, więc wszystko jest udokumentowane.</p>
+      </div>
+      <div class="pn rv">
+        <span class="gi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></span>
+        <h3>Stały kurs</h3>
+        <p>13 000 $ za 1 zł, bez ukrytych opłat. Do tego bonus za większe pakiety.</p>
+      </div>
+      <div class="pn rv">
+        <span class="gi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></span>
+        <h3>Wsparcie</h3>
+        <p>Masz pytanie? Otwórz ticket na naszym Discordzie.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FAQ -->
+<section id="faq">
+  <div class="wrap faq">
+    <div class="rv"><div class="kick">FAQ</div><h2>Częste <span class="o">pytania</span></h2></div>
+    <div id="faqList" class="rv"></div>
+  </div>
+</section>
+
+<section style="padding-top:0">
+  <div class="wrap">
+    <div class="big-cta rv">
+      <div class="kick" style="justify-content:center">Montes.pl</div>
+      <h2>Gotowy na <span class="o">kasę?</span></h2>
+      <p>Wybierz kwotę, podaj nick i graj dalej. Resztą zajmiemy się my.</p>
+      <div class="cta"><button class="btn buy" data-zl="25">Kup walutę</button><a href="#" class="btn line discord">Dołącz na Discord</a></div>
+    </div>
+  </div>
+</section>
+</main>
+
+<footer>
+  <div class="wrap fg">
+    <a href="#top" class="logo"><span class="mk">M</span>Montes<small>.pl</small></a>
+    <p>Montes.pl nie jest powiązany z administracją serwera Anarchia.gg ani z Mojang/Microsoft. Minecraft jest znakiem towarowym Mojang AB.</p>
+    <div class="fl"><a href="#oferty">Oferty</a><a href="#faq">FAQ</a><a href="#" class="discord">Discord</a></div>
+  </div>
+</footer>
+
+<!-- MODAL -->
+<div class="ov" id="ov" role="dialog" aria-modal="true" aria-labelledby="mdT">
+  <div class="md">
+    <div class="md-h"><h3 id="mdT">Nowe zamówienie</h3><button class="x" id="mX" aria-label="Zamknij">✕</button></div>
+    <div class="prog" id="prog"><i></i><i></i><i></i><i></i></div>
+
+    <div class="pane" data-p="0">
+      <label class="lbl" for="mNick">Nick w Minecraft (Anarchia.gg)</label>
+      <input class="inp" id="mNick" maxlength="16" placeholder="np. Steve" autocomplete="off">
+      <div class="err" id="eNick"></div>
+      <label class="lbl" for="mZl" style="margin-top:8px">Kwota w zł</label>
+      <input class="inp" id="mZl" inputmode="decimal" value="10">
+      <div class="err" id="eZl"></div>
+      <div style="font-size:14px;color:var(--mute)">Otrzymasz: <b id="mGet" style="color:#fff">130 000 $</b></div>
+    </div>
+
+    <div class="pane" data-p="1">
+      <span class="lbl">Metoda płatności</span>
+      <div class="opts" id="mPay"></div>
+    </div>
+
+    <div class="pane" data-p="2">
+      <div class="sumry" id="mSum"></div>
+      <label style="display:flex;gap:10px;align-items:flex-start;margin-top:18px;font-size:13px;color:var(--mute)">
+        <input type="checkbox" id="mOk" style="margin-top:3px;accent-color:#fff"> Potwierdzam, że nick jest poprawny i akceptuję regulamin sklepu.
+      </label>
+      <div class="err" id="eOk"></div>
+    </div>
+
+    <div class="pane" data-p="3">
+      <div class="proc" id="mProc">
+        <div class="ring"><svg viewBox="0 0 110 110"><circle class="bg" cx="55" cy="55" r="50"/><circle class="fgc" id="ringC" cx="55" cy="55" r="50"/></svg><b id="ringP">0%</b></div>
+        <p id="procT">Łączenie…</p>
+      </div>
+      <div class="proc" id="mDone" style="display:none">
+        <div class="okk"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg></div>
+        <h3 style="font-size:24px;letter-spacing:-.03em">Zamówienie przygotowane</h3>
+        <div class="code" id="mCode">#MT-0000</div>
+        <p style="font-family:var(--sans);font-size:14px">Skopiuj numer i otwórz ticket na Discordzie, żeby opłacić i odebrać walutę.</p>
+      </div>
+    </div>
+
+    <div class="nav-b" id="mNav">
+      <button class="btn line" id="mBack">Wstecz</button>
+      <button class="btn" id="mNext">Dalej</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(() => {
+'use strict';
+/* ═════════ KONFIGURACJA: zmień pod siebie ═════════ */
+const CFG = {
+  rate: 13000,                               // $ w grze za 1 zł
+  discord: 'https://discord.gg/TWOJ_SERWER', // link do Twojego Discorda
+  bonus: [                                   // progi bonusów (od kwoty zł)
+    { from: 50,  pct: 5 },
+    { from: 100, pct: 10 },
+    { from: 250, pct: 15 },
+  ],
+  packs: [
+    { name: 'Start',    zl: 5,   feats: ['Idealny na start', 'Dostawa na nick'] },
+    { name: 'Gracz',    zl: 10,  feats: ['Najczęściej wybierany na próbę', 'Dostawa na nick'] },
+    { name: 'Wojownik', zl: 25,  feats: ['Na pierwszy set', 'Priorytet w kolejce'] },
+    { name: 'Elita',    zl: 50,  feats: ['+5% bonusu', 'Priorytet w kolejce'], hot: 'HIT' },
+    { name: 'Boss',     zl: 100, feats: ['+10% bonusu', 'Najwyższy priorytet'] },
+    { name: 'Legenda',  zl: 250, feats: ['+15% bonusu', 'Obsługa VIP na Discordzie'], badge: 'MAX' },
+  ],
+  pay: [
+    { id: 'blik', name: 'BLIK', note: 'szybko z telefonu' },
+    { id: 'psc', name: 'PaySafeCard', note: 'kod PSC' },
+    { id: 'pp', name: 'PayPal', note: 'konto PayPal' },
+    { id: 'tr', name: 'Przelew', note: 'tradycyjny' },
+  ],
+};
+
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const fine = matchMedia('(hover:hover)').matches;
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
+const fmt = n => Math.round(n).toLocaleString('pl-PL');
+const zl = n => n.toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' zł';
+const short = n => n >= 1e6 ? (+(n / 1e6).toFixed(2)).toLocaleString('pl-PL') + 'M' : n >= 1e3 ? (+(n / 1e3).toFixed(1)).toLocaleString('pl-PL') + 'k' : fmt(n);
+const num = v => { const n = parseFloat(String(v).replace(/\s/g, '').replace(',', '.')); return isFinite(n) ? n : 0; };
+const bonusPct = z => CFG.bonus.reduce((p, t) => z >= t.from ? t.pct : p, 0);
+const calc = z => { const base = z * CFG.rate, pct = bonusPct(z), b = base * pct / 100; return { base, pct, b, tot: base + b }; };
+const toastEl = $('#toast'); let toastT;
+const toast = m => { toastEl.textContent = m; toastEl.classList.add('on'); clearTimeout(toastT); toastT = setTimeout(() => toastEl.classList.remove('on'), 2000); };
+$$('.discord').forEach(a => { a.href = CFG.discord; a.target = '_blank'; a.rel = 'noopener'; });
+
+/* ═════════ loader ═════════ */
+(() => {
+  let p = 0; const bar = $('#lbar'), t = $('#lpct');
+  const step = () => {
+    p = Math.min(100, p + (reduce ? 100 : 3 + Math.random() * 9));
+    bar.style.width = p + '%'; t.textContent = String(Math.floor(p)).padStart(3, '0') + '%';
+    if (p < 100) setTimeout(step, 40);
+    else setTimeout(() => { $('#loader').classList.add('done'); document.body.classList.add('ready'); }, 250);
+  };
+  step();
+})();
+
+/* ═════════ kursor + header + scroll ═════════ */
+const cur = $('.cur'), dot = $('.cur-dot');
+let mx = innerWidth / 2, my = innerHeight / 2, cx = mx, cy = my;
+addEventListener('pointermove', e => { mx = e.clientX; my = e.clientY; dot.style.transform = `translate(${mx}px,${my}px) translate(-50%,-50%)`; }, { passive: true });
+(function loop() { cx += (mx - cx) * .18; cy += (my - cy) * .18; cur.style.transform = `translate(${cx}px,${cy}px) translate(-50%,-50%)`; requestAnimationFrame(loop); })();
+document.addEventListener('pointerover', e => { if (e.target.closest('a,button,input,.card,.chip')) cur.classList.add('big'); });
+document.addEventListener('pointerout', e => { if (e.target.closest('a,button,input,.card,.chip')) cur.classList.remove('big'); });
+
+const hdr = $('#hdr'), bar = $('.scrl');
+const onScroll = () => {
+  hdr.classList.toggle('sc', scrollY > 30);
+  const h = document.documentElement.scrollHeight - innerHeight;
+  bar.style.width = (h > 0 ? scrollY / h * 100 : 0) + '%';
+};
+addEventListener('scroll', onScroll, { passive: true }); onScroll();
+
+$('#burger').addEventListener('click', e => { e.currentTarget.classList.toggle('on'); $('#links').classList.toggle('on'); });
+$$('#links a').forEach(a => a.addEventListener('click', () => { $('#burger').classList.remove('on'); $('#links').classList.remove('on'); }));
+
+const io = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } }), { threshold: .15 });
+$$('.rv,.dash').forEach(el => io.observe(el));
+
+/* magnetyczne przyciski */
+if (fine && !reduce) $$('.btn:not(.card .btn)').forEach(b => {
+  b.addEventListener('pointermove', e => { const r = b.getBoundingClientRect(); b.style.transform = `translate(${(e.clientX - r.left - r.width / 2) * .18}px,${(e.clientY - r.top - r.height / 2) * .3}px)`; });
+  b.addEventListener('pointerleave', () => b.style.transform = '');
+});
+
+/* marquee */
+(() => {
+  const words = ['13 000 $ = 1 zł', '<span class="o">Anarchia.gg</span>', 'Bonus do +15%', '<span class="o">Montes.pl</span>', 'BLIK · PSC · PayPal', '<span class="o">Szybka dostawa</span>'];
+  const html = words.map(w => `<span>${w}</span>`).join('');
+  $('#mq').innerHTML = html + html;
+})();
+
+/* ═════════ tilt 3D ═════════ */
+function tilt(el, max = 10) {
+  if (!fine || reduce) return;
+  el.addEventListener('pointermove', e => {
+    const r = el.getBoundingClientRect(), x = (e.clientX - r.left) / r.width, y = (e.clientY - r.top) / r.height;
+    el.style.transform = `perspective(1000px) rotateY(${(x - .5) * max}deg) rotateX(${(.5 - y) * max}deg) translateZ(0)`;
+    el.style.setProperty('--mx', x * 100 + '%'); el.style.setProperty('--my', y * 100 + '%');
+  });
+  el.addEventListener('pointerleave', () => el.style.transform = '');
+}
+
+/* ═════════ oferty ═════════ */
+$('#offers').innerHTML = CFG.packs.map(p => {
+  const c = calc(p.zl), hot = !!p.hot, badge = p.hot || p.badge || (c.pct ? `+${c.pct}%` : '');
+  return `<article class="card rv${hot ? ' hot' : ''}">
+    <div class="top"><span class="coin-ico">${esc(p.name[0])}</span>${badge ? `<span class="badge">${esc(badge)}</span>` : ''}</div>
+    <div class="nm" style="margin-top:22px">${esc(p.name)}</div>
+    <div class="amt">${short(c.tot)} <small>$</small></div>
+    <div class="sub">${fmt(c.base)} $${c.b ? ` + ${fmt(c.b)} $ bonusu` : ''}</div>
+    <div class="pr"><b>${zl(p.zl)}</b>${c.pct ? `<s>${zl(c.tot / CFG.rate)}</s>` : ''}</div>
+    <ul class="ft">${p.feats.map(f => `<li>${esc(f)}</li>`).join('')}</ul>
+    <button class="btn buy" data-zl="${p.zl}">Kup ${esc(p.name)}</button>
+  </article>`;
+}).join('');
+$$('.card').forEach(c => { tilt(c, 8); io.observe(c); });
+
+/* ═════════ szybki przelicznik ═════════ */
+let qRev = false; const qIn = $('#qIn'), qOut = $('#qOut');
+const qChipsZl = [5, 10, 25, 50, 100], qChipsK = [100000, 500000, 1000000, 2500000, 5000000];
+function qChips() {
+  $('#qChips').innerHTML = (qRev ? qChipsK : qChipsZl).map(v => `<button class="chip" data-v="${v}">${qRev ? short(v) + ' $' : v + ' zł'}</button>`).join('');
+}
+function qZl() { const v = num(qIn.value); return qRev ? Math.ceil(v / CFG.rate * 100) / 100 : v; }
+function qCalc() {
+  const v = Math.max(0, num(qIn.value));
+  if (!qRev) {
+    const c = calc(v); qOut.value = fmt(c.tot);
+    $('#qBonus').textContent = c.pct ? `+${c.pct}% (${fmt(c.b)} $)` : 'brak (od 50 zł)';
+  } else {
+    const z = Math.ceil(v / CFG.rate * 100) / 100; qOut.value = zl(z).replace(' zł', '');
+    const p = bonusPct(z);
+    $('#qBonus').textContent = p ? `+${p}% → dostaniesz ${fmt(calc(z).tot)} $` : 'brak (od 50 zł)';
+  }
+  $$('#qChips .chip').forEach(c => c.classList.toggle('on', num(c.dataset.v) === v));
+}
+qIn.addEventListener('input', () => { qIn.value = qIn.value.replace(/[^\d.,\s]/g, ''); qCalc(); });
+$('#qChips').addEventListener('click', e => { const c = e.target.closest('.chip'); if (!c) return; qIn.value = qRev ? fmt(+c.dataset.v) : c.dataset.v; qCalc(); });
+$('#qSwap').addEventListener('click', () => {
+  const z = qZl(); qRev = !qRev;
+  $('#qInL').textContent = qRev ? 'Chcesz dostać' : 'Płacisz';
+  $('#qOutL').textContent = qRev ? 'Zapłacisz' : 'Otrzymujesz';
+  $('#qInU').textContent = qRev ? '$ w grze' : 'PLN';
+  $('#qOutU').textContent = qRev ? 'PLN' : '$ w grze';
+  qIn.value = qRev ? fmt(z * CFG.rate) : String(z).replace('.', ',');
+  qChips(); qCalc();
+});
+$('#qBuy').addEventListener('click', () => openOrder(qZl()));
+qChips(); qCalc(); tilt($('#qcard'), 8);
+
+/* ═════════ symulator ═════════ */
+const sR = $('#sRange');
+$('#tiers').innerHTML = [{ from: 1, pct: 0 }, ...CFG.bonus].map((t, i) => `<div data-i="${i}"><span>od ${t.from} zł</span><i></i><span style="text-align:right">+${t.pct}%</span></div>`).join('');
+const tierRows = $$('#tiers div'), allTiers = [{ from: 1, pct: 0 }, ...CFG.bonus];
+let shown = 130000, target = 130000;
+function sUpd() {
+  const z = +sR.value, c = calc(z);
+  sR.style.setProperty('--p', ((z - sR.min) / (sR.max - sR.min) * 100) + '%');
+  target = c.tot;
+  $('#sZl').textContent = z + ' zł';
+  $('#sBase').textContent = short(c.base);
+  $('#sB').textContent = c.pct ? '+' + c.pct + '%' : '+0';
+  $('#sRate').textContent = short(c.tot / z) + '/zł';
+  $('#iZl').textContent = zl(z); $('#iBase').textContent = fmt(c.base) + ' $';
+  $('#iBon').textContent = (c.b ? '+' : '') + fmt(c.b) + ' $';
+  const nx = CFG.bonus.find(t => t.from > z);
+  $('#iNext').textContent = nx ? `${nx.from - z} zł → +${nx.pct}%` : 'masz maks.';
+  $('#iTot').textContent = fmt(c.tot) + ' $';
+  tierRows.forEach((r, i) => {
+    const t = allTiers[i], n = allTiers[i + 1];
+    const w = z >= (n ? n.from : Infinity) ? 100 : z >= t.from ? (n ? (z - t.from) / (n.from - t.from) * 100 : 100) : 0;
+    r.querySelector('i').style.setProperty('--w', w + '%');
+    r.classList.toggle('on', z >= t.from && (!n || z < n.from));
+  });
+  drawChart(z);
+}
+(function tick() { shown += (target - shown) * .15; if (Math.abs(target - shown) < 1) shown = target; $('#sOut').textContent = fmt(shown); requestAnimationFrame(tick); })();
+sR.addEventListener('input', sUpd);
+$('#sBuy').addEventListener('click', () => openOrder(+sR.value));
+
+const cv = $('#chart'), cx2 = cv.getContext('2d');
+function drawChart(z) {
+  const dpr = Math.min(devicePixelRatio, 2), W = cv.clientWidth, H = cv.clientHeight;
+  if (!W) return;
+  cv.width = W * dpr; cv.height = H * dpr; cx2.setTransform(dpr, 0, 0, dpr, 0, 0);
+  cx2.clearRect(0, 0, W, H);
+  const max = +sR.max, top = calc(max).tot, X = v => 4 + (v - 1) / (max - 1) * (W - 8), Y = v => H - 18 - v / top * (H - 30);
+  cx2.strokeStyle = 'rgba(255,255,255,.07)'; cx2.lineWidth = 1;
+  for (let i = 0; i <= 4; i++) { const y = 6 + i * (H - 24) / 4; cx2.beginPath(); cx2.moveTo(0, y); cx2.lineTo(W, y); cx2.stroke(); }
+  // linia bez bonusu
+  cx2.setLineDash([4, 5]); cx2.strokeStyle = 'rgba(255,255,255,.3)';
+  cx2.beginPath(); cx2.moveTo(X(1), Y(CFG.rate)); cx2.lineTo(X(max), Y(max * CFG.rate)); cx2.stroke(); cx2.setLineDash([]);
+  // linia z bonusem
+  const g = cx2.createLinearGradient(0, 0, 0, H); g.addColorStop(0, 'rgba(255,255,255,.22)'); g.addColorStop(1, 'rgba(255,255,255,0)');
+  cx2.beginPath(); cx2.moveTo(X(1), Y(calc(1).tot));
+  for (let v = 2; v <= max; v++) cx2.lineTo(X(v), Y(calc(v).tot));
+  cx2.strokeStyle = '#fff'; cx2.lineWidth = 2; cx2.stroke();
+  cx2.lineTo(X(max), H - 18); cx2.lineTo(X(1), H - 18); cx2.closePath(); cx2.fillStyle = g; cx2.fill();
+  // punkt
+  const px = X(z), py = Y(calc(z).tot);
+  cx2.strokeStyle = 'rgba(255,255,255,.35)'; cx2.beginPath(); cx2.moveTo(px, py); cx2.lineTo(px, H - 18); cx2.stroke();
+  cx2.fillStyle = '#000'; cx2.strokeStyle = '#fff'; cx2.lineWidth = 2; cx2.beginPath(); cx2.arc(px, py, 6, 0, 7); cx2.fill(); cx2.stroke();
+  cx2.fillStyle = '#5e5e5e'; cx2.font = '11px JetBrains Mono, monospace';
+  cx2.fillText('— z bonusem   - - bez bonusu', 4, H - 3);
+}
+addEventListener('resize', () => drawChart(+sR.value));
+sUpd();
+
+/* ═════════ panel klienta (symulacja) ═════════ */
+const stats = { spent: 0, got: 0, cnt: 0 }, hist = [];
+const term = $('#term'), stEls = $$('#track .st');
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+const nicks = ['Steve', 'Alex', 'Kowal_PvP', 'xNinja', 'Mati2010', 'Kaktus'];
+let demoOrder = null, demoRunning = false;
+const genId = () => '#MT-' + String(Math.floor(1000 + Math.random() * 9000));
+function setStep(i) { stEls.forEach((s, k) => { s.classList.toggle('done', k < i || i === 4); s.classList.toggle('now', k === i); }); }
+async function type(line, cls = '') {
+  const d = document.createElement('div'); if (cls) d.className = cls;
+  term.querySelector('.caret')?.remove(); term.appendChild(d);
+  for (const ch of line) { d.textContent += ch; await sleep(reduce ? 0 : 14); }
+  const c = document.createElement('span'); c.className = 'caret'; d.appendChild(c);
+  while (term.children.length > 7) term.firstChild.remove();
+}
+function renderStats() {
+  $('#dSpent').textContent = zl(stats.spent); $('#dGot').textContent = short(stats.got) + ' $'; $('#dCnt').textContent = stats.cnt;
+  $('#hist').innerHTML = hist.slice(0, 5).map(h => `<tr><td>${short(h.tot)} $<br><span style="color:var(--dim);font-size:11px">${zl(h.zl)}</span></td><td><span class="pill${h.ok ? ' w' : ''}">${h.ok ? 'OK' : 'W TOKU'}</span></td></tr>`).join('') || '<tr><td colspan="2" style="color:var(--dim)">brak</td></tr>';
+}
+async function runDemo(o) {
+  demoRunning = true;
+  const c = calc(o.zl), h = { zl: o.zl, tot: c.tot, ok: false }; hist.unshift(h); renderStats();
+  $('#dId').textContent = o.id; $('#dNick').textContent = o.nick; $('#dState').textContent = 'W TOKU';
+  term.innerHTML = '';
+  setStep(0); await type(`> zamówienie ${o.id} · ${zl(o.zl)} · ${o.pay}`, 'p'); await sleep(700);
+  await type('✓ płatność potwierdzona'); setStep(1); await sleep(800);
+  await type(`> sprawdzam gracza ${o.nick}…`, 'p'); await sleep(700);
+  await type('✓ gracz znaleziony na Anarchia.gg'); setStep(2); await sleep(800);
+  await type(`> /pay ${o.nick} ${Math.round(c.tot)}`, 'p'); await sleep(900);
+  await type(`✓ wysłano ${fmt(c.tot)} $ do ${o.nick}`, 'ok'); setStep(4);
+  h.ok = true; stats.spent += o.zl; stats.got += c.tot; stats.cnt++; renderStats();
+  $('#dState').textContent = 'DOSTARCZONE';
+  demoRunning = false;
+}
+const dashIO = new IntersectionObserver(async es => {
+  if (!es[0].isIntersecting) return;
+  dashIO.disconnect();
+  while (true) {
+    const o = demoOrder || { id: genId(), nick: nicks[Math.floor(Math.random() * nicks.length)], zl: [10, 25, 50, 100][Math.floor(Math.random() * 4)], pay: CFG.pay[Math.floor(Math.random() * CFG.pay.length)].name };
+    demoOrder = null;
+    await runDemo(o);
+    for (let t = 0; t < 40 && !demoOrder; t++) await sleep(100);
+  }
+}, { threshold: .3 });
+dashIO.observe($('#dash'));
+renderStats();
+
+/* ═════════ jak to działa (bez dodatków) / FAQ ═════════ */
+const FAQ = [
+  ['Jaki jest kurs?', `Stały: ${fmt(CFG.rate)} $ w grze za każdą 1 zł. Od 50 zł doliczamy bonus +5%, od 100 zł +10%, a od 250 zł +15%.`],
+  ['Jak szybko dostanę walutę?', 'Zamówienia realizujemy, gdy tylko obsługa jest online. Status sprawdzisz w tickecie na Discordzie.'],
+  ['Czy muszę być online w grze?', 'Nie jest to konieczne. Wystarczy, że podasz dokładny nick, a przelew zostanie wysłany na Twoje konto.'],
+  ['Pomyliłem nick. Co teraz?', 'Napisz od razu w tickecie na Discordzie z numerem zamówienia. Jeśli waluta nie została jeszcze wysłana, poprawimy nick.'],
+  ['Jakie są metody płatności?', 'BLIK, PaySafeCard, PayPal oraz zwykły przelew bankowy.'],
+  ['Czy mogę kupić własną kwotę?', 'Tak. Wpisz dowolną kwotę w kalkulatorze lub w formularzu zamówienia. Bonus nalicza się automatycznie według progów.'],
+];
+$('#faqList').innerHTML = FAQ.map(([q, a]) => `<div class="qa"><button aria-expanded="false">${esc(q)}<span class="pm"></span></button><div class="an"><div><p>${esc(a)}</p></div></div></div>`).join('');
+$('#faqList').addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return;
+  const qa = b.parentElement, on = !qa.classList.contains('on');
+  $$('#faqList .qa').forEach(x => { x.classList.remove('on'); x.querySelector('button').setAttribute('aria-expanded', 'false'); });
+  if (on) { qa.classList.add('on'); b.setAttribute('aria-expanded', 'true'); }
+});
+
+/* ═════════ modal zamówienia ═════════ */
+const ov = $('#ov'), mNick = $('#mNick'), mZl = $('#mZl');
+let step = 0, pay = null, lastFocus = null, busy = false;
+$('#mPay').innerHTML = CFG.pay.map(p => `<button class="opt" data-id="${p.id}"><b>${esc(p.name)}</b><span>${esc(p.note)}</span></button>`).join('');
+$('#mPay').addEventListener('click', e => { const b = e.target.closest('.opt'); if (!b) return; pay = CFG.pay.find(p => p.id === b.dataset.id); $$('#mPay .opt').forEach(o => o.classList.toggle('on', o === b)); });
+const upGet = () => $('#mGet').textContent = fmt(calc(Math.max(0, num(mZl.value))).tot) + ' $';
+mZl.addEventListener('input', upGet);
+function show(i) {
+  step = i;
+  $$('.pane').forEach(p => p.classList.toggle('on', +p.dataset.p === i));
+  $$('#prog i').forEach((b, k) => b.classList.toggle('on', k <= i));
+  $('#mBack').style.visibility = i > 0 && i < 3 ? 'visible' : 'hidden';
+  $('#mNext').textContent = i === 2 ? 'Złóż zamówienie' : 'Dalej';
+  $('#mNav').style.display = i === 3 ? 'none' : 'flex';
+}
+function openOrder(z) {
+  lastFocus = document.activeElement;
+  mZl.value = String(Math.max(1, Math.round((z || 10) * 100) / 100)).replace('.', ',');
+  upGet(); $('#eNick').textContent = ''; $('#eZl').textContent = ''; $('#eOk').textContent = '';
+  $('#mOk').checked = false; $('#mProc').style.display = ''; $('#mDone').style.display = 'none';
+  show(0); ov.classList.add('on'); document.body.style.overflow = 'hidden';
+  setTimeout(() => mNick.focus(), 300);
+}
+function closeOrder() {
+  if (busy) return;
+  ov.classList.remove('on'); document.body.style.overflow = '';
+  if (step === 3 && $('#mDone').style.display !== 'none') show(0);
+  lastFocus?.focus?.();
+}
+document.addEventListener('click', e => { const b = e.target.closest('.buy'); if (b) openOrder(+b.dataset.zl); });
+$('#mX').addEventListener('click', closeOrder);
+ov.addEventListener('click', e => { if (e.target === ov) closeOrder(); });
+addEventListener('keydown', e => { if (e.key === 'Escape' && ov.classList.contains('on')) closeOrder(); if (e.key === 'Enter' && ov.classList.contains('on') && step < 3 && e.target.tagName === 'INPUT') $('#mNext').click(); });
+$('#mBack').addEventListener('click', () => show(Math.max(0, step - 1)));
+$('#mNext').addEventListener('click', async () => {
+  if (step === 0) {
+    const n = mNick.value.trim(), z = num(mZl.value); let ok = true;
+    if (!/^[A-Za-z0-9_]{3,16}$/.test(n)) { $('#eNick').textContent = 'Nick: 3–16 znaków, litery, cyfry i _'; ok = false; } else $('#eNick').textContent = '';
+    if (!(z >= 1 && z <= 5000)) { $('#eZl').textContent = 'Kwota od 1 do 5000 zł'; ok = false; } else $('#eZl').textContent = '';
+    if (ok) show(1);
+  } else if (step === 1) {
+    if (!pay) { toast('Wybierz metodę płatności'); return; }
+    const z = Math.round(num(mZl.value) * 100) / 100, c = calc(z);
+    $('#mSum').innerHTML = [
+      ['Nick', esc(mNick.value.trim())], ['Kwota', zl(z)], ['Waluta bazowa', fmt(c.base) + ' $'],
+      ['Bonus', c.pct ? `+${c.pct}% (${fmt(c.b)} $)` : 'brak'], ['Płatność', esc(pay.name)], ['Razem w grze', `<span style="font-size:20px">${fmt(c.tot)} $</span>`]
+    ].map(([k, v]) => `<div class="ln"><span>${k}</span><b>${v}</b></div>`).join('');
+    show(2);
+  } else if (step === 2) {
+    if (!$('#mOk').checked) { $('#eOk').textContent = 'Zaznacz potwierdzenie'; return; }
+    $('#eOk').textContent = ''; show(3); busy = true;
+    const msgs = ['Tworzenie zamówienia…', 'Rezerwacja waluty…', 'Generowanie numeru…', 'Gotowe'];
+    const ringC = $('#ringC'), ringP = $('#ringP');
+    for (let p = 0; p <= 100; p += 2) {
+      ringC.style.strokeDashoffset = 314 - 314 * p / 100; ringP.textContent = p + '%';
+      $('#procT').textContent = msgs[Math.min(3, Math.floor(p / 34))];
+      await sleep(reduce ? 0 : 28);
+    }
+    const id = genId(), z = Math.round(num(mZl.value) * 100) / 100;
+    $('#mCode').textContent = id; $('#mProc').style.display = 'none'; $('#mDone').style.display = '';
+    $('#mNav').style.display = 'flex'; $('#mBack').style.visibility = 'hidden';
+    $('#mNext').textContent = 'Kopiuj numer i przejdź na Discord';
+    demoOrder = { id, nick: mNick.value.trim(), zl: z, pay: pay.name };
+    busy = false; step = 4;
+  } else if (step === 4) {
+    const id = $('#mCode').textContent;
+    try { await navigator.clipboard.writeText(id); toast('Skopiowano ' + id); } catch { toast('Numer: ' + id); }
+    window.open(CFG.discord, '_blank', 'noopener');
+  }
+});
+
+/* ═════════ 3D: monety Montes ═════════ */
+if (window.THREE) {
+  const canvas = $('#gl');
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' });
+  renderer.setPixelRatio(Math.min(devicePixelRatio, 1.75));
+  renderer.setClearColor(0x050505, 1);
+  renderer.outputEncoding = THREE.sRGBEncoding;
+  const scene = new THREE.Scene();
+  scene.fog = new THREE.Fog(0x050505, 14, 40);
+  const camera = new THREE.PerspectiveCamera(40, 1, .1, 100);
+  camera.position.set(0, 0, 16);
+
+  // tekstura z napisem M
+  function faceTex(letter) {
+    const c = document.createElement('canvas'); c.width = c.height = 512; const g = c.getContext('2d');
+    const gr = g.createRadialGradient(200, 180, 40, 256, 256, 280); gr.addColorStop(0, '#f2f2f2'); gr.addColorStop(1, '#8a8a8a');
+    g.fillStyle = gr; g.fillRect(0, 0, 512, 512);
+    g.strokeStyle = '#2a2a2a'; g.lineWidth = 10; g.beginPath(); g.arc(256, 256, 226, 0, 7); g.stroke();
+    g.lineWidth = 3; g.setLineDash([10, 12]); g.beginPath(); g.arc(256, 256, 200, 0, 7); g.stroke(); g.setLineDash([]);
+    g.fillStyle = '#151515'; g.font = 'bold 260px "Space Grotesk", Arial, sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle';
+    g.fillText(letter, 256, 270);
+    g.font = 'bold 34px "JetBrains Mono", monospace'; g.fillText('MONTES', 256, 420);
+    const t = new THREE.CanvasTexture(c); t.encoding = THREE.sRGBEncoding; t.anisotropy = 8; return t;
+  }
+  function edgeTex() {
+    const c = document.createElement('canvas'); c.width = 512; c.height = 32; const g = c.getContext('2d');
+    g.fillStyle = '#9a9a9a'; g.fillRect(0, 0, 512, 32);
+    g.fillStyle = '#4a4a4a'; for (let x = 0; x < 512; x += 8) g.fillRect(x, 0, 3, 32);
+    const t = new THREE.CanvasTexture(c); t.wrapS = THREE.RepeatWrapping; t.repeat.x = 6; return t;
+  }
+  const fTex = faceTex('M'), fTex2 = faceTex('$'), eTex = edgeTex();
+  const coinGeo = new THREE.CylinderGeometry(1, 1, .16, 72, 1);
+  const edgeMat = new THREE.MeshStandardMaterial({ map: eTex, metalness: .95, roughness: .3, color: 0xdddddd });
+  const faceMat = new THREE.MeshStandardMaterial({ map: fTex, metalness: .9, roughness: .22 });
+  const faceMat2 = new THREE.MeshStandardMaterial({ map: fTex2, metalness: .9, roughness: .22 });
+  const mats = [edgeMat, faceMat, faceMat2];
+
+  // oświetlenie (mono)
+  scene.add(new THREE.AmbientLight(0xffffff, .25));
+  const key = new THREE.DirectionalLight(0xffffff, 2.2); key.position.set(5, 6, 8); scene.add(key);
+  const rim = new THREE.DirectionalLight(0xffffff, 1.4); rim.position.set(-8, -2, -4); scene.add(rim);
+  const pt = new THREE.PointLight(0xffffff, 2.5, 30); pt.position.set(0, 0, 6); scene.add(pt);
+
+  // mapa odbić (prosty gradient studyjny)
+  (() => {
+    const c = document.createElement('canvas'); c.width = 256; c.height = 128; const g = c.getContext('2d');
+    const gr = g.createLinearGradient(0, 0, 0, 128); gr.addColorStop(0, '#fff'); gr.addColorStop(.45, '#333'); gr.addColorStop(.55, '#111'); gr.addColorStop(1, '#000');
+    g.fillStyle = gr; g.fillRect(0, 0, 256, 128);
+    g.fillStyle = '#fff'; g.fillRect(40, 20, 50, 14); g.fillRect(170, 30, 30, 40);
+    const t = new THREE.CanvasTexture(c); t.mapping = THREE.EquirectangularReflectionMapping;
+    const pm = new THREE.PMREMGenerator(renderer); scene.environment = pm.fromEquirectangular(t).texture; pm.dispose();
+  })();
+
+  // główna moneta
+  const hero = new THREE.Group(); scene.add(hero);
+  const big = new THREE.Mesh(coinGeo, mats); big.scale.setScalar(2.4); big.rotation.x = Math.PI / 2; hero.add(big);
+  // pierścienie
+  const ringMat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: .25 });
+  const rings = [3.4, 4.2, 5.3].map((r, i) => {
+    const m = new THREE.Mesh(new THREE.TorusGeometry(r, i === 1 ? .012 : .006, 8, 160), ringMat.clone());
+    m.material.opacity = [.35, .18, .1][i]; m.rotation.x = Math.PI / 2.4 + i * .2; m.rotation.y = i * .4; hero.add(m); return m;
+  });
+  const wire = new THREE.Mesh(new THREE.IcosahedronGeometry(6.2, 1), new THREE.MeshBasicMaterial({ color: 0xffffff, wireframe: true, transparent: true, opacity: .045 }));
+  hero.add(wire);
+
+  // orbitujące monety (instancje)
+  const N = innerWidth < 700 ? 40 : 90;
+  const small = new THREE.InstancedMesh(coinGeo, mats, N);
+  const data = [];
+  const dummy = new THREE.Object3D();
+  for (let i = 0; i < N; i++) {
+    data.push({
+      r: 4 + Math.random() * 8, a: Math.random() * Math.PI * 2, y: (Math.random() - .5) * 9,
+      s: .18 + Math.random() * .38, sp: (.05 + Math.random() * .12) * (Math.random() < .5 ? -1 : 1),
+      rx: Math.random() * 6, ry: Math.random() * 6, rs: .4 + Math.random() * 1.4, z: (Math.random() - .5) * 4,
+    });
+  }
+  scene.add(small);
+
+  // pył
+  const pN = 1400, pGeo = new THREE.BufferGeometry(), pPos = new Float32Array(pN * 3);
+  for (let i = 0; i < pN; i++) { pPos[i * 3] = (Math.random() - .5) * 60; pPos[i * 3 + 1] = (Math.random() - .5) * 60; pPos[i * 3 + 2] = (Math.random() - .5) * 40 - 5; }
+  pGeo.setAttribute('position', new THREE.BufferAttribute(pPos, 3));
+  const dust = new THREE.Points(pGeo, new THREE.PointsMaterial({ color: 0xffffff, size: .045, transparent: true, opacity: .55, depthWrite: false }));
+  scene.add(dust);
+
+  // podłoga z siatki
+  const grid = new THREE.GridHelper(80, 60, 0xffffff, 0xffffff);
+  grid.material.transparent = true; grid.material.opacity = .05; grid.position.y = -7; scene.add(grid);
+
+  let W = 0, H = 0;
+  function resize() {
+    W = innerWidth; H = innerHeight; renderer.setSize(W, H, false);
+    camera.aspect = W / H; camera.updateProjectionMatrix();
+  }
+  addEventListener('resize', resize); resize();
+
+  let tx = 0, ty = 0, px = 0, py = 0, spin = 0;
+  addEventListener('pointermove', e => { tx = e.clientX / W - .5; ty = e.clientY / H - .5; }, { passive: true });
+  // klik w przycisk kupna = szybki obrót monety
+  document.addEventListener('click', e => { if (e.target.closest('.buy,#qBuy,#sBuy,#qSwap,.chip')) spin += 3; });
+
+  const clock = new THREE.Clock();
+  let visible = true;
+  document.addEventListener('visibilitychange', () => { visible = !document.hidden; if (visible) clock.getDelta(); });
+  function frame() {
+    requestAnimationFrame(frame);
+    if (!visible) return;
+    const dt = Math.min(clock.getDelta(), .05), t = clock.elapsedTime;
+    const sp = document.documentElement.scrollHeight - innerHeight;
+    const s = sp > 0 ? scrollY / sp : 0;
+    px += (tx - px) * .05; py += (ty - py) * .05;
+    spin *= .96;
+    const m = reduce ? .15 : 1;
+
+    // pozycja monety zależna od scrolla
+    const heroX = W > 960 ? 4.2 - s * 8.4 : 0;
+    const heroY = W > 960 ? Math.sin(s * Math.PI * 2) * 1.2 : 2.6 - s * 3;
+    hero.position.x += (heroX - hero.position.x) * .06;
+    hero.position.y += (heroY - hero.position.y) * .06;
+    hero.position.z = W > 960 ? 0 : -4;
+    big.rotation.z += (dt * .6 + spin * dt) * m;
+    big.rotation.x = Math.PI / 2 + Math.sin(t * .6) * .25 * m + py * .6;
+    big.rotation.y = px * .8 + s * Math.PI * 4;
+    hero.position.y += Math.sin(t * 1.2) * .004 * m;
+    rings.forEach((r, i) => { r.rotation.z += dt * (.15 + i * .08) * (i % 2 ? -1 : 1) * m; });
+    wire.rotation.y += dt * .05 * m; wire.rotation.x = s * 2;
+
+    for (let i = 0; i < N; i++) {
+      const d = data[i]; d.a += d.sp * dt * m; d.rx += d.rs * dt * m; d.ry += d.rs * .7 * dt * m;
+      dummy.position.set(Math.cos(d.a) * d.r, d.y + Math.sin(t * .5 + i) * .3 - s * 6 + (s * 6 * (i % 3) / 2), Math.sin(d.a) * d.r * .6 + d.z - 7);
+      dummy.rotation.set(d.rx, d.ry, 0); dummy.scale.setScalar(d.s); dummy.updateMatrix();
+      small.setMatrixAt(i, dummy.matrix);
+    }
+    small.instanceMatrix.needsUpdate = true;
+    dust.rotation.y = t * .01 * m + s * .6; dust.position.y = s * 8;
+    grid.position.z = (t * .6 * m) % (80 / 60);
+
+    camera.position.x += (px * 2.2 - camera.position.x) * .05;
+    camera.position.y += (-py * 1.6 - camera.position.y) * .05;
+    camera.lookAt(0, 0, 0);
+    pt.position.x = px * 10; pt.position.y = -py * 8;
+    renderer.render(scene, camera);
+  }
+  frame();
+}
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,17 @@
+{
+  "name": "kompilator-pl",
+  "version": "1.0.0",
+  "description": "Kompilator.pl – wrzuć źródła moda Minecraft (.zip), dostań gotowy .jar",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "adm-zip": "^0.5.16",
+    "express": "^4.21.2",
+    "multer": "^1.4.5-lts.1"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

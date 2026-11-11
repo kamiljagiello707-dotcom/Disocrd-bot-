@@ -9,12 +9,18 @@ import net.minecraft.util.Hand;
 import net.minecraft.util.math.Box;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
+import tech.fuzir.client.event.events.Render3DEvent;
 import tech.fuzir.client.event.events.TickEvent;
+import tech.fuzir.client.gui.Theme;
 import tech.fuzir.client.module.Category;
 import tech.fuzir.client.module.Module;
 import tech.fuzir.client.setting.BoolSetting;
 import tech.fuzir.client.setting.ModeSetting;
+import tech.fuzir.client.render.WorldRenderUtil;
 import tech.fuzir.client.setting.NumberSetting;
+import tech.fuzir.client.util.ColorUtil;
+import tech.fuzir.client.util.animation.Animation;
+import tech.fuzir.client.util.animation.Easing;
 
 import java.util.Comparator;
 
@@ -32,17 +38,28 @@ public final class KillAura extends Module {
     private final BoolSetting passives = bool("Passives", false);
     private final BoolSetting ignoreInvisible = bool("Ignore Invisible", true);
     private final BoolSetting pauseWhileUsing = bool("Pause While Using", true);
+    private final BoolSetting targetEsp = bool("Target ESP", true);
+    private final ModeSetting espMode = register(new ModeSetting("ESP Mode", "Ring", "Ring", "Box"))
+            .visibleWhen(targetEsp::isEnabled);
 
+    private static final int HURT_COLOR = 0xFFFF4D6A;
+
+    private final Animation espFade = new Animation(Easing.OUT_CUBIC, 250);
     private LivingEntity target;
+    /** Last target, kept after it is lost so the indicator can fade out smoothly. */
+    private LivingEntity espTarget;
 
     public KillAura() {
         super("KillAura", "Attacks the best target around you when your swing is charged.", Category.COMBAT);
         on(TickEvent.class, e -> tick());
+        on(Render3DEvent.class, this::renderTargetEsp);
     }
 
     @Override
     protected void onDisable() {
         target = null;
+        espTarget = null;
+        espFade.set(0);
     }
 
     private void tick() {
@@ -123,6 +140,47 @@ public final class KillAura extends Module {
         float yaw = MathHelper.wrapDegrees(angles[0] - mc.player.getYaw());
         float pitch = angles[1] - mc.player.getPitch();
         return Math.sqrt(yaw * yaw + pitch * pitch);
+    }
+
+    // ------------------------------------------------------------------ Target ESP
+
+    private void renderTargetEsp(Render3DEvent event) {
+        if (!targetEsp.isEnabled()) return;
+        boolean active = target != null && target.isAlive();
+        if (active) espTarget = target;
+        float alpha = espFade.animateTo(active).getFloat();
+        if (espTarget == null) return;
+        if (alpha <= 0.01f) {
+            if (!active) espTarget = null;
+            return;
+        }
+
+        LivingEntity entity = espTarget;
+        float delta = event.tickDelta();
+        Vec3d pos = new Vec3d(
+                MathHelper.lerp(delta, entity.prevX, entity.getX()),
+                MathHelper.lerp(delta, entity.prevY, entity.getY()),
+                MathHelper.lerp(delta, entity.prevZ, entity.getZ()));
+        // Flash towards red while the target is in its hurt animation.
+        float hurt = entity.hurtTime > 0 ? Math.min(1f, entity.hurtTime / 10f) : 0f;
+
+        if (espMode.is("Box")) {
+            Box box = entity.getBoundingBox().offset(pos.subtract(entity.getPos())).expand(0.05);
+            int color = ColorUtil.interpolate(Theme.accentWave(0), HURT_COLOR, hurt);
+            WorldRenderUtil.box(event.matrices(), event.camera(), box,
+                    ColorUtil.withAlpha(color, (int) (0x38 * alpha)), ColorUtil.withAlpha(color, (int) (0xD0 * alpha)));
+            return;
+        }
+
+        // "Jello" ring sliding up and down the hitbox, leaving a fading trail behind its movement.
+        double time = System.currentTimeMillis() / 1000.0 * 1.8;
+        double y = pos.y + (Math.sin(time) + 1.0) / 2.0 * entity.getHeight();
+        double trail = -Math.cos(time) * 0.45;
+        double radius = entity.getWidth() * 0.75 + 0.15;
+        WorldRenderUtil.ring(event.matrices(), event.camera(), new Vec3d(pos.x, y, pos.z), radius, trail, 0.035f,
+                segment -> ColorUtil.multiplyAlpha(
+                        ColorUtil.interpolate(Theme.accentWave(segment * 3200.0 / 72.0), HURT_COLOR, hurt), alpha),
+                (int) (150 * alpha));
     }
 
     public LivingEntity getTarget() {

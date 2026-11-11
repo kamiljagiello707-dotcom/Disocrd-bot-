@@ -4,11 +4,13 @@ import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientLifecycleEvents;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
+import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderEvents;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import tech.fuzir.client.config.ConfigManager;
 import tech.fuzir.client.event.EventBus;
 import tech.fuzir.client.event.events.Render2DEvent;
+import tech.fuzir.client.event.events.Render3DEvent;
 import tech.fuzir.client.event.events.TickEvent;
 import tech.fuzir.client.gui.ClickGuiScreen;
 import tech.fuzir.client.hud.HudManager;
@@ -49,6 +51,8 @@ public final class FuzirClient implements ClientModInitializer {
             hudManager.render(context, tickDelta);
             eventBus.post(new Render2DEvent(context, tickDelta));
         });
+        WorldRenderEvents.LAST.register(context ->
+                eventBus.post(new Render3DEvent(context.matrixStack(), context.camera(), context.tickDelta())));
         ClientLifecycleEvents.CLIENT_STOPPING.register(client -> {
             configManager.save();
             Blur.invalidate();

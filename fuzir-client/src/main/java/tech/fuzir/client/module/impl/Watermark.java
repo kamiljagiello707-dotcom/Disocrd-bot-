@@ -45,10 +45,10 @@ public class Watermark extends HudModule {
     public void draw(Canvas cv, float x, float y, float w, float h, boolean right) {
         Hud.panel(cv, x, y, w, h, 8);
         float cy = y + h / 2;
-        cv.round(x + 6, cy - 7, 14, 14, 4.5f, Hud.WHITE);
-        cv.textCenter("F", x + 13.2f, cy, 0xFF000000, F.BOLD);
+        cv.round(x + 6, cy - 7, 14, 14, 4.5f, Hud.ACCENT);
+        cv.textCenter("F", x + 13.2f, cy, Hud.ON_ACCENT, F.BOLD);
         float tx = x + 26;
-        cv.textMid("Fuzir", tx, cy, Hud.WHITE, F.BOLD);
+        cv.textMid("Fuzir", tx, cy, Hud.ACCENT, F.BOLD);
         tx += cv.width("Fuzir", F.BOLD);
         for (String s : parts()) {
             cv.circle(tx + 5.5f, cy, 1.1f, Hud.DIM);

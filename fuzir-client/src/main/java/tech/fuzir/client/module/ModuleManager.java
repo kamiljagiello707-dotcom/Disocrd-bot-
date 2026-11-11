@@ -18,16 +18,22 @@ public final class ModuleManager {
 
     public static void init() {
         add(new Sprint());
+        add(new ToggleSneak());
         add(new AutoWalk());
+        add(new AutoTool());
+        add(new AutoRespawn());
         add(new Fullbright());
         add(new Zoom());
         add(new NoWeather());
+        add(new NoHurtCam());
+        add(new NoFireOverlay());
         add(new Watermark());
         add(new KeyBinds());
         add(new ModuleList());
         add(new Info());
         add(new Coordinates());
         add(new Keystrokes());
+        add(new ArmorHud());
         add(new NotificationsModule());
         add(new ClickGui());
     }

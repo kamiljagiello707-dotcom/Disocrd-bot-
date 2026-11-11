@@ -158,7 +158,8 @@ public final class Canvas {
     // ---------- tekst i ikony ----------
 
     public enum F {
-        SMALL("small", 7, 5.2f), REGULAR("regular", 9, 6.6f), BOLD("bold", 9, 6.6f), TITLE("title", 18, 13.2f),
+        SMALL("small", 7, 5.2f), REGULAR("regular", 9, 6.6f), BOLD("bold", 9, 6.6f),
+        MEDIUM("medium", 11, 8.1f), MEDIUM_BOLD("medium_bold", 11, 8.1f), HEADING("heading", 14, 10.3f), TITLE("title", 18, 13.2f),
         ICON_SM("icons_sm", 8, 8), ICON("icons", 10, 10), ICON_LG("icons_lg", 14, 14);
 
         final String id;

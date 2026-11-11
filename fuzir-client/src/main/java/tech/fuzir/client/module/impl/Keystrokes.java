@@ -35,9 +35,9 @@ public class Keystrokes extends HudModule {
         float shrink = a * 1.2f;
         float kx = x + shrink, ky = y + shrink, kw = w - shrink * 2, kh = h - shrink * 2;
         cv.shadow(kx, ky + 1.5f, kw, kh, 6, 6, 0x60000000);
-        cv.round(kx, ky, kw, kh, 6, Canvas.mix(Hud.PANEL, Hud.WHITE, a));
+        cv.round(kx, ky, kw, kh, 6, Canvas.mix(Hud.PANEL, Hud.ACCENT, a));
         cv.outline(kx, ky, kw, kh, 6, 1f, Canvas.mix(Hud.BORDER, 0x00FFFFFF, a));
-        int tc = Canvas.mix(Hud.TEXT, 0xFF000000, a);
+        int tc = Canvas.mix(Hud.TEXT, Hud.ON_ACCENT, a);
         if (label.isEmpty()) cv.round(x + w / 2 - 10, y + h / 2 - 1, 20, 2, 1, tc);
         else cv.textCenter(label, x + w / 2, y + h / 2, tc, F.BOLD);
     }

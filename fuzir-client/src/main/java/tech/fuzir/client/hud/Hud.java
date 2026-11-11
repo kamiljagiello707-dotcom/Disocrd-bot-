@@ -8,16 +8,32 @@ import tech.fuzir.client.module.HudModule;
 import tech.fuzir.client.module.ModuleManager;
 import tech.fuzir.client.module.impl.ClickGui;
 import tech.fuzir.client.util.Canvas;
+import tech.fuzir.client.util.Theme;
 
 public final class Hud {
     private static final MinecraftClient mc = MinecraftClient.getInstance();
 
-    public static final int PANEL = 0xD90C0C0E;
-    public static final int BORDER = 0x16FFFFFF;
-    public static final int WHITE = 0xFFFFFFFF;
-    public static final int TEXT = 0xFFF2F2F3;
-    public static final int MUTED = 0xFF8A8A90;
-    public static final int DIM = 0xFF56565C;
+    // kolory z aktualnego motywu, odświeżane co klatkę
+    public static int PANEL = 0xD90C0C0E;
+    public static int BORDER = 0x16FFFFFF;
+    public static int ACCENT = 0xFFFFFFFF;
+    public static int ON_ACCENT = 0xFF000000;
+    public static int TILE = 0xFF1D1D21;
+    public static int TEXT = 0xFFF2F2F3;
+    public static int MUTED = 0xFF8A8A90;
+    public static int DIM = 0xFF56565C;
+
+    public static void syncTheme() {
+        Theme t = Theme.current();
+        PANEL = t.panel();
+        BORDER = t.line();
+        ACCENT = t.accent();
+        ON_ACCENT = t.onAccent();
+        TILE = t.surface2();
+        TEXT = t.text();
+        MUTED = t.muted();
+        DIM = t.dim();
+    }
     public static final float MARGIN = 6;
 
     private Hud() {
@@ -40,6 +56,7 @@ public final class Hud {
 
     public static void render(DrawContext ctx, RenderTickCounter tick) {
         if (mc.options.hudHidden || mc.getDebugHud().shouldShowDebugHud() || mc.player == null) return;
+        syncTheme();
         Canvas cv = Canvas.begin(ctx, scale());
         for (HudModule m : ModuleManager.hud()) {
             if (!m.isEnabled()) continue;

@@ -1,27 +1,33 @@
-# Fuzir Client 2.0
+# Fuzir Client 2.5
 
-Klient do Minecrafta 1.21.4 (Fabric) z nowoczesnym, czarno-białym ClickGUI, panelem KeyBinds i przesuwanym HUD.
+Klient do Minecrafta 1.21.4 (Fabric) z dużym, nowoczesnym ClickGUI, motywami, configami, panelem KeyBinds i przesuwanym HUD.
 
-![Menu](docs/03-gui-render.jpg)
+![Menu](docs/03-gui-wizualne.jpg)
 
-![Ustawienia modułu](docs/04-gui-ustawienia.jpg)
+![Motyw Północ](docs/07-gui-polnoc.jpg)
+
+![Configi](docs/05-gui-configi.jpg)
+
+![Motywy](docs/06-gui-motywy.jpg)
 
 ![HUD](docs/01-hud.jpg)
 
 ## Co jest w środku
 
-- **Gładka grafika zamiast pikseli**: każdy kształt rysuje własny shader GPU (`shaders/core/rounded`), więc zaokrąglenia mają wygładzone krawędzie, a cienie są miękkie.
-- **Czcionki TTF**: tekst w Manrope, ikony z Lucide. Każda w wariantach pod 1080p, 1440p i 4K, żeby była ostra.
-- **ClickGUI**: kategorie z przesuwanym podświetleniem, karty modułów z ikoną, przełącznikiem i klawiszem, fala po kliknięciu, wjazd kart przy zmianie kategorii, wyszukiwarka.
-- **Panel ustawień modułu** wysuwany z prawej: przełączniki, suwaki, przełączniki segmentowe, przypisanie klawisza i tryb klawisza (przełącz / przytrzymaj).
-- **KeyBinds na ekranie**: nagłówek, separator i wiersze `ikona | nazwa | klawisz`. Włączone moduły są białe, wyłączone szare, a po wciśnięciu klawisza wiersz błyska.
-- **Edytor HUD**: przeciąganie elementów myszką, przyciąganie do krawędzi i środka ekranu, reset pozycji.
+- **Gładka grafika**: każdy kształt rysuje własny shader GPU (`shaders/core/rounded`). Krawędzie są wygładzone, cienie miękkie, a skala dopasowuje się do rozdzielczości.
+- **Logo projektu** zbudowane z wektorowych kształtów w kolorze motywu. Tekst jest w czcionce Manrope, a ikony nawigacji z Lucide.
+- **Menu**: panel boczny ze stronami (Szukaj, Ruch, Gracz, Wizualne, HUD, Inne, Configi, Motywy) i przesuwanym podświetleniem. Lista modułów pokazuje nazwę i opis, a ustawienia rozwijają się w dwóch kolumnach przy module (strzałka obraca się).
+- **Szukaj**: wyszukiwanie po nazwie, opisie i kategorii, z etykietą kategorii przy każdym wyniku.
+- **Configi**: zapis obecnych ustawień pod nazwą, wczytywanie, nadpisywanie i usuwanie (z potwierdzeniem), a także otwieranie folderu.
+- **Motywy**: Monochrom, Północ, Wiśnia, Ocean, Las i Grafit z podglądem. Przejście między kolorami jest płynne i obejmuje menu, HUD, KeyBinds i powiadomienia.
+- **KeyBinds na ekranie**: wiersze `ikona | nazwa | klawisz`. Po wciśnięciu klawisza wiersz błyska. Tryb klawisza: przełącz albo przytrzymaj.
+- **Edytor HUD**: przeciąganie elementów, przyciąganie do krawędzi i środka ekranu, reset pozycji.
 
 ## Instalacja
 
 1. Zainstaluj [Fabric Loader](https://fabricmc.net/use/installer/) dla wersji **1.21.4**.
 2. Wrzuć do folderu `.minecraft/mods`:
-   - `fuzir-client-2.0.0.jar` (gotowy w folderze `release`),
+   - `fuzir-client-2.5.0.jar` (gotowy w folderze `release`),
    - [Fabric API](https://modrinth.com/mod/fabric-api) dla 1.21.4.
 3. Uruchom grę z profilem Fabric.
 
@@ -44,18 +50,17 @@ Ustawienia, klawisze i pozycje HUD zapisują się w `.minecraft/config/fuzir-cli
 | Kategoria | Moduł | Co robi |
 |---|---|---|
 | Ruch | Sprint | bieganie bez trzymania klawisza |
+| Ruch | ToggleSneak | kucanie bez trzymania klawisza |
 | Ruch | AutoWalk | chodzenie do przodu, wypływanie w wodzie |
-| Render | Fullbright | pełna jasność (noktowizja tylko po stronie klienta) |
-| Render | Zoom | płynne przybliżenie pod klawiszem C, kamera filmowa |
-| Render | NoWeather | ukrywa deszcz i burzę |
-| HUD | Watermark | logo, nick, FPS i godzina |
-| HUD | KeyBinds | moduły z przypisanym klawiszem i ich stan |
-| HUD | Lista modułów | włączone moduły z ikonami i animacją |
-| HUD | Informacje | ping, prędkość, adres serwera |
-| HUD | Koordynaty | XYZ, przelicznik Netheru, kierunek |
-| HUD | Klawisze | podgląd WASD, myszy i spacji |
-| HUD | Powiadomienia | dymki z ikoną po przełączeniu modułu |
-| Klient | Ustawienia | rozmycie tła, dźwięki, szybkość animacji, skala menu i HUD |
+| Gracz | AutoTool | najlepsze narzędzie z paska do kopanego bloku, ochrona zużytych narzędzi |
+| Gracz | AutoRespawn | odrodzenie po śmierci z ustawianym opóźnieniem |
+| Wizualne | Fullbright | pełna jasność |
+| Wizualne | Zoom | płynne przybliżenie pod klawiszem C |
+| Wizualne | NoWeather | bez deszczu i burzy |
+| Wizualne | NoHurtCam | kamera nie trzęsie się po obrażeniach |
+| Wizualne | NoFireOverlay | ogień nie zasłania ekranu |
+| HUD | Watermark, KeyBinds, Lista modułów, Informacje, Koordynaty, Klawisze, Zbroja, Powiadomienia | elementy na ekranie |
+| Inne | Menu | rozmycie, dźwięki, opisy, szybkość animacji, skala menu i HUD |
 
 ## Budowanie
 
@@ -65,7 +70,7 @@ Wymaga JDK 21.
 ./gradlew build
 ```
 
-Gotowy plik: `build/libs/fuzir-client-2.0.0.jar`.
+Gotowy plik: `build/libs/fuzir-client-2.5.0.jar`.
 
 `./gradlew runAutotest` uruchamia grę z modułem testowym (`src/testmod`), który sam tworzy świat, przechodzi przez menu i zapisuje zrzuty ekranu do `run/screenshots`. Moduł testowy nie trafia do jara.
 

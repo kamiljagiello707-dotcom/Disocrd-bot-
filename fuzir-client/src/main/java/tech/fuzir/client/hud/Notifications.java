@@ -59,13 +59,13 @@ public final class Notifications {
             cv.alpha = Math.min(1, a * 1.3f);
             Hud.panel(cv, x, y, w, h, 9);
             float cy = y + h / 2 - 1;
-            cv.round(x + 7, cy - 10, 20, 20, 6, e.on ? Hud.WHITE : 0xFF1F1F23);
-            cv.icon(e.module.icon, x + 17, cy, e.on ? 0xFF000000 : Hud.MUTED, F.ICON);
-            cv.text(cv.trim(e.module.name, w - 44, F.BOLD), x + 34, cy - 7.5f, Hud.WHITE, F.BOLD);
+            cv.round(x + 7, cy - 10, 20, 20, 6, e.on ? Hud.ACCENT : Hud.TILE);
+            cv.icon(e.module.icon, x + 17, cy, e.on ? Hud.ON_ACCENT : Hud.MUTED, F.ICON);
+            cv.text(cv.trim(e.module.name, w - 44, F.BOLD), x + 34, cy - 7.5f, Hud.ACCENT, F.BOLD);
             cv.text(e.on ? "Włączono" : "Wyłączono", x + 34, cy + 3, e.on ? 0xFFB9B9BF : Hud.DIM, F.SMALL);
             float p = Math.max(0, 1 - (now - e.start) / (float) e.life);
             cv.round(x + 9, y + h - 4, (w - 18), 1.5f, 0.75f, 0x14FFFFFF);
-            cv.round(x + 9, y + h - 4, (w - 18) * p, 1.5f, 0.75f, e.on ? Hud.WHITE : Hud.DIM);
+            cv.round(x + 9, y + h - 4, (w - 18) * p, 1.5f, 0.75f, e.on ? Hud.ACCENT : Hud.DIM);
             cv.alpha = prev;
         }
         LIST.removeIf(e -> now - e.start > e.life && e.anim.get() < 0.01f);

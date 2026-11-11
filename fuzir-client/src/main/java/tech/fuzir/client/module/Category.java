@@ -3,10 +3,11 @@ package tech.fuzir.client.module;
 import tech.fuzir.client.util.Icons;
 
 public enum Category {
-    MOVEMENT("Ruch", "Poruszanie się postaci", Icons.MOVE),
-    RENDER("Render", "Wygląd świata i kamery", Icons.EYE),
+    MOVEMENT("Ruch", "Poruszanie się postaci", Icons.FOOTPRINTS),
+    PLAYER("Gracz", "Automatyzacja i wygoda", Icons.USER),
+    VISUALS("Wizualne", "Wygląd świata i kamery", Icons.EYE),
     HUD("HUD", "Elementy na ekranie gry", Icons.DASHBOARD),
-    CLIENT("Klient", "Ustawienia menu i klienta", Icons.SLIDERS);
+    OTHER("Inne", "Ustawienia menu i klienta", Icons.SLIDERS);
 
     public final String title;
     public final String subtitle;

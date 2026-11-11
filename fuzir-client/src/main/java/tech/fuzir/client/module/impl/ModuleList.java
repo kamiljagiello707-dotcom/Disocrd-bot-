@@ -75,12 +75,12 @@ public class ModuleList extends HudModule {
             cv.round(rx, ry, rw, ROW, 5, Hud.PANEL);
             if (bar.on()) {
                 float bx = right ? rx + rw - 3.5f : rx + 1.5f;
-                cv.round(bx, ry + 3.5f, 2, ROW - 7, 1, Hud.WHITE);
+                cv.round(bx, ry + 3.5f, 2, ROW - 7, 1, Hud.ACCENT);
             }
             float tx = rx + 8;
             float cy = ry + ROW / 2;
             if (icons.on()) {
-                cv.icon(m.icon, tx + 4, cy, Hud.WHITE, F.ICON_SM);
+                cv.icon(m.icon, tx + 4, cy, Hud.ACCENT, F.ICON_SM);
                 tx += 14;
             }
             cv.textMid(m.name, tx, cy, Hud.TEXT, F.REGULAR);

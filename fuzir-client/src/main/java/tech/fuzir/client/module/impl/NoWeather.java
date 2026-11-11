@@ -6,7 +6,7 @@ import tech.fuzir.client.util.Icons;
 
 public class NoWeather extends Module {
     public NoWeather() {
-        super("NoWeather", "Ukrywa deszcz, śnieg i burzę", Category.RENDER, Icons.CLOUD_OFF);
+        super("NoWeather", "Ukrywa deszcz, śnieg i burzę", Category.VISUALS, Icons.CLOUD_OFF);
     }
 
     @Override

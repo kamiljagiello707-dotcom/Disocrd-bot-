@@ -21,7 +21,7 @@ public class Zoom extends Module {
     private boolean savedSmooth;
 
     public Zoom() {
-        super("Zoom", "Przybliżenie widoku jak w lunecie", Category.RENDER, Icons.ZOOM);
+        super("Zoom", "Przybliżenie widoku jak w lunecie", Category.VISUALS, Icons.ZOOM);
         setEnabledQuiet(true);
     }
 

@@ -74,7 +74,7 @@ public abstract class Module {
 
     /** Czy pokazywać moduł na liście włączonych modułów. */
     public boolean showInList() {
-        return category != Category.HUD && category != Category.CLIENT;
+        return category != Category.HUD && category != Category.OTHER;
     }
 
     public boolean holdMode() {

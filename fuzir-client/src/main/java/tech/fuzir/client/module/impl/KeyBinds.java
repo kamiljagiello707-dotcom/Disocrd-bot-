@@ -45,8 +45,8 @@ public class KeyBinds extends HudModule {
     public void draw(Canvas cv, float x, float y, float w, float h, boolean right) {
         Hud.panel(cv, x, y, w, h, 9);
         // nagłówek
-        cv.icon(Icons.KEYBOARD, x + PAD + 5, y + HEAD / 2 + 0.5f, Hud.WHITE, F.ICON_SM);
-        cv.textMid("Keybinds", x + PAD + 15, y + HEAD / 2 + 0.5f, Hud.WHITE, F.BOLD);
+        cv.icon(Icons.KEYBOARD, x + PAD + 5, y + HEAD / 2 + 0.5f, Hud.ACCENT, F.ICON_SM);
+        cv.textMid("Keybinds", x + PAD + 15, y + HEAD / 2 + 0.5f, Hud.ACCENT, F.BOLD);
         List<Module> rows = rows();
         long on = rows.stream().filter(Module::isEnabled).count();
         cv.textRight(on + "/" + rows.size(), x + w - PAD, y + HEAD / 2 + 0.5f, Hud.DIM, F.SMALL);
@@ -66,8 +66,8 @@ public class KeyBinds extends HudModule {
             float flash = 1f - Math.min(1f, (now - m.toggledAt) / 650f);
             if (flash > 0) cv.round(x + 3, ry, w - 6, ROW, 5, Canvas.mulAlpha(0x2EFFFFFF, Anim.easeOutCubic(flash)));
             // ikona modułu
-            cv.round(x + PAD, cy - 7, 14, 14, 4, Canvas.mix(0xFF1D1D21, Hud.WHITE, a));
-            cv.icon(m.icon, x + PAD + 7, cy, Canvas.mix(0xFF7C7C83, 0xFF000000, a), F.ICON_SM);
+            cv.round(x + PAD, cy - 7, 14, 14, 4, Canvas.mix(Hud.TILE, Hud.ACCENT, a));
+            cv.icon(m.icon, x + PAD + 7, cy, Canvas.mix(0xFF7C7C83, Hud.ON_ACCENT, a), F.ICON_SM);
             // nazwa
             cv.textMid(m.name, x + PAD + 21, cy, Canvas.mix(0xFF86868D, Hud.TEXT, a), F.REGULAR);
             if (m.holdMode()) {
@@ -81,7 +81,7 @@ public class KeyBinds extends HudModule {
                 float kx = x + w - PAD - kw;
                 cv.round(kx, cy - 6, kw, 12, 3.5f, Canvas.mix(0xFF19191C, 0xFF2A2A2F, a));
                 cv.outline(kx, cy - 6, kw, 12, 3.5f, 1f, 0x14FFFFFF);
-                cv.textCenter(k, kx + kw / 2, cy, Canvas.mix(0xFF8A8A90, Hud.WHITE, a), F.SMALL);
+                cv.textCenter(k, kx + kw / 2, cy, Canvas.mix(0xFF8A8A90, Hud.ACCENT, a), F.SMALL);
             }
             ry += ROW;
         }

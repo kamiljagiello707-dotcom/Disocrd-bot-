@@ -34,6 +34,28 @@ public final class Icons {
     public static final char LAYERS = '';
     public static final char COMPASS = '';
 
+    public static final char FOLDER = '\ue0d7';
+    public static final char FOLDER_OPEN = '\ue247';
+    public static final char SAVE = '\ue14d';
+    public static final char PALETTE = '\ue1dd';
+    public static final char TRASH = '\ue18e';
+    public static final char DOWNLOAD = '\ue0b2';
+    public static final char PLUS = '\ue13d';
+    public static final char MONITOR = '\ue11d';
+    public static final char BOX = '\ue061';
+    public static final char SHIELD = '\ue158';
+    public static final char FLAME = '\ue0d2';
+    public static final char PICKAXE = '\ue5c6';
+    public static final char HEART = '\ue36e';
+    public static final char REFRESH = '\ue145';
+    public static final char CAMERA = '\ue064';
+    public static final char GRID = '\ue0ff';
+    public static final char STAR = '\ue176';
+    public static final char CIRCLE_CHECK = '\ue226';
+    public static final char TOGGLE = '\ue18c';
+    public static final char DRIVE = '\ue0ed';
+    public static final char ARROW_DOWN = '\ue455';
+
     private Icons() {
     }
 }

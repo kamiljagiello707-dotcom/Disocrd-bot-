@@ -17,7 +17,7 @@ import tech.fuzir.client.util.ColorUtil;
 import java.util.function.IntUnaryOperator;
 
 /**
- * Camera-relative 3D primitives drawn on top of the world (no depth test), used by ESP features.
+ * Camera-relative 3D primitives for ESP and world effects. ESP shapes ignore depth, world effects can use it.
  */
 public final class WorldRenderUtil {
     private static final int RING_SEGMENTS = 72;
@@ -57,6 +57,55 @@ public final class WorldRenderUtil {
             int color = colorAt.applyAsInt(i % RING_SEGMENTS);
             vertex(buffer, matrix, x, (float) c.y - lineHeight / 2f, z, color);
             vertex(buffer, matrix, x, (float) c.y + lineHeight / 2f, z, color);
+        }
+        end(buffer);
+    }
+
+    /**
+     * Flat annulus lying on the XZ plane. {@code colorAt(segment)} gives the outer color; the inner edge
+     * uses the same color multiplied by {@code innerAlpha}, which produces a soft glow towards the center.
+     */
+    public static void flatRing(MatrixStack matrices, Camera camera, Vec3d center, double innerRadius,
+                                double outerRadius, IntUnaryOperator colorAt, float innerAlpha, boolean depthTest) {
+        Vec3d c = center.subtract(camera.getPos());
+        Matrix4f matrix = matrices.peek().getPositionMatrix();
+        BufferBuilder buffer = begin(VertexFormat.DrawMode.TRIANGLE_STRIP, depthTest);
+        for (int i = 0; i <= RING_SEGMENTS; i++) {
+            double angle = Math.PI * 2.0 * i / RING_SEGMENTS;
+            double cos = Math.cos(angle);
+            double sin = Math.sin(angle);
+            int color = colorAt.applyAsInt(i % RING_SEGMENTS);
+            vertex(buffer, matrix, (float) (c.x + cos * innerRadius), (float) c.y, (float) (c.z + sin * innerRadius),
+                    ColorUtil.multiplyAlpha(color, innerAlpha));
+            vertex(buffer, matrix, (float) (c.x + cos * outerRadius), (float) c.y, (float) (c.z + sin * outerRadius), color);
+        }
+        end(buffer);
+    }
+
+    /**
+     * Cone with its apex above the base circle. Base vertices take {@code colorAt(segment)}, the apex uses
+     * {@code apexColor}, giving a vertical gradient.
+     */
+    public static void cone(MatrixStack matrices, Camera camera, Vec3d baseCenter, double radius, double height,
+                            IntUnaryOperator colorAt, int apexColor) {
+        Vec3d c = baseCenter.subtract(camera.getPos());
+        Matrix4f matrix = matrices.peek().getPositionMatrix();
+        BufferBuilder buffer = begin(VertexFormat.DrawMode.TRIANGLE_FAN, true);
+        vertex(buffer, matrix, (float) c.x, (float) (c.y + height), (float) c.z, apexColor);
+        for (int i = 0; i <= RING_SEGMENTS; i++) {
+            double angle = Math.PI * 2.0 * i / RING_SEGMENTS;
+            vertex(buffer, matrix, (float) (c.x + Math.cos(angle) * radius), (float) c.y,
+                    (float) (c.z + Math.sin(angle) * radius), colorAt.applyAsInt(i % RING_SEGMENTS));
+        }
+        end(buffer);
+
+        // Rim line for a crisp edge.
+        buffer = begin(VertexFormat.DrawMode.DEBUG_LINE_STRIP, true);
+        for (int i = 0; i <= RING_SEGMENTS; i++) {
+            double angle = Math.PI * 2.0 * i / RING_SEGMENTS;
+            int color = colorAt.applyAsInt(i % RING_SEGMENTS);
+            vertex(buffer, matrix, (float) (c.x + Math.cos(angle) * radius), (float) c.y,
+                    (float) (c.z + Math.sin(angle) * radius), ColorUtil.withAlpha(color, Math.min(255, ColorUtil.alpha(color) * 2)));
         }
         end(buffer);
     }
@@ -102,10 +151,15 @@ public final class WorldRenderUtil {
     }
 
     private static BufferBuilder begin(VertexFormat.DrawMode mode) {
+        return begin(mode, false);
+    }
+
+    private static BufferBuilder begin(VertexFormat.DrawMode mode, boolean depthTest) {
         RenderSystem.enableBlend();
         RenderSystem.defaultBlendFunc();
         RenderSystem.disableCull();
-        RenderSystem.disableDepthTest();
+        if (depthTest) RenderSystem.enableDepthTest();
+        else RenderSystem.disableDepthTest();
         RenderSystem.depthMask(false);
         RenderSystem.setShader(GameRenderer::getPositionColorProgram);
         BufferBuilder buffer = Tessellator.getInstance().getBuffer();

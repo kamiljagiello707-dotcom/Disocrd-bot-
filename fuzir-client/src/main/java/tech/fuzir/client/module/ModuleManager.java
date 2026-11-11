@@ -16,7 +16,9 @@ import tech.fuzir.client.module.movement.Sprint;
 import tech.fuzir.client.module.movement.Step;
 import tech.fuzir.client.module.player.AutoRespawn;
 import tech.fuzir.client.module.player.FastPlace;
+import tech.fuzir.client.module.render.ChinaHat;
 import tech.fuzir.client.module.render.FullBright;
+import tech.fuzir.client.module.render.JumpCircles;
 import tech.fuzir.client.module.world.Ambience;
 
 import java.util.ArrayList;
@@ -37,6 +39,8 @@ public final class ModuleManager {
         register(new Sprint());
         register(new Step());
         register(new FullBright());
+        register(new JumpCircles());
+        register(new ChinaHat());
         register(new AutoRespawn());
         register(new FastPlace());
         register(new Ambience());

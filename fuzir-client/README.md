@@ -39,7 +39,7 @@ Ustawienia, bindy, pozycje HUD i układ paneli zapisują się do `config/fuzir/c
 FuzirClient              punkt wejścia: managery, zdarzenia Fabric (tick, HUD, zamykanie gry)
 event/                   EventBus (typowany, thread-safe), Cancellable, KeyEvent, MouseButtonEvent, TickEvent, Render2DEvent
 module/                  Module (listenery podpinane tylko gdy moduł jest włączony), Category, ModuleManager
-  combat|movement|...    KillAura, TriggerBot, Sprint, Step, FullBright, AutoRespawn, FastPlace, Ambience, ClickGUI
+  combat|movement|...    KillAura, TriggerBot, Sprint, Step, FullBright, JumpCircles, ChinaHat, AutoRespawn, FastPlace, Ambience, ClickGUI
 setting/                 BoolSetting, NumberSetting, ModeSetting, KeySetting (widoczność warunkowa, serializacja JSON)
 gui/                     ClickGuiScreen, HudEditorScreen, Theme
   panel/Panel            przeciągany, zwijany i przewijany panel kategorii

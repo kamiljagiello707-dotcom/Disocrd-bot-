@@ -21,3 +21,6 @@ Bot ticketów do Discorda (discord.js v14) w nowym układzie wiadomości Discord
 6. `npm start`, a potem na wybranym kanale wpisz `/panel`.
 
 > Rola bota musi być **wyżej** niż role obsługi na liście ról.
+
+## ✦ Reasel.pl – sklep 3D
+W katalogu [`reasel/`](reasel/README.md) znajduje się sklep internetowy z odzieżą streetwear (Next.js 14, React Three Fiber, GSAP). Instrukcja uruchomienia i wdrożenia na Vercel: `reasel/README.md`.

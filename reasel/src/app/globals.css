@@ -1,0 +1,220 @@
+@import '@fontsource-variable/syne';
+@import '@fontsource-variable/inter';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg: #0a0a0a;
+  --fg: #f2f1ee;
+  --acid: #c6ff00;
+  --muted: #a3a19d;
+  --header-h: 72px;
+  color-scheme: dark;
+}
+
+@layer base {
+  html {
+    background: var(--bg);
+    color: var(--fg);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
+  /* Lenis */
+  html.lenis,
+  html.lenis body {
+    height: auto;
+  }
+  .lenis.lenis-smooth {
+    scroll-behavior: auto !important;
+  }
+  .lenis.lenis-smooth [data-lenis-prevent] {
+    overscroll-behavior: contain;
+  }
+  .lenis.lenis-stopped,
+  html.scroll-locked {
+    overflow: hidden;
+  }
+
+  body {
+    @apply bg-ink font-sans text-ink-50;
+    min-height: 100svh;
+    overflow-x: hidden;
+  }
+
+  ::selection {
+    background: var(--acid);
+    color: #0a0a0a;
+  }
+
+  /* Widoczny, kontrastowy fokus dla nawigacji klawiaturą */
+  :focus-visible {
+    outline: 2px solid var(--acid);
+    outline-offset: 3px;
+    border-radius: 2px;
+  }
+
+  /* Natywny kursor ukrywamy tylko, gdy działa własny kursor (urządzenia z myszą) */
+  html.has-cursor,
+  html.has-cursor a,
+  html.has-cursor button,
+  html.has-cursor [role='button'],
+  html.has-cursor label {
+    cursor: none;
+  }
+  html.has-cursor input,
+  html.has-cursor textarea,
+  html.has-cursor select {
+    cursor: auto;
+  }
+
+  input[type='number']::-webkit-inner-spin-button,
+  input[type='number']::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+}
+
+@layer components {
+  .container-x {
+    @apply mx-auto w-full max-w-[1600px] px-5 sm:px-8 lg:px-12;
+  }
+
+  .eyebrow {
+    @apply font-sans text-[11px] font-medium uppercase tracking-[0.25em] text-ink-300;
+  }
+
+  .h-display {
+    @apply font-display font-bold uppercase;
+  }
+
+  .btn {
+    @apply relative inline-flex items-center justify-center gap-3 overflow-hidden rounded-full px-7 py-4 text-sm font-semibold uppercase tracking-[0.14em] transition-colors duration-300 disabled:cursor-not-allowed disabled:opacity-50;
+  }
+  .btn-primary {
+    @apply btn bg-acid text-ink hover:bg-white;
+  }
+  .btn-ghost {
+    @apply btn border border-white/20 text-ink-50 hover:border-acid hover:text-acid;
+  }
+
+  .input {
+    @apply w-full rounded-xl border border-white/15 bg-white/[0.03] px-4 py-3.5 text-[15px] text-ink-50 placeholder:text-ink-400 transition-colors focus:border-acid focus:outline-none focus-visible:outline-none;
+  }
+  .input[aria-invalid='true'] {
+    @apply border-red-400/80;
+  }
+  .label {
+    @apply mb-2 block text-xs font-medium uppercase tracking-[0.16em] text-ink-200;
+  }
+  .error-text {
+    @apply mt-1.5 text-sm text-red-300;
+  }
+
+  .link-underline {
+    @apply relative;
+  }
+  .link-underline::after {
+    content: '';
+    @apply absolute -bottom-0.5 left-0 h-px w-full origin-right scale-x-0 bg-current transition-transform duration-500 ease-expo;
+  }
+  .link-underline:hover::after,
+  .link-underline:focus-visible::after {
+    @apply origin-left scale-x-100;
+  }
+
+  .prose-legal h2 {
+    @apply mb-4 mt-12 font-display text-2xl font-bold uppercase text-ink-50;
+  }
+  .prose-legal h3 {
+    @apply mb-3 mt-8 text-lg font-semibold text-ink-50;
+  }
+  .prose-legal p,
+  .prose-legal li {
+    @apply leading-relaxed text-ink-200;
+  }
+  .prose-legal p {
+    @apply mb-4;
+  }
+  .prose-legal ol,
+  .prose-legal ul {
+    @apply mb-4 space-y-2 pl-6;
+  }
+  .prose-legal ol {
+    @apply list-decimal;
+  }
+  .prose-legal ul {
+    @apply list-disc;
+  }
+  .prose-legal a {
+    @apply text-acid underline underline-offset-4;
+  }
+}
+
+@layer utilities {
+  .text-outline {
+    -webkit-text-stroke: 1px rgba(242, 241, 238, 0.5);
+    color: transparent;
+  }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    scrollbar-width: none;
+  }
+  .preserve-3d {
+    transform-style: preserve-3d;
+  }
+}
+
+/* Ziarno filmowe nad całą stroną (bardzo tanie – jedna warstwa z transformacją) */
+.grain {
+  position: fixed;
+  inset: -50%;
+  width: 200%;
+  height: 200%;
+  pointer-events: none;
+  z-index: 90;
+  opacity: 0.07;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0.9 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  animation: grain 8s steps(10) infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  .grain {
+    animation: none;
+  }
+}
+
+@keyframes grain {
+  0%,
+  100% {
+    transform: translate(0, 0);
+  }
+  10% {
+    transform: translate(-5%, -10%);
+  }
+  30% {
+    transform: translate(3%, -15%);
+  }
+  50% {
+    transform: translate(12%, 9%);
+  }
+  70% {
+    transform: translate(9%, 4%);
+  }
+  90% {
+    transform: translate(-1%, 7%);
+  }
+}

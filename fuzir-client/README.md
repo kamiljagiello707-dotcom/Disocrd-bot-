@@ -2,11 +2,15 @@
 
 Klient do Minecrafta 1.21.4 (Fabric) z czarno-białym ClickGUI, HUD i modułami.
 
+![Menu](docs/03-gui-render.jpg)
+
+![HUD](docs/01-hud.jpg)
+
 ## Instalacja
 
 1. Zainstaluj [Fabric Loader](https://fabricmc.net/use/installer/) dla wersji **1.21.4**.
 2. Wrzuć do folderu `.minecraft/mods`:
-   - `fuzir-client-1.0.0.jar` (z `build/libs` albo z wydania),
+   - `fuzir-client-1.0.0.jar` (gotowy w folderze `release`),
    - [Fabric API](https://modrinth.com/mod/fabric-api) dla 1.21.4.
 3. Uruchom grę z profilem Fabric.
 
@@ -59,3 +63,5 @@ Gotowy plik: `build/libs/fuzir-client-1.0.0.jar`.
 2. Ustawienia przez `add(new BoolSetting(...))`, `NumberSetting`, `ModeSetting`, `KeySetting`; menu rysuje je samo.
 3. Logika w `onTick()`, `onEnable()`, `onDisable()`.
 4. Rejestracja w `ModuleManager.init()`.
+
+Czcionka: [Manrope](https://github.com/sharanda/manrope), licencja SIL Open Font License 1.1.

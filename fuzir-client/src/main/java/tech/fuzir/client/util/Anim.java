@@ -24,7 +24,7 @@ public final class Anim {
     /** Przesuwa wartość w stronę {@code target}; większe {@code speed} = szybciej. */
     public float to(float target, float speed) {
         long now = System.nanoTime();
-        float dt = last == 0 ? 0f : Math.min((now - last) / 1_000_000_000f, 0.1f);
+        float dt = last == 0 ? 0f : Math.min((now - last) / 1_000_000_000f, 0.25f);
         last = now;
         value += (target - value) * (1f - (float) Math.exp(-speed * speedMul * dt));
         if (Math.abs(target - value) < 0.0005f) value = target;

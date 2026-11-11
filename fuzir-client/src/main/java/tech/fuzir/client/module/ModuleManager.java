@@ -39,6 +39,11 @@ public final class ModuleManager {
         add(new ArmorHud());
         add(new NotificationsModule());
         add(new ClickGui());
+        modules.add(new TargetESP());
+modules.add(new ESP());
+modules.add(new Tracers());
+modules.add(new NameTags());
+modules.add(new FullbrightExtras());
     }
 
     private static void add(Module m) {

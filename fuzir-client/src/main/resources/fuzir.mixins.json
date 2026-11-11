@@ -1,0 +1,16 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "tech.fuzir.client.mixin",
+  "compatibilityLevel": "JAVA_17",
+  "client": [
+    "KeyboardMixin",
+    "LightmapTextureManagerMixin",
+    "MinecraftClientAccessor",
+    "MouseMixin",
+    "PostEffectProcessorAccessor"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

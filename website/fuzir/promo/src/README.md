@@ -1,0 +1,13 @@
+# Film promocyjny Fuzir.tech
+
+Animacja jest w `promo.html` (funkcja `render(t)` rysuje dowolny moment filmu), muzyka generowana w `music.py`.
+
+Jak wyrenderować ponownie:
+
+1. Uruchom serwer w folderze `website`: `python3 -m http.server 8090`
+2. `node capture-assets.js ./assets` i `node capture-montes.js ./assets` (nagrywa materiał ze stron), skopiuj `../fuzir.jpg` jako `assets/photo.jpg`
+3. `node render-frames.js "$PWD" 3` (klatki do `frames/`)
+4. `python3 music.py music.wav`
+5. `ffmpeg -framerate 30 -i frames/f%04d.jpg -i music.wav -c:v libx264 -crf 19 -pix_fmt yuv420p -c:a aac -b:a 192k -shortest -movflags +faststart fuzir-promo.mp4`
+
+Wymaga Node z Playwright, Pythona z numpy i ffmpeg.

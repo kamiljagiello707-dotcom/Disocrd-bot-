@@ -41,8 +41,9 @@ public final class Notifications {
         while (LIST.size() > 5) LIST.remove(0);
     }
 
+    /** Mały czarny embed: ikonka modułu | nazwa | Enabled / Disabled. */
     static void render(Canvas cv) {
-        float w = 150, h = 34, gap = 6;
+        float h = 24, gap = 5;
         float baseY = cv.height() - 10;
         long now = System.currentTimeMillis();
         int slot = 0;
@@ -50,6 +51,9 @@ public final class Notifications {
             Entry e = LIST.get(i);
             boolean alive = now - e.start < e.life;
             float a = e.anim.to(alive ? 1 : 0, alive ? 13 : 11);
+            String status = e.on ? "Enabled" : "Disabled";
+            float nameW = cv.width(e.module.name, F.BOLD), statusW = cv.width(status, F.REGULAR);
+            float w = 5 + 16 + 8 + nameW + 9 + 9 + statusW + 10;
             float targetY = baseY - (slot + 1) * (h + gap);
             if (e.y.get() < 0) e.y.set(targetY);
             float y = e.y.to(targetY, 14);
@@ -57,15 +61,23 @@ public final class Notifications {
             float x = cv.width() - 10 - w + (1 - Anim.easeOutCubic(a)) * (w + 20);
             float prev = cv.alpha;
             cv.alpha = Math.min(1, a * 1.3f);
-            Hud.panel(cv, x, y, w, h, 9);
-            float cy = y + h / 2 - 1;
-            cv.round(x + 7, cy - 10, 20, 20, 6, e.on ? Hud.ACCENT : Hud.TILE);
-            cv.icon(e.module.icon, x + 17, cy, e.on ? Hud.ON_ACCENT : Hud.MUTED, F.ICON);
-            cv.text(cv.trim(e.module.name, w - 44, F.BOLD), x + 34, cy - 7.5f, Hud.ACCENT, F.BOLD);
-            cv.text(e.on ? "Włączono" : "Wyłączono", x + 34, cy + 3, e.on ? 0xFFB9B9BF : Hud.DIM, F.SMALL);
+            cv.shadow(x, y + 2, w, h, 7, 9, 0x80000000);
+            cv.round(x, y, w, h, 7, 0xF2070708);
+            cv.outline(x, y, w, h, 7, 1f, 0x18FFFFFF);
+            float cy = y + h / 2;
+            // ikonka modułu
+            cv.round(x + 5, cy - 8, 16, 16, 5, e.on ? Hud.ACCENT : Hud.TILE);
+            cv.icon(e.module.icon, x + 13, cy, e.on ? Hud.ON_ACCENT : Hud.MUTED, F.ICON_SM);
+            // nazwa | status
+            float tx = x + 29;
+            cv.textMid(e.module.name, tx, cy, 0xFFFFFFFF, F.BOLD);
+            tx += nameW + 9;
+            cv.rect(tx - 0.5f / cv.u, cy - 6, 1f / cv.u, 12, 0x30FFFFFF);
+            tx += 9;
+            cv.textMid(status, tx, cy, e.on ? Hud.ACCENT : 0xFF77777E, F.REGULAR);
+            // pasek czasu
             float p = Math.max(0, 1 - (now - e.start) / (float) e.life);
-            cv.round(x + 9, y + h - 4, (w - 18), 1.5f, 0.75f, 0x14FFFFFF);
-            cv.round(x + 9, y + h - 4, (w - 18) * p, 1.5f, 0.75f, e.on ? Hud.ACCENT : Hud.DIM);
+            cv.round(x + 7, y + h - 2.5f, (w - 14) * p, 1.2f, 0.6f, Canvas.mulAlpha(e.on ? Hud.ACCENT : 0xFF77777E, 0.7f));
             cv.alpha = prev;
         }
         LIST.removeIf(e -> now - e.start > e.life && e.anim.get() < 0.01f);

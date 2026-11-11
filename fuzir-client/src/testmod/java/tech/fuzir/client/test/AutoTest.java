@@ -82,11 +82,7 @@ public class AutoTest implements ClientModInitializer {
         if (t == 225) shot(mc, "02-gui-ruch");
         ClickGuiScreen gui = s instanceof ClickGuiScreen g ? g : null;
         if (gui == null) {
-            if (t > 430 && stage == 1) {
-                stage = 2;
-                System.out.println("[autotest] koniec");
-                mc.scheduleStop();
-            }
+            cosmetics(mc);
             return;
         }
         if (t == 230) {
@@ -121,6 +117,32 @@ public class AutoTest implements ClientModInitializer {
             Theme.select("Monochrom");
             ModuleManager.get(ClickGui.class).theme.set("Monochrom");
             gui.close();
+        }
+    }
+
+    private void cosmetics(MinecraftClient mc) {
+        if (t < 430) return;
+        if (t == 432) {
+            mc.options.setPerspective(net.minecraft.client.option.Perspective.THIRD_PERSON_BACK);
+            mc.player.getAbilities().flying = false;
+            mc.player.networkHandler.sendChatCommand("time set 12600");
+            mc.player.setPitch(18);
+        }
+        if (t == 440) ModuleManager.get(Cape.class).setEnabled(true);
+        if (t == 446) ModuleManager.get(ChinaHat.class).setEnabled(true);
+        if (t == 452) ModuleManager.get(JumpCircles.class).setEnabled(true);
+        if (t == 462) shot(mc, "08-powiadomienia");
+        if ((t == 500 || t == 513 || t == 526) && mc.player.isOnGround()) mc.player.jump();
+        if (t == 534) shot(mc, "09-peleryna");
+        if (t == 536) {
+            mc.options.setPerspective(net.minecraft.client.option.Perspective.THIRD_PERSON_FRONT);
+            mc.player.jump();
+        }
+        if (t == 546) shot(mc, "10-kapelusz");
+        if (t == 560 && stage == 1) {
+            stage = 2;
+            System.out.println("[autotest] koniec");
+            mc.scheduleStop();
         }
     }
 }

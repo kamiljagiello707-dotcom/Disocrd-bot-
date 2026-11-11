@@ -55,6 +55,9 @@ public final class Icons {
     public static final char TOGGLE = '\ue18c';
     public static final char DRIVE = '\ue0ed';
     public static final char ARROW_DOWN = '\ue455';
+    public static final char SHIRT = '\ue1ca';
+    public static final char CIRCLE_DASHED = '\ue4b0';
+    public static final char TRIANGLE = '\ue192';
 
     private Icons() {
     }

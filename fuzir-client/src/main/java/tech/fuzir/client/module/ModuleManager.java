@@ -27,6 +27,9 @@ public final class ModuleManager {
         add(new NoWeather());
         add(new NoHurtCam());
         add(new NoFireOverlay());
+        add(new Cape());
+        add(new JumpCircles());
+        add(new ChinaHat());
         add(new Watermark());
         add(new KeyBinds());
         add(new ModuleList());

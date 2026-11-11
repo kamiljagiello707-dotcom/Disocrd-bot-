@@ -5,6 +5,9 @@ import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientLifecycleEvents;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
+import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderEvents;
+import tech.fuzir.client.module.impl.ChinaHat;
+import tech.fuzir.client.module.impl.JumpCircles;
 import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.util.InputUtil;
 import org.lwjgl.glfw.GLFW;
@@ -34,6 +37,12 @@ public class FuzirClient implements ClientModInitializer {
             ModuleManager.tick(mc);
         });
         HudRenderCallback.EVENT.register(Hud::render);
+        WorldRenderEvents.LAST.register(ctx -> {
+            JumpCircles jc = ModuleManager.get(JumpCircles.class);
+            if (jc.isEnabled()) jc.render(ctx);
+            ChinaHat hat = ModuleManager.get(ChinaHat.class);
+            if (hat.isEnabled()) hat.render(ctx);
+        });
         ClientLifecycleEvents.CLIENT_STOPPING.register(mc -> Config.save());
         LOG.info("Fuzir Client gotowy: {} modułów", ModuleManager.all().size());
     }

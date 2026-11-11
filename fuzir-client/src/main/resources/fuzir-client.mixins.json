@@ -3,6 +3,6 @@
   "minVersion": "0.8",
   "package": "tech.fuzir.client.mixin",
   "compatibilityLevel": "JAVA_21",
-  "client": ["GameRendererMixin", "InGameOverlayRendererMixin"],
+  "client": ["GameRendererMixin", "InGameOverlayRendererMixin", "AbstractClientPlayerEntityMixin"],
   "injectors": { "defaultRequire": 1 }
 }

@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "id": "fuzir-client",
+  "version": "${version}",
+  "name": "Fuzir Client",
+  "description": "Klient z czarno-białym ClickGUI, HUD i modułami.",
+  "authors": ["Fuzir"],
+  "contact": { "homepage": "https://fuzir.tech" },
+  "license": "All-Rights-Reserved",
+  "icon": "assets/fuzir-client/icon.png",
+  "environment": "client",
+  "entrypoints": {
+    "client": ["tech.fuzir.client.FuzirClient"]
+  },
+  "mixins": ["fuzir-client.mixins.json"],
+  "depends": {
+    "fabricloader": ">=0.16.0",
+    "minecraft": "~1.21.4",
+    "java": ">=21",
+    "fabric-api": "*"
+  }
+}

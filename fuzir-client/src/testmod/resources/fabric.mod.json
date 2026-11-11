@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "id": "fuzir-client-test",
+  "version": "1.0.0",
+  "name": "Fuzir Client (test)",
+  "environment": "client",
+  "entrypoints": { "client": ["tech.fuzir.client.test.AutoTest"] },
+  "depends": { "fuzir-client": "*" }
+}

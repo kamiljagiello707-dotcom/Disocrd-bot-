@@ -1,16 +1,20 @@
 package tech.fuzir.client.module;
 
+import tech.fuzir.client.util.Icons;
+
 public enum Category {
-    MOVEMENT("Ruch", "R"),
-    RENDER("Render", "V"),
-    HUD("HUD", "H"),
-    CLIENT("Klient", "K");
+    MOVEMENT("Ruch", "Poruszanie się postaci", Icons.MOVE),
+    RENDER("Render", "Wygląd świata i kamery", Icons.EYE),
+    HUD("HUD", "Elementy na ekranie gry", Icons.DASHBOARD),
+    CLIENT("Klient", "Ustawienia menu i klienta", Icons.SLIDERS);
 
     public final String title;
-    public final String icon;
+    public final String subtitle;
+    public final char icon;
 
-    Category(String title, String icon) {
+    Category(String title, String subtitle, char icon) {
         this.title = title;
+        this.subtitle = subtitle;
         this.icon = icon;
     }
 }

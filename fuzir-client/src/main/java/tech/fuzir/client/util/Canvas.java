@@ -1,29 +1,44 @@
 package tech.fuzir.client.util;
 
+import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
+import net.minecraft.client.gl.Defines;
+import net.minecraft.client.gl.ShaderProgram;
+import net.minecraft.client.gl.ShaderProgramKey;
 import net.minecraft.client.gui.DrawContext;
+import net.minecraft.client.render.BufferBuilder;
+import net.minecraft.client.render.BufferRenderer;
+import net.minecraft.client.render.Tessellator;
+import net.minecraft.client.render.VertexFormat;
+import net.minecraft.client.render.VertexFormats;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.Style;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
+import org.joml.Matrix4f;
 
 /**
  * Rysowanie w prawdziwych pikselach ekranu, niezależnie od skali GUI gry.
- * Współrzędne podaje się w "jednostkach"; jedna jednostka to {@link #u} pikseli.
- * Dzięki temu zaokrąglenia rogów są gładkie, a nie schodkowe.
+ * Współrzędne podaje się w jednostkach; jedna jednostka to {@link #u} pikseli.
+ * Kształty rysuje shader SDF (gładkie krawędzie, cienie), tekst to czcionki TTF.
  */
 public final class Canvas {
+    private static final ShaderProgramKey ROUNDED = new ShaderProgramKey(
+            Identifier.of("fuzir-client", "core/rounded"), VertexFormats.POSITION_TEXTURE_COLOR, Defines.EMPTY);
+
     public final DrawContext ctx;
     public final float u;
     public final TextRenderer font;
-    /** Krycie wszystkiego, co jest rysowane (animacja otwierania). */
+    /** Krycie wszystkiego, co jest rysowane (np. animacja otwierania). */
     public float alpha = 1f;
+    private final int oversample;
 
     private Canvas(DrawContext ctx, float u) {
         this.ctx = ctx;
         this.u = u;
         this.font = MinecraftClient.getInstance().textRenderer;
+        this.oversample = Math.max(1, Math.min(4, Math.round(u)));
     }
 
     public static Canvas begin(DrawContext ctx, float u) {
@@ -38,7 +53,6 @@ public final class Canvas {
         ctx.getMatrices().pop();
     }
 
-    /** Szerokość ekranu w jednostkach. */
     public float width() {
         return MinecraftClient.getInstance().getWindow().getFramebufferWidth() / u;
     }
@@ -62,7 +76,6 @@ public final class Canvas {
         return argb(Math.round(a * Math.max(0f, Math.min(1f, k))), color);
     }
 
-    /** Liniowe przejście między dwoma kolorami ARGB. */
     public static int mix(int c1, int c2, float t) {
         t = Math.max(0f, Math.min(1f, t));
         int a = (int) (((c1 >>> 24) & 255) + (((c2 >>> 24) & 255) - ((c1 >>> 24) & 255)) * t);
@@ -76,131 +89,177 @@ public final class Canvas {
         return alpha >= 1f ? color : mulAlpha(color, alpha);
     }
 
-    // ---------- kształty ----------
+    // ---------- kształty (shader) ----------
+
+    private void shape(float x, float y, float w, float h, float radius, float soft, float thickness, int top, int bottom) {
+        if (w <= 0 || h <= 0) return;
+        top = c(top);
+        bottom = c(bottom);
+        if (((top >>> 24) & 0xFF) == 0 && ((bottom >>> 24) & 0xFF) == 0) return;
+        // najpierw wysyłamy wszystko, co DrawContext trzyma w buforze, żeby zachować kolejność
+        ctx.draw();
+        float x0 = x * u, y0 = y * u, pw = w * u, ph = h * u;
+        float pad = soft + 2f;
+        float qx0 = x0 - pad, qy0 = y0 - pad, qx1 = x0 + pw + pad, qy1 = y0 + ph + pad;
+
+        RenderSystem.enableBlend();
+        RenderSystem.defaultBlendFunc();
+        ShaderProgram sh = RenderSystem.setShader(ROUNDED);
+        if (sh == null) return;
+        sh.getUniform("Shape").set(qx1 - qx0, qy1 - qy0, pw / 2f, ph / 2f);
+        sh.getUniform("Style").set(radius * u, soft, thickness, 0f);
+
+        Matrix4f m = ctx.getMatrices().peek().getPositionMatrix();
+        BufferBuilder b = Tessellator.getInstance().begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_TEXTURE_COLOR);
+        b.vertex(m, qx0, qy0, 0).texture(0, 0).color(top);
+        b.vertex(m, qx0, qy1, 0).texture(0, 1).color(bottom);
+        b.vertex(m, qx1, qy1, 0).texture(1, 1).color(bottom);
+        b.vertex(m, qx1, qy0, 0).texture(1, 0).color(top);
+        BufferRenderer.drawWithGlobalProgram(b.end());
+    }
 
     public void rect(float x, float y, float w, float h, int color) {
-        ctx.fill(px(x), px(y), px(x + w), px(y + h), c(color));
+        shape(x, y, w, h, 0, 0.55f, 0, color, color);
     }
 
     public void round(float x, float y, float w, float h, float r, int color) {
-        roundPx(px(x), px(y), px(x + w), px(y + h), Math.round(r * u), c(color));
+        shape(x, y, w, h, r, 0.55f, 0, color, color);
     }
 
-    /** Zaokrąglony prostokąt z obramowaniem o grubości 1 piksela. */
+    /** Pionowy gradient z zaokrąglonymi rogami. */
+    public void roundGradient(float x, float y, float w, float h, float r, int top, int bottom) {
+        shape(x, y, w, h, r, 0.55f, 0, top, bottom);
+    }
+
+    /** Obramowanie o grubości podanej w pikselach. */
+    public void outline(float x, float y, float w, float h, float r, float thicknessPx, int color) {
+        shape(x, y, w, h, r, 0.55f, thicknessPx, color, color);
+    }
+
     public void roundBorder(float x, float y, float w, float h, float r, int fill, int border) {
-        int x0 = px(x), y0 = px(y), x1 = px(x + w), y1 = px(y + h), rr = Math.round(r * u);
-        roundPx(x0, y0, x1, y1, rr, c(border));
-        roundPx(x0 + 1, y0 + 1, x1 - 1, y1 - 1, Math.max(0, rr - 1), c(fill));
+        round(x, y, w, h, r, fill);
+        outline(x, y, w, h, r, 1f, border);
+    }
+
+    /** Miękki cień; {@code blur} w jednostkach. */
+    public void shadow(float x, float y, float w, float h, float r, float blur, int color) {
+        shape(x, y, w, h, r, blur * u, 0, color, color);
     }
 
     public void circle(float cx, float cy, float r, int color) {
         round(cx - r, cy - r, r * 2, r * 2, r, color);
     }
 
-    private void roundPx(int x0, int y0, int x1, int y1, int r, int color) {
-        if (x1 <= x0 || y1 <= y0 || ((color >>> 24) & 0xFF) == 0) return;
-        r = Math.min(r, Math.min((x1 - x0) / 2, (y1 - y0) / 2));
-        if (r <= 0) {
-            ctx.fill(x0, y0, x1, y1, color);
-            return;
-        }
-        ctx.fill(x0, y0 + r, x1, y1 - r, color);
-        for (int i = 0; i < r; i++) {
-            double dy = r - i - 0.5;
-            double inset = r - Math.sqrt(Math.max(0, r * r - dy * dy));
-            int full = (int) Math.ceil(inset);
-            float cover = (float) (full - inset);
-            int top = y0 + i, bottom = y1 - i - 1;
-            ctx.fill(x0 + full, top, x1 - full, top + 1, color);
-            ctx.fill(x0 + full, bottom, x1 - full, bottom + 1, color);
-            if (full > 0 && cover > 0.03f) {
-                // półprzezroczysty piksel na krawędzi wygładza łuk
-                int soft = mulAlpha(color, cover);
-                ctx.fill(x0 + full - 1, top, x0 + full, top + 1, soft);
-                ctx.fill(x1 - full, top, x1 - full + 1, top + 1, soft);
-                ctx.fill(x0 + full - 1, bottom, x0 + full, bottom + 1, soft);
-                ctx.fill(x1 - full, bottom, x1 - full + 1, bottom + 1, soft);
-            }
+    /** Linia o grubości jednego piksela. */
+    public void hline(float x, float y, float w, int color) {
+        rect(x, y, w, 1f / u, color);
+    }
+
+    // ---------- tekst i ikony ----------
+
+    public enum F {
+        SMALL("small", 7, 5.2f), REGULAR("regular", 9, 6.6f), BOLD("bold", 9, 6.6f), TITLE("title", 18, 13.2f),
+        ICON_SM("icons_sm", 8, 8), ICON("icons", 10, 10), ICON_LG("icons_lg", 14, 14);
+
+        final String id;
+        public final float size;
+        /** Wysokość wielkich liter (do centrowania w pionie). */
+        public final float cap;
+
+        F(String id, float size, float cap) {
+            this.id = id;
+            this.size = size;
+            this.cap = cap;
         }
     }
 
-    /** Pionowy gradient. */
-    public void gradient(float x, float y, float w, float h, int top, int bottom) {
-        ctx.fillGradient(px(x), px(y), px(x + w), px(y + h), c(top), c(bottom));
+    private static final float BASELINE = 6.8f;
+
+    private Identifier fontId(F f) {
+        return Identifier.of("fuzir-client", f.id + "_" + oversample);
     }
 
-    // ---------- tekst ----------
-    // Czcionka Manrope (TTF) w kilku rozmiarach. Matryca skaluje tylko o u,
-    // a wielkość liter wynika z rozmiaru czcionki, więc glify są ostre 1:1.
-
-    private static final Identifier SMALL = Identifier.of("fuzir-client", "small");
-    private static final Identifier REGULAR = Identifier.of("fuzir-client", "regular");
-    private static final Identifier BOLD = Identifier.of("fuzir-client", "bold");
-    private static final Identifier TITLE = Identifier.of("fuzir-client", "title");
-
-    private static Identifier fontFor(float size, boolean bold) {
-        if (size >= 1.5f) return TITLE;
-        if (size <= 0.6f) return SMALL;
-        return bold ? BOLD : REGULAR;
+    private Text styled(String s, F f) {
+        return Text.literal(s).setStyle(Style.EMPTY.withFont(fontId(f)));
     }
 
-    private static Text styled(String s, float size, boolean bold) {
-        return Text.literal(s).setStyle(Style.EMPTY.withFont(fontFor(size, bold)));
+    public float width(String s, F f) {
+        return font.getTextHandler().getWidth(styled(s, f));
     }
 
-    public float textWidth(String s, float size) {
-        return font.getWidth(styled(s, size, false));
+    /** Tekst; {@code y} to górna krawędź wielkich liter. */
+    public void text(String s, float x, float y, int color, F f) {
+        // gra stawia linię bazową czcionek TTF ok. 6,8 jednostki pod punktem rysowania
+        drawText(styled(s, f), x, y + f.cap - BASELINE, color);
     }
 
-    public float textWidthBold(String s, float size) {
-        return font.getWidth(styled(s, size, true));
+    /** Tekst wyśrodkowany w pionie względem {@code cy}. */
+    public void textMid(String s, float x, float cy, int color, F f) {
+        text(s, x, cy - f.cap / 2f, color, f);
     }
 
-    public float textHeight(float size) {
-        return size >= 1.5f ? 16f : size <= 0.6f ? 6f : 8f;
+    public void textRight(String s, float right, float cy, int color, F f) {
+        textMid(s, right - width(s, f), cy, color, f);
     }
 
-    public void text(String s, float x, float y, int color, float size) {
-        drawText(styled(s, size, false), x, y, color, false);
+    public void textCenter(String s, float cx, float cy, int color, F f) {
+        textMid(s, cx - width(s, f) / 2f, cy, color, f);
     }
 
-    public void textBold(String s, float x, float y, int color, float size) {
-        drawText(styled(s, size, true), x, y, color, false);
+    /** Ikona Lucide wyśrodkowana w punkcie (cx, cy). */
+    public void icon(char icon, float cx, float cy, int color, F f) {
+        String s = String.valueOf(icon);
+        float w = width(s, f);
+        // środek ikon Lucide wypada ok. 0,49 rozmiaru nad linią bazową
+        drawText(styled(s, f), cx - w / 2f, cy - BASELINE + f.size * 0.49f, color);
     }
 
-    public void textShadow(String s, float x, float y, int color, float size) {
-        drawText(styled(s, size, false), x, y, color, true);
-    }
-
-    private void drawText(Text t, float x, float y, int color, boolean shadow) {
+    private void drawText(Text t, float x, float y, int color) {
         int col = c(color);
         // przy alfie < 4 gra rysuje tekst w pełni nieprzezroczysty, więc go pomijamy
         if (((col >>> 24) & 0xFF) < 5) return;
         MatrixStack m = ctx.getMatrices();
         m.push();
-        m.translate(px(x), px(y), 0f);
+        m.translate(x * u, y * u, 0f);
         m.scale(u, u, 1f);
-        ctx.drawText(font, t, 0, 0, col, shadow);
+        ctx.drawText(font, t, 0, 0, col, false);
         m.pop();
     }
 
-    /** Skraca tekst z "..." tak, żeby zmieścił się w podanej szerokości. */
-    public String trim(String s, float maxW, float size) {
-        if (textWidth(s, size) <= maxW) return s;
-        String dots = "...";
+    public String trim(String s, float maxW, F f) {
+        if (width(s, f) <= maxW) return s;
         int end = s.length();
-        while (end > 0 && textWidth(s.substring(0, end) + dots, size) > maxW) end--;
-        return s.substring(0, end) + dots;
+        while (end > 0 && width(s.substring(0, end) + "...", f) > maxW) end--;
+        return s.substring(0, end).stripTrailing() + "...";
+    }
+
+    /** Dzieli tekst na linie mieszczące się w podanej szerokości. */
+    public java.util.List<String> wrap(String s, float maxW, F f) {
+        java.util.List<String> out = new java.util.ArrayList<>();
+        StringBuilder line = new StringBuilder();
+        for (String word : s.split(" ")) {
+            String test = line.isEmpty() ? word : line + " " + word;
+            if (width(test, f) > maxW && !line.isEmpty()) {
+                out.add(line.toString());
+                line = new StringBuilder(word);
+            } else {
+                line = new StringBuilder(test);
+            }
+        }
+        if (!line.isEmpty()) out.add(line.toString());
+        return out;
     }
 
     // ---------- przycinanie ----------
 
     public void scissor(float x, float y, float w, float h) {
+        ctx.draw();
         // enableScissor przelicza prostokąt przez aktualną macierz, więc podajemy piksele
         ctx.enableScissor(px(x), px(y), px(x + w), px(y + h));
     }
 
     public void endScissor() {
+        ctx.draw();
         ctx.disableScissor();
     }
 }

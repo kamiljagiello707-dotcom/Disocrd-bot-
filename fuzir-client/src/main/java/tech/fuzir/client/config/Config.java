@@ -7,6 +7,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import net.fabricmc.loader.api.FabricLoader;
 import tech.fuzir.client.FuzirClient;
+import tech.fuzir.client.module.HudModule;
 import tech.fuzir.client.module.Module;
 import tech.fuzir.client.module.ModuleManager;
 import tech.fuzir.client.setting.Setting;
@@ -35,6 +36,11 @@ public final class Config {
                 if (o == null) continue;
                 if (o.has("enabled") && m.hasToggle()) m.setEnabledQuiet(o.get("enabled").getAsBoolean());
                 if (o.has("key")) m.bind.load(o.get("key"));
+                if (o.has("keyMode")) m.bindMode.load(o.get("keyMode"));
+                if (m instanceof HudModule h && o.has("x") && o.has("y")) {
+                    h.fx = Math.max(0, Math.min(1, o.get("x").getAsFloat()));
+                    h.fy = Math.max(0, Math.min(1, o.get("y").getAsFloat()));
+                }
                 JsonObject s = o.getAsJsonObject("settings");
                 if (s == null) continue;
                 for (Setting<?> st : m.settings) {
@@ -53,13 +59,18 @@ public final class Config {
             JsonObject o = new JsonObject();
             o.addProperty("enabled", m.isEnabled());
             o.add("key", m.bind.save());
+            o.add("keyMode", m.bindMode.save());
+            if (m instanceof HudModule h) {
+                o.addProperty("x", h.fx);
+                o.addProperty("y", h.fy);
+            }
             JsonObject s = new JsonObject();
             for (Setting<?> st : m.settings) s.add(st.name, st.save());
             o.add("settings", s);
             mods.add(m.name, o);
         }
         JsonObject root = new JsonObject();
-        root.addProperty("version", 1);
+        root.addProperty("version", 2);
         root.add("modules", mods);
         try {
             Files.createDirectories(FILE.getParent());

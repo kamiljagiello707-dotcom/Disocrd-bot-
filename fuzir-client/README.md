@@ -1,16 +1,27 @@
-# Fuzir Client
+# Fuzir Client 2.0
 
-Klient do Minecrafta 1.21.4 (Fabric) z czarno-białym ClickGUI, HUD i modułami.
+Klient do Minecrafta 1.21.4 (Fabric) z nowoczesnym, czarno-białym ClickGUI, panelem KeyBinds i przesuwanym HUD.
 
 ![Menu](docs/03-gui-render.jpg)
 
+![Ustawienia modułu](docs/04-gui-ustawienia.jpg)
+
 ![HUD](docs/01-hud.jpg)
+
+## Co jest w środku
+
+- **Gładka grafika zamiast pikseli**: każdy kształt rysuje własny shader GPU (`shaders/core/rounded`), więc zaokrąglenia mają wygładzone krawędzie, a cienie są miękkie.
+- **Czcionki TTF**: tekst w Manrope, ikony z Lucide. Każda w wariantach pod 1080p, 1440p i 4K, żeby była ostra.
+- **ClickGUI**: kategorie z przesuwanym podświetleniem, karty modułów z ikoną, przełącznikiem i klawiszem, fala po kliknięciu, wjazd kart przy zmianie kategorii, wyszukiwarka.
+- **Panel ustawień modułu** wysuwany z prawej: przełączniki, suwaki, przełączniki segmentowe, przypisanie klawisza i tryb klawisza (przełącz / przytrzymaj).
+- **KeyBinds na ekranie**: nagłówek, separator i wiersze `ikona | nazwa | klawisz`. Włączone moduły są białe, wyłączone szare, a po wciśnięciu klawisza wiersz błyska.
+- **Edytor HUD**: przeciąganie elementów myszką, przyciąganie do krawędzi i środka ekranu, reset pozycji.
 
 ## Instalacja
 
 1. Zainstaluj [Fabric Loader](https://fabricmc.net/use/installer/) dla wersji **1.21.4**.
 2. Wrzuć do folderu `.minecraft/mods`:
-   - `fuzir-client-1.0.0.jar` (gotowy w folderze `release`),
+   - `fuzir-client-2.0.0.jar` (gotowy w folderze `release`),
    - [Fabric API](https://modrinth.com/mod/fabric-api) dla 1.21.4.
 3. Uruchom grę z profilem Fabric.
 
@@ -19,30 +30,31 @@ Klient do Minecrafta 1.21.4 (Fabric) z czarno-białym ClickGUI, HUD i modułami.
 | Klawisz | Akcja |
 |---|---|
 | Prawy Shift | otwiera / zamyka menu (zmienisz w Opcje → Sterowanie → Fuzir Client) |
-| Lewy klik na karcie | włącza / wyłącza moduł |
-| Prawy klik albo ⋮ | rozwija ustawienia modułu |
-| Pisanie w menu / Ctrl+F | wyszukiwanie modułów, Enter włącza jedyny wynik |
+| Klik na karcie | włącza / wyłącza moduł |
+| Prawy klik albo ikona zębatki | otwiera ustawienia modułu |
+| Pisanie w menu / Ctrl+F | wyszukiwanie, Enter włącza jedyny wynik |
 | Strzałki ↑ ↓ | zmiana kategorii |
-| Esc | zamyka menu (albo czyści wyszukiwanie) |
-| Klawisz w ustawieniach | kliknij i wciśnij klawisz; Esc / Backspace / prawy klik usuwa |
+| Esc | zamyka panel ustawień, wyszukiwanie albo menu |
+| Pole klawisza | kliknij i wciśnij klawisz; Esc / Backspace / krzyżyk usuwa |
 
-Ustawienia zapisują się w `.minecraft/config/fuzir-client.json`.
+Ustawienia, klawisze i pozycje HUD zapisują się w `.minecraft/config/fuzir-client.json`.
 
 ## Moduły
 
 | Kategoria | Moduł | Co robi |
 |---|---|---|
 | Ruch | Sprint | bieganie bez trzymania klawisza |
-| Ruch | AutoWalk | chodzenie do przodu, opcjonalnie wypływanie w wodzie |
+| Ruch | AutoWalk | chodzenie do przodu, wypływanie w wodzie |
 | Render | Fullbright | pełna jasność (noktowizja tylko po stronie klienta) |
-| Render | Zoom | przybliżenie pod klawiszem C, płynne, z kamerą filmową |
+| Render | Zoom | płynne przybliżenie pod klawiszem C, kamera filmowa |
 | Render | NoWeather | ukrywa deszcz i burzę |
-| HUD | Watermark | logo, FPS i godzina (styl pełny / minimalny) |
-| HUD | Lista modułów | włączone moduły z animacją w prawym górnym rogu |
-| HUD | Koordynaty | XYZ, przelicznik Netheru, kierunek |
+| HUD | Watermark | logo, nick, FPS i godzina |
+| HUD | KeyBinds | moduły z przypisanym klawiszem i ich stan |
+| HUD | Lista modułów | włączone moduły z ikonami i animacją |
 | HUD | Informacje | ping, prędkość, adres serwera |
+| HUD | Koordynaty | XYZ, przelicznik Netheru, kierunek |
 | HUD | Klawisze | podgląd WASD, myszy i spacji |
-| HUD | Powiadomienia | dymki po przełączeniu modułu |
+| HUD | Powiadomienia | dymki z ikoną po przełączeniu modułu |
 | Klient | Ustawienia | rozmycie tła, dźwięki, szybkość animacji, skala menu i HUD |
 
 ## Budowanie
@@ -53,15 +65,15 @@ Wymaga JDK 21.
 ./gradlew build
 ```
 
-Gotowy plik: `build/libs/fuzir-client-1.0.0.jar`.
+Gotowy plik: `build/libs/fuzir-client-2.0.0.jar`.
 
 `./gradlew runAutotest` uruchamia grę z modułem testowym (`src/testmod`), który sam tworzy świat, przechodzi przez menu i zapisuje zrzuty ekranu do `run/screenshots`. Moduł testowy nie trafia do jara.
 
 ## Dodawanie modułu
 
-1. Klasa w `src/main/java/tech/fuzir/client/module/impl`, dziedzicząca po `Module`.
-2. Ustawienia przez `add(new BoolSetting(...))`, `NumberSetting`, `ModeSetting`, `KeySetting`; menu rysuje je samo.
-3. Logika w `onTick()`, `onEnable()`, `onDisable()`.
-4. Rejestracja w `ModuleManager.init()`.
+1. Klasa w `src/main/java/tech/fuzir/client/module/impl`, dziedzicząca po `Module` (albo `HudModule` dla elementu HUD).
+2. Ikona: stała z `util/Icons` (nowe ikony trzeba dodać do `font/lucide.ttf`).
+3. Ustawienia przez `add(new BoolSetting(...))`, `NumberSetting`, `ModeSetting`, `KeySetting`; menu rysuje je samo.
+4. Logika w `onTick()`, `onEnable()`, `onDisable()`; rejestracja w `ModuleManager.init()`.
 
-Czcionka: [Manrope](https://github.com/sharanda/manrope), licencja SIL Open Font License 1.1.
+Czcionki: [Manrope](https://github.com/sharanda/manrope) (SIL Open Font License 1.1), ikony: [Lucide](https://lucide.dev) (ISC).

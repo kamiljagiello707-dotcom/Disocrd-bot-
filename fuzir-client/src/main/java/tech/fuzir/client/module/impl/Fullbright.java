@@ -4,10 +4,11 @@ import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.entity.effect.StatusEffects;
 import tech.fuzir.client.module.Category;
 import tech.fuzir.client.module.Module;
+import tech.fuzir.client.util.Icons;
 
 public class Fullbright extends Module {
     public Fullbright() {
-        super("Fullbright", "Widzisz wszystko jak w dzień, także w jaskiniach", Category.RENDER);
+        super("Fullbright", "Widzisz wszystko jak w dzień, także w jaskiniach", Category.RENDER, Icons.SUN);
     }
 
     @Override

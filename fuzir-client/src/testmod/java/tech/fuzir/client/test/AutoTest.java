@@ -12,7 +12,7 @@ import net.minecraft.client.util.ScreenshotRecorder;
 import net.minecraft.text.Text;
 import org.lwjgl.glfw.GLFW;
 import tech.fuzir.client.gui.ClickGuiScreen;
-import tech.fuzir.client.module.Module;
+import tech.fuzir.client.gui.HudEditorScreen;
 import tech.fuzir.client.module.ModuleManager;
 import tech.fuzir.client.module.impl.*;
 
@@ -61,49 +61,49 @@ public class AutoTest implements ClientModInitializer {
             mc.player.networkHandler.sendChatCommand("weather clear");
             mc.player.networkHandler.sendChatCommand("tp @s ~ ~12 ~ -30 8");
             mc.player.getAbilities().flying = true;
+            ModuleManager.get(Sprint.class).bind.set(GLFW.GLFW_KEY_R);
+            ModuleManager.get(Fullbright.class).bind.set(GLFW.GLFW_KEY_G);
+            ModuleManager.get(Zoom.class).bind.set(GLFW.GLFW_KEY_Z);
+            ModuleManager.get(NoWeather.class).bind.set(GLFW.GLFW_KEY_N);
+            ModuleManager.get(AutoWalk.class).bind.set(GLFW.GLFW_KEY_V);
+            ModuleManager.get(AutoWalk.class).bindMode.set("Przytrzymaj");
         }
-        if (t == 140) ModuleManager.get(Keystrokes.class).setEnabled(true);
-        if (t == 150) ModuleManager.get(Sprint.class).setEnabled(true);
-        if (t == 160) ModuleManager.get(Fullbright.class).setEnabled(true);
-        if (t == 170) ModuleManager.get(NoWeather.class).setEnabled(true);
-        if (t == 190) shot(mc, "01-hud");
-        if (t == 200) {
-            cursor(mc, 1100, 330);
+        if (t == 130) ModuleManager.get(Keystrokes.class).setEnabled(true);
+        if (t == 150) ModuleManager.get(Fullbright.class).setEnabled(true);
+        if (t == 160) ModuleManager.get(NoWeather.class).setEnabled(true);
+        if (t == 168) ModuleManager.get(Sprint.class).setEnabled(true);
+        if (t == 176) shot(mc, "01-hud");
+        if (t == 185) {
+            cursor(mc, 820, 380);
             mc.setScreen(new ClickGuiScreen());
         }
-        if (t == 240) shot(mc, "02-gui-ruch");
+        if (t == 225) shot(mc, "02-gui-ruch");
         ClickGuiScreen gui = s instanceof ClickGuiScreen g ? g : null;
-        if (gui == null) {
-            if (t > 400 && stage == 1) {
-                stage = 2;
-                System.out.println("[autotest] koniec");
-                mc.scheduleStop();
-            }
-            return;
-        }
-        if (t == 250) {
-            gui.keyPressed(GLFW.GLFW_KEY_DOWN, 0, 0);
-            ModuleManager.get(Zoom.class).expanded = true;
-            cursor(mc, 1400, 1000);
-        }
-        if (t == 285) shot(mc, "03-gui-render");
-        if (t == 295) {
-            gui.keyPressed(GLFW.GLFW_KEY_DOWN, 0, 0);
-            ModuleManager.get(Watermark.class).expanded = true;
-        }
-        if (t == 330) shot(mc, "04-gui-hud");
-        if (t == 340) {
-            gui.charTyped('s', 0);
-            gui.charTyped('p', 0);
-        }
-        if (t == 365) shot(mc, "05-gui-szukaj");
-        if (t == 370) {
-            gui.keyPressed(GLFW.GLFW_KEY_ESCAPE, 0, 0);
+        if (t == 230 && gui != null) gui.keyPressed(GLFW.GLFW_KEY_DOWN, 0, 0);
+        if (t == 260) shot(mc, "03-gui-render");
+        if (t == 265 && gui != null) gui.openSettings(ModuleManager.get(Zoom.class));
+        if (t == 295) shot(mc, "04-gui-ustawienia");
+        if (t == 300 && gui != null) {
             gui.keyPressed(GLFW.GLFW_KEY_ESCAPE, 0, 0);
             gui.keyPressed(GLFW.GLFW_KEY_DOWN, 0, 0);
-            for (Module m : ModuleManager.all()) m.expanded = m instanceof ClickGui;
         }
-        if (t == 395) shot(mc, "06-gui-klient");
-        if (t == 400) gui.keyPressed(GLFW.GLFW_KEY_ESCAPE, 0, 0);
+        if (t == 330) shot(mc, "05-gui-hud");
+        if (t == 335 && gui != null) {
+            gui.charTyped('k', 0);
+            gui.charTyped('e', 0);
+            gui.charTyped('y', 0);
+        }
+        if (t == 360) shot(mc, "06-gui-szukaj");
+        if (t == 365) {
+            cursor(mc, 60, 240);
+            mc.setScreen(new HudEditorScreen());
+        }
+        if (t == 395) shot(mc, "07-edytor-hud");
+        if (t == 400) mc.setScreen(null);
+        if (t == 430 && stage == 1) {
+            stage = 2;
+            System.out.println("[autotest] koniec");
+            mc.scheduleStop();
+        }
     }
 }

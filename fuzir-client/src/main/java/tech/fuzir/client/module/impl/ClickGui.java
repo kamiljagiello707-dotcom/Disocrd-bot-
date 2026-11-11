@@ -2,6 +2,7 @@ package tech.fuzir.client.module.impl;
 
 import tech.fuzir.client.module.Category;
 import tech.fuzir.client.module.Module;
+import tech.fuzir.client.util.Icons;
 import tech.fuzir.client.setting.BoolSetting;
 import tech.fuzir.client.setting.NumberSetting;
 
@@ -13,7 +14,7 @@ public class ClickGui extends Module {
     public final NumberSetting hudScale = add(new NumberSetting("Skala HUD", 1, 0.7, 1.5, 0.05, "x"));
 
     public ClickGui() {
-        super("Ustawienia", "Wygląd menu i HUD", Category.CLIENT);
+        super("Ustawienia", "Wygląd menu i HUD", Category.CLIENT, Icons.SETTINGS);
         setEnabledQuiet(true);
     }
 

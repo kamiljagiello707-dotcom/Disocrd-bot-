@@ -23,9 +23,10 @@ public final class ModuleManager {
         add(new Zoom());
         add(new NoWeather());
         add(new Watermark());
+        add(new KeyBinds());
         add(new ModuleList());
-        add(new Coordinates());
         add(new Info());
+        add(new Coordinates());
         add(new Keystrokes());
         add(new NotificationsModule());
         add(new ClickGui());
@@ -43,6 +44,10 @@ public final class ModuleManager {
         return MODULES.stream().filter(m -> m.category == c).toList();
     }
 
+    public static List<HudModule> hud() {
+        return MODULES.stream().filter(m -> m instanceof HudModule).map(m -> (HudModule) m).toList();
+    }
+
     @SuppressWarnings("unchecked")
     public static <T extends Module> T get(Class<T> type) {
         for (Module m : MODULES) if (type.isInstance(m)) return (T) m;
@@ -51,16 +56,17 @@ public final class ModuleManager {
 
     public static void tick(MinecraftClient mc) {
         // klawisze modułów działają tylko w grze, bez otwartego okna
-        if (mc.currentScreen == null && mc.getWindow() != null) {
-            long handle = mc.getWindow().getHandle();
-            for (Module m : MODULES) {
-                if (!m.bind.isSet() || !m.hasToggle()) continue;
-                boolean down = InputUtil.isKeyPressed(handle, m.bind.get());
-                if (down && !HELD.getOrDefault(m, false)) m.toggle();
-                HELD.put(m, down);
+        boolean inGame = mc.currentScreen == null && mc.getWindow() != null;
+        for (Module m : MODULES) {
+            if (!m.bind.isSet() || !m.hasToggle()) continue;
+            boolean down = inGame && InputUtil.isKeyPressed(mc.getWindow().getHandle(), m.bind.get());
+            boolean was = HELD.getOrDefault(m, false);
+            if (m.holdMode()) {
+                if (down != was && (inGame || !down)) m.setEnabled(down);
+            } else if (down && !was) {
+                m.toggle();
             }
-        } else {
-            HELD.clear();
+            HELD.put(m, down);
         }
         if (mc.player == null) return;
         for (Module m : MODULES) if (m.isEnabled()) m.onTick();

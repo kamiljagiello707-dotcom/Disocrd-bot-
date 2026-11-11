@@ -4,13 +4,14 @@ import net.minecraft.client.util.InputUtil;
 import org.lwjgl.glfw.GLFW;
 import tech.fuzir.client.module.Category;
 import tech.fuzir.client.module.Module;
+import tech.fuzir.client.util.Icons;
 import tech.fuzir.client.setting.BoolSetting;
 import tech.fuzir.client.setting.KeySetting;
 import tech.fuzir.client.setting.NumberSetting;
 import tech.fuzir.client.util.Anim;
 
 public class Zoom extends Module {
-    private final KeySetting key = add(new KeySetting("Przytrzymaj", GLFW.GLFW_KEY_C));
+    private final KeySetting key = add(new KeySetting("Klawisz zoomu", GLFW.GLFW_KEY_C));
     private final NumberSetting power = add(new NumberSetting("Przybliżenie", 4, 1.5, 10, 0.5, "x"));
     private final BoolSetting smooth = add(new BoolSetting("Płynne wejście", true));
     private final BoolSetting cinematic = add(new BoolSetting("Kamera filmowa", true));
@@ -20,7 +21,7 @@ public class Zoom extends Module {
     private boolean savedSmooth;
 
     public Zoom() {
-        super("Zoom", "Przybliżenie widoku jak w lunecie", Category.RENDER);
+        super("Zoom", "Przybliżenie widoku jak w lunecie", Category.RENDER, Icons.ZOOM);
         setEnabledQuiet(true);
     }
 

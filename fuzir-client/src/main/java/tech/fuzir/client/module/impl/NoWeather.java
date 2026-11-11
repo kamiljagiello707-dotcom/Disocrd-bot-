@@ -2,10 +2,11 @@ package tech.fuzir.client.module.impl;
 
 import tech.fuzir.client.module.Category;
 import tech.fuzir.client.module.Module;
+import tech.fuzir.client.util.Icons;
 
 public class NoWeather extends Module {
     public NoWeather() {
-        super("NoWeather", "Ukrywa deszcz, śnieg i burzę", Category.RENDER);
+        super("NoWeather", "Ukrywa deszcz, śnieg i burzę", Category.RENDER, Icons.CLOUD_OFF);
     }
 
     @Override

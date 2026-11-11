@@ -1,0 +1,42 @@
+// ekrany Fuzir Studio + drugi zrzut BubleBota
+const { chromium } = require('playwright');
+const OUT = process.argv[2];
+const APP = 'http://localhost:8090/fuzir/app/';
+(async () => {
+  const b = await chromium.launch({ args: ['--use-gl=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'] });
+  const ctx = await b.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true });
+  const m = await ctx.newPage();
+  m.on('dialog', (d) => d.accept());
+  const snap = async (n, wait = 2700) => { await m.waitForTimeout(wait); await m.screenshot({ path: `${OUT}/app-${n}.jpg`, type: 'jpeg', quality: 88 }); };
+  await m.goto(APP); await m.waitForTimeout(500);
+  await m.evaluate(() => localStorage.clear()); await m.reload(); await m.waitForTimeout(500);
+  await m.click('[data-a=mode][data-v=fuzir]'); await snap('pulpit', 1500);
+  await m.click('[data-a=timerStartSel]'); await m.waitForTimeout(3000);
+  await m.evaluate(() => scrollTo(0, 0)); await snap('timer', 3000);
+  await m.click('.tbtn.stop'); await m.waitForTimeout(2600);
+  await m.evaluate(() => location.hash = '#/zlecenia'); await snap('zlecenia', 900);
+  await m.click('[data-a=leadPaste]');
+  await m.fill('#lp', 'Nowe zlecenie dla Fuzir.tech\n\nRodzaj: Sklep\nFunkcje: Animacje 3D, Koszyk / cennik\nTermin: Do miesiąca\nBudżet: 500–1000 zł\nOpis: Sklep z walutą do serwera Minecraft\nKontakt: nowy_klient (Discord)');
+  await snap('paste', 900);
+  await m.click('[data-a=leadSave]'); await m.waitForTimeout(2600);
+  await m.evaluate(() => location.hash = '#/p/p1'); await snap('projekt', 1400);
+  await m.click('[data-a=ptab][data-v=tasks]'); await snap('zadania', 900);
+  await m.click('[data-a=ptab][data-v=chat]'); await snap('czat', 900);
+  await m.evaluate(() => location.hash = '#/finanse'); await snap('finanse', 1200);
+  await m.evaluate(() => location.hash = '#/projekty'); await snap('projekty', 1200);
+  await m.evaluate(() => { localStorage.setItem('fuzir-studio-v1-mode', 'client'); location.hash = '#/projekt'; location.reload(); });
+  await snap('klient', 1800);
+  await b.close();
+
+  const b2 = await chromium.launch({ args: ['--use-gl=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'] });
+  const q = await b2.newPage({ viewport: { width: 1280, height: 800 } });
+  await q.goto('http://localhost:8090/bublebot/'); await q.waitForTimeout(4000);
+  const ids = await q.evaluate(() => [...document.querySelectorAll('section[id]')].map((s) => s.id));
+  console.log('sekcje bublebot', ids.join(','));
+  const target = ids.find((i) => /konfig/i.test(i)) || ids[1];
+  await q.evaluate((id) => { const e = document.getElementById(id); scrollTo(0, e.offsetTop - 40); }, target);
+  await q.waitForTimeout(3500);
+  await q.screenshot({ path: `${OUT}/bublebot-2.jpg`, type: 'jpeg', quality: 86 });
+  await b2.close();
+  console.log('gotowe');
+})();

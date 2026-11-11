@@ -19,3 +19,11 @@ Wymaga Node z Playwright, Pythona z numpy i ffmpeg.
 - klatki: `node render60.js "$PWD" promo60.html frames60 3`
 - `python3 music60.py music60.wav`
 - `ffmpeg -framerate 30 -i frames60/f%04d.jpg -i music60.wav -c:v libx264 -crf 20 -pix_fmt yuv420p -c:a aac -b:a 192k -shortest -movflags +faststart fuzir-promo-60s.mp4`
+
+## Wersja 2 min (pełne promo)
+
+- animacja: `promo120.html` (19 scen, 240 bitów), muzyka: `music120.py` (tworzona z `music60.py` przez `make-music120.py`)
+- ekrany Fuzir Studio i drugi zrzut BubleBota: `node capture3.js ./assets`, ikona: skopiuj `../../app/icon-512.png` jako `assets/app-icon.png`
+- klatki: `node render60.js "$PWD" promo120.html frames120 3`
+- `python3 music120.py music120.wav`
+- `ffmpeg -framerate 30 -i frames120/f%04d.jpg -i music120.wav -c:v libx264 -preset slow -crf 20 -pix_fmt yuv420p -c:a aac -b:a 192k -shortest -movflags +faststart fuzir-promo-120s.mp4`

@@ -1,0 +1,682 @@
+<!doctype html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Fuzir Studio</title>
+<meta name="description" content="Fuzir Studio: projekty, zlecenia, klienci i płatności Fuzir.tech w jednej aplikacji.">
+<meta name="theme-color" content="#0b0d22">
+<meta name="color-scheme" content="dark">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Fuzir">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  color-scheme:dark;
+  --bg:#0b0d22;--bg2:#10122b;--sf:rgba(255,255,255,.045);--sf2:rgba(255,255,255,.08);--card:#14163a;
+  --ink:#f6f1ea;--mute:rgba(246,241,234,.62);--dim:rgba(246,241,234,.38);
+  --line:rgba(246,241,234,.1);--line2:rgba(246,241,234,.2);
+  --sun:#ffa24a;--sun2:#ff6e3a;--vio:#b78cff;--ok:#5ee6a0;--bad:#ff6b7a;--warn:#ffc561;--info:#7ab8ff;
+  --grad:linear-gradient(110deg,#ffd29a,#ffa24a 40%,#ff6e3a 70%,#b78cff);
+  --r:20px;--ease:cubic-bezier(.2,.8,.2,1);
+  --disp:'Syne',system-ui,sans-serif;--sans:'Manrope',system-ui,sans-serif;
+  --st:env(safe-area-inset-top,0px);--sb:env(safe-area-inset-bottom,0px);
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased;overscroll-behavior-y:none}
+body::before{content:"";position:fixed;inset:0;pointer-events:none;background:radial-gradient(90% 60% at 80% -10%,rgba(183,140,255,.18),transparent 60%),radial-gradient(80% 50% at 0% 110%,rgba(255,140,60,.14),transparent 60%);z-index:0}
+a{color:inherit;text-decoration:none}
+button,input,select,textarea{font:inherit;color:inherit}
+button{background:none;border:0;cursor:pointer}
+:focus-visible{outline:2px solid var(--sun);outline-offset:2px;border-radius:10px}
+.ic{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.ic.s{width:18px;height:18px}
+
+/* logowanie */
+.login{position:relative;z-index:1;min-height:100svh;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:calc(30px + var(--st)) 20px calc(30px + var(--sb));text-align:center}
+.login .logo{width:96px;height:96px;border-radius:28px;box-shadow:0 20px 60px -10px rgba(255,140,60,.55);animation:pop .8s var(--ease) both}
+.login h1{font-family:var(--disp);font-size:44px;letter-spacing:-.04em;margin:24px 0 6px;animation:up .7s .1s var(--ease) both}
+.login p{color:var(--mute);max-width:340px;animation:up .7s .18s var(--ease) both}
+.modes{display:grid;gap:12px;width:min(380px,100%);margin-top:34px}
+.mode{display:flex;align-items:center;gap:14px;text-align:left;padding:18px;border-radius:22px;background:var(--sf);border:1px solid var(--line);transition:.25s var(--ease);animation:up .7s var(--ease) both}
+.mode:nth-child(1){animation-delay:.26s}.mode:nth-child(2){animation-delay:.34s}
+.mode:hover{border-color:var(--line2);transform:translateY(-2px)}
+.mode:active{transform:scale(.98)}
+.mode .mi{width:50px;height:50px;border-radius:16px;display:grid;place-items:center;flex:none}
+.mode b{display:block;font-size:17px}.mode small{color:var(--mute);font-size:13px}
+.login .note{margin-top:26px;font-size:12px;color:var(--dim);max-width:340px}
+@keyframes pop{from{opacity:0;transform:scale(.6) rotate(-10deg)}}
+@keyframes up{from{opacity:0;transform:translateY(18px)}}
+
+/* powłoka */
+.app{position:relative;z-index:1;display:grid;grid-template-columns:260px 1fr;min-height:100svh}
+.side{position:sticky;top:0;height:100svh;padding:22px 14px;border-right:1px solid var(--line);display:flex;flex-direction:column;background:rgba(11,13,34,.6);backdrop-filter:blur(20px)}
+.brand{display:flex;align-items:center;gap:12px;padding:0 8px 22px;font-family:var(--disp);font-weight:800;font-size:20px;letter-spacing:-.02em}
+.brand img{width:38px;height:38px;border-radius:12px}
+.brand small{display:block;font-family:var(--sans);font-size:11px;font-weight:700;color:var(--dim);letter-spacing:.1em;text-transform:uppercase}
+.side nav{display:flex;flex-direction:column;gap:2px;flex:1}
+.side nav a{position:relative;display:flex;align-items:center;gap:12px;padding:12px;border-radius:14px;color:var(--mute);font-weight:700;font-size:14px;transition:.2s}
+.side nav a:hover{background:var(--sf);color:var(--ink)}
+.side nav a.on{background:var(--sf2);color:var(--ink)}
+.side nav a.on .ic{color:var(--sun)}
+.bd{margin-left:auto;min-width:20px;height:20px;padding:0 6px;border-radius:99px;background:var(--sun2);color:#1a1020;font-size:11px;font-weight:800;display:grid;place-items:center}
+.who{display:flex;align-items:center;gap:10px;padding:12px;border-radius:16px;background:var(--sf);border:1px solid var(--line)}
+.who b{display:block;font-size:14px;line-height:1.2}.who small{color:var(--mute);font-size:12px}
+.av{width:38px;height:38px;border-radius:12px;display:grid;place-items:center;font-weight:800;font-size:13px;color:#1a1020;flex:none}
+.main{min-width:0;display:flex;flex-direction:column}
+.top{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:12px;padding:calc(14px + var(--st)) 28px 14px;background:rgba(11,13,34,.72);backdrop-filter:blur(18px) saturate(1.3);-webkit-backdrop-filter:blur(18px) saturate(1.3);border-bottom:1px solid transparent;transition:border-color .3s}
+.top.sc{border-color:var(--line)}
+.top h1{font-family:var(--disp);font-size:24px;letter-spacing:-.03em;line-height:1.1;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.top h1 small{display:block;font-family:var(--sans);font-size:12px;font-weight:700;color:var(--mute);letter-spacing:0}
+.back{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;background:var(--sf);border:1px solid var(--line)}
+.tpill{display:none;align-items:center;gap:8px;height:38px;padding:0 14px 0 10px;border-radius:99px;background:rgba(255,110,58,.16);border:1px solid rgba(255,110,58,.4);font-weight:800;font-size:14px;font-variant-numeric:tabular-nums}
+.tpill.on{display:inline-flex}
+.tpill i{width:10px;height:10px;border-radius:50%;background:var(--sun2);animation:pulse 1.4s infinite}
+@keyframes pulse{50%{opacity:.35}}
+.content{padding:8px 28px calc(110px + var(--sb));max-width:1180px;width:100%}
+.pg{animation:pgin .45s var(--ease)}
+@keyframes pgin{from{opacity:0;transform:translateY(14px)}}
+.tabbar{display:none}
+@media (max-width:900px){
+  .app{grid-template-columns:1fr}
+  .side{display:none}
+  .top{padding:calc(12px + var(--st)) 16px 12px}
+  .top h1{font-size:22px}
+  .content{padding:4px 16px calc(100px + var(--sb))}
+  .tabbar{display:grid;grid-template-columns:repeat(5,1fr);position:fixed;left:10px;right:10px;bottom:calc(10px + var(--sb));z-index:30;height:66px;padding:6px;border-radius:24px;background:rgba(20,22,58,.86);backdrop-filter:blur(22px) saturate(1.4);-webkit-backdrop-filter:blur(22px) saturate(1.4);border:1px solid var(--line2);box-shadow:0 20px 50px -10px rgba(0,0,0,.7)}
+  .tabbar a{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;border-radius:18px;color:var(--dim);font-size:10px;font-weight:800;letter-spacing:.02em;transition:color .25s}
+  .tabbar a.on{color:var(--ink)}
+  .tabbar a.on::before{content:"";position:absolute;inset:0;border-radius:18px;background:var(--sf2);animation:tabin .3s var(--ease)}
+  .tabbar a.on .ic{color:var(--sun)}
+  .tabbar a>*{position:relative}
+  .tabbar .bd{position:absolute;top:5px;right:calc(50% - 22px);margin:0;min-width:17px;height:17px;font-size:10px}
+  @keyframes tabin{from{transform:scale(.7);opacity:0}}
+}
+
+/* elementy */
+.grid{display:grid;gap:14px}
+.g4{grid-template-columns:repeat(4,1fr)}.g3{grid-template-columns:repeat(3,1fr)}.g2{grid-template-columns:repeat(2,1fr)}.g21{grid-template-columns:2fr 1fr}
+@media (max-width:1100px){.g4{grid-template-columns:repeat(2,1fr)}.g21,.g3{grid-template-columns:1fr}}
+@media (max-width:560px){.g2{grid-template-columns:1fr}}
+.card{background:linear-gradient(170deg,rgba(255,255,255,.06),rgba(255,255,255,.02));border:1px solid var(--line);border-radius:var(--r);padding:18px;min-width:0;position:relative;overflow:hidden}
+.st-in>*{animation:up .5s var(--ease) both}
+.st-in>*:nth-child(2){animation-delay:.04s}.st-in>*:nth-child(3){animation-delay:.08s}.st-in>*:nth-child(4){animation-delay:.12s}.st-in>*:nth-child(5){animation-delay:.16s}.st-in>*:nth-child(6){animation-delay:.2s}.st-in>*:nth-child(n+7){animation-delay:.24s}
+.ch{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px}
+.ch h3{font-size:16px;font-weight:800;display:flex;align-items:center;gap:8px}
+.ch h3 .ic{color:var(--sun);width:20px;height:20px}
+.ch a,.lnk{font-size:13px;font-weight:800;color:var(--sun)}
+.hero{border-radius:26px;padding:22px;background:linear-gradient(135deg,#ff9a4a,#ff6e3a 45%,#9b6cff);color:#1a1020;position:relative;overflow:hidden;box-shadow:0 24px 60px -24px rgba(255,110,58,.7)}
+.hero::after{content:"";position:absolute;right:-50px;top:-70px;width:240px;height:240px;border-radius:50%;background:rgba(255,255,255,.18)}
+.hero>*{position:relative;z-index:1}
+.hero small{font-weight:800;font-size:12px;letter-spacing:.1em;text-transform:uppercase;opacity:.7}
+.hero b{display:block;font-family:var(--disp);font-size:42px;letter-spacing:-.04em;line-height:1.05;margin:6px 0 4px}
+.hero .row{display:flex;gap:22px;margin-top:14px;flex-wrap:wrap;font-weight:700}
+.hero .row span{opacity:.75;font-size:12px;display:block;font-weight:800}
+.stat span{font-size:12px;color:var(--mute);font-weight:700}
+.stat b{display:block;font-family:var(--disp);font-size:30px;letter-spacing:-.03em;line-height:1.15;margin-top:4px;font-variant-numeric:tabular-nums}
+.stat .si{width:38px;height:38px;border-radius:12px;display:grid;place-items:center;margin-bottom:12px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:46px;padding:0 18px;border-radius:14px;font-weight:800;font-size:14px;background:var(--grad);color:#1a1020;transition:transform .15s var(--ease),filter .2s;white-space:nowrap}
+.btn:active{transform:scale(.96)}
+.btn:hover{filter:brightness(1.06)}
+.btn.gh{background:var(--sf);color:var(--ink);border:1px solid var(--line2)}
+.btn.ok{background:var(--ok);color:#06281a}.btn.bad{background:rgba(255,107,122,.16);color:var(--bad);border:1px solid rgba(255,107,122,.35)}
+.btn.sm{height:36px;padding:0 13px;font-size:13px;border-radius:11px}
+.btn.wide{width:100%}
+.btn[disabled]{opacity:.45;pointer-events:none}
+.ib{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;background:var(--sf);border:1px solid var(--line);transition:.15s}
+.ib:active{transform:scale(.92)}
+.pill{display:inline-flex;align-items:center;gap:5px;height:24px;padding:0 10px;border-radius:99px;font-size:12px;font-weight:800;background:var(--sf2);color:var(--mute);white-space:nowrap}
+.pill.ok{background:rgba(94,230,160,.14);color:var(--ok)}.pill.bad{background:rgba(255,107,122,.14);color:var(--bad)}.pill.warn{background:rgba(255,197,97,.14);color:var(--warn)}.pill.info{background:rgba(122,184,255,.14);color:var(--info)}.pill.sun{background:rgba(255,162,74,.16);color:var(--sun)}
+.chips{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}
+.chips::-webkit-scrollbar{display:none}
+.chip{height:36px;padding:0 14px;border-radius:99px;border:1px solid var(--line);font-size:13px;font-weight:700;color:var(--mute);white-space:nowrap;transition:.2s}
+.chip.on{background:var(--grad);color:#1a1020;border-color:transparent}
+.list{display:flex;flex-direction:column}
+.li{display:flex;align-items:center;gap:12px;padding:12px 2px;border-bottom:1px solid var(--line);width:100%;text-align:left}
+.li:last-child{border-bottom:0}
+.li .t{flex:1;min-width:0}
+.li .t b{display:block;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.li .t small{color:var(--mute);font-size:12px}
+.dot{width:10px;height:10px;border-radius:50%;flex:none}
+.empty{text-align:center;color:var(--dim);padding:30px 10px;font-size:14px}
+.bar{height:8px;border-radius:99px;background:var(--sf2);overflow:hidden}
+.bar i{display:block;height:100%;border-radius:99px;background:var(--grad);transition:width .8s var(--ease)}
+.sp{flex:1}
+.fl{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.mt{margin-top:14px}.mt2{margin-top:22px}
+.mute{color:var(--mute)}
+.seg{display:flex;padding:4px;border-radius:14px;background:var(--sf);border:1px solid var(--line);gap:2px;overflow-x:auto;scrollbar-width:none}
+.seg button{flex:1;height:36px;padding:0 12px;border-radius:10px;font-size:13px;font-weight:800;color:var(--mute);white-space:nowrap;transition:.2s}
+.seg button.on{background:var(--sf2);color:var(--ink)}
+/* projekty */
+.pcard{display:block;width:100%;text-align:left;transition:transform .2s var(--ease),border-color .2s}
+.pcard:hover{border-color:var(--line2)}
+.pcard:active{transform:scale(.985)}
+.pcard::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--c)}
+.pcard h4{font-size:17px;letter-spacing:-.01em}
+.pcard .meta{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0 14px}
+.ring{position:relative;width:64px;height:64px;flex:none}
+.ring svg{width:100%;height:100%;transform:rotate(-90deg)}
+.ring circle{fill:none;stroke-width:6}
+.ring .bgc{stroke:var(--sf2)}.ring .fgc{stroke:url(#rg);stroke-linecap:round;transition:stroke-dashoffset 1s var(--ease)}
+.ring b{position:absolute;inset:0;display:grid;place-items:center;font-size:14px;font-weight:800}
+.ring.big{width:150px;height:150px}.ring.big circle{stroke-width:10}.ring.big b{font-family:var(--disp);font-size:34px}
+.steps{display:flex;gap:6px}
+.steps div{flex:1}
+.steps i{display:block;height:6px;border-radius:99px;background:var(--sf2);transition:background .4s}
+.steps .done i{background:var(--grad)}
+.steps .now i{background:linear-gradient(90deg,var(--sun) 50%,var(--sf2) 50%)}
+.steps small{display:block;font-size:11px;font-weight:700;color:var(--dim);margin-top:6px;text-align:center}
+.steps .done small,.steps .now small{color:var(--ink)}
+.kan{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+@media (max-width:800px){.kan{grid-template-columns:1fr}}
+.col h5{font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--mute);display:flex;justify-content:space-between;margin-bottom:10px}
+.task{display:flex;align-items:center;gap:10px;width:100%;text-align:left;padding:12px;border-radius:14px;background:var(--sf);border:1px solid var(--line);margin-bottom:8px;font-size:14px;font-weight:600;transition:.2s var(--ease);animation:up .35s var(--ease) both}
+.task:active{transform:scale(.98)}
+.task .cb{width:22px;height:22px;border-radius:8px;border:2px solid var(--line2);display:grid;place-items:center;flex:none;transition:.2s}
+.task.doing .cb{border-color:var(--sun)}
+.task.done{opacity:.6}.task.done span{text-decoration:line-through}
+.task.done .cb{background:var(--ok);border-color:var(--ok);color:#06281a}
+.task .x{margin-left:auto;color:var(--dim);padding:2px 4px}
+.addrow{display:flex;gap:8px;margin-top:6px}
+.inp{width:100%;height:46px;border-radius:14px;border:1px solid var(--line);background:rgba(0,0,0,.25);padding:0 14px;font-size:15px;outline:0;transition:border-color .2s}
+.inp:focus{border-color:var(--sun)}
+textarea.inp{height:auto;padding:12px 14px;resize:vertical;min-height:90px}
+select.inp{appearance:none}
+.field{display:grid;gap:6px;margin-bottom:14px}
+.field label{font-size:13px;font-weight:800;color:var(--mute)}
+/* czat */
+.chat{display:flex;flex-direction:column;gap:8px;min-height:240px;max-height:58vh;overflow-y:auto;padding:4px 2px 10px}
+.msg{max-width:80%;padding:10px 14px;border-radius:18px;font-size:14px;animation:up .3s var(--ease) both;white-space:pre-wrap;overflow-wrap:anywhere}
+.msg small{display:block;font-size:10px;opacity:.6;margin-top:3px;font-weight:700}
+.msg.me{align-self:flex-end;background:var(--grad);color:#1a1020;border-bottom-right-radius:6px}
+.msg.them{align-self:flex-start;background:var(--sf2);border-bottom-left-radius:6px}
+.composer{display:flex;gap:8px;padding-top:10px;border-top:1px solid var(--line)}
+/* aktualizacje */
+.feed{position:relative;padding-left:22px}
+.feed::before{content:"";position:absolute;left:6px;top:6px;bottom:6px;width:2px;background:var(--line)}
+.fi{position:relative;padding-bottom:16px}
+.fi::before{content:"";position:absolute;left:-21px;top:5px;width:12px;height:12px;border-radius:50%;background:var(--bg);border:2px solid var(--sun)}
+.fi b{font-size:14px}.fi small{display:block;color:var(--dim);font-size:12px;font-weight:700}
+.fi p{color:var(--mute);font-size:14px;margin-top:2px}
+.banner{display:flex;gap:12px;align-items:center;padding:16px;border-radius:18px;background:rgba(255,162,74,.12);border:1px solid rgba(255,162,74,.35);flex-wrap:wrap}
+.banner .t{flex:1;min-width:200px}
+/* wykres */
+.bars{display:flex;align-items:flex-end;gap:10px;height:150px;padding-top:18px}
+.bars div{flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;height:100%;justify-content:flex-end}
+.bars i{display:block;width:100%;max-width:40px;border-radius:10px 10px 4px 4px;background:var(--grad);height:var(--h);animation:grow 1s var(--ease) both;animation-delay:calc(var(--i)*.06s);position:relative}
+.bars i.cur{box-shadow:0 0 24px rgba(255,140,60,.6)}
+.bars i::after{content:attr(data-v);position:absolute;top:-18px;left:50%;transform:translateX(-50%);font-size:10px;font-weight:800;font-style:normal;color:var(--mute);white-space:nowrap}
+.bars small{font-size:11px;font-weight:700;color:var(--dim)}
+@keyframes grow{from{height:0}}
+/* timer */
+.timer{display:flex;align-items:center;gap:16px}
+.timer .clock{font-family:var(--disp);font-size:38px;letter-spacing:-.02em;font-variant-numeric:tabular-nums;line-height:1}
+.tbtn{width:60px;height:60px;border-radius:50%;display:grid;place-items:center;background:var(--grad);color:#1a1020;flex:none;box-shadow:0 10px 30px -8px rgba(255,110,58,.7);transition:transform .15s}
+.tbtn:active{transform:scale(.9)}
+.tbtn.stop{background:var(--bad);color:#2a0a10;box-shadow:0 10px 30px -8px rgba(255,107,122,.7)}
+/* arkusz */
+.ov{position:fixed;inset:0;z-index:100;background:rgba(5,6,18,.6);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);display:flex;align-items:flex-end;justify-content:center;animation:fade .25s}
+@keyframes fade{from{opacity:0}}
+.sheet{width:min(560px,100%);max-height:92svh;overflow-y:auto;background:#15173a;border:1px solid var(--line2);border-radius:28px 28px 0 0;padding:10px 20px calc(24px + var(--sb));animation:sheet .45s var(--ease)}
+.sheet .grab{width:44px;height:5px;border-radius:99px;background:var(--line2);margin:0 auto 14px}
+.sheet h3{font-family:var(--disp);font-size:24px;letter-spacing:-.03em;margin-bottom:14px}
+.sheet .acts{display:flex;gap:10px;margin-top:8px}
+.sheet .acts .btn{flex:1}
+@keyframes sheet{from{transform:translateY(100%)}}
+@media (min-width:901px){.ov{align-items:center}.sheet{border-radius:28px;padding-bottom:24px;animation:mdl .4s var(--ease)}.sheet .grab{display:none}}
+@keyframes mdl{from{opacity:0;transform:translateY(24px) scale(.97)}}
+.toast{position:fixed;left:50%;bottom:calc(92px + var(--sb));z-index:200;transform:translate(-50%,20px);opacity:0;display:flex;align-items:center;gap:10px;padding:12px 18px;border-radius:16px;background:var(--ink);color:#1a1020;font-weight:800;font-size:14px;transition:.35s var(--ease);pointer-events:none;max-width:calc(100% - 32px);box-shadow:0 16px 40px -10px rgba(0,0,0,.7)}
+.toast.on{opacity:1;transform:translate(-50%,0)}
+@media (min-width:901px){.toast{bottom:28px}}
+.kv{display:flex;justify-content:space-between;gap:10px;padding:10px 0;border-bottom:1px solid var(--line);font-size:14px}
+.kv:last-child{border-bottom:0}
+.kv span{color:var(--mute)}.kv b{text-align:right}
+.lead .tags{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0}
+.lead p{color:var(--mute);font-size:14px}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs><linearGradient id="rg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffd29a"/><stop offset=".5" stop-color="#ff6e3a"/><stop offset="1" stop-color="#b78cff"/></linearGradient></defs></svg>
+<div id="root"></div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<script>
+(() => {
+'use strict';
+const KEY = 'fuzir-studio-v1';
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const uid = () => Math.random().toString(36).slice(2, 9);
+const pad = (n) => String(n).padStart(2, '0');
+const ds = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+const pd = (s) => { const [y, m, d] = s.split('-').map(Number); return new Date(y, m - 1, d); };
+const TODAY = ds(new Date());
+const addD = (s, n) => { const d = pd(s); d.setDate(d.getDate() + n); return ds(d); };
+const days = (s) => Math.round((pd(s) - pd(TODAY)) / 864e5);
+const MG = ['stycznia', 'lutego', 'marca', 'kwietnia', 'maja', 'czerwca', 'lipca', 'sierpnia', 'września', 'października', 'listopada', 'grudnia'];
+const MS = ['sty', 'lut', 'mar', 'kwi', 'maj', 'cze', 'lip', 'sie', 'wrz', 'paź', 'lis', 'gru'];
+const fD = (s) => { const d = pd(s); return `${d.getDate()} ${MG[d.getMonth()]}`; };
+const zl = (n) => `${Math.round(n).toLocaleString('pl-PL')} zł`;
+const hm = (ms) => { const m = Math.floor(ms / 6e4); return `${Math.floor(m / 60)} h ${pad(m % 60)} min`; };
+const clock = (ms) => { const s = Math.floor(ms / 1000); return `${pad(Math.floor(s / 3600))}:${pad(Math.floor(s / 60) % 60)}:${pad(s % 60)}`; };
+const nowT = () => new Date().toTimeString().slice(0, 5);
+const plural = (n, a, b, c) => (n === 1 ? a : n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 10 || n % 100 >= 20) ? b : c);
+
+const I = {
+  home: '<path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/>',
+  inbox: '<path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/>',
+  folder: '<path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>',
+  wallet: '<path d="M20 12V8H6a2 2 0 0 1 0-4h12v4"/><path d="M4 6v12a2 2 0 0 0 2 2h14v-4"/><path d="M18 12a2 2 0 0 0 0 4h4v-4z"/>',
+  more: '<circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/>',
+  users: '<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.9M16 3.1a4 4 0 0 1 0 7.8"/>',
+  chat: '<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>',
+  play: '<path d="M6 4l14 8-14 8z"/>', stop: '<rect x="6" y="6" width="12" height="12" rx="2"/>',
+  plus: '<path d="M12 5v14M5 12h14"/>', check: '<path d="M20 6 9 17l-5-5"/>', x: '<path d="M18 6 6 18M6 6l12 12"/>',
+  back: '<path d="m15 18-6-6 6-6"/>', clock: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>', send: '<path d="m22 2-7 20-4-9-9-4z"/><path d="M22 2 11 13"/>',
+  cal: '<rect x="3" y="4" width="18" height="17" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/>', trend: '<path d="m22 7-8.5 8.5-5-5L2 17"/><path d="M16 7h6v6"/>',
+  clip: '<path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/>',
+  link: '<path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/>',
+  file: '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h5"/>',
+  dl: '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/>', swap: '<path d="M17 1l4 4-4 4M3 11V9a4 4 0 0 1 4-4h14M7 23l-4-4 4-4M21 13v2a4 4 0 0 1-4 4H3"/>',
+  refresh: '<path d="M21 12a9 9 0 1 1-3-6.7L21 8"/><path d="M21 3v5h-5"/>', spark: '<path d="M12 3v4M12 17v4M3 12h4M17 12h4M5.6 5.6l2.8 2.8M15.6 15.6l2.8 2.8M5.6 18.4l2.8-2.8M15.6 8.4l2.8-2.8"/>',
+  bolt: '<path d="M13 2 3 14h9l-1 8 10-12h-9z"/>', star: '<path d="m12 2 3 7h7l-5.5 4.5 2 7.5-6.5-4.5-6.5 4.5 2-7.5L2 9h7z"/>',
+};
+const ic = (n, c = '') => `<svg class="ic ${c}" viewBox="0 0 24 24" aria-hidden="true">${I[n] || ''}</svg>`;
+const STAGES = ['Rozmowa', 'Projekt', 'Kodowanie', 'Testy', 'Start'];
+const COLORS = ['#ffa24a', '#b78cff', '#5ee6a0', '#7ab8ff', '#ff6b7a', '#ffc561'];
+const TYPES = ['Wizytówka', 'Landing page', 'Sklep', 'Strona 3D', 'Bot Discord', 'Aplikacja', 'Inne'];
+const FEATS = ['Animacje 3D', 'Koszyk / cennik', 'Panel klienta', 'Integracja z Discordem', 'SEO', 'Kilka języków', 'Formularz kontaktowy', 'Hosting i domena'];
+const TIMES = ['Bez pośpiechu', 'Do miesiąca', 'Do 2 tygodni', 'Pilne'];
+const BUDGETS = ['do 200 zł', '200–500 zł', '500–1000 zł', '1000 zł +', 'Nie wiem'];
+
+/* dane demo */
+function seed() {
+  const ago = (n) => addD(TODAY, -n), inD = (n) => addD(TODAY, n), H = 36e5;
+  const clients = [
+    { id: 'c1', name: 'Montes', company: 'Montes.pl', contact: 'montes (Discord)' },
+    { id: 'c2', name: 'Szkoła nr 7', company: 'Szkoła Podstawowa nr 7', contact: 'sekretariat@sp7.przyklad.pl' },
+    { id: 'c3', name: 'Exchange', company: 'Exchange Discord', contact: 'exchange (Discord)' },
+    { id: 'c4', name: 'Kawiarnia Ziarno', company: 'Kawiarnia Ziarno', contact: 'kontakt@ziarno.przyklad.pl' },
+  ];
+  const T = (list, col) => list.map((t) => ({ id: uid(), t, col }));
+  const projects = [
+    { id: 'p1', name: 'Montes.pl', client: 'c1', type: 'Sklep', color: COLORS[0], stage: 3, review: true, deadline: inD(6), budget: 1200, preview: 'https://montes.pl', created: ago(24),
+      tasks: [...T(['Koszyk z bonusami', 'Kody rabatowe', 'Monety 3D (Three.js)', 'Wersja mobilna'], 'done'), ...T(['Testy na telefonach'], 'doing'), ...T(['Podpięcie domeny', 'Regulamin w stopce'], 'todo')],
+      time: [{ s: Date.now() - 30 * H, e: Date.now() - 26.5 * H }, { s: Date.now() - 50 * H, e: Date.now() - 44 * H }, { s: Date.now() - 74 * H, e: Date.now() - 69 * H }],
+      updates: [{ d: ago(1), t: 'Gotowa wersja do testów', x: 'Sklep działa na podglądzie. Sprawdź koszyk i kalkulator na telefonie.' }, { d: ago(6), t: 'Monety 3D', x: 'Tło z monetami zmienia kształt między sekcjami.' }, { d: ago(14), t: 'Projekt zaakceptowany', x: 'Startujemy z kodowaniem.' }] },
+    { id: 'p2', name: 'Edzio · e-dziennik', client: 'c2', type: 'Aplikacja', color: COLORS[1], stage: 2, deadline: inD(18), budget: 2500, preview: '', created: ago(15),
+      tasks: [...T(['Logowanie i role', 'Oceny i średnie', 'Plan lekcji'], 'done'), ...T(['Frekwencja i usprawiedliwienia', 'Wiadomości'], 'doing'), ...T(['Panel dyrektora', 'Tryb ciemny', 'Testy z nauczycielami'], 'todo')],
+      time: [{ s: Date.now() - 28 * H, e: Date.now() - 23 * H }, { s: Date.now() - 52 * H, e: Date.now() - 46 * H }],
+      updates: [{ d: ago(3), t: 'Oceny gotowe', x: 'Nauczyciel może wystawiać oceny z wagami.' }] },
+    { id: 'p3', name: 'Bot Exchange', client: 'c3', type: 'Bot Discord', color: COLORS[2], stage: 4, deadline: ago(2), budget: 600, preview: '', created: ago(20), done: true,
+      tasks: T(['Panel i formularze', 'Statusy wymian', 'Transkrypty', 'Opinie i statystyki'], 'done'),
+      time: [{ s: Date.now() - 120 * H, e: Date.now() - 114 * H }], updates: [{ d: ago(2), t: 'Bot wdrożony', x: 'Działa na serwerze.' }] },
+    { id: 'p4', name: 'Strona kawiarni', client: 'c4', type: 'Wizytówka', color: COLORS[3], stage: 1, deadline: inD(25), budget: 450, preview: '', created: ago(4),
+      tasks: [...T(['Moodboard i kolory'], 'done'), ...T(['Projekt strony głównej'], 'doing'), ...T(['Menu z cenami', 'Mapa dojazdu', 'Galeria zdjęć'], 'todo')],
+      time: [{ s: Date.now() - 6 * H, e: Date.now() - 4 * H }], updates: [] },
+  ];
+  const months = (n) => { const d = new Date(); d.setDate(10); d.setMonth(d.getMonth() - n); return ds(d); };
+  const invoices = [
+    { id: 'FV/1', project: 'p3', amount: 600, date: ago(3), due: inD(4), status: 'paid' },
+    { id: 'FV/2', project: 'p1', amount: 600, date: ago(20), due: ago(6), status: 'paid' },
+    { id: 'FV/3', project: 'p1', amount: 600, date: ago(1), due: inD(7), status: 'pending' },
+    { id: 'FV/4', project: 'p2', amount: 1000, date: ago(14), due: ago(1), status: 'pending' },
+    { id: 'FV/5', project: 'p4', amount: 150, date: ago(2), due: inD(5), status: 'sent' },
+    { id: 'FV/0', project: 'p0', amount: 800, date: months(1), due: months(1), status: 'paid' },
+    { id: 'FV/-1', project: 'p0', amount: 1150, date: months(2), due: months(2), status: 'paid' },
+    { id: 'FV/-2', project: 'p0', amount: 520, date: months(3), due: months(3), status: 'paid' },
+    { id: 'FV/-3', project: 'p0', amount: 940, date: months(4), due: months(4), status: 'paid' },
+    { id: 'FV/-4', project: 'p0', amount: 380, date: months(5), due: months(5), status: 'paid' },
+  ];
+  const messages = [
+    { id: uid(), project: 'p1', from: 'client', text: 'Siema, kiedy będzie można testować koszyk?', d: ago(2), at: '18:20', read: true },
+    { id: uid(), project: 'p1', from: 'fuzir', text: 'Hej! Wrzuciłem wersję do testów, link masz w aplikacji. Daj znać jak działa na telefonie 🙂', d: ago(1), at: '10:05', read: true },
+    { id: uid(), project: 'p1', from: 'client', text: 'Działa super, tylko czy da się dodać bonus +20% od 500 zł?', d: TODAY, at: '09:12', read: false },
+    { id: uid(), project: 'p2', from: 'client', text: 'Czy da się dodać eksport ocen do PDF?', d: ago(1), at: '14:40', read: false },
+    { id: uid(), project: 'p4', from: 'fuzir', text: 'Wysłałem pierwszy projekt strony głównej.', d: ago(1), at: '16:00', read: true },
+  ];
+  const leads = [
+    { id: uid(), d: TODAY, status: 'new', type: 'Strona 3D', feats: ['Animacje 3D', 'SEO'], time: 'Do miesiąca', budget: '500–1000 zł', desc: 'Strona dla mojego klanu w grze, z efektami 3D i listą członków.', contact: 'kuba_gg (Discord)' },
+    { id: uid(), d: addD(TODAY, -1), status: 'new', type: 'Bot Discord', feats: ['Integracja z Discordem'], time: 'Do 2 tygodni', budget: '200–500 zł', desc: 'Bot ticketów pod sklep z kontami.', contact: 'shopowner (Discord)' },
+    { id: uid(), d: addD(TODAY, -5), status: 'rejected', type: 'Wizytówka', feats: [], time: 'Pilne', budget: 'do 200 zł', desc: 'Strona na jutro.', contact: 'anon@przyklad.pl' },
+  ];
+  return { v: 1, clients, projects, invoices, messages, leads, timer: null, inv: 6 };
+}
+let D;
+try { D = JSON.parse(localStorage.getItem(KEY)); } catch { D = null; }
+if (!D || D.v !== 1) D = seed();
+const save = () => { try { localStorage.setItem(KEY, JSON.stringify(D)); } catch {} };
+save();
+let MODE = null; try { MODE = localStorage.getItem(KEY + '-mode'); } catch {}
+const CLIENT = 'c1';
+const U = { pf: 'active', ptab: 'over', ff: 'all', lf: 'new' };
+
+/* zapytania */
+const proj = (id) => D.projects.find((p) => p.id === id);
+const client = (id) => D.clients.find((c) => c.id === id) || { name: '—', company: '' };
+const myProjects = () => (MODE === 'client' ? D.projects.filter((p) => p.client === CLIENT) : D.projects);
+const progress = (p) => { const t = p.tasks.length, d = p.tasks.filter((x) => x.col === 'done').length; if (p.done) return 100; return Math.min(99, Math.round(((p.stage + (t ? d / t : 0)) / STAGES.length) * 100)); };
+const timeOf = (p) => p.time.reduce((a, x) => a + (x.e - x.s), 0) + (D.timer && D.timer.pid === p.id ? Date.now() - D.timer.s : 0);
+const weekTime = () => { const from = Date.now() - 7 * 864e5; return D.projects.reduce((a, p) => a + p.time.filter((x) => x.e > from).reduce((b, x) => b + (x.e - Math.max(x.s, from)), 0), 0) + (D.timer ? Date.now() - D.timer.s : 0); };
+const paidIn = (y, m) => D.invoices.filter((i) => i.status === 'paid' && pd(i.date).getFullYear() === y && pd(i.date).getMonth() === m).reduce((a, i) => a + i.amount, 0);
+const unreadFor = (who, pid) => D.messages.filter((m) => m.from !== who && !m.read && (!pid || m.project === pid) && (who === 'fuzir' || proj(m.project)?.client === CLIENT)).length;
+const invStatus = (i) => (i.status === 'paid' ? ['Opłacona', 'ok'] : i.status === 'sent' ? ['Klient zapłacił', 'info'] : days(i.due) < 0 ? ['Po terminie', 'bad'] : ['Oczekuje', 'warn']);
+const initials = (s) => s.split(/\s+/).map((x) => x[0]).join('').slice(0, 2).toUpperCase();
+const avatar = (name, color) => `<span class="av" style="background:${color || 'var(--grad)'}">${esc(initials(name))}</span>`;
+
+/* ui */
+let tt;
+function toast(m, icn = 'check') { const t = $('#toast'); t.innerHTML = ic(icn, 's') + esc(m); t.classList.add('on'); clearTimeout(tt); tt = setTimeout(() => t.classList.remove('on'), 2300); }
+function sheet(title, body, acts = '') {
+  closeSheet();
+  const o = document.createElement('div'); o.className = 'ov'; o.id = 'ov';
+  o.innerHTML = `<div class="sheet" role="dialog" aria-modal="true" aria-label="${esc(title)}"><div class="grab"></div><h3>${title}</h3>${body}${acts ? `<div class="acts">${acts}</div>` : ''}</div>`;
+  o.addEventListener('click', (e) => { if (e.target === o) closeSheet(); });
+  document.body.appendChild(o);
+  setTimeout(() => $('#ov .inp:not([readonly])')?.focus({ preventScroll: true }), 350);
+  return o;
+}
+function closeSheet() { $('#ov')?.remove(); }
+const ring = (pct, big) => { const r = big ? 64 : 26, c = 2 * Math.PI * r, vb = big ? 150 : 64; return `<div class="ring${big ? ' big' : ''}"><svg viewBox="0 0 ${vb} ${vb}"><circle class="bgc" cx="${vb / 2}" cy="${vb / 2}" r="${r}"/><circle class="fgc" cx="${vb / 2}" cy="${vb / 2}" r="${r}" stroke-dasharray="${c}" stroke-dashoffset="${c}" data-off="${c * (1 - pct / 100)}"/></svg><b>${pct}%</b></div>`; };
+const stepsHtml = (p) => `<div class="steps">${STAGES.map((s, i) => `<div class="${p.done || i < p.stage ? 'done' : i === p.stage ? 'now' : ''}"><i></i><small>${s}</small></div>`).join('')}</div>`;
+const dl = (s) => { const n = days(s); return n < 0 ? `<span class="pill bad">${-n} ${plural(-n, 'dzień', 'dni', 'dni')} po terminie</span>` : n === 0 ? '<span class="pill warn">Dziś</span>' : `<span class="pill ${n <= 7 ? 'warn' : ''}">${ic('cal', 's')} ${n} ${plural(n, 'dzień', 'dni', 'dni')}</span>`; };
+
+/* nawigacja */
+const NAV = {
+  fuzir: [['pulpit', 'Pulpit', 'home'], ['zlecenia', 'Zlecenia', 'inbox'], ['projekty', 'Projekty', 'folder'], ['finanse', 'Finanse', 'wallet'], ['wiecej', 'Więcej', 'more']],
+  client: [['projekt', 'Projekt', 'home'], ['czat', 'Czat', 'chat'], ['platnosci', 'Płatności', 'wallet'], ['zamow', 'Zamów', 'plus'], ['wiecej', 'Więcej', 'more']],
+};
+const EXTRA = { fuzir: [['klienci', 'Klienci', 'users'], ['wiadomosci', 'Wiadomości', 'chat']], client: [] };
+const TITLES = { pulpit: 'Pulpit', zlecenia: 'Zlecenia', projekty: 'Projekty', finanse: 'Finanse', wiecej: 'Więcej', klienci: 'Klienci', wiadomosci: 'Wiadomości', projekt: 'Mój projekt', czat: 'Czat z Fuzirem', platnosci: 'Płatności', zamow: 'Nowe zlecenie' };
+function route() { const h = location.hash.replace(/^#\/?/, ''); const [p, id] = h.split('/'); const all = [...NAV[MODE], ...EXTRA[MODE]].map((x) => x[0]); if (p === 'p' && id && proj(id)) return { page: 'p', id }; return { page: all.includes(p) ? p : NAV[MODE][0][0] }; }
+const go = (h) => { if (location.hash === '#/' + h) render(); else location.hash = '#/' + h; };
+function badges() {
+  if (MODE === 'fuzir') return { zlecenia: D.leads.filter((l) => l.status === 'new').length, finanse: D.invoices.filter((i) => i.status === 'sent').length, wiadomosci: unreadFor('fuzir'), wiecej: unreadFor('fuzir') };
+  return { czat: unreadFor('client'), platnosci: D.invoices.filter((i) => proj(i.project)?.client === CLIENT && i.status === 'pending').length, projekt: D.projects.filter((p) => p.client === CLIENT && p.review).length };
+}
+
+/* logowanie */
+function loginView() {
+  return `<div class="login"><img class="logo" src="icon-512.png" alt=""><h1>Fuzir <span style="background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent">Studio</span></h1>
+  <p>Projekty, zlecenia, klienci i płatności Fuzir.tech w jednej aplikacji.</p>
+  <div class="modes">
+    <button class="mode" data-a="mode" data-v="fuzir"><span class="mi" style="background:var(--grad);color:#1a1020">${ic('bolt')}</span><div><b>Panel Fuzira</b><small>Zarządzaj projektami i zleceniami</small></div></button>
+    <button class="mode" data-a="mode" data-v="client"><span class="mi" style="background:rgba(183,140,255,.2);color:var(--vio)">${ic('users')}</span><div><b>Panel klienta</b><small>Podgląd jako klient: Montes.pl</small></div></button>
+  </div>
+  <div class="note">Wersja demonstracyjna z przykładowymi danymi. Wszystko zapisuje się na tym urządzeniu.</div></div>`;
+}
+
+/* strony: fuzir */
+function pPulpit() {
+  const d = new Date(), month = paidIn(d.getFullYear(), d.getMonth()), act = D.projects.filter((p) => !p.done);
+  const pending = D.invoices.filter((i) => i.status !== 'paid').reduce((a, i) => a + i.amount, 0), newL = D.leads.filter((l) => l.status === 'new').length;
+  const doing = act.flatMap((p) => p.tasks.filter((t) => t.col === 'doing').map((t) => ({ t, p })));
+  const hi = d.getHours() < 12 ? 'Dzień dobry' : d.getHours() < 18 ? 'Cześć' : 'Dobry wieczór';
+  const chart = [...Array(6)].map((_, i) => { const x = new Date(); x.setDate(1); x.setMonth(x.getMonth() - (5 - i)); return { l: MS[x.getMonth()], v: paidIn(x.getFullYear(), x.getMonth()), cur: i === 5 }; });
+  const max = Math.max(...chart.map((c) => c.v), 1);
+  return `<div class="grid st-in">
+  <div class="hero"><small>${hi}, Fuzir · ${MG[d.getMonth()]}</small><b data-cnt="${month}">${zl(month)}</b><div style="font-weight:700;opacity:.8">przychód w tym miesiącu</div>
+    <div class="row"><div><span>Ten tydzień</span>${hm(weekTime())}</div><div><span>Aktywne</span>${act.length} ${plural(act.length, 'projekt', 'projekty', 'projektów')}</div><div><span>Do zapłaty</span>${zl(pending)}</div></div></div>
+  <div class="grid g4">
+    ${[['folder', 'var(--sun)', 'Aktywne projekty', act.length, 'projekty'], ['inbox', 'var(--vio)', 'Nowe zlecenia', newL, 'zlecenia'], ['wallet', 'var(--ok)', 'Do zapłaty', zl(pending), 'finanse'], ['clock', 'var(--info)', 'Godziny (7 dni)', (weekTime() / 36e5).toFixed(1).replace('.', ','), null]].map(([i, c, l, v, to]) => `<${to ? `a href="#/${to}"` : 'div'} class="card stat"><div class="si" style="background:color-mix(in srgb,${c} 18%,transparent);color:${c}">${ic(i, 's')}</div><span>${l}</span><b>${v}</b></${to ? 'a' : 'div'}>`).join('')}
+  </div>
+  ${timerCard()}
+  <div class="grid g21">
+    <div class="card"><div class="ch"><h3>${ic('cal')}Najbliższe terminy</h3><a href="#/projekty">Wszystkie</a></div><div class="list">${act.sort((a, b) => (a.deadline < b.deadline ? -1 : 1)).map((p) => `<a class="li" href="#/p/${p.id}"><span class="dot" style="background:${p.color}"></span><div class="t"><b>${esc(p.name)}</b><small>${esc(client(p.client).name)} · ${STAGES[p.stage]} · ${progress(p)}%</small></div>${dl(p.deadline)}</a>`).join('') || '<div class="empty">Brak aktywnych projektów</div>'}</div></div>
+    <div class="card"><div class="ch"><h3>${ic('trend')}Przychód</h3></div><div class="bars">${chart.map((c, i) => `<div><i class="${c.cur ? 'cur' : ''}" style="--h:${Math.max(4, (c.v / max) * 100)}%;--i:${i}" data-v="${c.v ? Math.round(c.v / 100) / 10 + 'k' : ''}"></i><small>${c.l}</small></div>`).join('')}</div></div>
+  </div>
+  <div class="card"><div class="ch"><h3>${ic('bolt')}W trakcie</h3><span class="pill">${doing.length}</span></div>${doing.map(({ t, p }) => `<button class="task doing" data-a="taskCycle" data-p="${p.id}" data-v="${t.id}"><span class="cb"></span><span>${esc(t.t)}</span><small class="mute" style="margin-left:auto">${esc(p.name)}</small></button>`).join('') || '<div class="empty">Nic w trakcie</div>'}</div>
+  </div>`;
+}
+function timerCard(pid) {
+  const run = D.timer && (!pid || D.timer.pid === pid);
+  if (run) { const p = proj(D.timer.pid); return `<div class="card"><div class="timer"><button class="tbtn stop" data-a="timerStop" aria-label="Zatrzymaj">${ic('stop')}</button><div><div class="mute" style="font-size:13px;font-weight:700">Mierzę czas: ${esc(p.name)}</div><div class="clock tclock">${clock(Date.now() - D.timer.s)}</div></div></div></div>`; }
+  if (pid) return `<div class="card"><div class="timer"><button class="tbtn" data-a="timerStart" data-v="${pid}" aria-label="Start">${ic('play')}</button><div><div class="mute" style="font-size:13px;font-weight:700">Czas pracy łącznie</div><div class="clock">${hm(timeOf(proj(pid)))}</div></div></div></div>`;
+  const act = D.projects.filter((p) => !p.done);
+  return `<div class="card"><div class="timer"><button class="tbtn" data-a="timerStartSel" aria-label="Start">${ic('play')}</button><div style="flex:1;min-width:0"><div class="mute" style="font-size:13px;font-weight:700;margin-bottom:6px">Licznik czasu pracy</div><select class="inp" id="tsel" aria-label="Projekt">${act.map((p) => `<option value="${p.id}">${esc(p.name)}</option>`).join('')}</select></div></div></div>`;
+}
+function pZlecenia() {
+  const list = D.leads.filter((l) => (U.lf === 'all' ? true : l.status === U.lf)).sort((a, b) => (a.d < b.d ? 1 : -1));
+  const cnt = (s) => D.leads.filter((l) => l.status === s).length;
+  return `<div class="fl" style="margin-bottom:14px"><div class="chips">${[['new', `Nowe (${cnt('new')})`], ['accepted', 'Przyjęte'], ['rejected', 'Odrzucone'], ['all', 'Wszystkie']].map(([k, n]) => `<button class="chip${U.lf === k ? ' on' : ''}" data-a="lf" data-v="${k}">${n}</button>`).join('')}</div><span class="sp"></span><button class="btn sm" data-a="leadPaste">${ic('clip', 's')}Wklej z konfiguratora</button></div>
+  <div class="grid g2 st-in">${list.map((l) => `<div class="card lead"><div class="fl"><span class="pill sun">${esc(l.type)}</span><span class="pill">${esc(l.budget)}</span><span class="sp"></span><small class="mute">${fD(l.d)}</small></div>
+    <p class="mt" style="color:var(--ink);font-weight:600">${esc(l.desc || 'Brak opisu')}</p>
+    <div class="tags">${l.feats.map((f) => `<span class="pill">${esc(f)}</span>`).join('')}<span class="pill info">${ic('clock', 's')} ${esc(l.time)}</span></div>
+    <div class="fl mute" style="font-size:13px">${ic('users', 's')} ${esc(l.contact || 'brak kontaktu')}</div>
+    ${l.status === 'new' ? `<div class="fl mt"><button class="btn sm ok" data-a="leadAccept" data-v="${l.id}">${ic('check', 's')}Przyjmij</button><button class="btn sm gh" data-a="copy" data-v="${esc(l.contact)}">Kontakt</button><span class="sp"></span><button class="btn sm bad" data-a="leadReject" data-v="${l.id}">Odrzuć</button></div>` : `<div class="mt"><span class="pill ${l.status === 'accepted' ? 'ok' : 'bad'}">${l.status === 'accepted' ? 'Przyjęte' : 'Odrzucone'}</span></div>`}
+  </div>`).join('') || '<div class="card empty">Brak zleceń w tym widoku. Klient może wysłać zlecenie z konfiguratora na fuzir.tech, a Ty wklejasz je tutaj.</div>'}</div>`;
+}
+function pProjekty() {
+  const list = myProjects().filter((p) => (U.pf === 'active' ? !p.done : U.pf === 'done' ? p.done : true));
+  return `<div class="fl" style="margin-bottom:14px"><div class="chips">${[['active', 'W toku'], ['done', 'Zakończone'], ['all', 'Wszystkie']].map(([k, n]) => `<button class="chip${U.pf === k ? ' on' : ''}" data-a="pf" data-v="${k}">${n}</button>`).join('')}</div><span class="sp"></span><button class="btn sm" data-a="projNew">${ic('plus', 's')}Nowy</button></div>
+  <div class="grid g2 st-in">${list.map((p) => projCard(p)).join('') || '<div class="card empty">Brak projektów</div>'}</div>`;
+}
+function projCard(p) {
+  const pr = progress(p), un = unreadFor('fuzir', p.id);
+  return `<a class="card pcard" href="#/p/${p.id}" style="--c:${p.color}"><div class="fl" style="flex-wrap:nowrap;align-items:flex-start"><div style="flex:1;min-width:0"><h4>${esc(p.name)}</h4><small class="mute">${esc(client(p.client).name)} · ${esc(p.type)}</small>
+    <div class="meta">${p.done ? '<span class="pill ok">Zakończony</span>' : `<span class="pill sun">${STAGES[p.stage]}</span>${dl(p.deadline)}`}${p.review ? '<span class="pill info">Czeka na akceptację</span>' : ''}${un ? `<span class="pill bad">${ic('chat', 's')} ${un}</span>` : ''}${D.timer?.pid === p.id ? '<span class="pill bad">● nagrywa czas</span>' : ''}</div></div>${ring(pr)}</div>
+    ${stepsHtml(p)}</a>`;
+}
+function pProject(id) {
+  const p = proj(id), cl = client(p.client), isF = MODE === 'fuzir';
+  if (isF && U.ptab === 'chat') markRead('fuzir', id);
+  const tabs = [['over', 'Przegląd'], ['tasks', 'Zadania'], ['chat', `Czat${unreadFor(MODE, id) ? ' •' : ''}`], ['upd', 'Aktualizacje']];
+  let body = '';
+  if (U.ptab === 'over') {
+    const paid = D.invoices.filter((i) => i.project === id && i.status === 'paid').reduce((a, i) => a + i.amount, 0);
+    body = `<div class="grid g2 st-in"><div class="card"><div class="fl" style="flex-wrap:nowrap;gap:18px">${ring(progress(p), true)}<div style="flex:1"><div class="mute" style="font-size:13px;font-weight:700">Etap</div><div style="font-family:var(--disp);font-size:26px;letter-spacing:-.02em">${p.done ? 'Zakończony' : STAGES[p.stage]}</div><div class="mt">${p.done ? '' : dl(p.deadline)}</div></div></div><div class="mt2">${stepsHtml(p)}</div>
+      ${isF && !p.done ? `<div class="fl mt2"><button class="btn sm" data-a="stageNext" data-v="${id}">${ic('check', 's')}${p.stage === 4 ? 'Zakończ projekt' : 'Następny etap'}</button>${p.review ? '<span class="pill info">Czeka na akceptację klienta</span>' : `<button class="btn sm gh" data-a="askReview" data-v="${id}">Poproś o akceptację</button>`}</div>` : ''}</div>
+      <div class="card"><div class="kv"><span>Klient</span><b>${esc(cl.company || cl.name)}</b></div><div class="kv"><span>Rodzaj</span><b>${esc(p.type)}</b></div><div class="kv"><span>Termin</span><b>${fD(p.deadline)}</b></div><div class="kv"><span>Budżet</span><b>${zl(p.budget)}</b></div><div class="kv"><span>Opłacono</span><b>${zl(paid)}</b></div>
+        <div class="bar mt"><i style="width:${Math.min(100, (paid / p.budget) * 100)}%"></i></div>
+        <div class="fl mt">${p.preview ? `<a class="btn sm gh" href="${esc(p.preview)}" target="_blank" rel="noopener">${ic('link', 's')}Podgląd</a>` : ''}${isF ? `<button class="btn sm gh" data-a="invNew" data-v="${id}">${ic('file', 's')}Faktura</button><button class="btn sm gh" data-a="projEdit" data-v="${id}">Edytuj</button>` : ''}</div></div>
+      ${isF ? timerCard(id) : ''}</div>`;
+  } else if (U.ptab === 'tasks') {
+    const cols = [['todo', 'Do zrobienia'], ['doing', 'W trakcie'], ['done', 'Gotowe']];
+    body = `<div class="kan">${cols.map(([k, n]) => { const ts = p.tasks.filter((t) => t.col === k); return `<div class="col card"><h5>${n}<span>${ts.length}</span></h5>${ts.map((t) => `<button class="task ${k}" ${isF ? `data-a="taskCycle" data-p="${id}" data-v="${t.id}"` : ''}><span class="cb">${k === 'done' ? ic('check', 's') : ''}</span><span>${esc(t.t)}</span>${isF ? `<span class="x" data-a="taskDel" data-p="${id}" data-v="${t.id}" aria-label="Usuń">✕</span>` : ''}</button>`).join('') || '<div class="empty" style="padding:14px">Pusto</div>'}</div>`; }).join('')}</div>
+    ${isF ? `<form class="addrow mt" data-f="taskAdd" data-p="${id}"><input class="inp" name="t" placeholder="Nowe zadanie…" maxlength="80" autocomplete="off"><button class="btn" aria-label="Dodaj">${ic('plus', 's')}</button></form><p class="mute mt" style="font-size:13px">Dotknij zadania, żeby przesunąć je dalej.</p>` : ''}`;
+  } else if (U.ptab === 'chat') {
+    body = chatBox(id);
+  } else {
+    body = `${isF ? `<form class="card" data-f="updAdd" data-p="${id}"><div class="field"><label for="ut">Nowa aktualizacja dla klienta</label><input class="inp" id="ut" name="t" placeholder="Tytuł, np. Gotowa wersja mobilna" maxlength="80"></div><textarea class="inp" name="x" placeholder="Szczegóły (opcjonalnie)" maxlength="400"></textarea><button class="btn mt">${ic('send', 's')}Opublikuj</button></form>` : ''}
+    <div class="card mt"><div class="feed">${p.updates.map((u) => `<div class="fi"><small>${fD(u.d)}</small><b>${esc(u.t)}</b>${u.x ? `<p>${esc(u.x)}</p>` : ''}</div>`).join('') || '<div class="empty">Brak aktualizacji</div>'}</div></div>`;
+  }
+  return `<div class="seg" style="margin-bottom:14px">${tabs.map(([k, n]) => `<button class="${U.ptab === k ? 'on' : ''}" data-a="ptab" data-v="${k}">${n}</button>`).join('')}</div>${body}`;
+}
+function chatBox(pid) {
+  const me = MODE, msgs = D.messages.filter((m) => m.project === pid);
+  return `<div class="card"><div class="chat" id="chat">${msgs.map((m) => `<div class="msg ${m.from === me ? 'me' : 'them'}">${esc(m.text)}<small>${m.from === 'fuzir' ? 'Fuzir' : esc(client(proj(pid).client).name)} · ${m.d === TODAY ? m.at : fD(m.d)}</small></div>`).join('') || '<div class="empty">Napisz pierwszą wiadomość</div>'}</div>
+  <form class="composer" data-f="msgSend" data-p="${pid}"><input class="inp" name="t" placeholder="Wiadomość…" maxlength="1000" autocomplete="off"><button class="btn" aria-label="Wyślij">${ic('send', 's')}</button></form></div>`;
+}
+function markRead(who, pid) { let ch = false; D.messages.forEach((m) => { if (m.project === pid && m.from !== who && !m.read) { m.read = true; ch = true; } }); if (ch) save(); }
+function pKlienci() {
+  return `<div class="grid g2 st-in">${D.clients.map((c, i) => { const ps = D.projects.filter((p) => p.client === c.id), paid = D.invoices.filter((x) => ps.some((p) => p.id === x.project) && x.status === 'paid').reduce((a, x) => a + x.amount, 0); return `<div class="card"><div class="fl" style="flex-wrap:nowrap">${avatar(c.name, COLORS[i % COLORS.length])}<div style="flex:1;min-width:0"><b>${esc(c.company || c.name)}</b><div class="mute" style="font-size:13px">${esc(c.contact)}</div></div><button class="ib" data-a="copy" data-v="${esc(c.contact)}" aria-label="Kopiuj kontakt">${ic('clip', 's')}</button></div><div class="kv mt"><span>Projekty</span><b>${ps.length}</b></div><div class="kv"><span>Zapłacono</span><b>${zl(paid)}</b></div><div class="fl mt">${ps.map((p) => `<a class="pill sun" href="#/p/${p.id}">${esc(p.name)}</a>`).join('')}</div></div>`; }).join('')}</div>`;
+}
+function pWiadomosci() {
+  const threads = D.projects.map((p) => ({ p, last: D.messages.filter((m) => m.project === p.id).slice(-1)[0], un: unreadFor('fuzir', p.id) })).filter((x) => x.last).sort((a, b) => (a.last.d + a.last.at < b.last.d + b.last.at ? 1 : -1));
+  return `<div class="card"><div class="list">${threads.map(({ p, last, un }) => `<button class="li" data-a="openChat" data-v="${p.id}">${avatar(client(p.client).name, p.color)}<div class="t"><b>${esc(p.name)}</b><small>${last.from === 'fuzir' ? 'Ty: ' : ''}${esc(last.text)}</small></div>${un ? `<span class="bd">${un}</span>` : `<small class="mute">${last.d === TODAY ? last.at : fD(last.d)}</small>`}</button>`).join('') || '<div class="empty">Brak wiadomości</div>'}</div></div>`;
+}
+function pFinanse() {
+  const y = new Date().getFullYear(), paidY = D.invoices.filter((i) => i.status === 'paid' && pd(i.date).getFullYear() === y).reduce((a, i) => a + i.amount, 0);
+  const pend = D.invoices.filter((i) => i.status !== 'paid'), over = pend.filter((i) => i.status === 'pending' && days(i.due) < 0);
+  const vis = D.invoices.filter((i) => i.project !== 'p0').filter((i) => (U.ff === 'all' ? true : U.ff === 'paid' ? i.status === 'paid' : i.status !== 'paid')).sort((a, b) => (a.date < b.date ? 1 : -1));
+  return `<div class="grid g3 st-in"><div class="card stat"><span>Zapłacone w ${y}</span><b>${zl(paidY)}</b></div><div class="card stat"><span>Oczekuje</span><b style="color:var(--warn)">${zl(pend.reduce((a, i) => a + i.amount, 0))}</b></div><div class="card stat"><span>Po terminie</span><b style="color:${over.length ? 'var(--bad)' : 'inherit'}">${over.length}</b></div></div>
+  <div class="fl mt2" style="margin-bottom:12px"><div class="chips">${[['all', 'Wszystkie'], ['open', 'Nieopłacone'], ['paid', 'Opłacone']].map(([k, n]) => `<button class="chip${U.ff === k ? ' on' : ''}" data-a="ff" data-v="${k}">${n}</button>`).join('')}</div><span class="sp"></span><button class="btn sm" data-a="invNew">${ic('plus', 's')}Faktura</button></div>
+  <div class="card"><div class="list">${vis.map((i) => { const [l, c] = invStatus(i), p = proj(i.project); return `<button class="li" data-a="invOpen" data-v="${i.id}"><span class="dot" style="background:${p?.color || 'var(--dim)'}"></span><div class="t"><b>${esc(i.id)} · ${esc(p?.name || '—')}</b><small>wystawiona ${fD(i.date)} · termin ${fD(i.due)}</small></div><div style="text-align:right"><b>${zl(i.amount)}</b><br><span class="pill ${c}">${l}</span></div></button>`; }).join('') || '<div class="empty">Brak faktur</div>'}</div></div>`;
+}
+function pWiecej() {
+  const b = badges();
+  const rows = MODE === 'fuzir' ? [['#/klienci', 'users', 'Klienci', `${D.clients.length}`], ['#/wiadomosci', 'chat', 'Wiadomości', b.wiadomosci ? `<span class="bd">${b.wiadomosci}</span>` : '']] : [];
+  return `<div class="grid st-in">
+  ${rows.length ? `<div class="card"><div class="list">${rows.map(([h, i, n, x]) => `<a class="li" href="${h}"><span class="ib">${ic(i, 's')}</span><div class="t"><b>${n}</b></div>${x}</a>`).join('')}</div></div>` : ''}
+  <div class="card"><div class="ch"><h3>${ic('dl')}Aplikacja</h3></div><p class="mute" style="font-size:14px">Zainstaluj Fuzir Studio na telefonie lub komputerze. Działa jak zwykła aplikacja, także offline.</p>
+    <button class="btn wide mt" data-a="install" id="instBtn">${ic('dl', 's')}Zainstaluj aplikację</button>
+    <p class="mute mt" style="font-size:12px">iPhone: w Safari kliknij Udostępnij, potem „Do ekranu początkowego”.</p></div>
+  <div class="card"><div class="list">
+    <button class="li" data-a="switch"><span class="ib">${ic('swap', 's')}</span><div class="t"><b>Przełącz na ${MODE === 'fuzir' ? 'panel klienta' : 'panel Fuzira'}</b><small>Zobacz aplikację z drugiej strony</small></div></button>
+    <button class="li" data-a="reset"><span class="ib">${ic('refresh', 's')}</span><div class="t"><b>Przywróć dane demo</b><small>Usuwa Twoje zmiany</small></div></button>
+    <a class="li" href="../" target="_blank" rel="noopener"><span class="ib">${ic('link', 's')}</span><div class="t"><b>fuzir.tech</b><small>Otwórz stronę</small></div></a>
+  </div></div>
+  <p class="mute" style="text-align:center;font-size:12px">Fuzir Studio · wersja demo</p></div>`;
+}
+
+/* strony: klient */
+function pKlientProjekt() {
+  const ps = D.projects.filter((p) => p.client === CLIENT), p = ps.find((x) => !x.done) || ps[0];
+  if (!p) return '<div class="card empty">Nie masz jeszcze projektu. Złóż zlecenie w zakładce Zamów.</div>';
+  return `<div class="grid st-in">
+  ${p.review ? `<div class="banner"><span class="ib" style="background:var(--grad);color:#1a1020;border:0">${ic('star', 's')}</span><div class="t"><b>Fuzir prosi o akceptację etapu „${STAGES[p.stage]}”</b><div class="mute" style="font-size:13px">Sprawdź podgląd i daj znać, czy wszystko gra.</div></div><button class="btn sm ok" data-a="accept" data-v="${p.id}">${ic('check', 's')}Akceptuję</button><button class="btn sm gh" data-a="remarks" data-v="${p.id}">Mam uwagi</button></div>` : ''}
+  <div class="card" style="text-align:center;padding:26px 18px"><div style="display:flex;justify-content:center">${ring(progress(p), true)}</div><h2 style="font-family:var(--disp);font-size:30px;letter-spacing:-.03em;margin-top:14px">${esc(p.name)}</h2><div class="mute">${p.done ? 'Projekt zakończony' : `Etap: ${STAGES[p.stage]} · termin ${fD(p.deadline)}`}</div><div class="mt2" style="text-align:left">${stepsHtml(p)}</div>
+    ${p.preview ? `<a class="btn wide mt2" href="${esc(p.preview)}" target="_blank" rel="noopener">${ic('link', 's')}Otwórz podgląd</a>` : ''}</div>
+  <div class="card"><div class="ch"><h3>${ic('spark')}Postęp prac</h3><span class="pill ok">${p.tasks.filter((t) => t.col === 'done').length}/${p.tasks.length} zadań</span></div><div class="list">${p.tasks.map((t) => `<div class="li"><span class="dot" style="background:${t.col === 'done' ? 'var(--ok)' : t.col === 'doing' ? 'var(--sun)' : 'var(--line2)'}"></span><div class="t"><b style="${t.col === 'done' ? 'text-decoration:line-through;opacity:.6' : ''}">${esc(t.t)}</b></div><small class="mute">${t.col === 'done' ? 'gotowe' : t.col === 'doing' ? 'w trakcie' : 'w planie'}</small></div>`).join('')}</div></div>
+  <div class="card"><div class="ch"><h3>${ic('bolt')}Aktualizacje</h3></div><div class="feed">${p.updates.map((u) => `<div class="fi"><small>${fD(u.d)}</small><b>${esc(u.t)}</b>${u.x ? `<p>${esc(u.x)}</p>` : ''}</div>`).join('') || '<div class="empty">Brak aktualizacji</div>'}</div></div>
+  </div>`;
+}
+function pKlientCzat() { const p = D.projects.find((x) => x.client === CLIENT && !x.done) || D.projects.find((x) => x.client === CLIENT); if (!p) return '<div class="card empty">Brak projektu</div>'; markRead('client', p.id); return chatBox(p.id); }
+function pKlientPlatnosci() {
+  const inv = D.invoices.filter((i) => proj(i.project)?.client === CLIENT).sort((a, b) => (a.date < b.date ? 1 : -1));
+  const due = inv.filter((i) => i.status === 'pending').reduce((a, i) => a + i.amount, 0);
+  return `<div class="grid st-in"><div class="hero"><small>Do zapłaty</small><b>${zl(due)}</b><div style="font-weight:700;opacity:.8">${inv.filter((i) => i.status === 'pending').length} ${plural(inv.filter((i) => i.status === 'pending').length, 'faktura', 'faktury', 'faktur')}</div></div>
+  <div class="card"><div class="list">${inv.map((i) => { const [l, c] = invStatus(i); return `<div class="li"><span class="ib">${ic('file', 's')}</span><div class="t"><b>${esc(i.id)} · ${zl(i.amount)}</b><small>termin ${fD(i.due)}</small></div>${i.status === 'pending' ? `<button class="btn sm" data-a="payMark" data-v="${i.id}">Zapłaciłem</button>` : `<span class="pill ${c}">${i.status === 'sent' ? 'Czeka na potwierdzenie' : l}</span>`}</div>`; }).join('') || '<div class="empty">Brak faktur</div>'}</div></div>
+  <div class="card"><div class="ch"><h3>${ic('wallet')}Dane do przelewu</h3></div><div class="kv"><span>Odbiorca</span><b>Fuzir.tech</b></div><div class="kv"><span>Tytuł</span><b>numer faktury</b></div><p class="mute mt" style="font-size:12px">Numer konta i BLIK poda Fuzir w czacie.</p></div></div>`;
+}
+let ORDER = { type: 'Sklep', feats: new Set(), time: 'Do miesiąca', budget: 'Nie wiem' };
+function pZamow() {
+  const ch = (list, key, multi) => `<div class="chips" style="flex-wrap:wrap">${list.map((v) => `<button class="chip${multi ? (ORDER[key].has(v) ? ' on' : '') : ORDER[key] === v ? ' on' : ''}" data-a="ord" data-k="${key}" data-v="${esc(v)}">${esc(v)}</button>`).join('')}</div>`;
+  return `<div class="grid st-in"><div class="card"><div class="field"><label>Rodzaj projektu</label>${ch(TYPES, 'type')}</div><div class="field"><label>Funkcje</label>${ch(FEATS, 'feats', true)}</div><div class="field"><label>Termin</label>${ch(TIMES, 'time')}</div><div class="field"><label>Budżet</label>${ch(BUDGETS, 'budget')}</div>
+  <div class="field"><label for="odesc">Opisz pomysł</label><textarea class="inp" id="odesc" maxlength="600" placeholder="Np. nowa zakładka z opiniami klientów"></textarea></div>
+  <button class="btn wide" data-a="orderSend">${ic('send', 's')}Wyślij do Fuzira</button></div></div>`;
+}
+
+/* render */
+function render() {
+  closeSheet();
+  const root = $('#root');
+  if (!MODE) { root.innerHTML = loginView(); return; }
+  const r = route(), b = badges(), nav = NAV[MODE];
+  const page = r.page === 'p' ? null : r.page;
+  const P = { pulpit: pPulpit, zlecenia: pZlecenia, projekty: pProjekty, finanse: pFinanse, wiecej: pWiecej, klienci: pKlienci, wiadomosci: pWiadomosci, projekt: pKlientProjekt, czat: pKlientCzat, platnosci: pKlientPlatnosci, zamow: pZamow };
+  const body = r.page === 'p' ? pProject(r.id) : P[page]();
+  const p = r.page === 'p' ? proj(r.id) : null;
+  const title = p ? `${esc(p.name)}<small>${esc(client(p.client).name)} · ${esc(p.type)}</small>` : `${TITLES[page]}<small>${MODE === 'fuzir' ? 'Fuzir Studio' : 'Montes.pl · klient'}</small>`;
+  const activeTab = p ? 'projekty' : ['klienci', 'wiadomosci'].includes(page) ? 'wiecej' : page;
+  const me = MODE === 'fuzir' ? ['Fuzir', 'Właściciel'] : ['Montes', 'Klient'];
+  root.innerHTML = `<div class="app">
+  <aside class="side"><div class="brand"><img src="icon-192.png" alt=""><div>Fuzir<small>Studio</small></div></div>
+    <nav>${[...nav.filter((x) => x[0] !== 'wiecej'), ...EXTRA[MODE], ['wiecej', 'Ustawienia', 'more']].map(([k, n, i]) => `<a href="#/${k}" class="${(p && k === 'projekty') || page === k ? 'on' : ''}">${ic(i)}${n}${b[k] && k !== 'wiecej' ? `<span class="bd">${b[k]}</span>` : ''}</a>`).join('')}</nav>
+    <div class="who">${avatar(me[0], MODE === 'fuzir' ? 'var(--grad)' : 'var(--vio)')}<div><b>${me[0]}</b><small>${me[1]}</small></div></div></aside>
+  <div class="main"><header class="top" id="top">${p ? `<a class="back" href="#/${MODE === 'fuzir' ? 'projekty' : 'projekt'}" aria-label="Wróć">${ic('back', 's')}</a>` : ''}<h1>${title}</h1><button class="tpill${D.timer ? ' on' : ''}" data-a="timerStop" aria-label="Zatrzymaj licznik"><i></i><span class="tclock">${D.timer ? clock(Date.now() - D.timer.s) : ''}</span></button></header>
+  <main class="content"><div class="pg">${body}</div></main></div>
+  <nav class="tabbar" aria-label="Nawigacja">${nav.map(([k, n, i]) => `<a href="#/${k}" class="${activeTab === k ? 'on' : ''}">${ic(i)}<span>${n}</span>${b[k] ? `<span class="bd">${b[k]}</span>` : ''}</a>`).join('')}</nav></div>`;
+  requestAnimationFrame(() => { $$('.fgc').forEach((c) => (c.style.strokeDashoffset = c.dataset.off)); const ch = $('#chat'); if (ch) ch.scrollTop = ch.scrollHeight; });
+  const ib = $('#instBtn'); if (ib) { ib.disabled = !deferred && !isStandalone(); if (isStandalone()) ib.innerHTML = ic('check', 's') + 'Zainstalowana'; }
+  document.title = `${p ? p.name : TITLES[page]} · Fuzir Studio`;
+}
+addEventListener('hashchange', () => { render(); scrollTo(0, 0); });
+addEventListener('scroll', () => $('#top')?.classList.toggle('sc', scrollY > 6), { passive: true });
+setInterval(() => { if (D.timer) $$('.tclock').forEach((e) => (e.textContent = clock(Date.now() - D.timer.s))); }, 1000);
+
+/* akcje */
+const A = {
+  mode(el) { MODE = el.dataset.v; try { localStorage.setItem(KEY + '-mode', MODE); } catch {} location.hash = '#/' + NAV[MODE][0][0]; render(); },
+  switch() { MODE = MODE === 'fuzir' ? 'client' : 'fuzir'; try { localStorage.setItem(KEY + '-mode', MODE); } catch {} location.hash = '#/' + NAV[MODE][0][0]; render(); toast(MODE === 'fuzir' ? 'Panel Fuzira' : 'Panel klienta', 'swap'); },
+  reset() { if (!confirm('Przywrócić dane demo? Twoje zmiany zostaną usunięte.')) return; D = seed(); save(); render(); toast('Dane przywrócone', 'refresh'); },
+  lf(el) { U.lf = el.dataset.v; render(); }, pf(el) { U.pf = el.dataset.v; render(); }, ff(el) { U.ff = el.dataset.v; render(); },
+  ptab(el) { U.ptab = el.dataset.v; render(); },
+  openChat(el) { U.ptab = 'chat'; go('p/' + el.dataset.v); },
+  copy(el) { const v = el.dataset.v; (navigator.clipboard?.writeText(v) || Promise.reject()).then(() => toast('Skopiowano'), () => toast(v, 'clip')); },
+  timerStart(el) { startTimer(el.dataset.v); }, timerStartSel() { const v = $('#tsel')?.value; if (v) startTimer(v); },
+  timerStop() { if (!D.timer) return; const p = proj(D.timer.pid); const dur = Date.now() - D.timer.s; if (p && dur > 5000) p.time.push({ s: D.timer.s, e: Date.now() }); D.timer = null; save(); render(); toast(`Zapisano ${hm(dur)} · ${p?.name || ''}`, 'clock'); },
+  taskCycle(el, e) { if (e.target.closest('.x')) return; const p = proj(el.dataset.p), t = p.tasks.find((x) => x.id === el.dataset.v); t.col = t.col === 'todo' ? 'doing' : t.col === 'doing' ? 'done' : 'todo'; save(); render(); if (t.col === 'done') toast('Zadanie gotowe'); },
+  taskDel(el, e) { e.stopPropagation(); const p = proj(el.dataset.p); p.tasks = p.tasks.filter((x) => x.id !== el.dataset.v); save(); render(); },
+  stageNext(el) { const p = proj(el.dataset.v); if (p.stage >= 4) { p.done = true; p.review = false; p.updates.unshift({ d: TODAY, t: 'Projekt zakończony 🎉', x: 'Dziękuję za współpracę!' }); toast('Projekt zakończony 🎉', 'star'); } else { p.stage++; p.review = false; p.updates.unshift({ d: TODAY, t: `Etap: ${STAGES[p.stage]}`, x: '' }); toast(`Etap: ${STAGES[p.stage]}`); } save(); render(); },
+  askReview(el) { const p = proj(el.dataset.v); p.review = true; D.messages.push({ id: uid(), project: p.id, from: 'fuzir', text: `Etap „${STAGES[p.stage]}” gotowy do akceptacji. Zajrzyj do aplikacji 🙂`, d: TODAY, at: nowT(), read: false }); save(); render(); toast('Wysłano prośbę o akceptację', 'send'); },
+  accept(el) { const p = proj(el.dataset.v); p.review = false; p.updates.unshift({ d: TODAY, t: `Klient zaakceptował etap „${STAGES[p.stage]}”`, x: '' }); D.messages.push({ id: uid(), project: p.id, from: 'client', text: `Akceptuję etap „${STAGES[p.stage]}” ✅`, d: TODAY, at: nowT(), read: false }); if (p.stage < 4) p.stage++; save(); render(); toast('Dzięki! Etap zaakceptowany', 'star'); },
+  remarks() { go('czat'); setTimeout(() => $('.composer .inp')?.focus(), 300); },
+  leadPaste() {
+    sheet('Wklej zlecenie', `<p class="mute" style="font-size:14px;margin-bottom:12px">Klient kopiuje zlecenie z konfiguratora na fuzir.tech i wysyła Ci je na Discordzie. Wklej je tutaj, a aplikacja sama odczyta pola.</p><textarea class="inp" id="lp" rows="8" placeholder="Nowe zlecenie dla Fuzir.tech&#10;&#10;Rodzaj: Sklep&#10;Funkcje: Animacje 3D, SEO&#10;Termin: Do miesiąca&#10;Budżet: 500–1000 zł&#10;Opis: …&#10;Kontakt: …"></textarea><div id="lpPrev" class="mt"></div>`,
+      `<button class="btn gh" data-a="leadClip">${ic('clip', 's')}Ze schowka</button><button class="btn" data-a="leadSave">Dodaj</button>`);
+    $('#lp').addEventListener('input', previewLead);
+  },
+  async leadClip() { try { $('#lp').value = await navigator.clipboard.readText(); previewLead(); } catch { toast('Brak dostępu do schowka, wklej ręcznie', 'clip'); } },
+  leadSave() { const l = parseLead($('#lp').value); if (!l.type && !l.desc) return toast('Nie rozpoznano zlecenia', 'x'); D.leads.unshift({ id: uid(), d: TODAY, status: 'new', ...l }); U.lf = 'new'; save(); render(); toast('Zlecenie dodane'); },
+  leadReject(el) { D.leads.find((l) => l.id === el.dataset.v).status = 'rejected'; save(); render(); toast('Zlecenie odrzucone', 'x'); },
+  leadAccept(el) { const l = D.leads.find((x) => x.id === el.dataset.v); projectSheet({ lead: l.id, name: `${l.type} · ${(l.contact || 'klient').split(/[ @(]/)[0]}`, type: TYPES.includes(l.type) ? l.type : 'Inne', clientName: (l.contact || 'Nowy klient').split(' (')[0], contact: l.contact, budget: { 'do 200 zł': 200, '200–500 zł': 400, '500–1000 zł': 800, '1000 zł +': 1500 }[l.budget] || 500, deadline: addD(TODAY, { 'Pilne': 7, 'Do 2 tygodni': 14, 'Do miesiąca': 30 }[l.time] || 45), feats: l.feats }); },
+  projNew() { projectSheet({ name: '', type: 'Wizytówka', clientName: '', contact: '', budget: 500, deadline: addD(TODAY, 30) }); },
+  projEdit(el) { const p = proj(el.dataset.v); sheet('Edytuj projekt', `<div class="field"><label for="en">Nazwa</label><input class="inp" id="en" value="${esc(p.name)}" maxlength="60"></div><div class="grid g2" style="gap:10px"><div class="field"><label for="ed">Termin</label><input class="inp" type="date" id="ed" value="${p.deadline}"></div><div class="field"><label for="eb">Budżet (zł)</label><input class="inp" type="number" id="eb" value="${p.budget}" min="0"></div></div><div class="field"><label for="ep">Link do podglądu</label><input class="inp" id="ep" value="${esc(p.preview)}" placeholder="https://"></div>`, `<button class="btn gh" data-a="projDel" data-v="${p.id}">Usuń</button><button class="btn" data-a="projEditSave" data-v="${p.id}">Zapisz</button>`); },
+  projEditSave(el) { const p = proj(el.dataset.v); p.name = $('#en').value.trim() || p.name; p.deadline = $('#ed').value || p.deadline; p.budget = Math.max(0, +$('#eb').value || 0); const pv = $('#ep').value.trim(); p.preview = /^https?:\/\//.test(pv) ? pv : ''; save(); render(); toast('Zapisano'); },
+  projDel(el) { if (!confirm('Usunąć projekt?')) return; D.projects = D.projects.filter((p) => p.id !== el.dataset.v); if (D.timer?.pid === el.dataset.v) D.timer = null; save(); go('projekty'); toast('Projekt usunięty', 'x'); },
+  projSave(el) {
+    const name = $('#pn').value.trim(), cn = $('#pc').value.trim(); if (!name || !cn) return toast('Podaj nazwę i klienta', 'x');
+    let c = D.clients.find((x) => x.name.toLowerCase() === cn.toLowerCase()); if (!c) { c = { id: uid(), name: cn, company: cn, contact: $('#pk').value.trim() }; D.clients.push(c); }
+    const feats = (el.dataset.feats || '').split('|').filter(Boolean);
+    const p = { id: uid(), name, client: c.id, type: $('#pt').value, color: COLORS[D.projects.length % COLORS.length], stage: 0, deadline: $('#pd').value || addD(TODAY, 30), budget: Math.max(0, +$('#pb').value || 0), preview: '', created: TODAY, tasks: [{ id: uid(), t: 'Rozmowa i wycena', col: 'doing' }, ...feats.map((f) => ({ id: uid(), t: f, col: 'todo' }))], time: [], updates: [{ d: TODAY, t: 'Projekt utworzony', x: 'Zaczynamy!' }] };
+    D.projects.unshift(p);
+    if (el.dataset.lead) { const l = D.leads.find((x) => x.id === el.dataset.lead); if (l) l.status = 'accepted'; }
+    save(); U.ptab = 'over'; go('p/' + p.id); toast('Projekt utworzony', 'star');
+  },
+  invNew(el) {
+    const pid = el.dataset.v || '';
+    sheet('Nowa faktura', `<div class="field"><label for="ip">Projekt</label><select class="inp" id="ip">${D.projects.map((p) => `<option value="${p.id}"${p.id === pid ? ' selected' : ''}>${esc(p.name)}</option>`).join('')}</select></div><div class="grid g2" style="gap:10px"><div class="field"><label for="ia">Kwota (zł)</label><input class="inp" type="number" id="ia" min="1" value="${pid ? Math.round(proj(pid).budget / 2) : 300}"></div><div class="field"><label for="id2">Termin płatności</label><input class="inp" type="date" id="id2" value="${addD(TODAY, 7)}"></div></div>`, `<button class="btn" data-a="invSave">Wystaw</button>`);
+  },
+  invSave() { const a = +$('#ia').value; if (!(a > 0)) return toast('Podaj kwotę', 'x'); const id = `FV/${D.inv++}`; D.invoices.push({ id, project: $('#ip').value, amount: a, date: TODAY, due: $('#id2').value || addD(TODAY, 7), status: 'pending' }); save(); render(); toast(`Wystawiono ${id}`); },
+  invOpen(el) { const i = D.invoices.find((x) => x.id === el.dataset.v), [l, c] = invStatus(i), p = proj(i.project); sheet(esc(i.id), `<div class="kv"><span>Projekt</span><b>${esc(p?.name || '—')}</b></div><div class="kv"><span>Klient</span><b>${esc(client(p?.client).name)}</b></div><div class="kv"><span>Kwota</span><b>${zl(i.amount)}</b></div><div class="kv"><span>Wystawiona</span><b>${fD(i.date)}</b></div><div class="kv"><span>Termin</span><b>${fD(i.due)}</b></div><div class="kv"><span>Status</span><b><span class="pill ${c}">${l}</span></b></div>`, i.status === 'paid' ? `<button class="btn gh" data-a="invUnpaid" data-v="${i.id}">Cofnij płatność</button>` : `<button class="btn gh" data-a="invDel" data-v="${i.id}">Usuń</button><button class="btn ok" data-a="invPaid" data-v="${i.id}">${ic('check', 's')}Opłacona</button>`); },
+  invPaid(el) { D.invoices.find((x) => x.id === el.dataset.v).status = 'paid'; save(); render(); toast('Płatność zaksięgowana 💸', 'wallet'); },
+  invUnpaid(el) { D.invoices.find((x) => x.id === el.dataset.v).status = 'pending'; save(); render(); },
+  invDel(el) { D.invoices = D.invoices.filter((x) => x.id !== el.dataset.v); save(); render(); toast('Faktura usunięta', 'x'); },
+  payMark(el) { const i = D.invoices.find((x) => x.id === el.dataset.v); i.status = 'sent'; D.messages.push({ id: uid(), project: i.project, from: 'client', text: `Zapłaciłem fakturę ${i.id} (${zl(i.amount)}).`, d: TODAY, at: nowT(), read: false }); save(); render(); toast('Fuzir dostał informację o płatności', 'send'); },
+  ord(el) { const k = el.dataset.k, v = el.dataset.v; if (k === 'feats') ORDER.feats.has(v) ? ORDER.feats.delete(v) : ORDER.feats.add(v); else ORDER[k] = v; render(); },
+  orderSend() { const desc = $('#odesc').value.trim(); D.leads.unshift({ id: uid(), d: TODAY, status: 'new', type: ORDER.type, feats: [...ORDER.feats], time: ORDER.time, budget: ORDER.budget, desc, contact: `${client(CLIENT).name} (klient)` }); ORDER = { type: 'Sklep', feats: new Set(), time: 'Do miesiąca', budget: 'Nie wiem' }; save(); render(); toast('Zlecenie wysłane do Fuzira 🚀', 'send'); },
+  install() { if (deferred) { deferred.prompt(); deferred.userChoice.finally(() => { deferred = null; render(); }); } },
+};
+function startTimer(pid) { if (D.timer) A.timerStop(); D.timer = { pid, s: Date.now() }; save(); render(); toast(`Start: ${proj(pid).name}`, 'play'); }
+function projectSheet(o) {
+  sheet(o.lead ? 'Przyjmij zlecenie' : 'Nowy projekt', `<div class="field"><label for="pn">Nazwa projektu</label><input class="inp" id="pn" value="${esc(o.name)}" maxlength="60"></div>
+  <div class="grid g2" style="gap:10px"><div class="field"><label for="pc">Klient</label><input class="inp" id="pc" value="${esc(o.clientName)}" maxlength="40" list="clist"><datalist id="clist">${D.clients.map((c) => `<option value="${esc(c.name)}">`).join('')}</datalist></div><div class="field"><label for="pk">Kontakt</label><input class="inp" id="pk" value="${esc(o.contact)}" maxlength="80"></div></div>
+  <div class="grid g2" style="gap:10px"><div class="field"><label for="pt">Rodzaj</label><select class="inp" id="pt">${TYPES.map((t) => `<option${t === o.type ? ' selected' : ''}>${t}</option>`).join('')}</select></div><div class="field"><label for="pb">Budżet (zł)</label><input class="inp" type="number" id="pb" value="${o.budget}" min="0"></div></div>
+  <div class="field"><label for="pd">Termin</label><input class="inp" type="date" id="pd" value="${o.deadline}"></div>`, `<button class="btn wide" data-a="projSave" data-lead="${o.lead || ''}" data-feats="${esc((o.feats || []).join('|'))}">${ic('check', 's')}Utwórz projekt</button>`);
+}
+function parseLead(txt) {
+  const get = (k) => { const m = new RegExp(`^\\s*${k}\\s*:\\s*(.+)$`, 'mi').exec(txt); return m ? m[1].trim() : ''; };
+  const clean = (v) => (/^\(uzupełnij\)$/i.test(v) || v === 'brak' ? '' : v);
+  return { type: get('Rodzaj'), feats: clean(get('Funkcje')).split(',').map((s) => s.trim()).filter(Boolean), time: get('Termin') || 'Do ustalenia', budget: get('Budżet') || 'Nie wiem', desc: clean(get('Opis')), contact: clean(get('Kontakt')) };
+}
+function previewLead() { const l = parseLead($('#lp').value), el = $('#lpPrev'); if (!l.type && !l.desc) { el.innerHTML = ''; return; } el.innerHTML = `<div class="card lead"><span class="pill sun">${esc(l.type || '?')}</span> <span class="pill">${esc(l.budget)}</span><p class="mt">${esc(l.desc || '—')}</p><div class="tags">${l.feats.map((f) => `<span class="pill">${esc(f)}</span>`).join('')}</div><small class="mute">${esc(l.contact || 'brak kontaktu')}</small></div>`; }
+
+document.addEventListener('click', (e) => {
+  const el = e.target.closest('[data-a]'); if (!el) return;
+  const fn = A[el.dataset.a]; if (!fn) return;
+  e.preventDefault(); fn(el, e);
+});
+document.addEventListener('submit', (e) => {
+  const f = e.target.closest('form[data-f]'); if (!f) return; e.preventDefault();
+  const p = proj(f.dataset.p), t = f.t?.value.trim();
+  if (f.dataset.f === 'taskAdd') { if (!t) return; p.tasks.push({ id: uid(), t, col: 'todo' }); save(); render(); setTimeout(() => $('form[data-f=taskAdd] .inp')?.focus(), 50); }
+  if (f.dataset.f === 'msgSend') {
+    if (!t) return; D.messages.push({ id: uid(), project: p.id, from: MODE, text: t, d: TODAY, at: nowT(), read: false }); save(); render(); setTimeout(() => $('.composer .inp')?.focus(), 50);
+    if (MODE === 'client' && !D.messages.some((m) => m.project === p.id && m.auto && m.d === TODAY)) setTimeout(() => { D.messages.push({ id: uid(), project: p.id, from: 'fuzir', text: 'Dzięki, dostałem! Odpiszę najszybciej jak się da 🙌', d: TODAY, at: nowT(), read: false, auto: true }); save(); if (route().page === 'czat') render(); }, 1800);
+  }
+  if (f.dataset.f === 'updAdd') { if (!t) return toast('Podaj tytuł', 'x'); p.updates.unshift({ d: TODAY, t, x: f.x.value.trim() }); save(); render(); toast('Klient zobaczy aktualizację', 'send'); }
+});
+addEventListener('keydown', (e) => { if (e.key === 'Escape') closeSheet(); });
+
+/* PWA */
+let deferred = null;
+const isStandalone = () => matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); deferred = e; if (route().page === 'wiecej') render(); });
+addEventListener('appinstalled', () => { deferred = null; toast('Aplikacja zainstalowana 🎉', 'star'); });
+if ('serviceWorker' in navigator && location.protocol.startsWith('http')) navigator.serviceWorker.register('sw.js').catch(() => {});
+
+render();
+})();
+</script>
+</body>
+</html>

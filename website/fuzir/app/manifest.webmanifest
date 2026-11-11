@@ -1,0 +1,21 @@
+{
+  "name": "Fuzir Studio",
+  "short_name": "Fuzir",
+  "description": "Projekty, zlecenia, klienci i płatności Fuzir.tech w jednej aplikacji.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0b0d22",
+  "theme_color": "#0b0d22",
+  "lang": "pl",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "icon-maskable.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "Nowe zlecenie", "url": "./#/zlecenia", "icons": [{ "src": "icon-192.png", "sizes": "192x192" }] },
+    { "name": "Projekty", "url": "./#/projekty", "icons": [{ "src": "icon-192.png", "sizes": "192x192" }] }
+  ]
+}

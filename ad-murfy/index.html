@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<title>Murfy — 20s spot</title>
+<style>
+  @font-face { font-family: 'Cormorant'; font-weight: 500; src: url('node_modules/@fontsource/cormorant-garamond/files/cormorant-garamond-latin-ext-500-normal.woff2') format('woff2'); }
+  @font-face { font-family: 'Cormorant'; font-weight: 600; src: url('node_modules/@fontsource/cormorant-garamond/files/cormorant-garamond-latin-ext-600-normal.woff2') format('woff2'); }
+  @font-face { font-family: 'CormorantL'; font-weight: 500; src: url('node_modules/@fontsource/cormorant-garamond/files/cormorant-garamond-latin-500-normal.woff2') format('woff2'); }
+  html, body { margin: 0; background: #000; overflow: hidden; }
+  #stage { position: relative; width: 1920px; height: 1080px; }
+  canvas { display: block; }
+  #card { position: absolute; left: 1060px; top: 0; height: 1080px; width: 760px;
+          display: flex; flex-direction: column; justify-content: center; color: #2a2119;
+          pointer-events: none; }
+  #card .brand { font-family: 'Cormorant', 'CormorantL', serif; font-weight: 600; font-size: 188px;
+                 letter-spacing: 0.16em; line-height: 0.9; }
+  #card .line { width: 0; height: 2px; background: #b08a52; margin: 34px 0 30px; }
+  #card .kind { font-family: 'Inter', sans-serif; font-weight: 500; font-size: 26px; letter-spacing: 0.42em;
+                text-transform: uppercase; color: #6b5a47; }
+  #card .tag { font-family: 'Cormorant', 'CormorantL', serif; font-weight: 500; font-style: normal; font-size: 54px;
+               margin-top: 26px; color: #3a2d22; }
+  #card > * { opacity: 0; }
+  #fade { position: absolute; inset: 0; background: #000; opacity: 1; pointer-events: none; }
+</style>
+<script type="importmap">
+{ "imports": {
+  "three": "./node_modules/three/build/three.module.js",
+  "three/addons/": "./node_modules/three/examples/jsm/"
+} }
+</script>
+</head>
+<body>
+<div id="stage">
+  <div id="card">
+    <div class="brand">MURFY</div>
+    <div class="line"></div>
+    <div class="kind">Szampon do włosów</div>
+    <div class="tag">Lekkość, którą czuć.</div>
+  </div>
+  <div id="fade"></div>
+</div>
+<script type="module" src="./scene.js"></script>
+</body>
+</html>

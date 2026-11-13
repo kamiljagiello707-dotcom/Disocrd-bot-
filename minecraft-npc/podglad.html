@@ -1,0 +1,318 @@
+<title>NpcMenu Podgląd</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=VT323&family=Pixelify+Sans:wght@400;600&display=swap">
+<style>
+/* Layout: scena gry (NPC + otwarte menu) po lewej, panel ustawień podglądu po prawej; na telefonie jedna kolumna. */
+:root {
+  color-scheme: dark;
+  --sky: #1b2436;
+  --ground: #2c3b22;
+  --panel: #c6c6c6;
+  --slot: #8b8b8b;
+  --slot-dark: #373737;
+  --slot-light: #ffffff;
+  --ink: #e8ecf2;
+  --muted: #9aa6b8;
+  --card: #141b28;
+  --line: #2a3448;
+  --accent: #ffaa00;
+  --mc-gold: #ffaa00; --mc-yellow: #ffff55; --mc-gray: #aaaaaa; --mc-dgray: #555555;
+  --mc-white: #ffffff; --mc-green: #55ff55; --mc-red: #ff5555; --mc-title: #404040;
+  --tip-bg: #100010f0; --tip-border: #2d0a63;
+  --pixel: "VT323", "Courier New", monospace;
+  --ui: "Pixelify Sans", "Trebuchet MS", system-ui, sans-serif;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--sky); color: var(--ink); font-family: var(--ui);
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 24px 40px;
+}
+.wrap { max-width: 1080px; margin: 0 auto; display: grid; gap: 20px; }
+header h1 { font-family: var(--pixel); font-size: 44px; line-height: 1; margin: 0; color: var(--accent); text-wrap: balance; letter-spacing: .5px; }
+header p { margin: 6px 0 0; color: var(--muted); font-size: 15px; max-width: 65ch; }
+.grid { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 20px; align-items: start; }
+@media (max-width: 820px) { .grid { grid-template-columns: minmax(0, 1fr); } }
+
+/* Scena */
+.scene {
+  position: relative; border: 2px solid var(--line); border-radius: 6px; overflow: hidden;
+  min-height: 520px; display: grid; place-items: center;
+  background:
+    linear-gradient(to bottom, #233150 0%, #3c5b85 58%, transparent 58%),
+    repeating-linear-gradient(90deg, #3d5a2a 0 32px, #375226 32px 64px);
+}
+.scene::after { content: ""; position: absolute; left: 0; right: 0; top: 58%; height: 10px; background: #5b8a3a; }
+.npc { position: absolute; left: 50%; top: 58%; transform: translate(-50%, -100%); display: grid; justify-items: center; gap: 6px; cursor: pointer; z-index: 1; background: none; border: 0; padding: 0; }
+.npc:focus-visible { outline: 3px dashed var(--mc-yellow); outline-offset: 6px; }
+.nametag { font-family: var(--pixel); font-size: 24px; color: var(--mc-gold); font-weight: bold; background: #0000005c; padding: 0 8px; text-shadow: 2px 2px 0 #3f2a00; }
+.npc canvas { image-rendering: pixelated; width: 96px; height: 192px; }
+.hint { position: absolute; bottom: 14px; left: 0; right: 0; text-align: center; font-family: var(--pixel); font-size: 22px; color: var(--mc-white); text-shadow: 2px 2px 0 #000; z-index: 1; }
+.crosshair { position: absolute; left: 50%; top: 50%; width: 18px; height: 18px; transform: translate(-50%,-50%); pointer-events: none; z-index: 1; }
+.crosshair::before, .crosshair::after { content: ""; position: absolute; background: #ffffffcc; }
+.crosshair::before { left: 8px; top: 0; width: 2px; height: 18px; }
+.crosshair::after { top: 8px; left: 0; height: 2px; width: 18px; }
+
+.overlay { position: absolute; inset: 0; background: #000000a0; display: grid; place-items: center; z-index: 3; padding: 12px; }
+
+/* GUI skrzynki */
+.gui {
+  --s: 36px;
+  background: var(--panel); padding: 8px 8px 10px; border-radius: 3px;
+  box-shadow: inset 3px 3px 0 #fff, inset -3px -3px 0 #555, 0 0 0 2px #000;
+  width: max-content; max-width: 100%;
+}
+.gui-title { font-family: var(--pixel); font-size: 22px; color: var(--mc-title); margin: 0 2px 4px; line-height: 1; }
+.slots { display: grid; grid-template-columns: repeat(9, var(--s)); gap: 0; }
+.slot {
+  width: var(--s); height: var(--s); background: var(--slot); position: relative;
+  box-shadow: inset 2px 2px 0 var(--slot-dark), inset -2px -2px 0 var(--slot-light);
+  display: grid; place-items: center; border: 0; padding: 0; cursor: default;
+}
+.slot canvas { width: 32px; height: 32px; image-rendering: pixelated; pointer-events: none; }
+.slot.active:hover, .slot.active:focus-visible { background: #a9a9a9; outline: none; cursor: pointer; }
+.slot.active:focus-visible { box-shadow: inset 0 0 0 2px var(--mc-yellow); }
+.inv-gap { height: 14px; }
+.inv-label { font-family: var(--pixel); font-size: 20px; color: var(--mc-title); margin: 6px 2px 4px; line-height: 1; }
+.hotbar { margin-top: 6px; }
+@media (max-width: 420px) { .gui { --s: 32px; } .slot canvas { width: 28px; height: 28px; } }
+
+/* Tooltip */
+.tip {
+  position: fixed; pointer-events: none; z-index: 20; font-family: var(--pixel); font-size: 22px; line-height: 1.05;
+  background: var(--tip-bg); padding: 6px 8px 7px; border: 2px solid #100010;
+  box-shadow: inset 0 0 0 2px var(--tip-border); text-shadow: 2px 2px 0 #00000080; max-width: 280px;
+}
+.tip .l1 { margin-bottom: 4px; }
+
+/* Panel boczny */
+aside { background: var(--card); border: 1px solid var(--line); border-radius: 6px; padding: 16px; display: grid; gap: 14px; }
+aside h2 { font-family: var(--pixel); font-size: 28px; margin: 0; color: var(--ink); line-height: 1; }
+label { display: grid; gap: 4px; font-size: 13px; color: var(--muted); letter-spacing: .3px; }
+input { font-family: var(--pixel); font-size: 22px; background: #0c111b; color: var(--ink); border: 1px solid var(--line); border-radius: 4px; padding: 4px 8px; width: 100%; }
+input:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.btn { font-family: var(--pixel); font-size: 22px; background: #6f6f6f; color: #fff; border: 0; padding: 6px 10px; cursor: pointer; text-shadow: 2px 2px 0 #3f3f3f; box-shadow: inset 2px 2px 0 #aaa, inset -2px -3px 0 #3a3a3a, 0 0 0 2px #000; }
+.btn:hover { background: #7f8fcf; }
+.chat { background: #00000066; border-radius: 4px; padding: 8px 10px; font-family: var(--pixel); font-size: 19px; line-height: 1.15; display: grid; gap: 2px; min-height: 120px; }
+.chat .cmd { color: var(--mc-gray); }
+small.note { color: var(--muted); font-size: 12px; line-height: 1.4; }
+.cmds { font-family: var(--pixel); font-size: 19px; color: var(--muted); display: grid; gap: 2px; }
+.cmds b { color: var(--mc-yellow); font-weight: normal; }
+@media (prefers-reduced-motion: no-preference) {
+  .overlay:not([hidden]) .gui { animation: pop .14s ease-out; }
+  @keyframes pop { from { transform: scale(.96); opacity: .6; } to { transform: none; opacity: 1; } }
+}
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>NpcMenu: podgląd w grze</h1>
+    <p>Tak wygląda plugin na serwerze. Kliknij NPC, żeby otworzyć menu, najedź na przedmiot, żeby zobaczyć opis, i kliknij barierę, żeby zamknąć. Po prawej zmienisz nick i saldo w podglądzie.</p>
+  </header>
+
+  <div class="grid">
+    <div class="scene" id="scene">
+      <div class="crosshair"></div>
+      <button class="npc" id="npc" type="button" aria-label="Kliknij NPC prawym przyciskiem">
+        <span class="nametag" id="npcName">Sklep</span>
+        <canvas id="npcCanvas" width="16" height="32"></canvas>
+      </button>
+      <div class="hint" id="hint">Kliknij NPC (PPM)</div>
+
+      <div class="overlay" id="overlay">
+        <div class="gui" role="dialog" aria-label="Twój profil">
+          <div class="gui-title" id="guiTitle">Twój profil</div>
+          <div class="slots" id="chestSlots"></div>
+          <div class="inv-label">Ekwipunek</div>
+          <div class="slots" id="invSlots"></div>
+          <div class="slots hotbar" id="hotbarSlots"></div>
+        </div>
+      </div>
+    </div>
+
+    <aside>
+      <h2>Ustawienia podglądu</h2>
+      <label for="nick">Nick gracza
+        <input id="nick" value="Marek_PL" maxlength="16">
+      </label>
+      <label for="saldo">Saldo w portfelu
+        <input id="saldo" value="100" inputmode="decimal">
+      </label>
+      <label for="waluta">Waluta (config.yml)
+        <input id="waluta" value="zł" maxlength="8">
+      </label>
+      <label for="npcNameInput">Nazwa NPC (/npc stworz)
+        <input id="npcNameInput" value="Sklep" maxlength="24">
+      </label>
+      <button class="btn" id="addBtn" type="button">/portfel dodaj +50</button>
+      <div>
+        <label>Czat</label>
+        <div class="chat" id="chat" aria-live="polite"></div>
+      </div>
+      <div class="cmds">
+        <span><b>/npc stworz [nazwa]</b> tworzy NPC</span>
+        <span><b>/npc usun</b> usuwa NPC</span>
+        <span><b>/portfel [gracz]</b> pokazuje saldo</span>
+        <span><b>/portfel dodaj|zabierz|ustaw</b></span>
+      </div>
+      <small class="note">Podgląd jest poglądowy: kolory, układ slotów i opisy odpowiadają domyślnemu config.yml pluginu.</small>
+    </aside>
+  </div>
+</div>
+
+<div class="tip" id="tip" hidden></div>
+
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+  const MC = { '0':'#000000','1':'#0000aa','2':'#00aa00','3':'#00aaaa','4':'#aa0000','5':'#aa00aa','6':'#ffaa00','7':'#aaaaaa','8':'#555555','9':'#5555ff','a':'#55ff55','b':'#55ffff','c':'#ff5555','d':'#ff55ff','e':'#ffff55','f':'#ffffff' };
+
+  // Kody &x -> HTML (jak LegacyComponentSerializer w pluginie)
+  function legacy(text) {
+    let color = '#ffffff', bold = false, out = '', buf = '';
+    const flush = () => { if (buf) { const s = document.createElement('span'); s.textContent = buf; out += `<span style="color:${color};${bold?'font-weight:bold;':''}">${s.innerHTML}</span>`; buf = ''; } };
+    for (let i = 0; i < text.length; i++) {
+      if (text[i] === '&' && i + 1 < text.length) {
+        const c = text[i+1].toLowerCase();
+        if (MC[c]) { flush(); color = MC[c]; bold = false; i++; continue; }
+        if (c === 'l') { flush(); bold = true; i++; continue; }
+        if (c === 'r') { flush(); color = '#ffffff'; bold = false; i++; continue; }
+      }
+      buf += text[i];
+    }
+    flush();
+    return out;
+  }
+
+  // Pixel art
+  function draw(canvas, rows, pal) {
+    const ctx = canvas.getContext('2d');
+    rows.forEach((r, y) => [...r].forEach((ch, x) => { if (pal[ch]) { ctx.fillStyle = pal[ch]; ctx.fillRect(x, y, 1, 1); } }));
+  }
+  function icon(rows, pal) { const c = document.createElement('canvas'); c.width = 16; c.height = 16; draw(c, rows, pal); return c; }
+
+  const HEAD = [
+    '................','..hhhhhhhhhhhh..','..hhhhhhhhhhhh..','..hhhhhhhhhhhh..','..hssssssssssh..','..ssssssssssss..',
+    '..swwesssseww s.'.replace(' ', 's'),'..sseesssseess..','..ssssnnnnssss..','..sssnssssnsss..','..ssssmmmmssss..',
+    '..ssssssssssss..','..dddddddddddd..','..dddddddddddd..','................','................'];
+  const HEAD_PAL = { h:'#4a2f1b', s:'#c99a74', w:'#ffffff', e:'#3a5fb0', n:'#a47458', m:'#7a4a36', d:'#3d8fa8' };
+
+  const GOLD = [
+    '................','................','................','.......oooo.....','.....ooyyyyo....','...ooyyyyyyyo...',
+    '..oyyyywyyyyyo..','.oyyyywwyyyyyyo.','.oyyyyyyyyyyyyo.','..oyyyyyyyyyyo..','...ooyyyyyyoo...','.....ooddoo.....',
+    '.......oo.......','................','................','................'];
+  const GOLD_PAL = { o:'#7a5300', y:'#f4c12b', w:'#fff6a8', d:'#b78300' };
+
+  const BARRIER = [
+    '................','.....rrrrrr.....','...rrrrrrrrrr...','..rrr......rrr..','..rr......rrrr..','.rr......rrr.rr.',
+    '.rr.....rrr..rr.','.rr....rrr...rr.','.rr...rrr....rr.','.rr..rrr.....rr.','.rr.rrr......rr.','..rrrr......rr..',
+    '..rrr......rrr..','...rrrrrrrrrr...','.....rrrrrr.....','................'];
+  const BARRIER_PAL = { r:'#e3262a' };
+
+  const PANE = [
+    '................','................','................','................','................','................',
+    'gggggggggggggggg','gGGGGGGGGGGGGGGg','gGGGGGGGGGGGGGGg','gggggggggggggggg','................','................',
+    '................','................','................','................'];
+  const PANE_PAL = { g:'#3d3d3d', G:'#6d6d6d' };
+
+  // NPC (prosty wieśniak 16x32)
+  const NPC = [
+    '....hhhhhhhh....','....hhhhhhhh....','....ssssssss....','....swwsswws....','....sbesseb s...'.replace(' ', 's').slice(0,16),
+    '....ssssssss....','....sssNNsss....','....sssNNsss....','.....ssNNss.....','....rrrrrrrr....',
+    '..rrrrrrrrrrrr..','..rrrrrrrrrrrr..','..rrssssssssrr..','..rrssssssssrr..','..rrrrrrrrrrrr..',
+    '..rrrrrrrrrrrr..','....rrrrrrrr....','....rrrrrrrr....','....rrrrrrrr....','....rrrrrrrr....',
+    '....rrrrrrrr....','....rrrrrrrr....','....rrrrrrrr....','....rrrrrrrr....','....rrrrrrrr....',
+    '....rrrrrrrr....','....rrrrrrrr....','....rrrrrrrr....','....rrrrrrrr....','....kkkkkkkk....',
+    '....kkkkkkkk....','................'];
+  draw($('npcCanvas'), NPC, { h:'#3a2614', s:'#b7856a', w:'#ffffff', b:'#2f6b34', e:'#2f6b34', N:'#9a6a52', r:'#6b4a2e', k:'#3a2614' });
+
+  const state = { nick: 'Marek_PL', saldo: 100, waluta: 'zł', npc: 'Sklep' };
+  const fmt = v => Number.isInteger(v) ? String(v) : v.toFixed(2);
+
+  const items = {
+    11: { icon: () => icon(HEAD, HEAD_PAL), name: () => '&e&lNazwa', lore: () => [`&7Gracz: &f${state.nick}`] },
+    15: { icon: () => icon(GOLD, GOLD_PAL), name: () => '&6&lPortfel', lore: () => [`&7Saldo: &a${fmt(state.saldo)} ${state.waluta}`] },
+    22: { icon: () => icon(BARRIER, BARRIER_PAL), name: () => '&c&lZamknij', lore: () => [], close: true }
+  };
+
+  const tip = $('tip');
+  function showTip(slot, ev) {
+    const it = items[slot]; if (!it) return;
+    tip.innerHTML = `<div class="l1">${legacy(it.name())}</div>` + it.lore().map(l => `<div>${legacy(l)}</div>`).join('');
+    tip.hidden = false; moveTip(ev);
+  }
+  function moveTip(ev) {
+    if (tip.hidden) return;
+    let x, y;
+    if (ev && ev.clientX != null) { x = ev.clientX + 14; y = ev.clientY - 28; }
+    else { const r = ev.target.getBoundingClientRect(); x = r.right + 6; y = r.top - 6; }
+    const w = tip.offsetWidth, vw = document.documentElement.clientWidth;
+    if (x + w > vw - 8) x = Math.max(8, vw - w - 8);
+    tip.style.left = x + 'px'; tip.style.top = Math.max(8, y) + 'px';
+  }
+  const hideTip = () => { tip.hidden = true; };
+
+  function buildChest() {
+    const box = $('chestSlots'); box.innerHTML = '';
+    for (let i = 0; i < 27; i++) {
+      const it = items[i];
+      const el = document.createElement(it ? 'button' : 'div');
+      el.className = 'slot' + (it ? ' active' : '');
+      if (it) {
+        el.type = 'button';
+        el.setAttribute('aria-label', it.name().replace(/&./g, ''));
+        el.addEventListener('mouseenter', e => showTip(i, e));
+        el.addEventListener('mousemove', moveTip);
+        el.addEventListener('mouseleave', hideTip);
+        el.addEventListener('focus', e => showTip(i, e));
+        el.addEventListener('blur', hideTip);
+        el.addEventListener('click', e => {
+          if (it.close) { closeMenu(); return; }
+          showTip(i, e); // w pluginie kliknięcie jest blokowane, przedmiot zostaje
+        });
+      }
+      el.appendChild(it ? it.icon() : icon(PANE, PANE_PAL));
+      box.appendChild(el);
+    }
+  }
+  function buildEmpty(id, n) { const b = $(id); for (let i = 0; i < n; i++) { const s = document.createElement('div'); s.className = 'slot'; b.appendChild(s); } }
+
+  const chat = $('chat');
+  function say(text, cmd) {
+    const d = document.createElement('div'); if (cmd) d.className = 'cmd';
+    d.innerHTML = cmd ? '> ' + legacy('&7' + text) : legacy(text);
+    chat.appendChild(d); while (chat.children.length > 7) chat.firstChild.remove();
+  }
+
+  function openMenu() { buildChest(); $('overlay').hidden = false; $('hint').hidden = true; const f = $('chestSlots').querySelector('.active'); if (f) f.focus({ preventScroll: true }); }
+  function closeMenu() { $('overlay').hidden = true; $('hint').hidden = false; hideTip(); $('npc').focus({ preventScroll: true }); }
+
+  $('npc').addEventListener('click', openMenu);
+  $('overlay').addEventListener('click', e => { if (e.target.id === 'overlay') closeMenu(); });
+  document.addEventListener('keydown', e => { if ((e.key === 'Escape' || e.key === 'e' || e.key === 'E') && !$('overlay').hidden && document.activeElement.tagName !== 'INPUT') closeMenu(); });
+
+  function sync() {
+    state.nick = $('nick').value.trim() || 'Gracz';
+    const v = parseFloat($('saldo').value.replace(',', '.'));
+    state.saldo = isFinite(v) && v >= 0 ? v : 0;
+    state.waluta = $('waluta').value.trim() || 'zł';
+    state.npc = $('npcNameInput').value || 'Sklep';
+    $('npcName').innerHTML = legacy('&6&l' + state.npc);
+    if (!$('overlay').hidden) buildChest();
+  }
+  ['nick', 'saldo', 'waluta', 'npcNameInput'].forEach(id => $(id).addEventListener('input', sync));
+  $('addBtn').addEventListener('click', () => {
+    state.saldo += 50; $('saldo').value = fmt(state.saldo); sync();
+    say(`/portfel dodaj ${state.nick} 50`, true);
+    say(`&aNowe saldo &f${state.nick}&a: ${fmt(state.saldo)} ${state.waluta}`);
+  });
+
+  buildEmpty('invSlots', 27); buildEmpty('hotbarSlots', 9);
+  say('/npc stworz &6&lSklep', true);
+  say('&aStworzono NPC: &6&lSklep');
+  say('&7[PPM na NPC] otwiera menu Twój profil');
+  sync(); openMenu(); // podgląd startuje z otwartym menu
+  $('npc').blur && document.activeElement && document.activeElement.blur();
+})();
+</script>

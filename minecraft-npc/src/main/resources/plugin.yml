@@ -1,0 +1,17 @@
+name: NpcMenu
+version: '${project.version}'
+main: pl.npcmenu.NpcMenuPlugin
+api-version: '1.21'
+description: NPC z menu (Nazwa + Portfel)
+commands:
+  npc:
+    description: Tworzenie i usuwanie NPC
+    usage: /npc <stworz [nazwa]|usun>
+    permission: npcmenu.admin
+  portfel:
+    description: Sprawdzanie i zarządzanie portfelem
+    usage: /portfel [gracz] | /portfel <dodaj|zabierz|ustaw> <gracz> <kwota>
+permissions:
+  npcmenu.admin:
+    description: Tworzenie NPC i zmiana sald
+    default: op

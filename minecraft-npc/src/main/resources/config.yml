@@ -1,0 +1,18 @@
+# Kody kolorów: &a, &6, &l itd.
+waluta: "zł"
+saldo-startowe: 100.0
+
+npc:
+  domyslna-nazwa: "&6&lSklep"
+
+menu:
+  tytul: "&8Twój profil"
+  nazwa:
+    tytul: "&e&lNazwa"
+    opis:
+      - "&7Gracz: &f{gracz}"
+  portfel:
+    tytul: "&6&lPortfel"
+    opis:
+      - "&7Saldo: &a{saldo} {waluta}"
+  zamknij: "&c&lZamknij"

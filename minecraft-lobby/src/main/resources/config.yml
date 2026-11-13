@@ -1,0 +1,102 @@
+# ─────────────────────────────────────────────
+#  LobbyCore – lobby z trybami Anarchia i FFA
+#  Kolory: &a &6 &l ... oraz hex: &#FFAA00
+# ─────────────────────────────────────────────
+nazwa-serwera: "&#FFB400&lT&#FFA200&lW&#FF9000&lÓ&#FF7E00&lJ&#FF6C00&lS&#FF5A00&lE&#FF4800&lR&#FF3600&lW&#FF2400&lE&#FF1200&lR"
+ip: "twojserwer.pl"
+discord: "discord.gg/twojserwer"
+
+swiaty:
+  lobby: "lobby"     # tworzony automatycznie (pusty świat + zbudowane lobby)
+  ffa: "ffa"         # tworzony automatycznie (pusty świat + zbudowana arena)
+  # Anarchia = zwykły świat survival razem z netherem i endem
+  anarchia: ["world", "world_nether", "world_the_end"]
+
+# BungeeCord / Velocity: jeśli tryb stoi na OSOBNYM serwerze, wpisz jego nazwę z proxy.
+# Puste = tryb działa na tym serwerze (osobne światy).
+proxy:
+  anarchia: ""
+  ffa: ""
+
+lobby:
+  czas: 6000                 # 6000 = południe, 13000 = noc
+  podwojny-skok: true
+  dolaczenie: "&8[&a+&8] &7{gracz}"
+  wyjscie: "&8[&c-&8] &7{gracz}"
+  tytul: "{nazwa}"
+  podtytul: "&7Wybierz tryb gry &e✦"
+  powitanie:
+    - ""
+    - "  &7Witaj na {nazwa}&7, &e{gracz}&7!"
+    - "  &8» &7Wybierz tryb &ekompasem &7lub wejdź w &eportal&7."
+    - "  &8» &7Discord: &9{discord}"
+    - ""
+
+anarchia:
+  losowy-teleport-promien: 3000   # pierwsze wejście = losowe miejsce w tym promieniu
+
+ffa:
+  ochrona-po-spawnie: 3      # sekundy nietykalności po wejściu/odrodzeniu
+  walka-sekundy: 10          # tyle trwa "w walce" (blokada /spawn)
+  kit:
+    helm: IRON_HELMET
+    klata: IRON_CHESTPLATE
+    spodnie: IRON_LEGGINGS
+    buty: IRON_BOOTS
+    przedmioty:
+      - DIAMOND_SWORD
+      - BOW
+      - "GOLDEN_APPLE:3"
+      - "COOKED_BEEF:16"
+      - "ARROW:32"
+
+czat:
+  format: "{tryb} &f{gracz}&8 » &7"
+  lobby: "&8[&eLobby&8]"
+  anarchia: "&8[&cAnarchia&8]"
+  ffa: "&8[&bFFA&8]"
+
+scoreboard:
+  tytul: "{nazwa}"
+  lobby:
+    - "&7{data}"
+    - ""
+    - "&8» &fGracz: &e{gracz}"
+    - "&8» &fPing: &a{ping}ms"
+    - ""
+    - "&8» &fOnline: &a{online}"
+    - "&8» &c⚔ Anarchia: &f{anarchia}"
+    - "&8» &b✦ FFA: &f{ffa}"
+    - ""
+    - "&e{ip}"
+  anarchia:
+    - "&7{data}"
+    - ""
+    - "&8» &fGracz: &e{gracz}"
+    - "&8» &fŚwiat: &f{swiat}"
+    - "&8» &fXYZ: &7{x} {y} {z}"
+    - ""
+    - "&8» &c⚔ Na anarchii: &f{anarchia}"
+    - ""
+    - "&e{ip}"
+  ffa:
+    - "&7{data}"
+    - ""
+    - "&8» &fZabójstwa: &a{kills}"
+    - "&8» &fŚmierci: &c{deaths}"
+    - "&8» &fK/D: &e{kd}"
+    - "&8» &fSeria: &6{seria} &8(rekord {rekord})"
+    - ""
+    - "&8» &b✦ Na arenie: &f{ffa}"
+    - ""
+    - "&e{ip}"
+
+tab:
+  naglowek: "\n{nazwa}\n&7Graczy online: &a{online}\n"
+  stopka: "\n&8» &7Anarchia: &f{anarchia}  &8|  &7FFA: &f{ffa}\n&9{discord}  &8|  &e{ip}\n"
+
+hologramy:
+  powitanie: "{nazwa}\n&7Witaj na serwerze!\n\n&c« Anarchia      &b FFA »\n&7Wejdź w portal albo użyj &ekompasu"
+  anarchia: "&c&lANARCHIA\n&7Survival bez zasad\n&8» &fOnline: &a{anarchia}"
+  ffa: "&b&lFFA\n&7Każdy na każdego\n&8» &fOnline: &a{ffa}"
+  arena: "&b&lFFA\n&7Każdy na każdego!\n&e/spawn &7- powrót do lobby"

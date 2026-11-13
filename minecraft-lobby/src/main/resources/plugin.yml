@@ -1,0 +1,22 @@
+name: LobbyCore
+version: '${project.version}'
+main: pl.lobbycore.LobbyCore
+api-version: '1.21'
+description: Lobby z trybami Anarchia i FFA
+softdepend: [NpcMenu]
+commands:
+  lobby:
+    description: Powrót do lobby
+    aliases: [spawn, hub, l]
+  anarchia:
+    description: Dołącz do Anarchii
+  ffa:
+    description: Dołącz do FFA
+  lobbyadmin:
+    description: Zarządzanie lobby
+    aliases: [la]
+    permission: lobbycore.admin
+permissions:
+  lobbycore.admin:
+    description: Budowanie lobby, spawny, tryb budowania
+    default: op

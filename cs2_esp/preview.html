@@ -1,0 +1,55 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>ESP preview</title>
+<style>
+  html,body{margin:0;background:#0b0d10;font-family:Consolas,monospace;overflow:hidden}
+  .wrap{position:relative;width:960px;height:540px;margin:16px auto;
+        background:linear-gradient(160deg,#3a3f36,#23262b 55%,#15171b);
+        border:1px solid #222;overflow:hidden}
+  /* "sciany" zeby pokazac ze sylwetki widac przez nie */
+  .wall{position:absolute;background:#4a4036;box-shadow:inset 0 0 40px #0008}
+  .box{position:absolute;background:#000}          /* pelna czarna sylwetka */
+  .hpbg{position:absolute;background:#000;width:4px}
+  .hp{position:absolute;width:4px}
+  .name{position:absolute;color:#ff3c3c;font-size:12px;white-space:nowrap}
+  .menu{position:absolute;left:40px;top:40px;width:220px;height:170px;background:#121216;
+        border:1px solid #2a2a30;padding:0;font-size:13px}
+  .menu .t{color:#ff3c3c;padding:8px 12px}
+  .menu .r{padding:2px 16px}
+  .on{color:#50ff78}.off{color:#787878}
+  .cap{color:#889;max-width:960px;margin:0 auto;padding:4px 2px;font-size:12px}
+</style>
+<div class="cap">podglad overlaya (mock 1:1 z render()) — magenta w grze = przezroczyste, tu tlo = "mapa"</div>
+<div class="wrap">
+  <!-- sciany -->
+  <div class="wall" style="left:120px;top:150px;width:90px;height:240px"></div>
+  <div class="wall" style="left:600px;top:80px;width:140px;height:300px"></div>
+
+  <!-- wrog 1: czesciowo za sciana, pelne hp -->
+  <div class="box"  style="left:150px;top:210px;width:46px;height:150px"></div>
+  <div class="hpbg" style="left:142px;top:210px;height:150px"></div>
+  <div class="hp"   style="left:142px;top:210px;height:150px;background:#2cff2c"></div>
+  <div class="name" style="left:150px;top:194px">s1mple</div>
+
+  <!-- wrog 2: za duza sciana, 45hp -->
+  <div class="box"  style="left:650px;top:170px;width:40px;height:132px"></div>
+  <div class="hpbg" style="left:642px;top:170px;height:132px"></div>
+  <div class="hp"   style="left:642px;top:229px;height:73px;background:#c8a000"></div>
+  <div class="name" style="left:650px;top:154px">ZywOo</div>
+
+  <!-- wrog 3: daleko, 15hp -->
+  <div class="box"  style="left:430px;top:250px;width:26px;height:86px"></div>
+  <div class="hpbg" style="left:422px;top:250px;height:86px"></div>
+  <div class="hp"   style="left:422px;top:323px;height:13px;background:#ff2c2c"></div>
+  <div class="name" style="left:430px;top:236px">donk</div>
+
+  <!-- menu (X) -->
+  <div class="menu">
+    <div class="t">CS2 WH&nbsp;&nbsp;C=ESP&nbsp;&nbsp;X=menu</div>
+    <div class="r on">[x] ESP (C)</div>
+    <div class="r on">[x] Czarna sylwetka</div>
+    <div class="r on">[x] HP bar</div>
+    <div class="r on">[x] Nazwy</div>
+    <div class="r on">[x] Tylko wrog</div>
+  </div>
+</div>

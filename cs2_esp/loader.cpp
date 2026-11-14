@@ -5,10 +5,12 @@
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <tlhelp32.h>
+#include <wininet.h>
 #include <cstdint>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <cctype>
 #include <string>
 #include <vector>
 
@@ -53,6 +55,52 @@ static bool load_ini(const char* path) {
     }
     fclose(f);
     return got >= 10;
+}
+
+// ---- auto-dump offsetow z GitHuba (a2x/cs2-dumper, bot updatuje co patch) ----
+static std::string http_get(const char* url) {
+    std::string out;
+    HINTERNET hi = InternetOpenA("cs2esp/1.0", INTERNET_OPEN_TYPE_PRECONFIG, nullptr, nullptr, 0);
+    if (!hi) return out;
+    HINTERNET hc = InternetOpenUrlA(hi, url, nullptr, 0,
+        INTERNET_FLAG_RELOAD | INTERNET_FLAG_SECURE | INTERNET_FLAG_NO_CACHE_WRITE, 0);
+    if (hc) {
+        char buf[8192]; DWORD n = 0;
+        while (InternetReadFile(hc, buf, sizeof(buf), &n) && n) out.append(buf, n);
+        InternetCloseHandle(hc);
+    }
+    InternetCloseHandle(hi);
+    return out;
+}
+
+// json jest plaski: "klucz": liczba  -> znajdz klucz, czytaj pierwsza liczbe po nim
+static bool json_int(const std::string& j, const char* key, uintptr_t& out) {
+    std::string a = std::string("\"") + key + "\"";
+    size_t p = j.find(a);
+    if (p == std::string::npos) return false;
+    p += a.size();
+    while (p < j.size() && !isdigit((unsigned char)j[p])) ++p;
+    if (p >= j.size()) return false;
+    out = (uintptr_t)strtoull(j.c_str() + p, nullptr, 10);
+    return true;
+}
+
+static bool fetch_offsets() {
+    std::string o = http_get("https://raw.githubusercontent.com/a2x/cs2-dumper/main/output/offsets.json");
+    std::string c = http_get("https://raw.githubusercontent.com/a2x/cs2-dumper/main/output/client_dll.json");
+    if (o.empty() || c.empty()) return false;
+    bool ok = true;
+    ok &= json_int(o, "dwEntityList",      offs.dwEntityList);
+    ok &= json_int(o, "dwViewMatrix",      offs.dwViewMatrix);
+    ok &= json_int(o, "dwLocalPlayerPawn", offs.dwLocalPlayerPawn);
+    ok &= json_int(c, "m_hPlayerPawn",     offs.m_hPlayerPawn);
+    ok &= json_int(c, "m_iszPlayerName",   offs.m_iszPlayerName);
+    ok &= json_int(c, "m_iHealth",         offs.m_iHealth);
+    ok &= json_int(c, "m_iTeamNum",        offs.m_iTeamNum);
+    ok &= json_int(c, "m_lifeState",       offs.m_lifeState);
+    ok &= json_int(c, "m_pGameSceneNode",  offs.m_pGameSceneNode);
+    ok &= json_int(c, "m_vecAbsOrigin",    offs.m_vecAbsOrigin);
+    return ok;
 }
 
 // ---- external memory ----
@@ -220,10 +268,12 @@ static std::string ini_path_next_to_exe() {
 }
 
 int WINAPI WinMain(HINSTANCE inst, HINSTANCE, LPSTR, int) {
-    std::string ini = ini_path_next_to_exe();
-    if (!load_ini(ini.c_str())) {
-        MessageBoxA(nullptr, ("Brak/niepelny offsets.ini obok exe:\n" + ini +
-            "\n\nWklej swiezy dump (10 wartosci).").c_str(), "ESP", MB_OK | MB_ICONERROR);
+    // 1. offsety: najpierw auto-dump z neta, fallback na offsets.ini obok exe
+    bool have = fetch_offsets();
+    if (!have) have = load_ini(ini_path_next_to_exe().c_str());
+    if (!have) {
+        MessageBoxA(nullptr, "Nie udalo sie pobrac offsetow (brak neta) i brak offsets.ini.\n"
+            "Sprawdz polaczenie albo dorzuc offsets.ini obok exe.", "ESP", MB_OK | MB_ICONERROR);
         return 1;
     }
     g_proc.pid = find_pid(L"cs2.exe");

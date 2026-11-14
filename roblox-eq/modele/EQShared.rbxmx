@@ -1,0 +1,224 @@
+<roblox xmlns:xmime="http://www.w3.org/2005/05/xmlmime" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.roblox.com/roblox.xsd" version="4"><Item class="Folder" referent="RBX0003"><Properties><string name="Name">EQShared</string></Properties><Item class="ModuleScript" referent="RBX0001"><Properties><string name="Name">EQConfig</string><ProtectedString name="Source"><![CDATA[-- EQConfig (ModuleScript)
+-- Miejsce: ReplicatedStorage > EQShared > EQConfig
+-- Główne ustawienia systemu ekwipunku.
+
+local Config = {}
+
+-- ── Sloty ────────────────────────────────────────────
+Config.HotbarSlots = 9          -- sloty na pasku na dole (klawisze 1-9)
+Config.BackpackSlots = 30       -- sloty w plecaku (okno EQ)
+Config.MaxSlots = Config.HotbarSlots + Config.BackpackSlots
+
+-- ── Klawisze ─────────────────────────────────────────
+Config.ToggleKey = Enum.KeyCode.E          -- otwórz / zamknij EQ
+Config.DropKey = Enum.KeyCode.Q            -- wyrzuć 1 szt. trzymanego przedmiotu
+Config.PickupKey = Enum.KeyCode.F          -- podnoszenie przedmiotów (ProximityPrompt)
+
+-- ── Zapis danych (DataStore) ─────────────────────────
+Config.SaveEnabled = true
+Config.DataStoreName = "EQ_v1"             -- zmień nazwę, żeby zresetować wszystkim EQ
+Config.AutosaveInterval = 120              -- sekundy
+
+-- ── Przedmioty startowe (dla nowych graczy) ──────────
+Config.StarterItems = {
+	{ Id = "Miecz", Amount = 1 },
+	{ Id = "Jablko", Amount = 5 },
+	{ Id = "MiksturaLeczenia", Amount = 2 },
+}
+
+-- ── Podnoszenie / wyrzucanie ─────────────────────────
+Config.PickupHoldTime = 0.25               -- ile trzeba trzymać klawisz (s)
+Config.PickupDistance = 10
+Config.DropLifetime = 120                  -- po ilu sekundach znika wyrzucony przedmiot
+Config.DemoPickups = true                  -- stawia kilka przedmiotów testowych przy spawnie (wyłącz w grze)
+
+-- ── Walka (bronie bez własnych skryptów) ─────────────
+Config.PvP = true                          -- false = bronie ranią tylko NPC
+
+-- ── Komendy na czacie (do testów) ────────────────────
+-- !daj <Id> [ilość]   !wyczysc   !lista
+-- Działają w Studio, dla twórcy gry i dla ID poniżej.
+Config.Admins = {
+	-- 123456789,
+}
+
+-- ── Rzadkości ────────────────────────────────────────
+Config.Rarities = {
+	Common    = { Name = "Zwykły",     Color = Color3.fromRGB(176, 182, 194), Order = 1 },
+	Uncommon  = { Name = "Niezwykły",  Color = Color3.fromRGB(88, 214, 110),  Order = 2 },
+	Rare      = { Name = "Rzadki",     Color = Color3.fromRGB(64, 156, 255),  Order = 3 },
+	Epic      = { Name = "Epicki",     Color = Color3.fromRGB(176, 92, 255),  Order = 4 },
+	Legendary = { Name = "Legendarny", Color = Color3.fromRGB(255, 170, 40),  Order = 5 },
+	Mythic    = { Name = "Mityczny",   Color = Color3.fromRGB(255, 64, 96),   Order = 6 },
+}
+
+Config.TypeNames = {
+	Tool = "Broń / narzędzie",
+	Consumable = "Do użycia",
+	Material = "Materiał",
+}
+
+-- ── Wygląd ───────────────────────────────────────────
+Config.Theme = {
+	Background = Color3.fromRGB(18, 20, 28),
+	Panel      = Color3.fromRGB(28, 31, 43),
+	Slot       = Color3.fromRGB(36, 40, 56),
+	SlotStroke = Color3.fromRGB(58, 64, 86),
+	Accent     = Color3.fromRGB(255, 60, 90),   -- kolor zaznaczenia / ramek
+	Equipped   = Color3.fromRGB(255, 255, 255),
+	Text       = Color3.fromRGB(240, 242, 250),
+	SubText    = Color3.fromRGB(150, 156, 178),
+	Good       = Color3.fromRGB(70, 200, 110),
+	Danger     = Color3.fromRGB(230, 70, 80),
+	Button     = Color3.fromRGB(48, 53, 74),
+}
+
+return Config
+]]></ProtectedString></Properties></Item><Item class="ModuleScript" referent="RBX0002"><Properties><string name="Name">ItemData</string><ProtectedString name="Source"><![CDATA[-- ItemData (ModuleScript)
+-- Miejsce: ReplicatedStorage > EQShared > ItemData
+-- Lista wszystkich przedmiotów. Klucz (np. "Miecz") to ID przedmiotu.
+--
+-- Pola:
+--   Name        nazwa widoczna w grze
+--   Description opis
+--   Rarity      Common / Uncommon / Rare / Epic / Legendary / Mythic
+--   Type        "Tool" (do trzymania w ręce), "Consumable" (do zjedzenia/wypicia), "Material"
+--   Emoji       ikonka, gdy nie ma obrazka
+--   Icon        (opcjonalnie) "rbxassetid://123456" – obrazek zamiast emoji
+--   MaxStack    ile sztuk mieści się w jednym slocie (narzędzia: 1)
+--
+-- Tool:
+--   ToolName    (opcjonalnie) nazwa Toola w ServerStorage > EQTools. Brak = bot zrobi prosty model sam
+--   Damage      obrażenia (tylko dla automatycznego modelu)
+--   Cooldown    przerwa między ciosami (s)
+--   Range       zasięg ciosu (studs)
+--   Color       kolor automatycznego modelu
+--
+-- Consumable:
+--   Heal        ile HP leczy
+--   SpeedBoost  + do szybkości chodzenia
+--   JumpBoost   + do wysokości skoku
+--   Duration    ile sekund trwa boost
+
+return {
+	-- ── Bronie / narzędzia ──
+	Miecz = {
+		Name = "Żelazny miecz",
+		Description = "Solidny miecz dla każdego wojownika.",
+		Rarity = "Common",
+		Type = "Tool",
+		Emoji = "🗡️",
+		MaxStack = 1,
+		Damage = 15,
+		Cooldown = 0.6,
+		Range = 6,
+		Color = Color3.fromRGB(190, 196, 206),
+	},
+	OgnistyMiecz = {
+		Name = "Ognisty miecz",
+		Description = "Ostrze wykute w sercu wulkanu. Pali wszystko, czego dotknie.",
+		Rarity = "Legendary",
+		Type = "Tool",
+		Emoji = "🔥",
+		MaxStack = 1,
+		Damage = 40,
+		Cooldown = 0.5,
+		Range = 7,
+		Color = Color3.fromRGB(255, 110, 30),
+	},
+	Kilof = {
+		Name = "Kilof",
+		Description = "Przydatny do kopania. Można też nim przywalić.",
+		Rarity = "Uncommon",
+		Type = "Tool",
+		Emoji = "⛏️",
+		MaxStack = 1,
+		Damage = 8,
+		Cooldown = 0.8,
+		Range = 5,
+		Color = Color3.fromRGB(120, 90, 60),
+	},
+
+	-- ── Do użycia ──
+	Jablko = {
+		Name = "Jabłko",
+		Description = "Soczyste jabłko. Leczy trochę zdrowia.",
+		Rarity = "Common",
+		Type = "Consumable",
+		Emoji = "🍎",
+		MaxStack = 16,
+		Heal = 20,
+	},
+	MiksturaLeczenia = {
+		Name = "Mikstura leczenia",
+		Description = "Czerwony eliksir, który szybko stawia na nogi.",
+		Rarity = "Rare",
+		Type = "Consumable",
+		Emoji = "🧪",
+		MaxStack = 5,
+		Heal = 60,
+	},
+	MiksturaSzybkosci = {
+		Name = "Mikstura szybkości",
+		Description = "Po wypiciu biegasz jak błyskawica.",
+		Rarity = "Epic",
+		Type = "Consumable",
+		Emoji = "⚡",
+		MaxStack = 5,
+		SpeedBoost = 12,
+		Duration = 15,
+	},
+	MiksturaSkoku = {
+		Name = "Mikstura skoku",
+		Description = "Nogi jak sprężyny.",
+		Rarity = "Uncommon",
+		Type = "Consumable",
+		Emoji = "🦘",
+		MaxStack = 5,
+		JumpBoost = 15,
+		Duration = 15,
+	},
+
+	-- ── Materiały ──
+	Drewno = {
+		Name = "Drewno",
+		Description = "Podstawowy materiał budowlany.",
+		Rarity = "Common",
+		Type = "Material",
+		Emoji = "🪵",
+		MaxStack = 64,
+	},
+	Kamien = {
+		Name = "Kamień",
+		Description = "Twardy i ciężki.",
+		Rarity = "Common",
+		Type = "Material",
+		Emoji = "🪨",
+		MaxStack = 64,
+	},
+	Zloto = {
+		Name = "Sztabka złota",
+		Description = "Błyszczy się. Cenna.",
+		Rarity = "Rare",
+		Type = "Material",
+		Emoji = "🪙",
+		MaxStack = 64,
+	},
+	Diament = {
+		Name = "Diament",
+		Description = "Bardzo rzadki kamień szlachetny.",
+		Rarity = "Epic",
+		Type = "Material",
+		Emoji = "💎",
+		MaxStack = 32,
+	},
+	Gwiazda = {
+		Name = "Odłamek gwiazdy",
+		Description = "Spadł z nieba. Nikt nie wie, do czego służy...",
+		Rarity = "Mythic",
+		Type = "Material",
+		Emoji = "🌟",
+		MaxStack = 16,
+	},
+}
+]]></ProtectedString></Properties></Item></Item></roblox>

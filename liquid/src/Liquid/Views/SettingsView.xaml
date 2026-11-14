@@ -1,0 +1,49 @@
+<UserControl x:Class="Liquid.Views.SettingsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+        <StackPanel Margin="36,4,36,32" MaxWidth="900" HorizontalAlignment="Left">
+            <TextBlock Text="Ustawienia" Style="{StaticResource H1}"/>
+            <TextBlock Text="Dostosuj Liquid do siebie." Style="{StaticResource Sub}" Margin="0,6,0,22"/>
+
+            <Border Style="{StaticResource Card}">
+                <StackPanel>
+                    <TextBlock Text="OGÓLNE" Style="{StaticResource Caption}" Margin="0,0,0,6"/>
+                    <CheckBox x:Name="Notif" Style="{StaticResource Switch}" Click="Changed" Content="Powiadomienia (np. „Licznik FPS włączony”)"/>
+                    <CheckBox x:Name="Tray" Style="{StaticResource Switch}" Click="Changed" Content="Zamknięcie okna chowa Liquid do zasobnika"/>
+                    <CheckBox x:Name="Autostart" Style="{StaticResource Switch}" Click="Autostart_Click" Content="Uruchamiaj razem z Windows (w tle)"/>
+                </StackPanel>
+            </Border>
+
+            <Border Style="{StaticResource Card}" Margin="0,16,0,0">
+                <StackPanel>
+                    <TextBlock Text="OSTRZEŻENIA O TEMPERATURZE" Style="{StaticResource Caption}" Margin="0,0,0,6"/>
+                    <CheckBox x:Name="Warn" Style="{StaticResource Switch}" Click="Changed" Content="Powiadom mnie, gdy podzespół się przegrzewa"/>
+                    <DockPanel Margin="0,12,0,0">
+                        <TextBlock DockPanel.Dock="Right" x:Name="CpuWarnText" FontWeight="SemiBold"/>
+                        <TextBlock Text="Próg dla procesora" Foreground="#CCCCCC"/>
+                    </DockPanel>
+                    <Slider x:Name="CpuWarn" Minimum="60" Maximum="105" IsSnapToTickEnabled="True" TickFrequency="1" ValueChanged="Warn_Changed"/>
+                    <DockPanel Margin="0,12,0,0">
+                        <TextBlock DockPanel.Dock="Right" x:Name="GpuWarnText" FontWeight="SemiBold"/>
+                        <TextBlock Text="Próg dla karty graficznej" Foreground="#CCCCCC"/>
+                    </DockPanel>
+                    <Slider x:Name="GpuWarn" Minimum="60" Maximum="100" IsSnapToTickEnabled="True" TickFrequency="1" ValueChanged="Warn_Changed"/>
+                    <Button Style="{StaticResource GhostButton}" Content="Wyślij testowe powiadomienie" HorizontalAlignment="Left" Margin="0,16,0,0" Click="Test_Click"/>
+                </StackPanel>
+            </Border>
+
+            <Border Style="{StaticResource Card}" Margin="0,16,0,0">
+                <DockPanel>
+                    <Image DockPanel.Dock="Left" Source="pack://application:,,,/Assets/logo.png" Width="64" Height="64" RenderOptions.BitmapScalingMode="HighQuality"/>
+                    <StackPanel Margin="18,0,0,0" VerticalAlignment="Center">
+                        <TextBlock x:Name="AboutTitle" Text="Liquid" Style="{StaticResource H2}" FontSize="18"/>
+                        <TextBlock Style="{StaticResource Sub}" Margin="0,4,0,0"
+                                   Text="Parametry komputera, temperatury i licznik FPS. Czujniki: LibreHardwareMonitor (MPL 2.0) + PawnIO. Licznik FPS: Event Tracing for Windows."/>
+                        <TextBlock x:Name="SettingsPath" Style="{StaticResource Sub}" FontSize="11" Margin="0,6,0,0" Foreground="{StaticResource MutedBrush}"/>
+                    </StackPanel>
+                </DockPanel>
+            </Border>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

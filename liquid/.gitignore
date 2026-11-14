@@ -1,0 +1,5 @@
+bin/
+obj/
+dist/
+installer/PawnIO_setup.exe
+assets/png/

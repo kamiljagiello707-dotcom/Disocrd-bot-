@@ -1,0 +1,90 @@
+<UserControl x:Class="Liquid.Views.SpecsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:c="clr-namespace:Liquid.Controls">
+    <ScrollViewer x:Name="Scroller" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+        <StackPanel Margin="36,4,36,32">
+            <DockPanel>
+                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
+                    <Button x:Name="CopyBtn" Style="{StaticResource GhostButton}" Click="Copy_Click" Margin="0,0,10,0" IsEnabled="False">
+                        <StackPanel Orientation="Horizontal">
+                            <Path Style="{StaticResource IconPath}" Data="{StaticResource IconCopy}" Width="15" Height="15"/>
+                            <TextBlock Text="Kopiuj specyfikację" Margin="8,0,0,0"/>
+                        </StackPanel>
+                    </Button>
+                    <Button x:Name="RefreshBtn" Style="{StaticResource PrimaryButton}" Click="Refresh_Click">
+                        <StackPanel Orientation="Horizontal">
+                            <Path Style="{StaticResource IconPath}" Data="{StaticResource IconRefresh}" Width="15" Height="15" Stroke="Black"/>
+                            <TextBlock Text="Skanuj ponownie" Margin="8,0,0,0"/>
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+                <StackPanel>
+                    <TextBlock Text="Parametry komputera" Style="{StaticResource H1}"/>
+                    <TextBlock Text="Pełna specyfikacja Twojego sprzętu. Na końcu znajdziesz wiadomość od Liquid o Twoim setupie." Style="{StaticResource Sub}" Margin="0,6,0,0"/>
+                </StackPanel>
+            </DockPanel>
+
+            <!-- Ładowanie -->
+            <Border x:Name="Loader" Style="{StaticResource Card}" Margin="0,26,0,0" Padding="28">
+                <StackPanel Orientation="Horizontal">
+                    <Grid Width="34" Height="34">
+                        <Ellipse Stroke="#262626" StrokeThickness="4"/>
+                        <Ellipse Stroke="White" StrokeThickness="4" StrokeDashArray="6 30" RenderTransformOrigin="0.5,0.5">
+                            <Ellipse.RenderTransform>
+                                <RotateTransform x:Name="Spin"/>
+                            </Ellipse.RenderTransform>
+                        </Ellipse>
+                    </Grid>
+                    <StackPanel Margin="18,0,0,0" VerticalAlignment="Center">
+                        <TextBlock Text="Skanuję podzespoły…" Style="{StaticResource H2}"/>
+                        <TextBlock Text="Odczytuję procesor, kartę graficzną, pamięć, dyski i system." Style="{StaticResource Sub}"/>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+
+            <Grid x:Name="CardsGrid" Margin="-8,18,-8,0" Visibility="Collapsed">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition/>
+                    <ColumnDefinition/>
+                </Grid.ColumnDefinitions>
+                <StackPanel x:Name="ColLeft"/>
+                <StackPanel x:Name="ColRight" Grid.Column="1"/>
+            </Grid>
+
+            <!-- Werdykt -->
+            <Border x:Name="VerdictCard" Margin="0,18,0,0" CornerRadius="18" Background="White" Padding="28" Visibility="Collapsed">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition/>
+                    </Grid.ColumnDefinitions>
+                    <Border Width="170" Height="170" CornerRadius="85" Background="Black" VerticalAlignment="Top">
+                        <c:RingGauge x:Name="ScoreGauge" Width="150" Height="150" Maximum="100" Unit="/ 100" StrokeWidth="11"/>
+                    </Border>
+                    <StackPanel Grid.Column="1" Margin="30,0,0,0">
+                        <TextBlock Text="WIADOMOŚĆ OD LIQUID" FontSize="11" FontWeight="Bold" Foreground="#777777"/>
+                        <TextBlock x:Name="VerdictTitle" FontSize="28" FontWeight="Bold" Foreground="Black" Margin="0,6,0,0"/>
+                        <TextBlock x:Name="VerdictText" FontSize="14" Foreground="#222222" TextWrapping="Wrap" Margin="0,8,0,0" LineHeight="21"/>
+                        <UniformGrid x:Name="PartBars" Columns="4" Margin="0,20,0,0"/>
+                        <Grid Margin="0,20,0,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition/>
+                                <ColumnDefinition Width="24"/>
+                                <ColumnDefinition/>
+                            </Grid.ColumnDefinitions>
+                            <StackPanel>
+                                <TextBlock Text="MOCNE STRONY" FontSize="11" FontWeight="Bold" Foreground="#777777"/>
+                                <StackPanel x:Name="ProsList" Margin="0,6,0,0"/>
+                            </StackPanel>
+                            <StackPanel Grid.Column="2">
+                                <TextBlock Text="CO MOŻNA POPRAWIĆ" FontSize="11" FontWeight="Bold" Foreground="#777777"/>
+                                <StackPanel x:Name="ConsList" Margin="0,6,0,0"/>
+                            </StackPanel>
+                        </Grid>
+                    </StackPanel>
+                </Grid>
+            </Border>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

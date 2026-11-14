@@ -1,0 +1,96 @@
+<UserControl x:Class="Liquid.Views.HomeView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+        <StackPanel Margin="36,4,36,32">
+            <TextBlock x:Name="Greeting" Text="Witaj w Liquid" Style="{StaticResource H1}"/>
+            <TextBlock Text="Twój sprzęt, temperatury i FPS — wszystko w jednym, czarno-białym miejscu." Style="{StaticResource Sub}" Margin="0,6,0,26"/>
+
+            <!-- Szybki podgląd -->
+            <UniformGrid Columns="4" Margin="-8,0">
+                <Border Style="{StaticResource Card}" Margin="8">
+                    <StackPanel>
+                        <TextBlock Text="TEMPERATURA CPU" Style="{StaticResource Caption}"/>
+                        <TextBlock x:Name="QCpuTemp" Text="—" Style="{StaticResource BigNumber}" Margin="0,10,0,0"/>
+                        <TextBlock x:Name="QCpuName" Text="Procesor" Style="{StaticResource Sub}" FontSize="12" TextTrimming="CharacterEllipsis" TextWrapping="NoWrap"/>
+                    </StackPanel>
+                </Border>
+                <Border Style="{StaticResource Card}" Margin="8">
+                    <StackPanel>
+                        <TextBlock Text="TEMPERATURA GPU" Style="{StaticResource Caption}"/>
+                        <TextBlock x:Name="QGpuTemp" Text="—" Style="{StaticResource BigNumber}" Margin="0,10,0,0"/>
+                        <TextBlock x:Name="QGpuName" Text="Karta graficzna" Style="{StaticResource Sub}" FontSize="12" TextTrimming="CharacterEllipsis" TextWrapping="NoWrap"/>
+                    </StackPanel>
+                </Border>
+                <Border Style="{StaticResource Card}" Margin="8">
+                    <StackPanel>
+                        <TextBlock Text="OBCIĄŻENIE CPU / GPU" Style="{StaticResource Caption}"/>
+                        <TextBlock x:Name="QLoad" Text="—" Style="{StaticResource BigNumber}" FontSize="26" Margin="0,12,0,2"/>
+                        <TextBlock Text="aktualne użycie" Style="{StaticResource Sub}" FontSize="12"/>
+                    </StackPanel>
+                </Border>
+                <Border Style="{StaticResource Card}" Margin="8">
+                    <StackPanel>
+                        <TextBlock Text="PAMIĘĆ RAM" Style="{StaticResource Caption}"/>
+                        <TextBlock x:Name="QRam" Text="—" Style="{StaticResource BigNumber}" Margin="0,10,0,0"/>
+                        <TextBlock x:Name="QRamSub" Text="w użyciu" Style="{StaticResource Sub}" FontSize="12"/>
+                    </StackPanel>
+                </Border>
+            </UniformGrid>
+
+            <TextBlock Text="SEKCJE" Style="{StaticResource Caption}" Margin="0,26,0,6"/>
+            <UniformGrid Columns="3" Margin="-8,0">
+                <Button Style="{StaticResource CardButton}" Margin="8" Tag="specs" Click="Go_Click">
+                    <StackPanel>
+                        <Border Width="46" Height="46" CornerRadius="12" Background="White" HorizontalAlignment="Left">
+                            <Path Style="{StaticResource IconPath}" Data="{StaticResource IconChip}" Stroke="Black" Width="22" Height="22"/>
+                        </Border>
+                        <TextBlock Text="Parametry komputera" Style="{StaticResource H2}" FontSize="18" Margin="0,18,0,6"/>
+                        <TextBlock Text="Pełna specyfikacja: procesor, karta, RAM, płyta, dyski, system — i werdykt Liquid, czy Twój setup jest dobry." Style="{StaticResource Sub}"/>
+                        <StackPanel Orientation="Horizontal" Margin="0,18,0,0">
+                            <TextBlock Text="Otwórz" FontWeight="SemiBold" FontSize="13"/>
+                            <Path Style="{StaticResource IconPath}" Data="{StaticResource IconArrow}" Width="14" Height="14" Margin="8,0,0,0"/>
+                        </StackPanel>
+                    </StackPanel>
+                </Button>
+                <Button Style="{StaticResource CardButton}" Margin="8" Tag="temps" Click="Go_Click">
+                    <StackPanel>
+                        <Border Width="46" Height="46" CornerRadius="12" Background="White" HorizontalAlignment="Left">
+                            <Path Style="{StaticResource IconPath}" Data="{StaticResource IconTemp}" Stroke="Black" Width="22" Height="22"/>
+                        </Border>
+                        <TextBlock Text="Stopnie urządzeń" Style="{StaticResource H2}" FontSize="18" Margin="0,18,0,6"/>
+                        <TextBlock Text="Temperatury procesora, karty graficznej, dysków i płyty na żywo — z obciążeniem, zegarami i wentylatorami." Style="{StaticResource Sub}"/>
+                        <StackPanel Orientation="Horizontal" Margin="0,18,0,0">
+                            <TextBlock Text="Otwórz" FontWeight="SemiBold" FontSize="13"/>
+                            <Path Style="{StaticResource IconPath}" Data="{StaticResource IconArrow}" Width="14" Height="14" Margin="8,0,0,0"/>
+                        </StackPanel>
+                    </StackPanel>
+                </Button>
+                <Button Style="{StaticResource CardButton}" Margin="8" Tag="fps" Click="Go_Click">
+                    <StackPanel>
+                        <Border Width="46" Height="46" CornerRadius="12" Background="White" HorizontalAlignment="Left">
+                            <Path Style="{StaticResource IconPath}" Data="{StaticResource IconFps}" Stroke="Black" Width="22" Height="22"/>
+                        </Border>
+                        <TextBlock Text="Licznik FPS" Style="{StaticResource H2}" FontSize="18" Margin="0,18,0,6"/>
+                        <TextBlock Text="Licznik FPS do wybranej gry, overlay nad grą z temperaturami, 1% low, frametime i benchmark." Style="{StaticResource Sub}"/>
+                        <StackPanel Orientation="Horizontal" Margin="0,18,0,0">
+                            <TextBlock x:Name="FpsCardStatus" Text="Otwórz" FontWeight="SemiBold" FontSize="13"/>
+                            <Path Style="{StaticResource IconPath}" Data="{StaticResource IconArrow}" Width="14" Height="14" Margin="8,0,0,0"/>
+                        </StackPanel>
+                    </StackPanel>
+                </Button>
+            </UniformGrid>
+
+            <Border Style="{StaticResource Card}" Margin="0,24,0,0" Background="White">
+                <DockPanel>
+                    <Path DockPanel.Dock="Left" Style="{StaticResource IconPath}" Data="{StaticResource IconBolt}" Stroke="Black" Width="22" Height="22" VerticalAlignment="Center"/>
+                    <StackPanel Margin="16,0,0,0">
+                        <TextBlock Text="Szybkie skróty" FontWeight="Bold" FontSize="15" Foreground="Black"/>
+                        <TextBlock Foreground="#333333" FontSize="13" TextWrapping="Wrap" Margin="0,4,0,0"
+                                   Text="Ctrl + Shift + F10 — overlay FPS w grze   ·   Ctrl + Shift + F9 — włącz / wyłącz licznik FPS   ·   Zamknięcie okna chowa Liquid do zasobnika."/>
+                    </StackPanel>
+                </DockPanel>
+            </Border>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

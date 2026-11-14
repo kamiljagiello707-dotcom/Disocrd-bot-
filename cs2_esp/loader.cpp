@@ -195,11 +195,46 @@ static void line(HDC dc, int x1, int y1, int x2, int y2, HPEN p) {
     SelectObject(dc, o);
 }
 
+// zielona sylwetka czlowieka (glowa+tors+rece+nogi), symetryczna, skala wg boxa
+static void draw_body(HDC dc, int cx, int top, int bot, int w, HBRUSH fill) {
+    float H = (float)(bot - top), hw = w * 0.5f;
+    if (H < 6.0f) return;
+    HGDIOBJ ob = SelectObject(dc, fill);
+    HGDIOBJ op = SelectObject(dc, GetStockObject(NULL_PEN)); // bez czarnego obrysu
+
+    int headR  = (int)(H * 0.085f); if (headR < 2) headR = 2;
+    int headCy = top + headR;
+    int shY    = top + (int)(H * 0.20f);
+    int waistY = top + (int)(H * 0.50f);
+    int hipY   = top + (int)(H * 0.52f);
+    int footY  = bot;
+    int shHW   = (int)hw;
+    int wsHW   = (int)(hw * 0.55f);
+    int armHW  = (int)(hw * 0.32f);
+    int gap    = (int)(hw * 0.10f);
+
+    Ellipse(dc, cx - headR, headCy - headR, cx + headR, headCy + headR);   // glowa
+
+    POINT torso[4] = { {cx-shHW,shY},{cx+shHW,shY},{cx+wsHW,waistY},{cx-wsHW,waistY} };
+    Polygon(dc, torso, 4);                                                 // tors
+
+    POINT armL[4] = { {cx-shHW,shY},{cx-shHW-armHW,shY+2},{cx-wsHW-armHW,hipY},{cx-wsHW,hipY} };
+    POINT armR[4] = { {cx+shHW,shY},{cx+shHW+armHW,shY+2},{cx+wsHW+armHW,hipY},{cx+wsHW,hipY} };
+    Polygon(dc, armL, 4); Polygon(dc, armR, 4);                            // rece
+
+    POINT legL[4] = { {cx-wsHW,hipY},{cx-gap,hipY},{cx-gap,footY},{cx-wsHW,footY} };
+    POINT legR[4] = { {cx+gap,hipY},{cx+wsHW,hipY},{cx+wsHW,footY},{cx+gap,footY} };
+    Polygon(dc, legL, 4); Polygon(dc, legR, 4);                            // nogi
+
+    SelectObject(dc, op); SelectObject(dc, ob);
+}
+
 static void render(HDC dc, int w, int h) {
     RECT full{ 0,0,w,h };
     HBRUSH key = CreateSolidBrush(RGB(255, 0, 255)); // magenta = dziura (color-key)
     FillRect(dc, &full, key); DeleteObject(key);
     HBRUSH black = (HBRUSH)GetStockObject(BLACK_BRUSH);
+    HBRUSH green = CreateSolidBrush(RGB(40, 230, 70)); // zielona sylwetka
     SetBkMode(dc, TRANSPARENT);
 
     if (cfg.esp) {
@@ -210,8 +245,7 @@ static void render(HDC dc, int w, int h) {
             int l = (int)(t.head.x - bw*0.5f), r = (int)(t.head.x + bw*0.5f);
             int top = (int)t.head.y, bot = (int)t.feet.y;
             if (cfg.box) {
-                RECT body{ l, top, r, bot };
-                FillRect(dc, &body, black); // pelna czarna sylwetka
+                draw_body(dc, (l + r) / 2, top, bot, r - l, green); // zielona postac
             }
             if (cfg.hp) {
                 int filled = (bot - top) * t.hp / 100;
@@ -236,7 +270,7 @@ static void render(HDC dc, int w, int h) {
         SetTextColor(dc, RGB(255,60,60));
         TextOutA(dc, 52, 48, "CS2 WH  C=ESP  X=menu", 21);
         struct row { const char* l; bool* v; };
-        row rows[] = { {"ESP (C)",&cfg.esp},{"Czarna sylwetka",&cfg.box},{"HP bar",&cfg.hp},
+        row rows[] = { {"ESP (C)",&cfg.esp},{"Sylwetka (zielona)",&cfg.box},{"HP bar",&cfg.hp},
                        {"Nazwy",&cfg.name},{"Tylko wrog",&cfg.team_check} };
         for (int i = 0; i < 5; ++i) {
             int y = 80 + i*24;
@@ -245,6 +279,7 @@ static void render(HDC dc, int w, int h) {
             TextOutA(dc, 56, y, s.c_str(), (int)s.size());
         }
     }
+    DeleteObject(green);
 }
 
 static void menu_click(int mx, int my) {

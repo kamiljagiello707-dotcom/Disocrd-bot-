@@ -6,48 +6,67 @@
   .wrap{position:relative;width:960px;height:540px;margin:16px auto;
         background:linear-gradient(160deg,#3a3f36,#23262b 55%,#15171b);
         border:1px solid #222;overflow:hidden}
-  /* "sciany" zeby pokazac ze sylwetki widac przez nie */
   .wall{position:absolute;background:#4a4036;box-shadow:inset 0 0 40px #0008}
-  .box{position:absolute;background:#000}          /* pelna czarna sylwetka */
   .hpbg{position:absolute;background:#000;width:4px}
   .hp{position:absolute;width:4px}
   .name{position:absolute;color:#ff3c3c;font-size:12px;white-space:nowrap}
-  .menu{position:absolute;left:40px;top:40px;width:220px;height:170px;background:#121216;
-        border:1px solid #2a2a30;padding:0;font-size:13px}
+  .menu{position:absolute;left:40px;top:40px;width:220px;background:#121216;
+        border:1px solid #2a2a30;font-size:13px}
   .menu .t{color:#ff3c3c;padding:8px 12px}
   .menu .r{padding:2px 16px}
-  .on{color:#50ff78}.off{color:#787878}
+  .on{color:#50ff78}
   .cap{color:#889;max-width:960px;margin:0 auto;padding:4px 2px;font-size:12px}
+  svg .body{fill:#28e646}
 </style>
-<div class="cap">podglad overlaya (mock 1:1 z render()) — magenta w grze = przezroczyste, tu tlo = "mapa"</div>
+<div class="cap">podglad overlaya (mock 1:1 z draw_body()) — zielona sylwetka postaci, widoczna przez sciany</div>
 <div class="wrap">
-  <!-- sciany -->
   <div class="wall" style="left:120px;top:150px;width:90px;height:240px"></div>
   <div class="wall" style="left:600px;top:80px;width:140px;height:300px"></div>
 
-  <!-- wrog 1: czesciowo za sciana, pelne hp -->
-  <div class="box"  style="left:150px;top:210px;width:46px;height:150px"></div>
+  <!-- helper: jedna sylwetka = glowa+tors+rece+nogi, parametry jak w draw_body -->
+  <!-- wrog 1: H=150 W=63 -->
+  <svg style="position:absolute;left:142px;top:210px" width="63" height="150" viewBox="0 0 63 150">
+    <circle class="body" cx="31.5" cy="12.75" r="12.75"/>
+    <polygon class="body" points="0,30 63,30 48,75 15,75"/>
+    <polygon class="body" points="0,30 -0,32 -5,78 15,78"/>
+    <polygon class="body" points="63,30 63,32 68,78 48,78"/>
+    <polygon class="body" points="15,78 28,78 28,150 15,150"/>
+    <polygon class="body" points="35,78 48,78 48,150 35,150"/>
+  </svg>
   <div class="hpbg" style="left:142px;top:210px;height:150px"></div>
   <div class="hp"   style="left:142px;top:210px;height:150px;background:#2cff2c"></div>
   <div class="name" style="left:150px;top:194px">s1mple</div>
 
-  <!-- wrog 2: za duza sciana, 45hp -->
-  <div class="box"  style="left:650px;top:170px;width:40px;height:132px"></div>
+  <!-- wrog 2: H=132 W=55, 45hp -->
+  <svg style="position:absolute;left:645px;top:170px" width="55" height="132" viewBox="0 0 55 132">
+    <circle class="body" cx="27.5" cy="11" r="11"/>
+    <polygon class="body" points="0,26 55,26 42,66 13,66"/>
+    <polygon class="body" points="0,26 0,28 -4,69 13,69"/>
+    <polygon class="body" points="55,26 55,28 59,69 42,69"/>
+    <polygon class="body" points="13,69 24,69 24,132 13,132"/>
+    <polygon class="body" points="31,69 42,69 42,132 31,132"/>
+  </svg>
   <div class="hpbg" style="left:642px;top:170px;height:132px"></div>
   <div class="hp"   style="left:642px;top:229px;height:73px;background:#c8a000"></div>
   <div class="name" style="left:650px;top:154px">ZywOo</div>
 
-  <!-- wrog 3: daleko, 15hp -->
-  <div class="box"  style="left:430px;top:250px;width:26px;height:86px"></div>
+  <!-- wrog 3: H=86 W=36, 15hp -->
+  <svg style="position:absolute;left:422px;top:250px" width="36" height="86" viewBox="0 0 36 86">
+    <circle class="body" cx="18" cy="7.3" r="7.3"/>
+    <polygon class="body" points="0,17 36,17 27,43 9,43"/>
+    <polygon class="body" points="0,17 0,19 -3,45 9,45"/>
+    <polygon class="body" points="36,17 36,19 39,45 27,45"/>
+    <polygon class="body" points="9,45 16,45 16,86 9,86"/>
+    <polygon class="body" points="20,45 27,45 27,86 20,86"/>
+  </svg>
   <div class="hpbg" style="left:422px;top:250px;height:86px"></div>
   <div class="hp"   style="left:422px;top:323px;height:13px;background:#ff2c2c"></div>
   <div class="name" style="left:430px;top:236px">donk</div>
 
-  <!-- menu (X) -->
   <div class="menu">
     <div class="t">CS2 WH&nbsp;&nbsp;C=ESP&nbsp;&nbsp;X=menu</div>
     <div class="r on">[x] ESP (C)</div>
-    <div class="r on">[x] Czarna sylwetka</div>
+    <div class="r on">[x] Sylwetka (zielona)</div>
     <div class="r on">[x] HP bar</div>
     <div class="r on">[x] Nazwy</div>
     <div class="r on">[x] Tylko wrog</div>

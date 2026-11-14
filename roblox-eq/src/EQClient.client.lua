@@ -1,12 +1,13 @@
 -- EQClient (LocalScript)
 -- Miejsce: StarterPlayer > StarterPlayerScripts > EQClient
--- Rysuje cały interfejs ekwipunku (nie trzeba nic budować ręcznie w StarterGui).
+-- Rysuje cały interfejs ekwipunku RP (nie trzeba nic budować w StarterGui).
 
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local UserInputService = game:GetService("UserInputService")
 local TweenService = game:GetService("TweenService")
 local StarterGui = game:GetService("StarterGui")
+local Lighting = game:GetService("Lighting")
 
 local player = Players.LocalPlayer
 local Shared = ReplicatedStorage:WaitForChild("EQShared")
@@ -17,17 +18,14 @@ local UpdateEvent = Remotes:WaitForChild("InventoryUpdate")
 local ActionEvent = Remotes:WaitForChild("InventoryAction")
 local NotifyEvent = Remotes:WaitForChild("Notify")
 
-local MAX, HOTBAR = Config.MaxSlots, Config.HotbarSlots
 local T = Config.Theme
-local SLOT = 64
-local GAP = 6
-local COLS = 6
+local MAX = Config.MaxStacks
+local WHITE = Color3.new(1, 1, 1)
 
 -- wyłącz domyślny plecak Robloxa
 task.spawn(function()
 	for _ = 1, 30 do
-		local ok = pcall(StarterGui.SetCoreGuiEnabled, StarterGui, Enum.CoreGuiType.Backpack, false)
-		if ok then
+		if pcall(StarterGui.SetCoreGuiEnabled, StarterGui, Enum.CoreGuiType.Backpack, false) then
 			break
 		end
 		task.wait(0.5)
@@ -37,9 +35,12 @@ end)
 local state = {
 	slots = table.create(MAX, false),
 	equipped = 0,
+	weight = 0,
+	maxWeight = Config.MaxWeight,
 	open = false,
 	selected = nil,
 	search = "",
+	category = "all",
 }
 
 -- ════════════════════════ pomocnicze ════════════════════════
@@ -57,14 +58,14 @@ local function create(class, props)
 end
 
 local function corner(p, r)
-	return create("UICorner", { CornerRadius = UDim.new(0, r or 8), Parent = p })
+	return create("UICorner", { CornerRadius = r and UDim.new(0, r) or UDim.new(1, 0), Parent = p })
 end
 
-local function stroke(p, color, th, tr)
+local function stroke(p, tr, th)
 	return create("UIStroke", {
-		Color = color,
+		Color = WHITE,
+		Transparency = tr or 0.88,
 		Thickness = th or 1,
-		Transparency = tr or 0,
 		ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
 		Parent = p,
 	})
@@ -78,16 +79,6 @@ local function label(props)
 	return create("TextLabel", props)
 end
 
-local function rarityOf(id)
-	local d = Items[id]
-	return Config.Rarities[d and d.Rarity or "Common"] or Config.Rarities.Common
-end
-
-local function inside(gui, pos)
-	local ap, as = gui.AbsolutePosition, gui.AbsoluteSize
-	return pos.X >= ap.X and pos.X <= ap.X + as.X and pos.Y >= ap.Y and pos.Y <= ap.Y + as.Y
-end
-
 local function tween(o, t, props)
 	local tw = TweenService:Create(o, TweenInfo.new(t, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), props)
 	tw:Play()
@@ -96,6 +87,20 @@ end
 
 local function act(action, a, b)
 	ActionEvent:FireServer(action, a, b)
+end
+
+local function rarityOf(id)
+	local d = Items[id]
+	return Config.Rarities[d and d.Rarity or "Common"] or Config.Rarities.Common
+end
+
+local function categoryName(id)
+	for _, c in Config.Categories do
+		if c.Id == id then
+			return c.Name
+		end
+	end
+	return id or "Różne"
 end
 
 local function setIcon(img, txt, id)
@@ -110,292 +115,221 @@ local function setIcon(img, txt, id)
 	end
 end
 
+local function kg(n)
+	return (("%.1f"):format(n)):gsub("%.", ",", 1) .. " kg"
+end
+
+-- ════════════════════════ wymiary ════════════════════════
+local PAD = 24
+local CARD_W, CARD_H, CARD_GAP, COLS, ROWS = 118, 104, 10, 4, 3
+local GRID_W = COLS * CARD_W + (COLS - 1) * CARD_GAP + 10
+local GRID_H = ROWS * CARD_H + (ROWS - 1) * CARD_GAP + 4
+local DET_W = 280
+local GRID_Y = 156
+local PANEL_W = PAD + GRID_W + 20 + DET_W + PAD
+local PANEL_H = GRID_Y + GRID_H + 62
+
 -- ════════════════════════ GUI ════════════════════════
 local gui = create("ScreenGui", {
 	Name = "EQGui",
 	ResetOnSpawn = false,
 	ZIndexBehavior = Enum.ZIndexBehavior.Sibling,
-	IgnoreGuiInset = false,
-	DisplayOrder = 5,
+	DisplayOrder = 10,
 	Parent = player:WaitForChild("PlayerGui"),
 })
 
-local scales = {}
-local function addScale(p)
-	local s = create("UIScale", { Parent = p })
-	table.insert(scales, s)
-	return s
+local blur
+if Config.Blur then
+	blur = create("BlurEffect", { Name = "EQBlur", Size = 0, Enabled = false, Parent = Lighting })
 end
 
--- ── pasek (hotbar) ──
-local BAR_W = HOTBAR * SLOT + (HOTBAR - 1) * GAP + 16
-local holder = create("Frame", {
-	Name = "Hotbar",
-	AnchorPoint = Vector2.new(0.5, 1),
-	Position = UDim2.new(0.5, 0, 1, -10),
-	Size = UDim2.fromOffset(BAR_W + 66, 80),
-	BackgroundTransparency = 1,
-	Parent = gui,
-})
-addScale(holder)
-
-local bar = create("Frame", {
-	Position = UDim2.fromOffset(66, 0),
-	Size = UDim2.fromOffset(BAR_W, 80),
-	BackgroundColor3 = T.Background,
-	BackgroundTransparency = 0.2,
-	Parent = holder,
-})
-corner(bar, 14)
-stroke(bar, T.SlotStroke, 1.5, 0.2)
-create("UIListLayout", {
-	FillDirection = Enum.FillDirection.Horizontal,
-	HorizontalAlignment = Enum.HorizontalAlignment.Center,
-	VerticalAlignment = Enum.VerticalAlignment.Center,
-	Padding = UDim.new(0, GAP),
-	SortOrder = Enum.SortOrder.LayoutOrder,
-	Parent = bar,
-})
-
-local bagButton = create("TextButton", {
-	Name = "BagButton",
-	Size = UDim2.fromOffset(58, 58),
-	Position = UDim2.fromOffset(0, 11),
-	BackgroundColor3 = T.Background,
-	BackgroundTransparency = 0.1,
-	AutoButtonColor = true,
-	Text = "🎒",
-	TextSize = 28,
-	Font = Enum.Font.GothamBold,
-	TextColor3 = T.Text,
-	Parent = holder,
-})
-corner(bagButton, 14)
-local bagStroke = stroke(bagButton, T.Accent, 2, 0.2)
-label({
-	Size = UDim2.fromOffset(20, 14),
-	Position = UDim2.new(1, -20, 1, -16),
-	Text = Config.ToggleKey.Name,
-	TextSize = 11,
-	Font = Enum.Font.GothamBold,
-	TextColor3 = T.SubText,
-	Parent = bagButton,
-})
-
--- nazwa trzymanego przedmiotu nad paskiem
-local heldLabel = label({
-	AnchorPoint = Vector2.new(0.5, 1),
-	Position = UDim2.new(0.5, 33, 0, -6),
-	Size = UDim2.fromOffset(400, 22),
-	Text = "",
-	TextSize = 18,
-	Font = Enum.Font.GothamBold,
-	TextStrokeTransparency = 0.4,
-	TextTransparency = 1,
-	TextStrokeColor3 = Color3.new(0, 0, 0),
-	Parent = holder,
-})
-
--- ── okno ekwipunku ──
-local BAG_W = COLS * SLOT + (COLS - 1) * GAP + 6 + 10
-local BAG_H = 5 * SLOT + 4 * GAP + 6
-local DET_W = 270
-local PANEL_W = 16 + BAG_W + 12 + DET_W + 16
-local PANEL_H = 16 + 44 + 10 + BAG_H + 30 + 10
-
 local panel = create("Frame", {
-	Name = "Inventory",
+	Name = "Ekwipunek",
 	AnchorPoint = Vector2.new(0.5, 0.5),
-	Position = UDim2.fromScale(0.5, 0.45),
+	Position = UDim2.fromScale(0.5, 0.5),
 	Size = UDim2.fromOffset(PANEL_W, PANEL_H),
-	BackgroundColor3 = Color3.new(1, 1, 1), -- kolor nadaje UIGradient
+	BackgroundColor3 = T.Panel,
+	BackgroundTransparency = T.PanelTransparency,
 	Visible = false,
 	Parent = gui,
 })
-corner(panel, 16)
-stroke(panel, T.Accent, 2, 0.35)
-create("UIGradient", {
-	Rotation = 90,
-	Color = ColorSequence.new(T.Panel, T.Background),
-	Parent = panel,
-})
-local panelScale = addScale(panel)
+corner(panel, 18)
+stroke(panel, 0.86, 1)
+local panelScale = create("UIScale", { Parent = panel })
 
-local header = create("Frame", {
-	Position = UDim2.fromOffset(16, 16),
-	Size = UDim2.new(1, -32, 0, 44),
-	BackgroundTransparency = 1,
-	Parent = panel,
-})
+-- nagłówek
 label({
-	Size = UDim2.fromOffset(220, 26),
-	Text = "🎒  EKWIPUNEK",
-	TextSize = 22,
+	Position = UDim2.fromOffset(PAD, 22),
+	Size = UDim2.fromOffset(300, 28),
+	Text = "EKWIPUNEK",
+	TextSize = 24,
 	Font = Enum.Font.GothamBlack,
 	TextXAlignment = Enum.TextXAlignment.Left,
-	Parent = header,
-})
-local countLabel = label({
-	Position = UDim2.fromOffset(0, 26),
-	Size = UDim2.fromOffset(220, 18),
-	Text = "0 / " .. MAX .. " slotów",
-	TextSize = 13,
-	TextColor3 = T.SubText,
-	TextXAlignment = Enum.TextXAlignment.Left,
-	Parent = header,
+	Parent = panel,
 })
 
 local closeBtn = create("TextButton", {
-	AnchorPoint = Vector2.new(1, 0.5),
-	Position = UDim2.new(1, 0, 0.5, 0),
+	AnchorPoint = Vector2.new(1, 0),
+	Position = UDim2.new(1, -20, 0, 18),
 	Size = UDim2.fromOffset(36, 36),
-	BackgroundColor3 = T.Button,
+	BackgroundColor3 = T.Glass,
+	BackgroundTransparency = 0.92,
 	Text = "✕",
 	TextSize = 18,
 	Font = Enum.Font.GothamBold,
 	TextColor3 = T.Text,
-	Parent = header,
+	AutoButtonColor = false,
+	Parent = panel,
 })
 corner(closeBtn, 10)
-
-local sortBtn = create("TextButton", {
-	AnchorPoint = Vector2.new(1, 0.5),
-	Position = UDim2.new(1, -44, 0.5, 0),
-	Size = UDim2.fromOffset(96, 36),
-	BackgroundColor3 = T.Button,
-	Text = "⇅  Sortuj",
-	TextSize = 14,
-	Font = Enum.Font.GothamBold,
-	TextColor3 = T.Text,
-	Parent = header,
-})
-corner(sortBtn, 10)
+stroke(closeBtn, 0.85)
 
 local searchBox = create("TextBox", {
-	AnchorPoint = Vector2.new(1, 0.5),
-	Position = UDim2.new(1, -148, 0.5, 0),
-	Size = UDim2.fromOffset(180, 36),
-	BackgroundColor3 = T.Slot,
-	PlaceholderText = "🔍  Szukaj...",
-	PlaceholderColor3 = T.SubText,
+	Position = UDim2.fromOffset(PAD, 64),
+	Size = UDim2.fromOffset(240, 34),
+	BackgroundColor3 = T.Glass,
+	BackgroundTransparency = 0.93,
+	PlaceholderText = "Szukaj...",
+	PlaceholderColor3 = T.Muted,
 	Text = "",
 	TextSize = 14,
 	Font = Enum.Font.GothamMedium,
 	TextColor3 = T.Text,
 	ClearTextOnFocus = false,
 	TextXAlignment = Enum.TextXAlignment.Left,
-	Parent = header,
+	Parent = panel,
 })
-corner(searchBox, 10)
-create("UIPadding", { PaddingLeft = UDim.new(0, 10), Parent = searchBox })
-stroke(searchBox, T.SlotStroke, 1, 0)
+corner(searchBox, 9)
+stroke(searchBox, 0.9)
+create("UIPadding", { PaddingLeft = UDim.new(0, 12), PaddingRight = UDim.new(0, 12), Parent = searchBox })
 
-local bagFrame = create("ScrollingFrame", {
-	Position = UDim2.fromOffset(16, 70),
-	Size = UDim2.fromOffset(BAG_W, BAG_H),
+-- zakładki
+local tabsFrame = create("Frame", {
+	Position = UDim2.fromOffset(PAD, 112),
+	Size = UDim2.fromOffset(GRID_W, 30),
+	BackgroundTransparency = 1,
+	Parent = panel,
+})
+create("UIListLayout", {
+	FillDirection = Enum.FillDirection.Horizontal,
+	VerticalAlignment = Enum.VerticalAlignment.Center,
+	Padding = UDim.new(0, 8),
+	SortOrder = Enum.SortOrder.LayoutOrder,
+	Parent = tabsFrame,
+})
+local tabButtons = {}
+local renderAll -- forward
+
+for i, cat in Config.Categories do
+	local b = create("TextButton", {
+		LayoutOrder = i,
+		AutomaticSize = Enum.AutomaticSize.X,
+		Size = UDim2.fromOffset(0, 30),
+		BackgroundColor3 = T.Glass,
+		BackgroundTransparency = 0.9,
+		Text = cat.Name,
+		TextSize = 13,
+		Font = Enum.Font.GothamBold,
+		TextColor3 = T.Text,
+		AutoButtonColor = false,
+		Parent = tabsFrame,
+	})
+	corner(b)
+	create("UIPadding", { PaddingLeft = UDim.new(0, 14), PaddingRight = UDim.new(0, 14), Parent = b })
+	tabButtons[cat.Id] = b
+	b.Activated:Connect(function()
+		state.category = cat.Id
+		renderAll()
+	end)
+end
+
+-- siatka przedmiotów
+local grid = create("ScrollingFrame", {
+	Position = UDim2.fromOffset(PAD, GRID_Y),
+	Size = UDim2.fromOffset(GRID_W, GRID_H),
 	BackgroundTransparency = 1,
 	BorderSizePixel = 0,
-	ScrollBarThickness = 6,
-	ScrollBarImageColor3 = T.SlotStroke,
+	ScrollBarThickness = 4,
+	ScrollBarImageColor3 = WHITE,
+	ScrollBarImageTransparency = 0.7,
 	CanvasSize = UDim2.new(),
 	AutomaticCanvasSize = Enum.AutomaticSize.Y,
 	ScrollingDirection = Enum.ScrollingDirection.Y,
 	Parent = panel,
 })
-create("UIPadding", {
-	PaddingTop = UDim.new(0, 3),
-	PaddingLeft = UDim.new(0, 3),
-	PaddingBottom = UDim.new(0, 3),
-	Parent = bagFrame,
-})
+create("UIPadding", { PaddingTop = UDim.new(0, 2), PaddingLeft = UDim.new(0, 2), PaddingBottom = UDim.new(0, 2), Parent = grid })
 create("UIGridLayout", {
-	CellSize = UDim2.fromOffset(SLOT, SLOT),
-	CellPadding = UDim2.fromOffset(GAP, GAP),
+	CellSize = UDim2.fromOffset(CARD_W, CARD_H),
+	CellPadding = UDim2.fromOffset(CARD_GAP, CARD_GAP),
 	SortOrder = Enum.SortOrder.LayoutOrder,
-	Parent = bagFrame,
+	Parent = grid,
 })
-
-label({
-	Position = UDim2.fromOffset(16, 70 + BAG_H + 6),
-	Size = UDim2.new(1, -32, 0, 24),
-	Text = "Przeciągnij = przenieś  •  PPM = podziel stos  •  2x klik = użyj  •  upuść poza oknem = wyrzuć",
-	TextSize = 12,
-	TextColor3 = T.SubText,
-	TextXAlignment = Enum.TextXAlignment.Left,
+local emptyLabel = label({
+	Position = UDim2.fromOffset(PAD, GRID_Y),
+	Size = UDim2.fromOffset(GRID_W, GRID_H),
+	Text = "Brak przedmiotów",
+	TextSize = 15,
+	TextColor3 = T.Muted,
+	Visible = false,
 	Parent = panel,
 })
 
--- ── panel szczegółów ──
+-- panel szczegółów
 local details = create("Frame", {
-	Position = UDim2.fromOffset(16 + BAG_W + 12, 70),
-	Size = UDim2.fromOffset(DET_W, BAG_H),
-	BackgroundColor3 = T.Panel,
+	Position = UDim2.fromOffset(PAD + GRID_W + 20, GRID_Y),
+	Size = UDim2.fromOffset(DET_W, GRID_H),
+	BackgroundColor3 = T.Glass,
+	BackgroundTransparency = 0.95,
 	Parent = panel,
 })
-corner(details, 12)
-local detStroke = stroke(details, T.SlotStroke, 1.5, 0)
+corner(details, 14)
+stroke(details, 0.9)
 
 local detEmpty = label({
 	Size = UDim2.fromScale(1, 1),
-	Text = "👆\nKliknij przedmiot,\naby zobaczyć szczegóły",
+	Text = "Wybierz przedmiot",
 	TextSize = 15,
-	TextColor3 = T.SubText,
-	TextWrapped = true,
+	TextColor3 = T.Muted,
 	Parent = details,
 })
-
-local detContent = create("Frame", {
-	Size = UDim2.fromScale(1, 1),
-	BackgroundTransparency = 1,
-	Visible = false,
-	Parent = details,
-})
-local detIconBox = create("Frame", {
-	AnchorPoint = Vector2.new(0.5, 0),
-	Position = UDim2.new(0.5, 0, 0, 14),
-	Size = UDim2.fromOffset(84, 84),
-	BackgroundColor3 = T.Slot,
-	Parent = detContent,
-})
-corner(detIconBox, 16)
-local detIconStroke = stroke(detIconBox, T.SlotStroke, 2.5, 0)
+local detContent = create("Frame", { Size = UDim2.fromScale(1, 1), BackgroundTransparency = 1, Visible = false, Parent = details })
 local detImg = create("ImageLabel", {
-	AnchorPoint = Vector2.new(0.5, 0.5),
-	Position = UDim2.fromScale(0.5, 0.5),
-	Size = UDim2.fromScale(0.75, 0.75),
+	AnchorPoint = Vector2.new(0.5, 0),
+	Position = UDim2.new(0.5, 0, 0, 26),
+	Size = UDim2.fromOffset(52, 52),
 	BackgroundTransparency = 1,
 	ScaleType = Enum.ScaleType.Fit,
 	Visible = false,
-	Parent = detIconBox,
+	Parent = detContent,
 })
 local detEmoji = label({
-	AnchorPoint = Vector2.new(0.5, 0.5),
-	Position = UDim2.fromScale(0.5, 0.5),
-	Size = UDim2.fromScale(0.7, 0.7),
+	AnchorPoint = Vector2.new(0.5, 0),
+	Position = UDim2.new(0.5, 0, 0, 26),
+	Size = UDim2.fromOffset(52, 52),
 	TextScaled = true,
 	Text = "",
-	Parent = detIconBox,
+	Parent = detContent,
 })
 local detName = label({
-	Position = UDim2.fromOffset(10, 104),
-	Size = UDim2.new(1, -20, 0, 24),
+	Position = UDim2.fromOffset(12, 90),
+	Size = UDim2.new(1, -24, 0, 28),
 	Text = "",
-	TextSize = 19,
+	TextSize = 22,
 	Font = Enum.Font.GothamBlack,
 	TextTruncate = Enum.TextTruncate.AtEnd,
 	Parent = detContent,
 })
 local detRarity = label({
-	Position = UDim2.fromOffset(10, 128),
-	Size = UDim2.new(1, -20, 0, 18),
+	Position = UDim2.fromOffset(12, 118),
+	Size = UDim2.new(1, -24, 0, 16),
 	Text = "",
-	TextSize = 13,
-	Font = Enum.Font.GothamBold,
+	TextSize = 12,
+	Font = Enum.Font.GothamBlack,
 	Parent = detContent,
 })
 local detDesc = label({
-	Position = UDim2.fromOffset(14, 152),
-	Size = UDim2.new(1, -28, 0, 46),
+	Position = UDim2.fromOffset(18, 144),
+	Size = UDim2.new(1, -36, 0, 36),
 	Text = "",
 	TextSize = 13,
 	TextColor3 = T.SubText,
@@ -403,111 +337,179 @@ local detDesc = label({
 	TextYAlignment = Enum.TextYAlignment.Top,
 	Parent = detContent,
 })
-local detStats = label({
-	Position = UDim2.fromOffset(14, 200),
-	Size = UDim2.new(1, -28, 0, 54),
+local detMeta = label({
+	Position = UDim2.fromOffset(12, 186),
+	Size = UDim2.new(1, -24, 0, 16),
 	Text = "",
-	TextSize = 13,
-	RichText = true,
-	TextWrapped = true,
-	TextXAlignment = Enum.TextXAlignment.Left,
-	TextYAlignment = Enum.TextYAlignment.Top,
+	TextSize = 12,
+	TextColor3 = T.Muted,
+	Parent = detContent,
+})
+local detCat = label({
+	Position = UDim2.fromOffset(12, 203),
+	Size = UDim2.new(1, -24, 0, 16),
+	Text = "",
+	TextSize = 12,
+	TextColor3 = T.Muted,
 	Parent = detContent,
 })
 
-local function makeButton(text, color, pos, size)
+local function makeBtn(text, bg, fg, pos, size)
 	local b = create("TextButton", {
 		Position = pos,
 		Size = size,
-		BackgroundColor3 = color,
+		BackgroundColor3 = bg,
 		Text = text,
-		TextSize = 14,
+		TextSize = 15,
 		Font = Enum.Font.GothamBold,
-		TextColor3 = T.Text,
+		TextColor3 = fg,
 		AutoButtonColor = true,
 		Parent = detContent,
 	})
 	corner(b, 9)
 	return b
 end
-local BTN_Y = BAG_H - 12 - 32 - 8 - 32
-local inner = DET_W - 24
-local small = math.floor((inner - 12) / 3)
-local btnPrimary = makeButton("Użyj", T.Good, UDim2.fromOffset(12, BTN_Y), UDim2.fromOffset(inner, 32))
-local btnSplit = makeButton("✂ Podziel", T.Button, UDim2.fromOffset(12, BTN_Y + 40), UDim2.fromOffset(small, 32))
-local btnDrop = makeButton("⬇ Wyrzuć", T.Button, UDim2.fromOffset(12 + small + 6, BTN_Y + 40), UDim2.fromOffset(small, 32))
-local btnDelete = makeButton("🗑 Usuń", T.Danger, UDim2.fromOffset(12 + (small + 6) * 2, BTN_Y + 40), UDim2.fromOffset(small, 32))
+local BW = DET_W - 32
+local btnUse = makeBtn("Użyj", T.Primary, T.PrimaryText, UDim2.fromOffset(16, GRID_H - 106), UDim2.fromOffset(BW, 40))
+local btnDrop = makeBtn("Wyrzuć", T.Secondary, T.Text, UDim2.fromOffset(16, GRID_H - 58), UDim2.fromOffset(math.floor((BW - 8) / 2), 40))
+local btnGive = makeBtn("Podaj", T.Secondary, T.Text, UDim2.fromOffset(16 + math.floor((BW - 8) / 2) + 8, GRID_H - 58), UDim2.fromOffset(math.floor((BW - 8) / 2), 40))
+btnGive.TextSize = 13
+btnGive.TextTruncate = Enum.TextTruncate.AtEnd
 
--- ── powiadomienia ──
+-- dół: waga
+local weightBg = create("Frame", {
+	Position = UDim2.fromOffset(PAD, GRID_Y + GRID_H + 22),
+	Size = UDim2.fromOffset(330, 6),
+	BackgroundColor3 = T.Glass,
+	BackgroundTransparency = 0.85,
+	BorderSizePixel = 0,
+	Parent = panel,
+})
+corner(weightBg)
+local weightFill = create("Frame", {
+	Size = UDim2.fromScale(0, 1),
+	BackgroundColor3 = WHITE,
+	BorderSizePixel = 0,
+	Parent = weightBg,
+})
+corner(weightFill)
+local weightLabel = label({
+	Position = UDim2.fromOffset(PAD, GRID_Y + GRID_H + 32),
+	Size = UDim2.fromOffset(200, 16),
+	Text = "0 / 50 kg",
+	TextSize = 12,
+	TextColor3 = T.SubText,
+	TextXAlignment = Enum.TextXAlignment.Left,
+	Parent = panel,
+})
+label({
+	AnchorPoint = Vector2.new(1, 0),
+	Position = UDim2.new(1, -PAD, 0, GRID_Y + GRID_H + 26),
+	Size = UDim2.fromOffset(200, 16),
+	Text = "[" .. Config.ToggleKey.Name .. "] zamknij",
+	TextSize = 12,
+	TextColor3 = T.Muted,
+	TextXAlignment = Enum.TextXAlignment.Right,
+	Parent = panel,
+})
+
+-- przycisk otwierania (telefon)
+local openBtn
+if Config.ShowOpenButton then
+	openBtn = create("TextButton", {
+		AnchorPoint = Vector2.new(0, 0.5),
+		Position = UDim2.new(0, 14, 0.5, 0),
+		Size = UDim2.fromOffset(54, 54),
+		BackgroundColor3 = T.Panel,
+		BackgroundTransparency = 0.2,
+		Text = "🎒",
+		TextSize = 26,
+		Font = Enum.Font.GothamBold,
+		TextColor3 = T.Text,
+		AutoButtonColor = true,
+		Parent = gui,
+	})
+	corner(openBtn, 14)
+	stroke(openBtn, 0.8)
+	label({
+		AnchorPoint = Vector2.new(1, 1),
+		Position = UDim2.new(1, -5, 1, -2),
+		Size = UDim2.fromOffset(16, 14),
+		Text = Config.ToggleKey.Name,
+		TextSize = 11,
+		Font = Enum.Font.GothamBold,
+		TextColor3 = T.Muted,
+		TextXAlignment = Enum.TextXAlignment.Right,
+		Parent = openBtn,
+	})
+end
+
+-- powiadomienia
 local toasts = create("Frame", {
-	AnchorPoint = Vector2.new(1, 1),
-	Position = UDim2.new(1, -16, 1, -110),
-	Size = UDim2.fromOffset(280, 320),
+	AnchorPoint = Vector2.new(1, 0),
+	Position = UDim2.new(1, -16, 0, 16),
+	Size = UDim2.fromOffset(280, 300),
 	BackgroundTransparency = 1,
 	Parent = gui,
 })
-addScale(toasts)
+local toastScale = create("UIScale", { Parent = toasts })
 create("UIListLayout", {
-	VerticalAlignment = Enum.VerticalAlignment.Bottom,
+	VerticalAlignment = Enum.VerticalAlignment.Top,
 	HorizontalAlignment = Enum.HorizontalAlignment.Right,
 	Padding = UDim.new(0, 6),
 	SortOrder = Enum.SortOrder.LayoutOrder,
 	Parent = toasts,
 })
 
--- ── podpowiedź po najechaniu ──
-local tooltip = create("Frame", {
-	Size = UDim2.fromOffset(210, 46),
-	BackgroundColor3 = T.Background,
-	BackgroundTransparency = 0.05,
-	Visible = false,
-	ZIndex = 20,
-	Parent = gui,
-})
-corner(tooltip, 8)
-local tipStroke = stroke(tooltip, T.SlotStroke, 1.5, 0)
-local tipName = label({
-	Position = UDim2.fromOffset(10, 5),
-	Size = UDim2.new(1, -20, 0, 20),
-	TextSize = 14,
-	Font = Enum.Font.GothamBold,
-	TextXAlignment = Enum.TextXAlignment.Left,
-	TextTruncate = Enum.TextTruncate.AtEnd,
-	ZIndex = 21,
-	Text = "",
-	Parent = tooltip,
-})
-local tipSub = label({
-	Position = UDim2.fromOffset(10, 24),
-	Size = UDim2.new(1, -20, 0, 16),
-	TextSize = 12,
-	TextXAlignment = Enum.TextXAlignment.Left,
-	ZIndex = 21,
-	Text = "",
-	Parent = tooltip,
-})
-local tipScale = addScale(tooltip)
+-- ════════════════════════ karty ════════════════════════
+local cards = {}
+local lastClick = { slot = nil, t = 0 }
 
--- ════════════════════════ sloty ════════════════════════
-local slotFrames = {}
-local onSlotPress, onSlotHover, onSlotLeave
+local function styleCard(c)
+	local selected = c.slot ~= nil and c.slot == state.selected
+	local equipped = c.slot ~= nil and c.slot == state.equipped
+	local tr = selected and 0.8 or (c.hover and 0.9 or 0.94)
+	tween(c.btn, 0.12, { BackgroundTransparency = tr })
+	c.stroke.Transparency = selected and 0.35 or (equipped and 0.5 or 0.9)
+	c.stroke.Thickness = selected and 1.5 or 1
+	c.equip.Visible = equipped
+end
 
-local function makeSlot(index, parent)
+local function onCardClick(c)
+	local slot = c.slot
+	if not slot then
+		return
+	end
+	local t = os.clock()
+	if lastClick.slot == slot and t - lastClick.t < 0.35 then
+		lastClick.slot = nil
+		act("Use", slot)
+		return
+	end
+	lastClick.slot = slot
+	lastClick.t = t
+	state.selected = slot
+	renderAll()
+end
+
+local function getCard(k)
+	if cards[k] then
+		return cards[k]
+	end
 	local btn = create("TextButton", {
-		Name = "Slot" .. index,
 		Text = "",
 		AutoButtonColor = false,
-		BackgroundColor3 = T.Slot,
-		Size = UDim2.fromOffset(SLOT, SLOT),
-		LayoutOrder = index,
-		Parent = parent,
+		BackgroundColor3 = T.Glass,
+		BackgroundTransparency = 0.94,
+		LayoutOrder = k,
+		Parent = grid,
 	})
 	corner(btn, 10)
-	local st = stroke(btn, T.SlotStroke, 2, 0)
+	local st = stroke(btn, 0.9)
 	local img = create("ImageLabel", {
 		AnchorPoint = Vector2.new(0.5, 0.5),
-		Position = UDim2.fromScale(0.5, 0.5),
-		Size = UDim2.fromScale(0.7, 0.7),
+		Position = UDim2.new(0.5, 0, 0, 40),
+		Size = UDim2.fromOffset(38, 38),
 		BackgroundTransparency = 1,
 		ScaleType = Enum.ScaleType.Fit,
 		Visible = false,
@@ -515,149 +517,111 @@ local function makeSlot(index, parent)
 	})
 	local emoji = label({
 		AnchorPoint = Vector2.new(0.5, 0.5),
-		Position = UDim2.fromScale(0.5, 0.47),
-		Size = UDim2.fromScale(0.62, 0.62),
+		Position = UDim2.new(0.5, 0, 0, 40),
+		Size = UDim2.fromOffset(36, 36),
 		TextScaled = true,
 		Text = "",
 		Parent = btn,
 	})
-	local amount = label({
-		Position = UDim2.new(0, 0, 1, -20),
-		Size = UDim2.new(1, -6, 0, 16),
+	local name = label({
+		Position = UDim2.fromOffset(6, 68),
+		Size = UDim2.new(1, -12, 0, 16),
 		Text = "",
-		TextSize = 14,
-		Font = Enum.Font.GothamBlack,
-		TextXAlignment = Enum.TextXAlignment.Right,
-		TextStrokeTransparency = 0.3,
+		TextSize = 12,
+		TextTruncate = Enum.TextTruncate.AtEnd,
 		Parent = btn,
 	})
-	if index <= HOTBAR then
-		label({
-			Position = UDim2.fromOffset(6, 3),
-			Size = UDim2.fromOffset(14, 14),
-			Text = tostring(index),
-			TextSize = 12,
-			Font = Enum.Font.GothamBold,
-			TextColor3 = T.SubText,
-			TextXAlignment = Enum.TextXAlignment.Left,
-			Parent = btn,
-		})
-	end
-	local rbar = create("Frame", {
-		AnchorPoint = Vector2.new(0.5, 1),
-		Position = UDim2.new(0.5, 0, 1, -3),
-		Size = UDim2.new(1, -20, 0, 3),
-		BorderSizePixel = 0,
+	local amount = label({
+		AnchorPoint = Vector2.new(1, 0),
+		Position = UDim2.new(1, -8, 0, 6),
+		Size = UDim2.fromOffset(40, 14),
+		Text = "",
+		TextSize = 12,
+		Font = Enum.Font.GothamBold,
+		TextXAlignment = Enum.TextXAlignment.Right,
+		Parent = btn,
+	})
+	local equip = label({
+		Position = UDim2.fromOffset(8, 6),
+		Size = UDim2.fromOffset(40, 14),
+		Text = "W RĘCE",
+		TextSize = 9,
+		Font = Enum.Font.GothamBlack,
+		TextColor3 = T.SubText,
+		TextXAlignment = Enum.TextXAlignment.Left,
 		Visible = false,
 		Parent = btn,
 	})
-	corner(rbar, 2)
-	local sc = create("UIScale", { Parent = btn })
-
-	local e = { btn = btn, stroke = st, img = img, emoji = emoji, amount = amount, bar = rbar, scale = sc, index = index }
-	slotFrames[index] = e
-
-	btn.InputBegan:Connect(function(input)
-		onSlotPress(index, input)
+	local bar = create("Frame", {
+		AnchorPoint = Vector2.new(0.5, 1),
+		Position = UDim2.new(0.5, 0, 1, -9),
+		Size = UDim2.new(1, -26, 0, 3),
+		BorderSizePixel = 0,
+		Parent = btn,
+	})
+	corner(bar)
+	local c = { btn = btn, stroke = st, img = img, emoji = emoji, name = name, amount = amount, bar = bar, equip = equip, slot = nil, hover = false }
+	btn.Activated:Connect(function()
+		onCardClick(c)
 	end)
 	btn.MouseEnter:Connect(function()
-		onSlotHover(index)
+		c.hover = true
+		styleCard(c)
 	end)
 	btn.MouseLeave:Connect(function()
-		onSlotLeave(index)
+		c.hover = false
+		styleCard(c)
 	end)
-	return e
-end
-
-for i = 1, HOTBAR do
-	makeSlot(i, bar)
-end
-for i = HOTBAR + 1, MAX do
-	makeSlot(i, bagFrame)
+	cards[k] = c
+	return c
 end
 
 -- ════════════════════════ rysowanie ════════════════════════
-local function matchesSearch(s)
-	if state.search == "" then
-		return true
+local function visibleSlots()
+	local list = {}
+	for i = 1, MAX do
+		local s = state.slots[i]
+		local def = s and Items[s.id]
+		if def then
+			local catOk = state.category == "all" or def.Category == state.category
+			local searchOk = state.search == ""
+				or string.find(string.lower(def.Name), state.search, 1, true) ~= nil
+				or string.find(string.lower(s.id), state.search, 1, true) ~= nil
+			if catOk and searchOk then
+				table.insert(list, i)
+			end
+		end
 	end
-	if not s then
-		return false
-	end
-	local def = Items[s.id]
-	local name = def and string.lower(def.Name) or ""
-	return string.find(name, state.search, 1, true) ~= nil or string.find(string.lower(s.id), state.search, 1, true) ~= nil
+	return list
 end
 
-local function renderSlot(i)
-	local e = slotFrames[i]
-	local s = state.slots[i]
-	if s and Items[s.id] then
-		local r = rarityOf(s.id)
-		setIcon(e.img, e.emoji, s.id)
-		e.amount.Text = s.n > 1 and tostring(s.n) or ""
-		e.stroke.Color = r.Color
-		e.stroke.Transparency = 0.25
-		e.bar.Visible = true
-		e.bar.BackgroundColor3 = r.Color
-		e.btn.BackgroundColor3 = T.Slot:Lerp(r.Color, 0.14)
-	else
-		e.img.Visible = false
-		e.emoji.Text = ""
-		e.amount.Text = ""
-		e.stroke.Color = T.SlotStroke
-		e.stroke.Transparency = 0
-		e.bar.Visible = false
-		e.btn.BackgroundColor3 = T.Slot
+local function nearestPlayer()
+	local myRoot = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
+	if not myRoot then
+		return nil
 	end
-
-	local equipped = state.equipped == i
-	local selected = state.open and state.selected == i
-	if selected then
-		e.stroke.Color = T.Accent
-		e.stroke.Transparency = 0
-	elseif equipped then
-		e.stroke.Color = T.Equipped
-		e.stroke.Transparency = 0
+	local best, bestDist = nil, Config.GiveDistance
+	for _, other in Players:GetPlayers() do
+		if other ~= player then
+			local r = other.Character and other.Character:FindFirstChild("HumanoidRootPart")
+			if r then
+				local d = (r.Position - myRoot.Position).Magnitude
+				if d <= bestDist then
+					best, bestDist = other, d
+				end
+			end
+		end
 	end
-	e.stroke.Thickness = (selected or equipped) and 3 or 2
-	tween(e.scale, 0.15, { Scale = equipped and 1.08 or 1 })
-
-	local match = matchesSearch(s)
-	e.btn.BackgroundTransparency = match and 0 or 0.65
-	e.emoji.TextTransparency = match and 0 or 0.75
-	e.img.ImageTransparency = match and 0 or 0.75
-	e.amount.TextTransparency = match and 0 or 0.75
+	return best
 end
 
-local function statsText(def, s)
-	local lines = {}
-	local function add(t)
-		table.insert(lines, t)
-	end
-	if def.Damage then
-		add(("⚔️ Obrażenia: <b>%d</b>"):format(def.Damage))
-	end
-	if def.Cooldown and def.Type == "Tool" then
-		add(("⏱️ Szybkość ataku: <b>%.1fs</b>"):format(def.Cooldown))
-	end
-	if def.Heal then
-		add(("❤️ Leczy: <b>+%d HP</b>"):format(def.Heal))
-	end
-	if def.SpeedBoost then
-		add(("⚡ Szybkość: <b>+%d</b> (%ds)"):format(def.SpeedBoost, def.Duration or 10))
-	end
-	if def.JumpBoost then
-		add(("🦘 Skok: <b>+%d</b> (%ds)"):format(def.JumpBoost, def.Duration or 10))
-	end
-	local stack = def.MaxStack or 1
-	if stack > 1 then
-		add(("📦 Ilość: <b>%d / %d</b>"):format(s.n, stack))
-	end
-	return table.concat(lines, "\n")
+local function renderGive()
+	local target = nearestPlayer()
+	btnGive.Text = target and ("Podaj: " .. target.DisplayName) or "Podaj (nikt obok)"
+	btnGive.TextTransparency = target and 0 or 0.55
+	return target
 end
 
-local deleteArmed = false
 local function renderDetails()
 	local i = state.selected
 	local s = i and state.slots[i]
@@ -665,73 +629,77 @@ local function renderDetails()
 	if not def then
 		detEmpty.Visible = true
 		detContent.Visible = false
-		detStroke.Color = T.SlotStroke
 		return
 	end
 	detEmpty.Visible = false
 	detContent.Visible = true
 	local r = rarityOf(s.id)
-	detStroke.Color = r.Color
-	detIconStroke.Color = r.Color
-	detIconBox.BackgroundColor3 = T.Slot:Lerp(r.Color, 0.18)
 	setIcon(detImg, detEmoji, s.id)
 	detName.Text = def.Name
-	detName.TextColor3 = r.Color
-	detRarity.Text = r.Name .. "  •  " .. (Config.TypeNames[def.Type] or def.Type or "")
-	detRarity.TextColor3 = T.SubText
+	detRarity.Text = r.Name
+	detRarity.TextColor3 = r.Color
 	detDesc.Text = def.Description or ""
-	detStats.Text = statsText(def, s)
+	detMeta.Text = ("Ilość: %d   •   Waga: %s"):format(s.n, kg((def.Weight or 0) * s.n))
+	detCat.Text = "Kategoria: " .. categoryName(def.Category)
 
 	if def.Type == "Tool" then
 		local on = state.equipped == i
-		btnPrimary.Text = on and "✋ Schowaj" or "🗡️ Weź do ręki"
-		btnPrimary.BackgroundColor3 = on and T.Button or T.Good
-		btnPrimary.Active = true
-		btnPrimary.TextTransparency = 0
+		btnUse.Text = on and "Schowaj" or "Weź do ręki"
+		btnUse.BackgroundColor3 = T.Primary
+		btnUse.TextTransparency = 0
 	elseif def.Type == "Consumable" then
-		btnPrimary.Text = "✨ Użyj"
-		btnPrimary.BackgroundColor3 = T.Good
-		btnPrimary.Active = true
-		btnPrimary.TextTransparency = 0
+		btnUse.Text = "Użyj"
+		btnUse.BackgroundColor3 = T.Primary
+		btnUse.TextTransparency = 0
 	else
-		btnPrimary.Text = "Materiał – nie można użyć"
-		btnPrimary.BackgroundColor3 = T.Button
-		btnPrimary.Active = false
-		btnPrimary.TextTransparency = 0.5
+		btnUse.Text = "Nie można użyć"
+		btnUse.BackgroundColor3 = T.Secondary
+		btnUse.TextTransparency = 0.5
 	end
-	btnSplit.TextTransparency = s.n >= 2 and 0 or 0.5
-	btnDelete.Text = deleteArmed and "Na pewno?" or "🗑 Usuń"
+	renderGive()
 end
 
-local heldToken = 0
-local function showHeld(i)
-	local s = state.slots[i]
-	local def = s and Items[s.id]
-	if not def then
-		return
+function renderAll()
+	-- zakładki
+	for id, b in tabButtons do
+		local active = state.category == id
+		b.BackgroundTransparency = active and 0 or 0.9
+		b.TextColor3 = active and T.PrimaryText or T.Text
 	end
-	heldToken += 1
-	local my = heldToken
-	heldLabel.Text = def.Name
-	heldLabel.TextColor3 = rarityOf(s.id).Color
-	heldLabel.TextTransparency = 0
-	heldLabel.TextStrokeTransparency = 0.4
-	task.delay(1.8, function()
-		if heldToken == my then
-			tween(heldLabel, 0.5, { TextTransparency = 1, TextStrokeTransparency = 1 })
+	-- siatka
+	local list = visibleSlots()
+	local selectedVisible = false
+	for k, slot in list do
+		local c = getCard(k)
+		local s = state.slots[slot]
+		local def = Items[s.id]
+		local r = rarityOf(s.id)
+		c.slot = slot
+		c.btn.Visible = true
+		setIcon(c.img, c.emoji, s.id)
+		c.name.Text = def.Name
+		c.amount.Text = "x" .. s.n
+		c.bar.BackgroundColor3 = r.Color
+		if slot == state.selected then
+			selectedVisible = true
 		end
-	end)
-end
-
-local function renderAll()
-	local used = 0
-	for i = 1, MAX do
-		if state.slots[i] then
-			used += 1
-		end
-		renderSlot(i)
 	end
-	countLabel.Text = ("%d / %d slotów"):format(used, MAX)
+	for k = #list + 1, #cards do
+		cards[k].slot = nil
+		cards[k].btn.Visible = false
+	end
+	if not selectedVisible then
+		state.selected = list[1]
+	end
+	for k = 1, #list do
+		styleCard(cards[k])
+	end
+	emptyLabel.Visible = #list == 0
+	-- waga
+	local ratio = state.maxWeight > 0 and math.clamp(state.weight / state.maxWeight, 0, 1) or 0
+	tween(weightFill, 0.25, { Size = UDim2.fromScale(ratio, 1) })
+	weightFill.BackgroundColor3 = ratio >= 0.9 and T.Danger or WHITE
+	weightLabel.Text = ("%s / %d kg"):format((("%.1f"):format(state.weight)):gsub("%.", ",", 1), state.maxWeight)
 	renderDetails()
 end
 
@@ -740,50 +708,49 @@ local toastOrder = 0
 local function toast(text, color)
 	toastOrder += 1
 	local f = create("Frame", {
-		Size = UDim2.fromOffset(280, 38),
-		BackgroundColor3 = T.Background,
+		Size = UDim2.fromOffset(280, 40),
+		BackgroundColor3 = T.Panel,
 		BackgroundTransparency = 1,
 		LayoutOrder = toastOrder,
 		Parent = toasts,
 	})
 	corner(f, 10)
-	local st = stroke(f, color or T.Accent, 1.5, 1)
-	local side = create("Frame", {
-		Size = UDim2.new(0, 4, 1, -12),
-		Position = UDim2.fromOffset(6, 6),
-		BackgroundColor3 = color or T.Accent,
+	local st = stroke(f, 1)
+	local dot = create("Frame", {
+		AnchorPoint = Vector2.new(0, 0.5),
+		Position = UDim2.new(0, 14, 0.5, 0),
+		Size = UDim2.fromOffset(6, 6),
+		BackgroundColor3 = color or WHITE,
 		BackgroundTransparency = 1,
 		BorderSizePixel = 0,
 		Parent = f,
 	})
-	corner(side, 2)
+	corner(dot)
 	local l = label({
-		Position = UDim2.fromOffset(18, 0),
-		Size = UDim2.new(1, -26, 1, 0),
+		Position = UDim2.fromOffset(30, 0),
+		Size = UDim2.new(1, -40, 1, 0),
 		Text = text,
-		TextSize = 14,
+		TextSize = 13,
 		Font = Enum.Font.GothamBold,
-		TextColor3 = color or T.Text,
 		TextXAlignment = Enum.TextXAlignment.Left,
 		TextTruncate = Enum.TextTruncate.AtEnd,
 		TextTransparency = 1,
 		Parent = f,
 	})
-	tween(f, 0.25, { BackgroundTransparency = 0.1 })
-	tween(st, 0.25, { Transparency = 0.2 })
-	tween(side, 0.25, { BackgroundTransparency = 0 })
+	tween(f, 0.25, { BackgroundTransparency = 0.12 })
+	tween(st, 0.25, { Transparency = 0.86 })
+	tween(dot, 0.25, { BackgroundTransparency = 0 })
 	tween(l, 0.25, { TextTransparency = 0 })
-	-- maksymalnie 6 na raz
 	local list = {}
-	for _, c in toasts:GetChildren() do
-		if c:IsA("Frame") then
-			table.insert(list, c)
+	for _, ch in toasts:GetChildren() do
+		if ch:IsA("Frame") then
+			table.insert(list, ch)
 		end
 	end
 	table.sort(list, function(a, b)
 		return a.LayoutOrder < b.LayoutOrder
 	end)
-	for k = 1, #list - 6 do
+	for k = 1, #list - 5 do
 		list[k]:Destroy()
 	end
 	task.delay(3, function()
@@ -792,367 +759,105 @@ local function toast(text, color)
 		end
 		tween(f, 0.4, { BackgroundTransparency = 1 })
 		tween(st, 0.4, { Transparency = 1 })
-		tween(side, 0.4, { BackgroundTransparency = 1 })
+		tween(dot, 0.4, { BackgroundTransparency = 1 })
 		tween(l, 0.4, { TextTransparency = 1 }).Completed:Wait()
 		f:Destroy()
 	end)
 end
 
 -- ════════════════════════ otwieranie / zamykanie ════════════════════════
-local drag, press = nil, nil
-local function cancelDrag()
-	if drag then
-		drag.ghost:Destroy()
-		local e = slotFrames[drag.index]
-		if e then
-			e.emoji.TextTransparency = 0
-			e.img.ImageTransparency = 0
-		end
-	end
-	drag, press = nil, nil
-end
-
 local function setOpen(open)
 	if state.open == open then
 		return
 	end
 	state.open = open
-	cancelDrag()
-	tooltip.Visible = false
-	deleteArmed = false
 	if open then
-		panel.Visible = true
-		panel.Position = UDim2.new(0.5, 0, 0.45, 30)
-		tween(panel, 0.25, { Position = UDim2.fromScale(0.5, 0.45) })
-		bagStroke.Transparency = 0
-	else
 		state.selected = nil
+		renderAll()
+		panel.Visible = true
+		panel.Position = UDim2.new(0.5, 0, 0.5, 24)
+		tween(panel, 0.28, { Position = UDim2.fromScale(0.5, 0.5) })
+		if blur then
+			blur.Enabled = true
+			tween(blur, 0.3, { Size = 14 })
+		end
+	else
 		searchBox:ReleaseFocus()
-		local tw = tween(panel, 0.18, { Position = UDim2.new(0.5, 0, 0.45, 30) })
-		tw.Completed:Once(function()
+		tween(panel, 0.18, { Position = UDim2.new(0.5, 0, 0.5, 24) }).Completed:Once(function()
 			if not state.open then
 				panel.Visible = false
 			end
 		end)
-		bagStroke.Transparency = 0.2
-	end
-	renderAll()
-end
-
-local function selectSlot(i)
-	deleteArmed = false
-	state.selected = state.slots[i] and i or nil
-	renderAll()
-end
-
--- ════════════════════════ akcje ════════════════════════
-local function primaryAction(i)
-	local s = state.slots[i]
-	local def = s and Items[s.id]
-	if not def then
-		return
-	end
-	if def.Type == "Tool" then
-		act("Equip", i)
-	elseif def.Type == "Consumable" then
-		act("Use", i)
+		if blur then
+			tween(blur, 0.2, { Size = 0 }).Completed:Once(function()
+				if not state.open then
+					blur.Enabled = false
+				end
+			end)
+		end
 	end
 end
 
-btnPrimary.MouseButton1Click:Connect(function()
+-- ════════════════════════ przyciski ════════════════════════
+btnUse.Activated:Connect(function()
 	if state.selected then
-		primaryAction(state.selected)
+		act("Use", state.selected)
 	end
 end)
-btnSplit.MouseButton1Click:Connect(function()
-	if state.selected then
-		act("Split", state.selected)
-	end
-end)
-btnDrop.MouseButton1Click:Connect(function()
+btnDrop.Activated:Connect(function()
 	if state.selected then
 		act("Drop", state.selected, 1)
 	end
 end)
-btnDelete.MouseButton1Click:Connect(function()
-	if not state.selected then
-		return
-	end
-	if deleteArmed then
-		deleteArmed = false
-		act("Delete", state.selected)
-		state.selected = nil
-		renderAll()
-	else
-		deleteArmed = true
-		renderDetails()
-		local sel = state.selected
-		task.delay(2.5, function()
-			if deleteArmed and state.selected == sel then
-				deleteArmed = false
-				renderDetails()
-			end
-		end)
+btnGive.Activated:Connect(function()
+	local target = renderGive()
+	if state.selected and target then
+		act("Give", state.selected, target.UserId)
 	end
 end)
-sortBtn.MouseButton1Click:Connect(function()
-	state.selected = nil
-	act("Sort")
-end)
-closeBtn.MouseButton1Click:Connect(function()
+closeBtn.Activated:Connect(function()
 	setOpen(false)
 end)
-bagButton.MouseButton1Click:Connect(function()
-	setOpen(not state.open)
-end)
+if openBtn then
+	openBtn.Activated:Connect(function()
+		setOpen(not state.open)
+	end)
+end
 searchBox:GetPropertyChangedSignal("Text"):Connect(function()
 	state.search = string.lower(searchBox.Text)
 	renderAll()
 end)
 
--- ════════════════════════ mysz / dotyk ════════════════════════
-local lastClick = { index = nil, t = 0 }
-local mousePos = Vector2.zero
-
-local function slotAt(pos)
-	for i, e in slotFrames do
-		if i > HOTBAR and not (state.open and inside(bagFrame, pos)) then
-			continue
-		end
-		if inside(e.btn, pos) then
-			return i
-		end
-	end
-	return nil
-end
-
-local function placeTooltip(pos)
-	local scale = tipScale.Scale
-	local w, h = 210 * scale, 46 * scale
-	local cam = workspace.CurrentCamera
-	local vp = cam and cam.ViewportSize or Vector2.new(1920, 1080)
-	local x = math.min(pos.X + 16, vp.X - w - 8)
-	local y = math.max(pos.Y - h - 8, 4)
-	tooltip.Position = UDim2.fromOffset(x, y)
-end
-
-function onSlotHover(i)
-	if drag then
-		return
-	end
-	local s = state.slots[i]
-	local def = s and Items[s.id]
-	if not def or not UserInputService.MouseEnabled then
-		tooltip.Visible = false
-		return
-	end
-	local r = rarityOf(s.id)
-	tipName.Text = (def.Emoji and def.Emoji .. " " or "") .. def.Name
-	tipName.TextColor3 = r.Color
-	tipSub.Text = r.Name .. (s.n > 1 and ("  •  x" .. s.n) or "")
-	tipSub.TextColor3 = T.SubText
-	tipStroke.Color = r.Color
-	tooltip.Visible = true
-	tooltip.Parent = gui -- zawsze na wierzchu
-	placeTooltip(mousePos)
-	state.hover = i
-end
-
-function onSlotLeave(i)
-	if state.hover == i then
-		state.hover = nil
-		tooltip.Visible = false
-	end
-end
-
-local function startDrag(i, pos)
-	local s = state.slots[i]
-	if not s then
-		return
-	end
-	local r = rarityOf(s.id)
-	local ghost = create("Frame", {
-		AnchorPoint = Vector2.new(0.5, 0.5),
-		Size = UDim2.fromOffset(SLOT, SLOT),
-		Position = UDim2.fromOffset(pos.X, pos.Y),
-		BackgroundColor3 = T.Slot:Lerp(r.Color, 0.25),
-		BackgroundTransparency = 0.15,
-		ZIndex = 30,
-		Parent = gui,
-	})
-	corner(ghost, 10)
-	stroke(ghost, r.Color, 2.5, 0)
-	local gImg = create("ImageLabel", {
-		AnchorPoint = Vector2.new(0.5, 0.5),
-		Position = UDim2.fromScale(0.5, 0.5),
-		Size = UDim2.fromScale(0.7, 0.7),
-		BackgroundTransparency = 1,
-		ScaleType = Enum.ScaleType.Fit,
-		ZIndex = 31,
-		Parent = ghost,
-	})
-	local gTxt = label({
-		AnchorPoint = Vector2.new(0.5, 0.5),
-		Position = UDim2.fromScale(0.5, 0.5),
-		Size = UDim2.fromScale(0.62, 0.62),
-		TextScaled = true,
-		ZIndex = 31,
-		Text = "",
-		Parent = ghost,
-	})
-	setIcon(gImg, gTxt, s.id)
-	if s.n > 1 then
-		label({
-			Position = UDim2.new(0, 0, 1, -20),
-			Size = UDim2.new(1, -6, 0, 16),
-			Text = tostring(s.n),
-			TextSize = 14,
-			Font = Enum.Font.GothamBlack,
-			TextXAlignment = Enum.TextXAlignment.Right,
-			TextStrokeTransparency = 0.3,
-			ZIndex = 31,
-			Parent = ghost,
-		})
-	end
-	create("UIScale", { Scale = scales[1] and scales[1].Scale * 1.1 or 1.1, Parent = ghost })
-	local e = slotFrames[i]
-	e.emoji.TextTransparency = 0.8
-	e.img.ImageTransparency = 0.8
-	tooltip.Visible = false
-	drag = { index = i, ghost = ghost }
-end
-
-local function clickSlot(i)
-	local t = os.clock()
-	if lastClick.index == i and t - lastClick.t < 0.35 then
-		lastClick.index = nil
-		primaryAction(i)
-		return
-	end
-	lastClick.index = i
-	lastClick.t = t
-	if state.open then
-		selectSlot(i)
-	elseif i <= HOTBAR then
-		act("Equip", i)
-	end
-end
-
-function onSlotPress(i, input)
-	local t = input.UserInputType
-	if t == Enum.UserInputType.MouseButton1 or t == Enum.UserInputType.Touch then
-		local pos = Vector2.new(input.Position.X, input.Position.Y)
-		press = { index = i, pos = pos }
-		mousePos = pos
-	elseif t == Enum.UserInputType.MouseButton2 then
-		if state.open and state.slots[i] then
-			act("Split", i)
-		end
-	end
-end
-
-UserInputService.InputChanged:Connect(function(input)
-	local t = input.UserInputType
-	if t ~= Enum.UserInputType.MouseMovement and t ~= Enum.UserInputType.Touch then
-		return
-	end
-	local pos = Vector2.new(input.Position.X, input.Position.Y)
-	mousePos = pos
-	if tooltip.Visible then
-		placeTooltip(pos)
-	end
-	if press and not drag and state.open and (pos - press.pos).Magnitude > 8 then
-		startDrag(press.index, pos)
-	end
-	if drag then
-		drag.ghost.Position = UDim2.fromOffset(pos.X, pos.Y)
-	end
-end)
-
-UserInputService.InputEnded:Connect(function(input)
-	local t = input.UserInputType
-	if t ~= Enum.UserInputType.MouseButton1 and t ~= Enum.UserInputType.Touch then
-		return
-	end
-	local pos = Vector2.new(input.Position.X, input.Position.Y)
-	if drag then
-		local from = drag.index
-		local target = slotAt(pos)
-		cancelDrag()
-		if target and target ~= from then
-			if state.selected == from then
-				state.selected = target
-			elseif state.selected == target then
-				state.selected = from
-			end
-			act("Move", from, target)
-		elseif not target and not inside(panel, pos) and not inside(holder, pos) then
-			if state.selected == from then
-				state.selected = nil
-			end
-			act("Drop", from) -- cały stos
-		end
-		renderAll()
-	elseif press then
-		local i = press.index
-		press = nil
-		if slotAt(pos) == i then
-			clickSlot(i)
-		end
-	end
-end)
-
--- ════════════════════════ klawiatura ════════════════════════
-local NUM_KEYS = {
-	[Enum.KeyCode.One] = 1, [Enum.KeyCode.Two] = 2, [Enum.KeyCode.Three] = 3,
-	[Enum.KeyCode.Four] = 4, [Enum.KeyCode.Five] = 5, [Enum.KeyCode.Six] = 6,
-	[Enum.KeyCode.Seven] = 7, [Enum.KeyCode.Eight] = 8, [Enum.KeyCode.Nine] = 9,
-}
-
 UserInputService.InputBegan:Connect(function(input, processed)
 	if processed then
 		return
 	end
-	local key = input.KeyCode
-	if key == Config.ToggleKey then
+	if input.KeyCode == Config.ToggleKey then
 		setOpen(not state.open)
-	elseif key == Enum.KeyCode.Escape and state.open then
-		setOpen(false)
-	elseif key == Config.DropKey then
-		if state.open and state.hover and state.slots[state.hover] then
-			act("Drop", state.hover, 1)
-		else
-			act("DropEquipped")
-		end
-	elseif NUM_KEYS[key] and NUM_KEYS[key] <= HOTBAR then
-		local i = NUM_KEYS[key]
-		if state.open and state.hover and state.hover > HOTBAR then
-			-- najechane w plecaku + cyfra = szybkie przeniesienie na pasek
-			act("Move", state.hover, i)
-		elseif state.slots[i] then
-			act("Equip", i)
-		elseif state.equipped > 0 then
-			act("Equip", i) -- pusty slot = schowaj broń
+	end
+end)
+
+-- odświeżanie przycisku "Podaj", gdy okno jest otwarte
+task.spawn(function()
+	while true do
+		task.wait(0.5)
+		if state.open and state.selected then
+			renderGive()
 		end
 	end
 end)
 
--- ════════════════════════ skalowanie ekranu ════════════════════════
+-- skalowanie pod rozmiar ekranu
 local function rescale()
 	local cam = workspace.CurrentCamera
 	if not cam then
 		return
 	end
 	local vp = cam.ViewportSize
-	local s = math.clamp(math.min(vp.X / (PANEL_W + 40), vp.Y / 760), 0.5, 1)
-	for _, sc in scales do
-		sc.Scale = s
-	end
-	-- pasek nie szerszy niż ekran
-	local barScale = math.clamp((vp.X - 20) / (BAR_W + 66), 0.45, 1)
-	scales[1].Scale = math.min(s * 1.05, barScale, 1)
+	local s = math.clamp(math.min((vp.X - 30) / PANEL_W, (vp.Y - 60) / PANEL_H), 0.45, 1)
+	panelScale.Scale = s
+	toastScale.Scale = math.clamp(s, 0.7, 1)
 end
-rescale()
 local function hookCamera()
 	local cam = workspace.CurrentCamera
 	if cam then
@@ -1172,15 +877,13 @@ UpdateEvent.OnClientEvent:Connect(function(payload)
 		local s = payload.slots[i]
 		state.slots[i] = (type(s) == "table" and Items[s.id]) and s or false
 	end
-	local prev = state.equipped
 	state.equipped = payload.equipped or 0
+	state.weight = payload.weight or 0
+	state.maxWeight = payload.maxWeight or Config.MaxWeight
 	if state.selected and not state.slots[state.selected] then
 		state.selected = nil
 	end
 	renderAll()
-	if state.equipped ~= prev and state.equipped > 0 then
-		showHeld(state.equipped)
-	end
 end)
 
 NotifyEvent.OnClientEvent:Connect(function(text, color)

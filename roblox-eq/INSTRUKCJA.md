@@ -1,38 +1,34 @@
-# 🎒 System EQ (ekwipunek) do Roblox Studio — pełna instrukcja
+# 🎒 Ekwipunek RP do Roblox Studio — pełna instrukcja
 
-Gotowy system ekwipunku: pasek na dole (1–9), okno plecaka (klawisz **E**), przeciąganie przedmiotów, stosy, rzadkości z kolorami, okno szczegółów, używanie, wyrzucanie, podnoszenie z ziemi, bronie, zapis postępu (DataStore) i obsługa telefonów.
+Ekwipunek w stylu RP: ciemne, szklane okno z białymi ikonami, zakładki kategorii, wyszukiwarka, karty z ilością i paskiem rzadkości, panel szczegółów (Użyj / Wyrzuć / Podaj) oraz waga (np. `19,0 / 50 kg`). Otwierasz go klawiszem **B**.
+
+![podgląd](podglad.png)
 
 ---
 
-## ✦ Co jest w środku
+## ✦ Funkcje
 
-| Funkcja | Opis |
+| | |
 |---|---|
-| 🧰 Pasek 1–9 | Klawisze 1–9 albo kliknięcie = weź do ręki / użyj |
-| 🎒 Plecak 30 slotów | Klawisz **E** albo przycisk 🎒 (działa też na telefonie) |
-| 🖱️ Przeciąganie | Przenoszenie, zamiana miejscami, łączenie stosów |
-| ✂️ Dzielenie stosu | Prawy przycisk myszy na slocie albo przycisk „Podziel” |
-| ⬇️ Wyrzucanie | **Q** = 1 szt. trzymanego przedmiotu, upuszczenie poza okno = cały stos |
-| ✋ Podnoszenie | Klawisz **F** przy przedmiocie na ziemi |
-| 🔍 Szukaj + ⇅ Sortuj | Wyszukiwanie po nazwie, sortowanie plecaka wg rzadkości |
-| 💎 Rzadkości | Zwykły, Niezwykły, Rzadki, Epicki, Legendarny, Mityczny (kolory ramek) |
-| ⚔️ Bronie | Działają od razu (zadają obrażenia) — nie trzeba robić modelu |
-| 🧪 Mikstury | Leczenie, szybkość, skok (na czas) |
-| 💾 Zapis | Ekwipunek zapisuje się po wyjściu, co 2 min i przy wyłączeniu serwera |
-| 🛡️ Bezpieczny | Wszystko liczy serwer — exploiter nie doda sobie przedmiotów |
-| 📱 Telefon | UI samo dopasowuje się do rozmiaru ekranu |
+| 🗂️ Zakładki | Wszystko, Jedzenie, Medyczne, Narzędzia, Różne (możesz dodać własne) |
+| 🔍 Szukaj | Filtrowanie po nazwie |
+| ⚖️ Waga | Każdy przedmiot coś waży, a limit to 50 kg. Za ciężkiego przedmiotu nie podniesiesz |
+| ✨ Użyj | Jedzenie i leki leczą (kawa daje boost szybkości), narzędzia biorą się do ręki |
+| ⬇️ Wyrzuć | Przedmiot ląduje na ziemi z podpisem i każdy może go podnieść (**E**) |
+| 🤝 Podaj | Przekazanie przedmiotu najbliższemu graczowi (do 8 studów) |
+| 🔦 Narzędzia | Latarka świeci (klik = włącz/wyłącz), kij bejsbolowy bije, telefon jest w ręce |
+| 💾 Zapis | Zapis po wyjściu, co 2 minuty i przy wyłączeniu serwera |
+| 🛡️ Bezpieczny | Wszystko liczy serwer, więc exploiter nie doda sobie przedmiotów |
+| 📱 Telefon | Przycisk 🎒 na ekranie, UI skaluje się do ekranu |
+| 🌫️ Rozmycie | Po otwarciu EQ tło się rozmywa |
 
-**Skróty:** `E` otwórz/zamknij • `1–9` pasek • `Q` wyrzuć • `F` podnieś • `Esc` zamknij • 2× klik = użyj • najedź na przedmiot w plecaku + cyfra = przenieś na pasek.
+**Sterowanie:** `B` otwórz/zamknij • klik = zaznacz • 2× klik = użyj • `E` podnieś z ziemi.
 
 ---
 
-## ✦ Instalacja — sposób 1 (najszybszy, ~1 min)
+## ✦ Instalacja — sposób 1 (najszybszy)
 
-W folderze `modele/` są 3 gotowe pliki. W Roblox Studio:
-
-1. Otwórz swoją grę (albo nowe miejsce **Baseplate**).
-2. Włącz okno **Explorer** (zakładka *View → Explorer*).
-3. Przeciągnij pliki z folderu na komputerze **na odpowiednie miejsce w Explorerze**:
+W folderze `modele/` są 3 pliki. W Roblox Studio włącz **View → Explorer** i przeciągnij:
 
 | Plik | Upuść na |
 |---|---|
@@ -40,153 +36,142 @@ W folderze `modele/` są 3 gotowe pliki. W Roblox Studio:
 | `EQSystem.rbxmx` | **ServerScriptService** |
 | `EQClient.rbxmx` | **StarterPlayer → StarterPlayerScripts** |
 
-> Zamiast przeciągania możesz kliknąć PPM na ReplicatedStorage (itd.) → **Insert from File...** i wybrać plik.
+Możesz też kliknąć PPM na usłudze → **Insert from File...** i wybrać plik.
 
-4. Przejdź do kroku **„Włącz zapis”** niżej.
+## ✦ Instalacja — sposób 2 (kopiuj-wklej)
 
----
-
-## ✦ Instalacja — sposób 2 (ręcznie, kopiuj-wklej)
-
-Pliki z kodem są w folderze `src/`. W Explorerze utwórz dokładnie taką strukturę (PPM → *Insert Object*):
+Kod jest w folderze `src/`. Utwórz taką strukturę (PPM → *Insert Object*) i wklej kod do każdego skryptu:
 
 ```
 ReplicatedStorage
 └── 📁 EQShared                (Folder)
     ├── 📜 EQConfig            (ModuleScript)  ← src/EQConfig.lua
     └── 📜 ItemData            (ModuleScript)  ← src/ItemData.lua
-
 ServerScriptService
 └── 📁 EQSystem                (Folder)
     ├── 📜 EQService           (ModuleScript)  ← src/EQService.lua
     └── 📜 EQServer            (Script)        ← src/EQServer.server.lua
-
 StarterPlayer
 └── StarterPlayerScripts
     └── 📜 EQClient            (LocalScript)   ← src/EQClient.client.lua
-
 ServerStorage
-└── 📁 EQTools                 (Folder, opcjonalnie – własne modele broni)
+└── 📁 EQTools                 (Folder, opcjonalnie: własne modele narzędzi)
 ```
 
-Dla każdego skryptu: otwórz go (2× klik), usuń domyślny tekst `print("Hello world!")` i wklej całą zawartość pliku.
+⚠️ Nazwy i typy (ModuleScript / Script / LocalScript) muszą się zgadzać **co do litery**.
 
-⚠️ **Nazwy muszą się zgadzać co do litery** (`EQShared`, `EQConfig`, `ItemData`, `EQSystem`, `EQService`). Typy też: **ModuleScript**, **Script** i **LocalScript** to trzy różne rzeczy.
+## ✦ Włącz zapis
+
+1. *File → Publish to Roblox*.
+2. *Home → Game Settings → Security* → włącz **Enable Studio Access to API Services** → *Save*.
 
 ---
 
-## ✦ Włącz zapis (DataStore)
+## ✦ Białe ikony (żeby wyglądało jak na podglądzie)
 
-1. **Opublikuj grę**: *File → Publish to Roblox* (DataStore działa tylko w opublikowanej grze).
-2. *Home → Game Settings → Security* → włącz **Enable Studio Access to API Services** → *Save*.
+Bez tego kroku system działa, ale zamiast białych ikon będą kolorowe emoji.
 
-Bez tego system i tak działa, ale ekwipunek nie zapisuje się między wejściami (w Output zobaczysz ostrzeżenie `[EQ]`).
+1. W Studio: **View → Asset Manager** → zakładka **Images** → przycisk **Bulk Import** (ikona chmurki ze strzałką).
+2. Zaznacz wszystkie pliki z folderu `ikony/` (14 plików PNG) i wgraj je.
+3. Po wgraniu kliknij PPM na obrazku → **Copy Asset ID**.
+4. W **ItemData** wklej ID do pola `Icon` danego przedmiotu, np.:
+   ```lua
+   Apteczka = { ..., Icon = "rbxassetid://1234567890" },
+   ```
+   Nazwa pliku = ID przedmiotu (`Apteczka.png` → `Apteczka`).
+
+Roblox sprawdza każdy obrazek przez moderację, więc ikona może pojawić się po kilku minutach.
 
 ---
 
 ## ✦ Test
 
-1. Kliknij **Play** (F5).
-2. W **Output** (*View → Output*) powinno być: `[EQ] System ekwipunku uruchomiony (39 slotów)`.
-3. Na dole masz pasek z mieczem, jabłkami i miksturami. Wokół spawnu leży 10 przedmiotów testowych — podejdź i wciśnij **F**.
-4. Wciśnij **E** — otworzy się plecak. Przeciągaj, klikaj, sortuj.
-5. Wciśnij **1** — miecz w ręce, klik = zamach (zadaje obrażenia graczom i NPC).
+1. Kliknij **Play**. W Output pojawi się `[EQ] Ekwipunek RP uruchomiony (max 50 kg)`.
+2. Wciśnij **B**. Na start masz telefon, chleb i wodę.
+3. Wokół spawnu leży 10 przedmiotów testowych (apteczka, latarka, złoto...). Podejdź i wciśnij **E**.
+4. Komendy na czacie (działają w Studio i dla twórcy gry): `!daj Apteczka 2`, `!lista`, `!wyczysc`.
+5. Żeby przetestować **Podaj**, użyj *Test → Clients and Servers → 2 Players*.
 
-**Komendy na czacie** (działają w Studio i dla twórcy gry):
-
-| Komenda | Co robi |
-|---|---|
-| `!daj Diament 10` | daje przedmiot (ID z `ItemData`) |
-| `!lista` | pokazuje ID wszystkich przedmiotów |
-| `!wyczysc` | czyści ekwipunek |
-
-Gdy skończysz testy, w `EQConfig` ustaw `Config.DemoPickups = false`, żeby przedmioty testowe nie pojawiały się w grze.
+Przed premierą ustaw w `EQConfig` wartość `Config.DemoPickups = false`.
 
 ---
 
-## ✦ Dodawanie własnych przedmiotów
+## ✦ Dodawanie przedmiotów
 
-Otwórz **ItemData** i dopisz nowy wpis (skopiuj istniejący). Przykład:
+W **ItemData** skopiuj istniejący wpis i zmień go:
 
 ```lua
-Banan = {
-	Name = "Banan",
-	Description = "Żółty i zdrowy.",
-	Rarity = "Uncommon",      -- Common / Uncommon / Rare / Epic / Legendary / Mythic
-	Type = "Consumable",      -- Tool / Consumable / Material
-	Emoji = "🍌",
-	MaxStack = 16,
-	Heal = 30,
+Kanapka = {
+	Name = "Kanapka", Description = "Z szynką i serem.",
+	Category = "Jedzenie",      -- Jedzenie / Medyczne / Narzedzia / Rozne
+	Rarity = "Common",          -- Common / Uncommon / Rare / Epic / Legendary
+	Type = "Consumable",        -- Consumable (do użycia) / Tool (do ręki) / Item (zwykły)
+	Weight = 0.3, MaxStack = 10,
+	Heal = 15,
+	Emoji = "🥪", Icon = "",
 },
 ```
 
-**Własny obrazek zamiast emoji:** wgraj obrazek (*View → Asset Manager → Images*), PPM → *Copy Asset ID* i dodaj `Icon = "rbxassetid://TWOJE_ID",`.
+* **Consumable:** `Heal`, `SpeedBoost`, `JumpBoost`, `Duration`
+* **Tool:** `Damage`, `Cooldown`, `Range` (broń), `Light = true` (latarka), `ToolName`
+* **Nowa zakładka:** dopisz `{ Id = "Bron", Name = "Broń" }` w `Config.Categories` i ustaw przedmiotom `Category = "Bron"`.
 
-**Pola dla broni (`Type = "Tool"`)**: `Damage`, `Cooldown`, `Range`, `Color`.
-**Pola dla mikstur (`Type = "Consumable"`)**: `Heal`, `SpeedBoost`, `JumpBoost`, `Duration`.
+### Własne modele narzędzi
+Wrzuć Tool do **ServerStorage → EQTools** i nazwij go tak jak ID przedmiotu (np. `Telefon`). System da graczowi Twój model razem z jego skryptami. Bez tego system zrobi prosty model sam.
 
----
-
-## ✦ Własne modele broni / narzędzi
-
-Domyślnie system sam robi prosty miecz. Żeby użyć **swojego Toola** (np. z Toolboxa):
-
-1. W **ServerStorage** utwórz folder **EQTools**.
-2. Wrzuć do niego Tool i nazwij go **tak samo jak ID** przedmiotu (np. `Miecz`)
-   albo dodaj w ItemData pole `ToolName = "NazwaToola"`.
-3. Gotowe — po wybraniu przedmiotu gracz dostanie Twój Tool (z jego własnymi skryptami i animacjami).
-
----
-
-## ✦ Przedmioty do podniesienia na mapie
-
-Dowolny **Part** albo **Model** w Workspace może być przedmiotem do podniesienia. Zaznacz go → okno **Properties** → na samym dole **Attributes → +** i dodaj:
+### Przedmioty do podniesienia na mapie
+Zaznacz Part albo Model → **Properties → Attributes → +**:
 
 | Atrybut | Typ | Przykład | Opis |
 |---|---|---|---|
-| `EQItem` | string | `Diament` | ID przedmiotu (wymagane) |
-| `EQAmount` | number | `3` | ilość (domyślnie 1) |
-| `EQRespawn` | number | `30` | po ilu sekundach pojawi się znowu (brak = znika na zawsze) |
-
-System sam doda podpowiedź „Podnieś [F]”.
+| `EQItem` | string | `Apteczka` | ID przedmiotu (wymagane) |
+| `EQAmount` | number | `2` | ilość |
+| `EQRespawn` | number | `60` | odrodzenie po X sekundach (brak = znika na zawsze) |
 
 ---
 
-## ✦ Używanie EQ w innych skryptach (sklepy, questy, skrzynki)
-
-W dowolnym **Script** (po stronie serwera):
+## ✦ Użycie w innych skryptach (sklep, praca, szafka, crafting)
 
 ```lua
 local EQ = require(game.ServerScriptService.EQSystem.EQService)
 
--- dać przedmiot (zwraca ile się NIE zmieściło)
-local reszta = EQ.AddItem(player, "Zloto", 5)
+EQ.AddItem(player, "Pizza", 2)          -- zwraca ile się NIE zmieściło
+EQ.RemoveItem(player, "Klucze", 1)      -- true / false
+EQ.CountItem(player, "Woda")            -- ile sztuk
+EQ.HasItem(player, "Telefon")           -- czy ma
+EQ.CanCarry(player, "SztabkaZlota", 5)  -- czy uniesie (waga + miejsce)
+EQ.GetWeight(player)                    -- aktualna waga
+EQ.Notify(player, "Tekst")              -- powiadomienie
+EQ.SpawnItem("Bandaz", 3, Vector3.new(0, 5, 0), 60)
 
--- zabrać przedmiot (true = zabrano, false = za mało)
-if EQ.RemoveItem(player, "Drewno", 10) then
-	EQ.AddItem(player, "Kilof", 1) -- crafting!
-end
-
-EQ.CountItem(player, "Diament")      -- ile sztuk ma gracz
-EQ.HasItem(player, "Kilof")          -- czy ma
-EQ.HasSpace(player, "Drewno", 64)    -- czy się zmieści
-EQ.Notify(player, "Kupiono!", Color3.fromRGB(80, 220, 120))
-EQ.SpawnItem("Jablko", 3, Vector3.new(0, 5, 0), 20) -- przedmiot na ziemi (respawn 20 s)
-
--- zdarzenia
-EQ.ItemAdded.Event:Connect(function(player, id, amount) print(player.Name, "+", amount, id) end)
+EQ.ItemUsed.Event:Connect(function(player, id) print(player.Name, "użył", id) end)
 ```
 
-**Przykład — sklep na przycisk (ClickDetector):** wstaw Part, do niego `ClickDetector` i **Script**:
+**Przykład: sklep z jedzeniem (ClickDetector).** Wstaw Part, do niego `ClickDetector` i **Script**:
 
 ```lua
 local EQ = require(game.ServerScriptService.EQSystem.EQService)
 script.Parent.ClickDetector.MouseClick:Connect(function(player)
-	if EQ.RemoveItem(player, "Zloto", 3) then
-		EQ.AddItem(player, "OgnistyMiecz", 1)
-		EQ.Notify(player, "🔥 Kupiono Ognisty miecz!", Color3.fromRGB(255, 170, 40))
+	if not EQ.CanCarry(player, "Pizza", 1) then
+		EQ.Notify(player, "Nie uniesiesz więcej!", Color3.fromRGB(240, 95, 95))
+		return
+	end
+	EQ.AddItem(player, "Pizza", 1)
+	EQ.Notify(player, "Kupiono pizzę 🍕")
+end)
+```
+
+**Przykład: drzwi na klucz.** Script w drzwiach z `ProximityPrompt`:
+
+```lua
+local EQ = require(game.ServerScriptService.EQSystem.EQService)
+local door = script.Parent
+door.ProximityPrompt.Triggered:Connect(function(player)
+	if EQ.HasItem(player, "Klucze") then
+		door.CanCollide = not door.CanCollide
+		door.Transparency = door.CanCollide and 0 or 0.7
 	else
-		EQ.Notify(player, "Potrzebujesz 3x Sztabka złota", Color3.fromRGB(230, 70, 80))
+		EQ.Notify(player, "Potrzebujesz kluczy 🔑", Color3.fromRGB(240, 95, 95))
 	end
 end)
 ```
@@ -197,16 +182,18 @@ end)
 
 | Ustawienie | Domyślnie | Opis |
 |---|---|---|
-| `HotbarSlots` | 9 | sloty na pasku (max 9) |
-| `BackpackSlots` | 30 | sloty w plecaku |
-| `ToggleKey` / `DropKey` / `PickupKey` | E / Q / F | klawisze |
-| `DataStoreName` | `EQ_v1` | zmień (np. na `EQ_v2`), żeby zresetować wszystkim ekwipunek |
-| `StarterItems` | miecz, jabłka, mikstury | co dostaje nowy gracz |
-| `DropLifetime` | 120 | po ilu sekundach znika wyrzucony przedmiot |
-| `DemoPickups` | true | przedmioty testowe przy spawnie — **wyłącz przed premierą** |
-| `PvP` | true | `false` = bronie ranią tylko NPC |
-| `Admins` | – | UserId osób, które mogą używać komend `!daj` itd. |
-| `Theme` | ciemny + czerwony | kolory UI (np. zmień `Accent`) |
+| `MaxWeight` | 50 | limit wagi (kg) |
+| `MaxStacks` | 40 | max liczba różnych stosów |
+| `ToggleKey` / `PickupKey` | B / E | klawisze |
+| `ShowOpenButton` | true | przycisk 🎒 na ekranie |
+| `Blur` | true | rozmycie tła |
+| `Categories` | 5 zakładek | zakładki |
+| `StarterItems` | telefon, chleb, woda | przedmioty startowe |
+| `GiveDistance` | 8 | zasięg podawania |
+| `DropLifetime` | 300 | po ilu sekundach znika wyrzucony przedmiot |
+| `DataStoreName` | `EQ_RP_v1` | zmień, żeby zresetować wszystkim ekwipunek |
+| `DemoPickups` | true | przedmioty testowe — **wyłącz przed premierą** |
+| `Theme` | ciemny/biały | kolory |
 
 ---
 
@@ -214,10 +201,10 @@ end)
 
 | Problem | Rozwiązanie |
 |---|---|
-| Nic się nie pojawia | Sprawdź **Output**. Najczęściej zła nazwa albo typ skryptu (patrz struktura wyżej). |
-| `Infinite yield possible on ... EQShared` | Folder `EQShared` nie jest w **ReplicatedStorage** albo ma inną nazwę. |
-| `Infinite yield ... EQRemotes` | Skrypt serwera nie działa — `EQServer` musi być typu **Script** w `ServerScriptService/EQSystem`. |
-| Nie zapisuje się | Opublikuj grę i włącz *Enable Studio Access to API Services*. |
-| Widać stary plecak Robloxa | `EQClient` musi być **LocalScript** w **StarterPlayerScripts**. |
-| `[EQ] Nieznany przedmiot na mapie` | Atrybut `EQItem` ma ID, którego nie ma w `ItemData` (wielkość liter ma znaczenie). |
-| Komendy `!daj` nie działają | Działają tylko w Studio, dla twórcy gry albo dla ID z `Config.Admins`. |
+| Nic się nie pojawia | Sprawdź **Output**. Najczęściej zła nazwa albo typ skryptu |
+| `Infinite yield ... EQShared` | Folder `EQShared` musi być w **ReplicatedStorage** |
+| `Infinite yield ... EQRemotes` | `EQServer` musi być **Script** w `ServerScriptService/EQSystem` |
+| Emoji zamiast białych ikon | Wgraj ikony z folderu `ikony/` (sekcja wyżej) |
+| Nie zapisuje się | Opublikuj grę i włącz *Enable Studio Access to API Services* |
+| „Za ciężko!” | Zwiększ `MaxWeight` albo zmniejsz `Weight` przedmiotów |
+| „Podaj (nikt obok)” | Drugi gracz musi stać bliżej niż `GiveDistance` |

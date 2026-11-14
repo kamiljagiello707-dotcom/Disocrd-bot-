@@ -1,76 +1,80 @@
 -- EQConfig (ModuleScript)
 -- Miejsce: ReplicatedStorage > EQShared > EQConfig
--- Główne ustawienia systemu ekwipunku.
+-- Ustawienia systemu ekwipunku RP.
 
 local Config = {}
 
--- ── Sloty ────────────────────────────────────────────
-Config.HotbarSlots = 9          -- sloty na pasku na dole (klawisze 1-9)
-Config.BackpackSlots = 30       -- sloty w plecaku (okno EQ)
-Config.MaxSlots = Config.HotbarSlots + Config.BackpackSlots
+-- ── Pojemność ────────────────────────────────────────
+Config.MaxWeight = 50            -- maksymalna waga (kg)
+Config.MaxStacks = 40            -- maksymalnie tyle różnych stosów przedmiotów
 
 -- ── Klawisze ─────────────────────────────────────────
-Config.ToggleKey = Enum.KeyCode.E          -- otwórz / zamknij EQ
-Config.DropKey = Enum.KeyCode.Q            -- wyrzuć 1 szt. trzymanego przedmiotu
-Config.PickupKey = Enum.KeyCode.F          -- podnoszenie przedmiotów (ProximityPrompt)
+Config.ToggleKey = Enum.KeyCode.B          -- otwórz / zamknij ekwipunek
+Config.PickupKey = Enum.KeyCode.E          -- podnoszenie przedmiotów z ziemi
+Config.ShowOpenButton = true               -- przycisk 🎒 na ekranie (ważne na telefonie)
+Config.Blur = true                         -- rozmycie tła po otwarciu
+
+-- ── Kategorie (zakładki) ─────────────────────────────
+-- Id musi się zgadzać z polem Category w ItemData
+Config.Categories = {
+	{ Id = "all", Name = "Wszystko" },
+	{ Id = "Jedzenie", Name = "Jedzenie" },
+	{ Id = "Medyczne", Name = "Medyczne" },
+	{ Id = "Narzedzia", Name = "Narzędzia" },
+	{ Id = "Rozne", Name = "Różne" },
+}
 
 -- ── Zapis danych (DataStore) ─────────────────────────
 Config.SaveEnabled = true
-Config.DataStoreName = "EQ_v1"             -- zmień nazwę, żeby zresetować wszystkim EQ
+Config.DataStoreName = "EQ_RP_v1"          -- zmień nazwę, żeby zresetować wszystkim ekwipunek
 Config.AutosaveInterval = 120              -- sekundy
 
 -- ── Przedmioty startowe (dla nowych graczy) ──────────
 Config.StarterItems = {
-	{ Id = "Miecz", Amount = 1 },
-	{ Id = "Jablko", Amount = 5 },
-	{ Id = "MiksturaLeczenia", Amount = 2 },
+	{ Id = "Telefon", Amount = 1 },
+	{ Id = "Chleb", Amount = 2 },
+	{ Id = "Woda", Amount = 2 },
 }
 
--- ── Podnoszenie / wyrzucanie ─────────────────────────
-Config.PickupHoldTime = 0.25               -- ile trzeba trzymać klawisz (s)
-Config.PickupDistance = 10
-Config.DropLifetime = 120                  -- po ilu sekundach znika wyrzucony przedmiot
-Config.DemoPickups = true                  -- stawia kilka przedmiotów testowych przy spawnie (wyłącz w grze)
+-- ── Podnoszenie / wyrzucanie / podawanie ─────────────
+Config.PickupHoldTime = 0.3
+Config.PickupDistance = 8
+Config.DropLifetime = 300                  -- po ilu sekundach znika wyrzucony przedmiot
+Config.GiveDistance = 8                    -- z jakiej odległości można podać przedmiot graczowi
+Config.DemoPickups = true                  -- przedmioty testowe przy spawnie (WYŁĄCZ przed premierą)
 
 -- ── Walka (bronie bez własnych skryptów) ─────────────
-Config.PvP = true                          -- false = bronie ranią tylko NPC
+Config.PvP = true
 
 -- ── Komendy na czacie (do testów) ────────────────────
 -- !daj <Id> [ilość]   !wyczysc   !lista
--- Działają w Studio, dla twórcy gry i dla ID poniżej.
+-- Działają w Studio, dla twórcy gry i dla UserId poniżej.
 Config.Admins = {
 	-- 123456789,
 }
 
--- ── Rzadkości ────────────────────────────────────────
+-- ── Rzadkości (kolor paska pod przedmiotem) ──────────
 Config.Rarities = {
-	Common    = { Name = "Zwykły",     Color = Color3.fromRGB(176, 182, 194), Order = 1 },
-	Uncommon  = { Name = "Niezwykły",  Color = Color3.fromRGB(88, 214, 110),  Order = 2 },
-	Rare      = { Name = "Rzadki",     Color = Color3.fromRGB(64, 156, 255),  Order = 3 },
-	Epic      = { Name = "Epicki",     Color = Color3.fromRGB(176, 92, 255),  Order = 4 },
-	Legendary = { Name = "Legendarny", Color = Color3.fromRGB(255, 170, 40),  Order = 5 },
-	Mythic    = { Name = "Mityczny",   Color = Color3.fromRGB(255, 64, 96),   Order = 6 },
+	Common    = { Name = "ZWYKŁY",     Color = Color3.fromRGB(235, 235, 240), Order = 1 },
+	Uncommon  = { Name = "NIEZWYKŁY",  Color = Color3.fromRGB(110, 215, 140), Order = 2 },
+	Rare      = { Name = "RZADKI",     Color = Color3.fromRGB(110, 160, 255), Order = 3 },
+	Epic      = { Name = "EPICKI",     Color = Color3.fromRGB(185, 120, 255), Order = 4 },
+	Legendary = { Name = "LEGENDARNY", Color = Color3.fromRGB(245, 200, 80),  Order = 5 },
 }
 
-Config.TypeNames = {
-	Tool = "Broń / narzędzie",
-	Consumable = "Do użycia",
-	Material = "Materiał",
-}
-
--- ── Wygląd ───────────────────────────────────────────
+-- ── Wygląd (biały / szklany styl) ────────────────────
 Config.Theme = {
-	Background = Color3.fromRGB(18, 20, 28),
-	Panel      = Color3.fromRGB(28, 31, 43),
-	Slot       = Color3.fromRGB(36, 40, 56),
-	SlotStroke = Color3.fromRGB(58, 64, 86),
-	Accent     = Color3.fromRGB(255, 60, 90),   -- kolor zaznaczenia / ramek
-	Equipped   = Color3.fromRGB(255, 255, 255),
-	Text       = Color3.fromRGB(240, 242, 250),
-	SubText    = Color3.fromRGB(150, 156, 178),
-	Good       = Color3.fromRGB(70, 200, 110),
-	Danger     = Color3.fromRGB(230, 70, 80),
-	Button     = Color3.fromRGB(48, 53, 74),
+	Panel = Color3.fromRGB(22, 22, 25),
+	PanelTransparency = 0.08,
+	Text = Color3.fromRGB(246, 246, 248),
+	SubText = Color3.fromRGB(175, 175, 184),
+	Muted = Color3.fromRGB(125, 125, 134),
+	Glass = Color3.fromRGB(255, 255, 255),   -- karty / pola (z dużą przezroczystością)
+	Primary = Color3.fromRGB(255, 255, 255), -- przycisk "Użyj"
+	PrimaryText = Color3.fromRGB(18, 18, 20),
+	Secondary = Color3.fromRGB(58, 58, 64),  -- przycisk "Wyrzuć"
+	Danger = Color3.fromRGB(240, 95, 95),
+	Good = Color3.fromRGB(120, 220, 150),
 }
 
 return Config

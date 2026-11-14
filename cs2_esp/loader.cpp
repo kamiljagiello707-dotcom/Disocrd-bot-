@@ -149,8 +149,9 @@ static void line(HDC dc, int x1, int y1, int x2, int y2, HPEN p) {
 
 static void render(HDC dc, int w, int h) {
     RECT full{ 0,0,w,h };
-    FillRect(dc, &full, (HBRUSH)GetStockObject(BLACK_BRUSH));
-    HPEN pen = CreatePen(PS_SOLID, 1, RGB(255, 40, 40));
+    HBRUSH key = CreateSolidBrush(RGB(255, 0, 255)); // magenta = dziura (color-key)
+    FillRect(dc, &full, key); DeleteObject(key);
+    HBRUSH black = (HBRUSH)GetStockObject(BLACK_BRUSH);
     SetBkMode(dc, TRANSPARENT);
 
     if (cfg.esp) {
@@ -161,8 +162,8 @@ static void render(HDC dc, int w, int h) {
             int l = (int)(t.head.x - bw*0.5f), r = (int)(t.head.x + bw*0.5f);
             int top = (int)t.head.y, bot = (int)t.feet.y;
             if (cfg.box) {
-                line(dc, l, top, r, top, pen); line(dc, l, bot, r, bot, pen);
-                line(dc, l, top, l, bot, pen);  line(dc, r, top, r, bot, pen);
+                RECT body{ l, top, r, bot };
+                FillRect(dc, &body, black); // pelna czarna sylwetka
             }
             if (cfg.hp) {
                 int filled = (bot - top) * t.hp / 100;
@@ -174,7 +175,7 @@ static void render(HDC dc, int w, int h) {
                 FillRect(dc, &fg, b); DeleteObject(b);
             }
             if (cfg.name && !t.name.empty()) {
-                SetTextColor(dc, RGB(230, 230, 230));
+                SetTextColor(dc, RGB(255, 60, 60));
                 TextOutA(dc, l, top - 14, t.name.c_str(), (int)t.name.size());
             }
         }
@@ -185,9 +186,9 @@ static void render(HDC dc, int w, int h) {
         HBRUSH bg = CreateSolidBrush(RGB(18,18,22));
         FillRect(dc, &panel, bg); DeleteObject(bg);
         SetTextColor(dc, RGB(255,60,60));
-        TextOutA(dc, 52, 48, "CS2 ESP  [X zamyka]", 19);
+        TextOutA(dc, 52, 48, "CS2 WH  C=ESP  X=menu", 21);
         struct row { const char* l; bool* v; };
-        row rows[] = { {"ESP",&cfg.esp},{"Box",&cfg.box},{"HP bar",&cfg.hp},
+        row rows[] = { {"ESP (C)",&cfg.esp},{"Czarna sylwetka",&cfg.box},{"HP bar",&cfg.hp},
                        {"Nazwy",&cfg.name},{"Tylko wrog",&cfg.team_check} };
         for (int i = 0; i < 5; ++i) {
             int y = 80 + i*24;
@@ -196,7 +197,6 @@ static void render(HDC dc, int w, int h) {
             TextOutA(dc, 56, y, s.c_str(), (int)s.size());
         }
     }
-    DeleteObject(pen);
 }
 
 static void menu_click(int mx, int my) {
@@ -240,16 +240,19 @@ int WINAPI WinMain(HINSTANCE inst, HINSTANCE, LPSTR, int) {
         WS_EX_LAYERED | WS_EX_TRANSPARENT | WS_EX_TOPMOST | WS_EX_TOOLWINDOW,
         wc.lpszClassName, "ovl", WS_POPUP, 0, 0,
         GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN), nullptr, nullptr, inst, nullptr);
-    SetLayeredWindowAttributes(hwnd, RGB(0,0,0), 0, LWA_COLORKEY);
+    SetLayeredWindowAttributes(hwnd, RGB(255,0,255), 0, LWA_COLORKEY);
     ShowWindow(hwnd, SW_SHOW);
 
     HDC sdc = GetDC(hwnd), mdc = CreateCompatibleDC(sdc);
-    bool xd = false, cd = false; MSG msg{};
+    bool xd = false, cd = false, ced = false; MSG msg{};
     while (true) {
         while (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE)) {
             if (msg.message == WM_QUIT) goto done;
             TranslateMessage(&msg); DispatchMessage(&msg);
         }
+        bool cen = (GetAsyncKeyState('C') & 0x8000) != 0; // C = ESP on/off
+        if (cen && !ced) cfg.esp = !cfg.esp;
+        ced = cen;
         bool xn = (GetAsyncKeyState('X') & 0x8000) != 0;
         if (xn && !xd) {
             g_menu_open = !g_menu_open;

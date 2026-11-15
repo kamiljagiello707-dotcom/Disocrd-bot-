@@ -41,6 +41,7 @@ public class ModuleManager {
                 .add(new ModeSetting("Tryb", "Mode", "Box", "Outline", "Glow"), new BoolSetting("Gracze", "Players", true), new BoolSetting("Moby", "Mobs", false)));
         reg(new Module("Fullbright", Category.RENDER, "sun", "Pełna jasność", "Full brightness"));
         reg(new TargetEsp());
+        reg(new Ambient());
         reg(new Module("Tracers", Category.RENDER, "radar", "Linie do graczy", "Lines to players"));
         reg(new Module("Nametags", Category.RENDER, "tag", "Większe nicki", "Bigger nametags")
                 .add(new NumberSetting("Skala", "Scale", 1.5, 1.0, 3.0, 0.1), new BoolSetting("Zdrowie", "Health", true)));

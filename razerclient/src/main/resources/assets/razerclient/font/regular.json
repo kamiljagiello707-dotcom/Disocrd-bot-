@@ -1,1 +1,1 @@
-{ "providers": [ { "type": "ttf", "file": "razerclient:Inter-Medium.otf", "size": 9, "oversample": 4.0, "shift": [0, 0.5] } ] }
+{ "providers": [ { "type": "ttf", "file": "razerclient:inter-medium.ttf", "size": 9, "oversample": 4.0, "shift": [0, 0.5] } ] }

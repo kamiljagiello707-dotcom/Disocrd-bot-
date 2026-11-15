@@ -58,7 +58,6 @@ public class RazerClient implements ClientModInitializer {
                 hud.render(ctx, tickCounter.getTickDelta(true));
         });
         ClientLifecycleEvents.CLIENT_STOPPING.register(c -> config.save(config.current()));
-        DebugShots.init();
         LOGGER.info("{} {} załadowany", NAME, VERSION);
     }
 

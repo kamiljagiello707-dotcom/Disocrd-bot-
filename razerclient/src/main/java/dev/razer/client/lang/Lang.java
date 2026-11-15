@@ -67,6 +67,8 @@ public final class Lang {
         put("config.empty", "Brak zapisanych konfiguracji", "No saved configs");
         put("config.folder", "Otwórz folder", "Open folder");
         // profil
+        put("profile.desc", "Informacje o koncie i bieżącej sesji", "Account and current session info");
+        put("settings.desc", "Język, rozmiar GUI, animacje i elementy HUD", "Language, GUI size, animations and HUD elements");
         put("profile.uuid", "UUID", "UUID");
         put("profile.server", "Serwer", "Server");
         put("profile.singleplayer", "Świat jednoosobowy", "Singleplayer");

@@ -199,8 +199,8 @@ public class ClickGui extends Screen {
                     if (en > 0) {
                         String t = String.valueOf(en);
                         float tw = Fonts.width(t, Font.BOLD, 0.65f) + 7;
-                        R2D.roundRect(ctx, x + SB - 18 - tw, fy + 6, tw, 10, 5, R2D.blend(Theme.toggleOff(), Theme.accentText(), near * 0.15f));
-                        Fonts.drawV(ctx, t, x + SB - 18 - tw + 3.5f, fy + 11, R2D.blend(Theme.textDim(), Theme.accentText(), near * 0.6f), Font.BOLD, 0.65f);
+                        R2D.roundRect(ctx, x + SB - 18 - tw, fy + 6, tw, 10, 5, R2D.blend(Theme.toggleOff(), Theme.accentText(), near));
+                        Fonts.drawV(ctx, t, x + SB - 18 - tw + 3.5f, fy + 11, R2D.blend(Theme.textDim(), Theme.accent(), near), Font.BOLD, 0.65f);
                     }
                 }
             });
@@ -265,8 +265,8 @@ public class ClickGui extends Screen {
         switch (page) {
             case THEMES -> { title = Lang.get("page.themes"); sub = Lang.get("themes.desc"); }
             case CONFIG -> { title = Lang.get("page.config"); sub = Lang.get("config.desc"); }
-            case PROFILE -> { title = Lang.get("page.profile"); sub = Lang.get("profile.hint"); }
-            case SETTINGS -> { title = Lang.get("page.settings"); sub = Lang.get("profile.sub"); }
+            case PROFILE -> { title = Lang.get("page.profile"); sub = Lang.get("profile.desc"); }
+            case SETTINGS -> { title = Lang.get("page.settings"); sub = Lang.get("settings.desc"); }
             default -> {
                 List<Module> list = currentModules();
                 title = search.isEmpty() ? category.getName() : "„" + search + "”";
@@ -418,7 +418,7 @@ public class ClickGui extends Screen {
         ctx.getMatrices().push();
         float ax = x + w - 46, ay = y + baseH / 2f;
         ctx.getMatrices().translate(ax, ay, 0);
-        ctx.getMatrices().multiply(net.minecraft.util.math.RotationAxis.POSITIVE_Z.rotationDegrees(-90 * rot - 90));
+        ctx.getMatrices().multiply(net.minecraft.util.math.RotationAxis.POSITIVE_Z.rotationDegrees(180 + 90 * rot));
         R2D.icon(ctx, "arrow_left", -3.5f, -3.5f, 7, R2D.withAlpha(Theme.textFaint(), m.getSettings().isEmpty() ? 0.6f : 1f));
         ctx.getMatrices().pop();
 

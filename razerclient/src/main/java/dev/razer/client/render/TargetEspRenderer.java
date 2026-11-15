@@ -33,6 +33,8 @@ public final class TargetEspRenderer {
     private static final Identifier MARKER = Identifier.of("razerclient", "textures/ui/target_marker.png");
     private static final Identifier GLOW = Identifier.of("razerclient", "textures/ui/glow.png");
     private static final Identifier PULSE = Identifier.of("razerclient", "textures/ui/pulse.png");
+    private static final Identifier GLOW_ADD = Identifier.of("razerclient", "textures/ui/glow_add.png");
+    private static final Identifier PULSE_ADD = Identifier.of("razerclient", "textures/ui/pulse_add.png");
     private static LivingEntity target, attacked;
     private static long attackTime;
     private static final Anim appear = new Anim(0, 10);
@@ -141,6 +143,14 @@ public final class TargetEspRenderer {
 
     /** kwadrat zwrócony do kamery w aktualnym punkcie macierzy */
     private static void billboard(MatrixStack ms, Camera cam, Identifier tex, float size, float rot, int c) {
+        // miękkie tekstury rysujemy addytywnie (ONE, ONE) z jasnością w RGB – shader MC odrzuca piksele z alfą < 0.1
+        boolean soft = tex == GLOW || tex == PULSE;
+        if (soft) {
+            tex = tex == GLOW ? GLOW_ADD : PULSE_ADD;
+            float a = ((c >>> 24) & 0xFF) / 255f;
+            c = 0xFF000000 | ((int) (((c >> 16) & 0xFF) * a) << 16) | ((int) (((c >> 8) & 0xFF) * a) << 8) | (int) ((c & 0xFF) * a);
+            RenderSystem.blendFunc(GlStateManager.SrcFactor.ONE, GlStateManager.DstFactor.ONE);
+        }
         ms.push();
         ms.multiply(cam.getRotation());
         if (rot != 0) ms.multiply(RotationAxis.POSITIVE_Z.rotationDegrees(rot));
@@ -155,6 +165,7 @@ public final class TargetEspRenderer {
         b.vertex(mat, -1, 1, 0).texture(0, 0).color(c);
         BufferRenderer.drawWithGlobalProgram(b.end());
         ms.pop();
+        if (soft) RenderSystem.blendFunc(GlStateManager.SrcFactor.SRC_ALPHA, GlStateManager.DstFactor.ONE);
     }
 
     // ------------------------------------------------------------------ Pierścień

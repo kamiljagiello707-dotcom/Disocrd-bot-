@@ -1,7 +1,7 @@
 # RazerClient 2.0
 
 Nowoczesne GUI klienta do Minecraft **1.21.1 (Fabric)**: ClickGUI, edytor HUD, motywy z kolorami akcentu i powiadomienia.
-To jest **sam interfejs**. Moduły to puste przełączniki bez żadnej funkcji w grze, z wyjątkiem kosmetycznych **TargetESP**, **Ambient**, **ChinaHat**, **JumpCircles**, **Cosmetic** i **HitSound**.
+To jest **sam interfejs**. Moduły to puste przełączniki bez żadnej funkcji w grze, z wyjątkiem kosmetycznych **TargetESP**, **Ambient**, **ChinaHat**, **JumpCircles**, **Cosmetic**, **HitSound** i **Nametags**.
 
 | | |
 |---|---|
@@ -10,6 +10,7 @@ To jest **sam interfejs**. Moduły to puste przełączniki bez żadnej funkcji w
 ![ClickGUI](docs/gui_themes.jpg)
 
 ## Co nowego w 2.0
+- 🏷️ **Nametags** (Render): nowoczesne, zaokrąglone nicki zamiast tych z Minecrafta. Głowa skina z drugą warstwą, nick, pigułka z HP w kolorze od zielonego do czerwonego, pancerz, ping, dystans i pasek zdrowia w kolorze akcentu. Znajomi są wyróżnieni akcentem i ikonką. Tło Dark, Glass albo None, opcja „Self” pokazuje własny nick w F5. Rysowane z testem głębi, więc nie widać ich przez ściany
 - 🌍 **Klient domyślnie po angielsku** (polski do wyboru w ustawieniach klienta)
 - 🧩 **5 nowych modułów w każdej kategorii** (łącznie 59): AimAssist, AutoClicker, Reach, WTap, HitBoxes · Spider, LongJump, Jesus, ElytraBoost, AirJump · Zoom, FreeLook, NoHurtCam, BlockOutline, NoFire · AutoEat, AutoTool, ChestStealer, FastUse, AutoRespawn · AutoFarm, Weather, LiquidPlace, AutoSign, TimeChanger · NameProtect, AutoGG, ChatSuffix, AntiBot, FakePlayer
 - ⚙️ **Dużo ustawień w każdym module**, np. KillAura: Mode, Rotations (Silent/Legit/Snap/None), Priority, Range, Search Range, Rotation Speed, FOV, Min/Max CPS, Switch Delay, Rage Mode, Through Walls, Raytrace, Keep Sprint, Swing, Auto Block, wybór celów i inne
@@ -53,6 +54,8 @@ To jest **sam interfejs**. Moduły to puste przełączniki bez żadnej funkcji w
 | ![](docs/hud_chat_drag.jpg) | ![](docs/target_esp.jpg) |
 
 ![TargetESP – style](docs/target_esp_styles.jpg)
+
+![Nametags](docs/nametags.jpg)
 
 ![Kosmetyki](docs/cosmetics.jpg)
 

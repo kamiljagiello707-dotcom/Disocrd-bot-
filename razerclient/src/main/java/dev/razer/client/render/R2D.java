@@ -22,6 +22,8 @@ public final class R2D {
 
     /** globalna przezroczystość (animacja otwierania GUI) */
     public static float alpha = 1f;
+    /** gdy true – rysowanie z testem głębi (np. elementy 2D w świecie) */
+    public static boolean worldDepth = false;
 
     private static final int[] CIRCLE_SIZES = {16, 32, 64, 128, 256};
     private static final Identifier[] CIRCLES = new Identifier[CIRCLE_SIZES.length];
@@ -63,7 +65,7 @@ public final class R2D {
     private static BufferBuilder begin(Identifier tex) {
         RenderSystem.enableBlend();
         RenderSystem.defaultBlendFunc();
-        RenderSystem.disableDepthTest();
+        if (worldDepth) { RenderSystem.enableDepthTest(); RenderSystem.depthMask(false); } else RenderSystem.disableDepthTest();
         RenderSystem.disableCull();
         RenderSystem.setShader(GameRenderer::getPositionTexColorProgram);
         RenderSystem.setShaderTexture(0, tex);
@@ -75,6 +77,7 @@ public final class R2D {
         BuiltBuffer built = b.endNullable();
         if (built != null) BufferRenderer.drawWithGlobalProgram(built);
         RenderSystem.enableDepthTest();
+        if (worldDepth) RenderSystem.depthMask(true);
     }
 
     private static void quad(BufferBuilder b, Matrix4f m, float x1, float y1, float x2, float y2,
@@ -238,7 +241,7 @@ public final class R2D {
         Matrix4f m = ctx.getMatrices().peek().getPositionMatrix();
         RenderSystem.enableBlend();
         RenderSystem.defaultBlendFunc();
-        RenderSystem.disableDepthTest();
+        if (worldDepth) { RenderSystem.enableDepthTest(); RenderSystem.depthMask(false); } else RenderSystem.disableDepthTest();
         RenderSystem.disableCull();
         RenderSystem.setShader(GameRenderer::getPositionTexColorProgram);
         RenderSystem.setShaderTexture(0, tex);

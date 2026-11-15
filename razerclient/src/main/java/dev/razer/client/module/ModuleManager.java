@@ -115,9 +115,7 @@ public class ModuleManager {
         mod("Tracers", Category.RENDER, "radar", "Linie do graczy", "Lines to players",
                 m("Origin", "Crosshair", "Feet", "Top"), n("Width", 1.0, 0.5, 4.0, 0.5), n("Opacity", 80, 10, 100, 5),
                 b("Players", true), b("Mobs", false), b("Distance Color", true), b("Ignore Friends", false));
-        mod("Nametags", Category.RENDER, "tag", "Większe nicki", "Bigger nametags",
-                n("Scale", 1.5, 1.0, 3.0, 0.1), m("Background", "Dark", "Blur", "None"),
-                b("Health", true), b("Armor", true), b("Ping", true), b("Distance", false), b("Enchants", false), b("Items", false));
+        modules.add(new Nametags());
         mod("ChestESP", Category.RENDER, "package", "Podświetlanie skrzyń", "Highlights chests",
                 m("Mode", "Box", "Outline", "Glow"), n("Range", 64, 16, 256, 8), b("Chests", true), b("Ender Chests", true),
                 b("Shulkers", true), b("Barrels", false), b("Spawners", false), b("Tracers", false));

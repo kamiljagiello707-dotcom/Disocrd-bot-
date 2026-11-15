@@ -232,6 +232,17 @@ public final class R2D {
         end(b);
     }
 
+    /** tekstura z dowolnymi UV (np. przewijane, powtarzane tło) */
+    public static void textureUV(DrawContext ctx, Identifier tex, float x, float y, float w, float h,
+                                 float u0, float v0, float u1, float v1, int color) {
+        int c = col(color);
+        if ((c >>> 24) == 0) return;
+        Matrix4f m = ctx.getMatrices().peek().getPositionMatrix();
+        BufferBuilder b = begin(tex);
+        quad(b, m, x, y, x + w, y + h, u0, v0, u1, v1, c);
+        end(b);
+    }
+
     public static void icon(DrawContext ctx, String name, float x, float y, float size, int color) {
         Identifier tex = ICONS.computeIfAbsent(name, n -> id("textures/icons/" + n + ".png"));
         texture(ctx, tex, x, y, size, size, color);

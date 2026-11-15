@@ -113,6 +113,7 @@ public class ConfigManager {
         o.add("particles", s.particles.save());
         o.add("sounds", s.sounds.save());
         o.add("welcome", s.welcome.save());
+        o.add("customMenu", s.customMenu.save());
         o.add("notifications", s.notifications.save());
         JsonObject hud = new JsonObject();
         for (HudElement e : RazerClient.get().hud.elements) hud.add(e.id, e.save());
@@ -136,6 +137,7 @@ public class ConfigManager {
                 if (o.has("particles")) s.particles.load(o.get("particles"));
                 if (o.has("sounds")) s.sounds.load(o.get("sounds"));
                 if (o.has("welcome")) s.welcome.load(o.get("welcome"));
+                if (o.has("customMenu")) s.customMenu.load(o.get("customMenu"));
                 if (o.has("hud")) {
                     JsonObject hud = o.getAsJsonObject("hud");
                     for (HudElement e : RazerClient.get().hud.elements) if (hud.has(e.id)) e.load(hud.getAsJsonObject(e.id));

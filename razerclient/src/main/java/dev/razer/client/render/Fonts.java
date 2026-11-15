@@ -12,7 +12,7 @@ public final class Fonts {
     private Fonts() {}
 
     public enum Font {
-        REGULAR("regular"), SEMIBOLD("semibold"), BOLD("bold");
+        REGULAR("regular"), SEMIBOLD("semibold"), BOLD("bold"), DISPLAY("display");
         final Style style;
         Font(String id) { this.style = Style.EMPTY.withFont(Identifier.of("razerclient", id)); }
     }
@@ -48,6 +48,14 @@ public final class Fonts {
     public static void drawV(DrawContext ctx, String s, float x, float cy, int color, Font f, float scale) {
         draw(ctx, s, x, cy - height(scale) / 2f, color, f, scale);
     }
+
+    /** duża czcionka – rysowana tak, by górna krawędź wielkich liter była w topY */
+    public static void drawDisplay(DrawContext ctx, String s, float cx, float topY, int color, float scale) {
+        draw(ctx, s, cx - width(s, Font.DISPLAY, scale) / 2f, topY + 19f * scale / 0.62f * 0.62f, color, Font.DISPLAY, scale);
+    }
+
+    /** wysokość wielkich liter dużej czcionki */
+    public static float displayCap(float scale) { return 26f * scale; }
 
     public static String trim(String s, Font f, float scale, float maxW) {
         if (width(s, f, scale) <= maxW) return s;

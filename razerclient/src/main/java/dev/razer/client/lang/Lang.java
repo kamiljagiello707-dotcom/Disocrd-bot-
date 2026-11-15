@@ -100,6 +100,15 @@ public final class Lang {
         put("size.normal", "Średni", "Normal");
         put("size.large", "Duży", "Large");
         put("wm.fps", "FPS", "FPS");
+        put("set.menu", "Własne menu główne", "Custom main menu");
+        put("set.menu.desc", "Ekran blokady z godziną i nowoczesne menu RazerClient", "Lock screen with clock and modern RazerClient menu");
+        put("menu.continue", "Kliknij, aby kontynuować", "Click to continue");
+        put("menu.singleplayer", "Jednoosobowy", "Singleplayer");
+        put("menu.multiplayer", "Wieloosobowy", "Multiplayer");
+        put("menu.options", "Ustawienia", "Options");
+        put("menu.quit", "Wyjdź", "Quit");
+        put("menu.realms", "Realms", "Realms");
+        put("menu.welcome", "Witaj, %s", "Welcome, %s");
         put("chatdrag.hint", "Przeciągnij HUD myszką  •  ŚPM – domyślna pozycja", "Drag the HUD with your mouse  •  MMB – default position");
         put("welcome", "Witaj, %s!  •  Prawy Shift – menu", "Welcome, %s!  •  Right Shift – menu");
         put("cat.favorites", "Ulubione", "Favorites");

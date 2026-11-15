@@ -13,6 +13,7 @@ public class ClientSettings {
     public final BoolSetting sounds = new BoolSetting("Dźwięki GUI", "GUI sounds", true);
     public final BoolSetting notifications = new BoolSetting("Powiadomienia", "Notifications", true);
     public final BoolSetting welcome = new BoolSetting("Powitanie", "Welcome", true);
+    public final BoolSetting customMenu = new BoolSetting("Menu główne", "Main menu", true);
 
     public float guiScale() {
         return switch (guiSize.get()) {
@@ -24,6 +25,6 @@ public class ClientSettings {
 
     public void reset() {
         guiSize.reset(); animSpeed.reset(); blur.reset(); particles.reset();
-        sounds.reset(); notifications.reset(); welcome.reset();
+        sounds.reset(); notifications.reset(); welcome.reset(); customMenu.reset();
     }
 }

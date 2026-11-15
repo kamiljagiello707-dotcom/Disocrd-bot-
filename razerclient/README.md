@@ -3,9 +3,14 @@
 Nowoczesne GUI klienta do Minecraft **1.21.1 (Fabric)**: ClickGUI, edytor HUD, motywy z kolorami akcentu i powiadomienia.
 To jest **sam interfejs**. Moduły to puste przełączniki bez żadnej funkcji w grze, z wyjątkiem kosmetycznych **TargetESP** i **Ambient**.
 
+| | |
+|---|---|
+| ![](docs/menu_lock.jpg) | ![](docs/menu.jpg) |
+
 ![ClickGUI](docs/gui_themes.jpg)
 
 ## Co nowego w 2.0
+- 🌌 **Własne menu główne:** ekran blokady z datą i dużą godziną na animowanym tle z falami dymu i świecącymi cząsteczkami. Po kliknięciu płynne przejście do menu z napisem RazerClient świecącym w kolorze akcentu i okrągłymi przyciskami (Jednoosobowy, Wieloosobowy, Realms, Ustawienia, Wyjdź), które unoszą się po najechaniu i pokazują podpis. Można wrócić do menu Minecrafta w ustawieniach klienta
 - ✨ **Ambient** (Wizualne): świecące kulki w kolorze akcentu unoszące się w powietrzu wokół gracza. Można ustawić ilość, rozmiar i zasięg
 - 🎯 **TargetESP** (Wizualne): efektowny znacznik na graczu, którego uderzyłeś albo na którego patrzysz. Pierścień z gradientem płynie w górę i w dół po sylwetce i zostawia smugę, a obracający się znacznik pulsuje i błyska na czerwono przy trafieniu. Style: **Mix**, **Duchy** (świecące komety krążące wokół gracza), **Pulse** (pulsujący świecący symbol na klatce), **Krąg** (świecący pierścień pod nogami z falą), **Pierścień**, **Znacznik**. Opcje: tylko gracze, smuga, ilość duchów, prędkość, rozmiar. Kolor bierze z akcentu. Rysowany z testem głębi, więc **nie widać go przez ściany** i jest czysto kosmetyczny
 - 🎨 **Kolory akcentu z gradientem:** Mono (biało-czarny), Fiolet, Róż, Niebieski, Cyjan, Zielony, Czerwony, Złoty, z płynnym przejściem kolorów

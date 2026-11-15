@@ -903,6 +903,7 @@ public class ClickGui extends Screen {
                 {"sound", "set.sounds", s.sounds},
                 {"bell", "set.notifications", s.notifications},
                 {"star", "set.welcome", s.welcome},
+                {"hud", "set.menu", s.customMenu},
         };
         for (Object[] t : toggles) {
             BoolSetting b = (BoolSetting) t[2];

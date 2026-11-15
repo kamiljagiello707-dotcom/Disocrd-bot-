@@ -2,6 +2,6 @@
   "required": true,
   "package": "dev.razer.client.mixin",
   "compatibilityLevel": "JAVA_21",
-  "client": ["InGameHudMixin", "MinecraftClientMixin"],
+  "client": ["InGameHudMixin", "MinecraftClientMixin", "AbstractClientPlayerEntityMixin"],
   "injectors": { "defaultRequire": 1 }
 }

@@ -1,7 +1,7 @@
 # RazerClient 2.0
 
 Nowoczesne GUI klienta do Minecraft **1.21.1 (Fabric)**: ClickGUI, edytor HUD, motywy z kolorami akcentu i powiadomienia.
-To jest **sam interfejs**. Moduły to puste przełączniki bez żadnej funkcji w grze, z wyjątkiem kosmetycznych **TargetESP** i **Ambient**.
+To jest **sam interfejs**. Moduły to puste przełączniki bez żadnej funkcji w grze, z wyjątkiem kosmetycznych **TargetESP**, **Ambient**, **ChinaHat**, **JumpCircles** i **Cosmetic**.
 
 | | |
 |---|---|
@@ -10,6 +10,9 @@ To jest **sam interfejs**. Moduły to puste przełączniki bez żadnej funkcji w
 ![ClickGUI](docs/gui_themes.jpg)
 
 ## Co nowego w 2.0
+- 🎩 **ChinaHat** (Wizualne): świecący stożkowy kapelusz nad głową z gradientem w kolorze akcentu. Opcjonalnie także na znajomych. Opcje: rozmiar, wysokość, obrót
+- ⭕ **JumpCircles** (Wizualne): świecące kręgi rozchodzące się pod nogami przy każdym skoku. Opcje: rozmiar, czas
+- 🧥 **Cosmetic** (Inne): własna peleryna z logo RazerClient w wersjach Midnight, Czarna i Fiolet (widoczna u Ciebie)
 - 🌃 **Nowe ClickGUI:** motyw **Midnight** (granatowy z niebieskim akcentem, domyślny), wartości ustawień w kolorze akcentu przy nazwie modułu (np. „KillAura Single 3.5”), pasek skrótów pod oknem, przycisk zamknięcia, pasek przewijania w kolorze akcentu, w profilu liczba włączonych modułów
 - 🖱️ **ŚPM na module** przypisuje klawisz bez rozwijania opcji, **kółko na suwaku** zmienia wartość, klik w strzałkę rozwija opcje
 - 👥 **Znajomi:** nowa strona, na której dodajesz i usuwasz nicki (zapisywane w konfiguracji)
@@ -43,6 +46,10 @@ To jest **sam interfejs**. Moduły to puste przełączniki bez żadnej funkcji w
 | ![](docs/hud_chat_drag.jpg) | ![](docs/target_esp.jpg) |
 
 ![TargetESP – style](docs/target_esp_styles.jpg)
+
+![Kosmetyki](docs/cosmetics.jpg)
+
+![Peleryny](docs/capes.png)
 | ![](docs/gui_combat.jpg) | ![](docs/gui_hud.jpg) |
 | ![](docs/gui_favorites.jpg) | ![](docs/gui_friends.jpg) |
 

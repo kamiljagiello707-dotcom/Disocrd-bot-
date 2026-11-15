@@ -66,6 +66,7 @@ public class RazerClient implements ClientModInitializer {
         }));
         dev.razer.client.hud.ChatDrag.init();
         dev.razer.client.render.TargetEspRenderer.init();
+        dev.razer.client.render.CosmeticsRenderer.init();
         ClientLifecycleEvents.CLIENT_STOPPING.register(c -> config.save(config.current()));
         LOGGER.info("{} {} załadowany", NAME, VERSION);
     }

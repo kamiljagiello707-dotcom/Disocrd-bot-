@@ -42,6 +42,8 @@ public class ModuleManager {
         reg(new Module("Fullbright", Category.RENDER, "sun", "Pełna jasność", "Full brightness"));
         reg(new TargetEsp());
         reg(new Ambient());
+        reg(new ChinaHat());
+        reg(new JumpCircles());
         reg(new Module("Tracers", Category.RENDER, "radar", "Linie do graczy", "Lines to players"));
         reg(new Module("Nametags", Category.RENDER, "tag", "Większe nicki", "Bigger nametags")
                 .add(new NumberSetting("Skala", "Scale", 1.5, 1.0, 3.0, 0.1), new BoolSetting("Zdrowie", "Health", true)));
@@ -61,6 +63,7 @@ public class ModuleManager {
         reg(new Module("Timer", Category.WORLD, "timer", "Zmienia prędkość gry", "Changes game speed")
                 .add(new NumberSetting("Prędkość", "Speed", 1.0, 0.1, 5.0, 0.1)));
         // MISC
+        reg(new Cosmetic());
         reg(new Module("AntiAFK", Category.MISC, "coffee", "Zapobiega wyrzuceniu za AFK", "Prevents AFK kick"));
         reg(new Module("AutoReconnect", Category.MISC, "refresh", "Automatyczne łączenie", "Auto reconnect")
                 .add(new NumberSetting("Opóźnienie", "Delay", 5, 1, 30, 1)));

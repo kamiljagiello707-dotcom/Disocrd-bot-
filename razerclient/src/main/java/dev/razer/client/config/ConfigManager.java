@@ -114,7 +114,7 @@ public class ConfigManager {
         o.add("sounds", s.sounds.save());
         o.add("welcome", s.welcome.save());
         o.add("customMenu", s.customMenu.save());
-        o.addProperty("ui", 3);
+        o.addProperty("ui", 4);
         com.google.gson.JsonArray fr = new com.google.gson.JsonArray();
         for (String f : RazerClient.get().friends.all()) fr.add(f);
         o.add("friends", fr);
@@ -145,6 +145,8 @@ public class ConfigManager {
                 if (o.has("friends")) for (var f : o.getAsJsonArray("friends")) RazerClient.get().friends.add(f.getAsString());
                 // nowy wygląd 2.1 – jednorazowo przełącz na Midnight + niebieski akcent
                 if (!o.has("ui") || o.get("ui").getAsInt() < 3) { Theme.setInstant(Theme.Preset.MIDNIGHT); Theme.setAccentInstant(Theme.Accent.BLUE); }
+                // 2.2 – klient domyślnie po angielsku (jednorazowo)
+                if (!o.has("ui") || o.get("ui").getAsInt() < 4) Lang.set(Lang.Language.ENGLISH);
                 if (o.has("hud")) {
                     JsonObject hud = o.getAsJsonObject("hud");
                     for (HudElement e : RazerClient.get().hud.elements) if (hud.has(e.id)) e.load(hud.getAsJsonObject(e.id));

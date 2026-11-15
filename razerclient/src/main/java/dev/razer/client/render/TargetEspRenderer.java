@@ -110,11 +110,11 @@ public final class TargetEspRenderer {
         ms.push();
         ms.translate(x, y, z);
         switch (m.mode.get()) {
-            case "Pierścień" -> drawRing(ms, target, time, a, hurt, scale, m.trail.get());
-            case "Znacznik" -> markerFront(ms, cam, x, y, z, () -> drawMarker(ms, cam, target, time, a, hurt, scale));
-            case "Krąg" -> drawGroundCircle(ms, target, time, a, hurt, scale);
+            case "Ring" -> drawRing(ms, target, time, a, hurt, scale, m.trail.get());
+            case "Marker" -> markerFront(ms, cam, x, y, z, () -> drawMarker(ms, cam, target, time, a, hurt, scale));
+            case "Circle" -> drawGroundCircle(ms, target, time, a, hurt, scale);
             case "Pulse" -> markerFront(ms, cam, x, y, z, () -> drawPulse(ms, cam, target, time, a, hurt, scale));
-            case "Duchy" -> drawGhosts(ms, cam, target, time, a, hurt, scale, m.ghosts.get().intValue(), m.trail.get());
+            case "Ghosts" -> drawGhosts(ms, cam, target, time, a, hurt, scale, m.ghosts.get().intValue(), m.trail.get());
             default -> {
                 drawRing(ms, target, time, a, hurt, scale, m.trail.get());
                 markerFront(ms, cam, x, y, z, () -> drawMarker(ms, cam, target, time, a, hurt, scale));

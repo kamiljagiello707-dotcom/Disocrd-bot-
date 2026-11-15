@@ -10,6 +10,10 @@ To jest **sam interfejs**. Moduły to puste przełączniki bez żadnej funkcji w
 ![ClickGUI](docs/gui_themes.jpg)
 
 ## Co nowego w 2.0
+- 🌍 **Klient domyślnie po angielsku** (polski do wyboru w ustawieniach klienta)
+- 🧩 **5 nowych modułów w każdej kategorii** (łącznie 59): AimAssist, AutoClicker, Reach, WTap, HitBoxes · Spider, LongJump, Jesus, ElytraBoost, AirJump · Zoom, FreeLook, NoHurtCam, BlockOutline, NoFire · AutoEat, AutoTool, ChestStealer, FastUse, AutoRespawn · AutoFarm, Weather, LiquidPlace, AutoSign, TimeChanger · NameProtect, AutoGG, ChatSuffix, AntiBot, FakePlayer
+- ⚙️ **Dużo ustawień w każdym module**, np. KillAura: Mode, Rotations (Silent/Legit/Snap/None), Priority, Range, Search Range, Rotation Speed, FOV, Min/Max CPS, Switch Delay, Rage Mode, Through Walls, Raytrace, Keep Sprint, Swing, Auto Block, wybór celów i inne
+- 🔔 **Powiadomienia jako element HUD:** można je wyłączyć na stronie HUD i przesunąć w edytorze albo przy czacie. Stos rośnie w górę lub w dół zależnie od miejsca
 - 💎 **Nowy HUD:** panele z gradientowym tłem, połyskiem i poświatą w kolorze akcentu; nagłówki z ikoną w świecącej plakietce i licznikiem w pigułce. Watermark ma sekcje z ikonami (FPS, ping, godzina, nick). KeyBinds pokazuje klawisze jak na klawiaturze i zieloną kropkę stanu, lista modułów ma kolorowe paski i kategorie. Zbroja ma kolorowe paski wytrzymałości, efekty paski pozostałego czasu, a powiadomienia ikonę w świecącym kółku i znaczek ON/OFF
 - 🔊 **HitSound** (Inne): dźwięk przy każdym uderzeniu. Do wyboru 13 dźwięków: 7 własnych, zsyntetyzowanych do RazerClient (Razer, Pop, Glass, Coin, Laser, Bubble, Thump) i 6 z Minecrafta (Dzwonek, Pling, Kurant, XP, Ametyst, Krytyk). Zmiana dźwięku w opcjach od razu go odtwarza. Opcje: głośność, wysokość, losowa wysokość, tylko gracze
 - 🎩 **ChinaHat** (Wizualne): świecący stożkowy kapelusz nad głową z gradientem w kolorze akcentu. Opcjonalnie także na znajomych. Opcje: rozmiar, wysokość, obrót
@@ -53,7 +57,7 @@ To jest **sam interfejs**. Moduły to puste przełączniki bez żadnej funkcji w
 ![Kosmetyki](docs/cosmetics.jpg)
 
 ![Peleryny](docs/capes.png)
-| ![](docs/gui_combat.jpg) | ![](docs/gui_hud.jpg) |
+| ![](docs/gui_combat.jpg) | ![](docs/gui_render.jpg) |
 | ![](docs/gui_favorites.jpg) | ![](docs/gui_friends.jpg) |
 
 ## Budowanie

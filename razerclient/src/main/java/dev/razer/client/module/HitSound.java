@@ -12,7 +12,7 @@ import net.minecraft.util.Identifier;
 public class HitSound extends Module {
     public final ModeSetting sound = new ModeSetting("Dźwięk", "Sound",
             "Razer", "Pop", "Glass", "Coin", "Laser", "Bubble", "Thump",
-            "Dzwonek", "Pling", "Kurant", "XP", "Ametyst", "Krytyk");
+            "Bell", "Pling", "Chime", "XP", "Amethyst", "Crit");
     public final NumberSetting volume = new NumberSetting("Głośność", "Volume", 80, 0, 100, 5);
     public final NumberSetting pitch = new NumberSetting("Wysokość", "Pitch", 1.0, 0.5, 2.0, 0.05);
     public final BoolSetting randomPitch = new BoolSetting("Losowa wysokość", "Random pitch", true);
@@ -32,11 +32,11 @@ public class HitSound extends Module {
             case "Laser" -> Identifier.of("razerclient", "hit.laser");
             case "Bubble" -> Identifier.of("razerclient", "hit.bubble");
             case "Thump" -> Identifier.of("razerclient", "hit.thump");
-            case "Dzwonek" -> Identifier.ofVanilla("block.note_block.bell");
+            case "Bell" -> Identifier.ofVanilla("block.note_block.bell");
             case "Pling" -> Identifier.ofVanilla("block.note_block.pling");
-            case "Kurant" -> Identifier.ofVanilla("block.note_block.chime");
+            case "Chime" -> Identifier.ofVanilla("block.note_block.chime");
             case "XP" -> Identifier.ofVanilla("entity.experience_orb.pickup");
-            case "Ametyst" -> Identifier.ofVanilla("block.amethyst_block.hit");
+            case "Amethyst" -> Identifier.ofVanilla("block.amethyst_block.hit");
             default -> Identifier.ofVanilla("entity.player.attack.crit");
         };
     }

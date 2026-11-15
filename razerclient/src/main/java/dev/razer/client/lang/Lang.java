@@ -11,7 +11,7 @@ public final class Lang {
         Language(String display, String code) { this.display = display; this.code = code; }
     }
 
-    private static Language current = Language.POLSKI;
+    private static Language current = Language.ENGLISH;
     private static final Map<String, String[]> STRINGS = new HashMap<>();
 
     private static void put(String key, String pl, String en) { STRINGS.put(key, new String[]{pl, en}); }
@@ -100,6 +100,8 @@ public final class Lang {
         put("size.normal", "Średni", "Normal");
         put("size.large", "Duży", "Large");
         put("wm.fps", "FPS", "FPS");
+        put("hud.el.notifications", "Powiadomienia", "Notifications");
+        put("hud.el.notifications.desc", "Włączenie / wyłączenie modułu i inne komunikaty", "Module toggles and other messages");
         put("page.friends", "Znajomi", "Friends");
         put("friends.desc", "Lista Twoich znajomych na serwerach", "Your friends list");
         put("friends.placeholder", "Wpisz nick znajomego...", "Type a friend's name...");

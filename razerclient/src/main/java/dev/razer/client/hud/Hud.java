@@ -43,7 +43,8 @@ public class Hud {
     public final Potions potions = new Potions();
     public final Coords coords = new Coords();
     public final Info info = new Info();
-    public final List<HudElement> elements = List.of(watermark, moduleList, keybinds, target, potions, armor, info, coords);
+    public final NotifElement notifs = new NotifElement();
+    public final List<HudElement> elements = List.of(watermark, moduleList, keybinds, target, potions, armor, info, coords, notifs);
 
     private double lastX, lastZ, speed;
     private long lastSpeedTime;
@@ -74,7 +75,6 @@ public class Hud {
             ctx.getMatrices().pop();
         }
         R2D.alpha = 1f;
-        RazerClient.get().notifications.render(ctx, sw, sh);
     }
 
     private void updateSpeed(MinecraftClient mc) {
@@ -509,6 +509,20 @@ public class Hud {
                 case "west" -> pl ? "Zachód (-X)" : "West (-X)";
                 default -> pl ? "Wschód (+X)" : "East (+X)";
             };
+        }
+    }
+
+    /** Powiadomienia jako element HUD – można je przesunąć w edytorze / przy czacie */
+    public class NotifElement extends HudElement {
+        NotifElement() { super("notifications", "hud.el.notifications", "bell", true, Notifications.W, Notifications.H); }
+
+        @Override protected float[] defaultPos(int sw, int sh, Hud hud) { return new float[]{sw - w - 8, sh - h - 8}; }
+
+        @Override public void render(DrawContext ctx, float x, float y, boolean preview) {
+            w = Notifications.W; h = Notifications.H;
+            MinecraftClient mc = mc();
+            int sw = mc.getWindow().getScaledWidth(), sh = mc.getWindow().getScaledHeight();
+            RazerClient.get().notifications.render(ctx, x, y, y + h / 2f > sh / 2f, x + w / 2f > sw / 2f, preview);
         }
     }
 

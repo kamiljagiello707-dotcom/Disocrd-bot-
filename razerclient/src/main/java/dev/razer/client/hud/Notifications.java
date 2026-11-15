@@ -39,26 +39,38 @@ public class Notifications {
     }
 
     private void push(Notification n) {
-        if (!RazerClient.get().settings.notifications.get()) return;
+        Hud hud = RazerClient.get().hud;
+        if (hud != null && !hud.notifs.enabled.get()) return;
         list.add(0, n);
         if (list.size() > 6) list.remove(list.size() - 1);
     }
 
-    public void render(DrawContext ctx, int sw, int sh) {
+    public static final float W = 132, H = 30, GAP = 5;
+
+    public boolean isEmpty() { return list.isEmpty(); }
+
+    /**
+     * Rysuje stos powiadomień zaczepiony w (ax, ay) – najnowsze w tym miejscu, starsze w górę (up)
+     * lub w dół. Wjeżdżają z bliższej krawędzi ekranu (fromRight).
+     */
+    public void render(DrawContext ctx, float ax, float ay, boolean up, boolean fromRight, boolean preview) {
         long now = System.currentTimeMillis();
         list.removeIf(n -> now - n.start > n.duration + 400);
-        float w = 132, h = 30, gap = 5;
-        float baseY = sh - 8;
+        float w = W, h = H, gap = GAP;
+        if (list.isEmpty() && preview) {
+            drawCard(ctx, new Notification("target", Lang.get("enabled"), "KillAura  •  " + Lang.format("notif.key", "R"), 1, 2200), ax, ay, w, h, 0.35f);
+            return;
+        }
         int i = 0;
         for (Notification n : list) {
             long t = now - n.start;
             float in = Anim.easeOutBack(t / 350f);
             float out = t > n.duration ? Anim.easeInCubic((t - n.duration) / 350f) : 0;
             float slide = (1 - in) + out; // 0 = widoczne, 1 = schowane
-            float targetY = baseY - (i + 1) * (h + gap) + gap;
+            float targetY = ay + (up ? -i : i) * (h + gap);
             if (n.y.raw() == -1) n.y.snap(targetY);
             float y = n.y.animate(targetY);
-            float x = sw - w - 8 + slide * (w + 20);
+            float x = ax + (fromRight ? 1 : -1) * slide * (w + 20);
             float prevAlpha = R2D.alpha;
             R2D.alpha = prevAlpha * (1 - out);
             drawCard(ctx, n, x, y, w, h, Math.min(1, t / (float) n.duration));

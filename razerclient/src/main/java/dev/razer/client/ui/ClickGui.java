@@ -871,7 +871,8 @@ public class ClickGui extends Screen {
     }
 
     private void drawFooter(DrawContext ctx) {
-        String[][] items = {{"LPM", "footer.toggle"}, {"PPM / >", "footer.settings"}, {"ŚPM", "footer.bind"},
+        boolean pl = Lang.pl();
+        String[][] items = {{pl ? "LPM" : "LMB", "footer.toggle"}, {pl ? "PPM / >" : "RMB / >", "footer.settings"}, {pl ? "ŚPM" : "MMB", "footer.bind"},
                 {Lang.pl() ? "Kółko" : "Wheel", "footer.wheel"}, {"RShift / Esc", "footer.close"}};
         float s = 0.62f, gap = 12, total = 0;
         for (String[] it : items) total += Fonts.width(it[0], Font.BOLD, s) + 4 + Fonts.width(Lang.get(it[1]), Font.REGULAR, s) + gap;
@@ -1041,7 +1042,6 @@ public class ClickGui extends Screen {
                 {"render", "set.blur", s.blur},
                 {"sparkles", "set.particles", s.particles},
                 {"sound", "set.sounds", s.sounds},
-                {"bell", "set.notifications", s.notifications},
                 {"star", "set.welcome", s.welcome},
                 {"hud", "set.menu", s.customMenu},
         };

@@ -10,6 +10,7 @@ To jest **sam interfejs**. Moduły to puste przełączniki bez żadnej funkcji w
 ![ClickGUI](docs/gui_themes.jpg)
 
 ## Co nowego w 2.0
+- 💎 **Nowy HUD:** panele z gradientowym tłem, połyskiem i poświatą w kolorze akcentu; nagłówki z ikoną w świecącej plakietce i licznikiem w pigułce. Watermark ma sekcje z ikonami (FPS, ping, godzina, nick). KeyBinds pokazuje klawisze jak na klawiaturze i zieloną kropkę stanu, lista modułów ma kolorowe paski i kategorie. Zbroja ma kolorowe paski wytrzymałości, efekty paski pozostałego czasu, a powiadomienia ikonę w świecącym kółku i znaczek ON/OFF
 - 🔊 **HitSound** (Inne): dźwięk przy każdym uderzeniu. Do wyboru 13 dźwięków: 7 własnych, zsyntetyzowanych do RazerClient (Razer, Pop, Glass, Coin, Laser, Bubble, Thump) i 6 z Minecrafta (Dzwonek, Pling, Kurant, XP, Ametyst, Krytyk). Zmiana dźwięku w opcjach od razu go odtwarza. Opcje: głośność, wysokość, losowa wysokość, tylko gracze
 - 🎩 **ChinaHat** (Wizualne): świecący stożkowy kapelusz nad głową z gradientem w kolorze akcentu. Opcjonalnie także na znajomych. Opcje: rozmiar, wysokość, obrót
 - ⭕ **JumpCircles** (Wizualne): świecące kręgi rozchodzące się pod nogami przy każdym skoku. Opcje: rozmiar, czas
@@ -43,7 +44,8 @@ To jest **sam interfejs**. Moduły to puste przełączniki bez żadnej funkcji w
 
 | | |
 |---|---|
-| ![](docs/hud.jpg) | ![](docs/hud_editor.jpg) |
+| ![](docs/hud.jpg) | ![](docs/hud_v2.jpg) |
+| ![](docs/hud_editor.jpg) | |
 | ![](docs/hud_chat_drag.jpg) | ![](docs/target_esp.jpg) |
 
 ![TargetESP – style](docs/target_esp_styles.jpg)

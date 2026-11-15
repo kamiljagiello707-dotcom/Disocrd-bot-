@@ -115,6 +115,35 @@ public final class R2D {
         end(b);
     }
 
+    /** zaokrąglony prostokąt z gradientem góra -> dół */
+    public static void roundRectV(DrawContext ctx, float x, float y, float w, float h, float r, int top, int bottom) {
+        if (w <= 0 || h <= 0) return;
+        r = Math.max(0, Math.min(r, Math.min(w, h) / 2f));
+        float px = r * 2 * pixelScale(ctx);
+        Identifier tex = CIRCLES[CIRCLES.length - 1];
+        for (int i = 0; i < CIRCLE_SIZES.length; i++) if (CIRCLE_SIZES[i] >= px) { tex = CIRCLES[i]; break; }
+        Matrix4f m = ctx.getMatrices().peek().getPositionMatrix();
+        BufferBuilder b = begin(tex);
+        int ct = col(top), cb = col(bottom);
+        float x2 = x + w, y2 = y + h, h5 = 0.5f;
+        float[] ys = {y, y + r, y2 - r, y2};
+        int[] cs = new int[4];
+        for (int i = 0; i < 4; i++) cs[i] = blend(ct, cb, (ys[i] - y) / h);
+        float[] xs = {x, x + r, x2 - r, x2};
+        float[] us = {0, h5, h5, 1};
+        for (int row = 0; row < 3; row++)
+            for (int colI = 0; colI < 3; colI++) {
+                float ax = xs[colI], bx = xs[colI + 1], ay = ys[row], by = ys[row + 1];
+                if (bx <= ax || by <= ay) continue;
+                float u1 = us[colI], u2 = us[colI + 1], v1 = us[row], v2 = us[row + 1];
+                b.vertex(m, ax, ay, 0).texture(u1, v1).color(cs[row]);
+                b.vertex(m, ax, by, 0).texture(u1, v2).color(cs[row + 1]);
+                b.vertex(m, bx, by, 0).texture(u2, v2).color(cs[row + 1]);
+                b.vertex(m, bx, ay, 0).texture(u2, v1).color(cs[row]);
+            }
+        end(b);
+    }
+
     public static void rect(DrawContext ctx, float x, float y, float w, float h, int color) {
         roundRect(ctx, x, y, w, h, 0, color);
     }

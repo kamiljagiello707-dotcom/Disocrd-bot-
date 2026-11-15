@@ -33,7 +33,7 @@ public class Hud {
     private static final DateTimeFormatter TIME = DateTimeFormatter.ofPattern("HH:mm");
 
     // wspólny styl
-    public static final float R = 8f, PADX = 8, HEAD = 16, ROW = 10.5f, NAME = 0.66f, ICON = 6.5f;
+    public static final float R = 8f, PADX = 8, HEAD = 18, ROW = 11f, NAME = 0.66f, ICON = 6.5f;
 
     public final Watermark watermark = new Watermark();
     public final ModuleList moduleList = new ModuleList();
@@ -90,40 +90,79 @@ public class Hud {
 
     // ================================================================== styl
 
+    private static final net.minecraft.util.Identifier GLOW = R2D.id("textures/ui/glow.png");
+
+    private static boolean mono() { return Theme.accentPreset() == Theme.Accent.MONO; }
+
     public static void panel(DrawContext ctx, float x, float y, float w, float h) { panel(ctx, x, y, w, h, R); }
 
+    /** panel: cień, poświata w kolorze akcentu, gradientowe tło z połyskiem i obramowanie */
     public static void panel(DrawContext ctx, float x, float y, float w, float h, float r) {
-        R2D.shadow(ctx, x, y, w, h, 8, Theme.shadow());
-        R2D.roundRect(ctx, x, y, w, h, r, Theme.hudBg());
-        R2D.roundOutline(ctx, x, y, w, h, r, 0.5f, Theme.stroke());
+        R2D.shadow(ctx, x, y + 1, w, h, 9, Theme.shadow());
+        if (!mono()) R2D.shadow(ctx, x, y, w, h, 10, R2D.withAlpha(Theme.accentWave(0), 0.07f));
+        int bg = Theme.hudBg();
+        int top = R2D.withAlpha(R2D.blend(bg, Theme.text(), 0.06f), ((bg >>> 24) & 0xFF) / 255f);
+        R2D.roundRectV(ctx, x, y, w, h, r, top, bg);
+        R2D.roundOutline(ctx, x, y, w, h, r, 0.5f, R2D.blend(Theme.stroke(), Theme.accent(), mono() ? 0 : 0.18f));
+        // połysk na górnej krawędzi
+        R2D.gradientH(ctx, x + r, y + 0.6f, (w - 2 * r) / 2f, 0.5f, R2D.withAlpha(Theme.text(), 0f), R2D.withAlpha(Theme.text(), 0.16f));
+        R2D.gradientH(ctx, x + w / 2f, y + 0.6f, (w - 2 * r) / 2f, 0.5f, R2D.withAlpha(Theme.text(), 0.16f), R2D.withAlpha(Theme.text(), 0f));
     }
 
-    /** cienki pasek akcentu z gradientem u góry panelu */
+    /** krótka świecąca kreska akcentu u góry (używana w TargetHUD) */
     public static void accentLine(DrawContext ctx, float x, float y, float w) {
-        if (Theme.accentPreset() == Theme.Accent.MONO) return;
+        if (mono()) return;
         float lw = Math.min(w - 2 * R - 4, 40);
         R2D.gradientH(ctx, x + w / 2f - lw / 2f, y + 0.5f, lw / 2f, 1.2f, R2D.withAlpha(Theme.accentWave(0), 0f), Theme.accentWave(1.5f));
         R2D.gradientH(ctx, x + w / 2f, y + 0.5f, lw / 2f, 1.2f, Theme.accentWave(1.5f), R2D.withAlpha(Theme.accentWave(3f), 0f));
     }
 
+    /** plakietka z ikoną w kolorze akcentu */
+    public static void badge(DrawContext ctx, float x, float y, float size, String icon) {
+        int ac = Theme.accentWave(0);
+        R2D.texture(ctx, GLOW, x - size * 0.6f, y - size * 0.6f, size * 2.2f, size * 2.2f, R2D.withAlpha(ac, 0.35f));
+        R2D.roundRectV(ctx, x, y, size, size, size * 0.32f, R2D.blend(ac, 0xFFFFFFFF, 0.12f), R2D.blend(ac, 0xFF000000, 0.12f));
+        float is = size * 0.64f;
+        R2D.icon(ctx, icon, x + (size - is) / 2f, y + (size - is) / 2f, is, Theme.accentText());
+    }
+
     public static float header(DrawContext ctx, float x, float y, float w, String icon, String title, String count) {
-        accentLine(ctx, x, y, w);
-        R2D.icon(ctx, icon, x + PADX, y + HEAD / 2f - 3.75f, 7.5f, Theme.accentWave(0));
-        Fonts.drawV(ctx, title, x + PADX + 11, y + HEAD / 2f + 0.5f, Theme.text(), Font.BOLD, 0.72f);
-        if (count != null)
-            Fonts.drawV(ctx, count, x + w - PADX - Fonts.width(count, Font.SEMIBOLD, 0.62f), y + HEAD / 2f + 0.5f, Theme.textFaint(), Font.SEMIBOLD, 0.62f);
-        return y + HEAD;
+        badge(ctx, x + PADX - 1, y + HEAD / 2f - 5.5f, 11, icon);
+        Fonts.drawV(ctx, title, x + PADX + 15, y + HEAD / 2f + 0.5f, Theme.text(), Font.BOLD, 0.74f);
+        if (count != null) {
+            float cw = Fonts.width(count, Font.BOLD, 0.58f) + 8;
+            float cx = x + w - PADX - cw + 2;
+            R2D.roundRect(ctx, cx, y + HEAD / 2f - 4.5f, cw, 9, 4.5f, R2D.withAlpha(Theme.accentWave(0), mono() ? 0.12f : 0.22f));
+            Fonts.drawV(ctx, count, cx + 4, y + HEAD / 2f + 0.4f, mono() ? Theme.textDim() : Theme.accentWave(0), Font.BOLD, 0.58f);
+        }
+        // separator zanikający na końcach
+        float sy = y + HEAD - 1;
+        R2D.gradientH(ctx, x + 6, sy, (w - 12) / 2f, 0.5f, R2D.withAlpha(Theme.stroke(), 0f), Theme.stroke());
+        R2D.gradientH(ctx, x + w / 2f, sy, (w - 12) / 2f, 0.5f, Theme.stroke(), R2D.withAlpha(Theme.stroke(), 0f));
+        return y + HEAD + 1;
     }
 
     private static void row(DrawContext ctx, float x, float y, float w, String icon, String label, String value, int iconCol, int labelCol, int valueCol) {
         R2D.icon(ctx, icon, x + PADX, y + ROW / 2f - ICON / 2f, ICON, iconCol);
         Fonts.drawV(ctx, label, x + PADX + 11, y + ROW / 2f + 0.5f, labelCol, Font.SEMIBOLD, NAME);
         if (value != null)
-            Fonts.drawV(ctx, value, x + w - PADX - Fonts.width(value, Font.SEMIBOLD, NAME), y + ROW / 2f + 0.5f, valueCol, Font.SEMIBOLD, NAME);
+            Fonts.drawV(ctx, value, x + w - PADX - Fonts.width(value, Font.BOLD, NAME), y + ROW / 2f + 0.5f, valueCol, Font.BOLD, NAME);
     }
 
     private static float rowWidth(String label, String value) {
-        return Fonts.width(label, Font.SEMIBOLD, NAME) + (value != null ? Fonts.width(value, Font.SEMIBOLD, NAME) + 12 : 0) + PADX * 2 + 11;
+        return Fonts.width(label, Font.SEMIBOLD, NAME) + (value != null ? Fonts.width(value, Font.BOLD, NAME) + 14 : 0) + PADX * 2 + 11;
+    }
+
+    /** klawisz w stylu klawiatury */
+    private static float keycap(DrawContext ctx, float rightX, float cy, String k, float on) {
+        float kw = Math.max(10, Fonts.width(k, Font.BOLD, 0.58f) + 7), kh = 9;
+        float kx = rightX - kw;
+        R2D.roundRect(ctx, kx, cy - kh / 2f + 1, kw, kh, 2.5f, R2D.blend(0x66000000, R2D.blend(Theme.accent(), 0xFF000000, 0.35f), on));
+        R2D.roundRectV(ctx, kx, cy - kh / 2f, kw, kh - 0.8f, 2.5f,
+                R2D.blend(R2D.blend(Theme.toggleOff(), Theme.text(), 0.08f), R2D.blend(Theme.accentWave(0), 0xFFFFFFFF, 0.1f), on),
+                R2D.blend(Theme.toggleOff(), Theme.accentWave(0), on));
+        Fonts.drawV(ctx, k, kx + (kw - Fonts.width(k, Font.BOLD, 0.58f)) / 2f, cy - 0.3f, R2D.blend(Theme.textDim(), Theme.accentText(), on), Font.BOLD, 0.58f);
+        return kw;
     }
 
     private static MinecraftClient mc() { return MinecraftClient.getInstance(); }
@@ -137,33 +176,44 @@ public class Hud {
 
         @Override public void render(DrawContext ctx, float x, float y, boolean preview) {
             MinecraftClient mc = mc();
-            String[] parts = {"RazerClient", mc.getCurrentFps() + " " + Lang.get("wm.fps"), LocalTime.now().format(TIME), mc.getSession().getUsername()};
-            Font[] fonts = {Font.BOLD, Font.SEMIBOLD, Font.SEMIBOLD, Font.SEMIBOLD};
-            float s = 0.7f, pad = 8, dotGap = 5, iconSize = 8.5f;
-            float ww = pad + iconSize + 4;
-            for (int i = 0; i < parts.length; i++) {
-                ww += Fonts.width(parts[i], fonts[i], s);
-                if (i < parts.length - 1) ww += dotGap * 2 + 2;
+            int ping = 0;
+            if (mc.getNetworkHandler() != null && mc.player != null) {
+                PlayerListEntry e = mc.getNetworkHandler().getPlayerListEntry(mc.player.getUuid());
+                if (e != null) ping = e.getLatency();
             }
-            ww += pad + Fonts.width("2.0", Font.BOLD, 0.5f) + 3;
-            w = ww; h = 17;
+            String[][] seg = {
+                    {"gauge", mc.getCurrentFps() + " FPS"},
+                    {"wifi", ping + " ms"},
+                    {"clock", LocalTime.now().format(TIME)},
+                    {"player", mc.getSession().getUsername()},
+            };
+            float s = 0.68f, pad = 7, gap = 6, ic = 6.5f;
+            float titleW = Fonts.width("Razer", Font.BOLD, 0.74f) + Fonts.width("Client", Font.BOLD, 0.74f) + Fonts.width("2.0", Font.BOLD, 0.48f) + 2;
+            float ww = pad + 12 + 5 + titleW;
+            for (String[] sg : seg) ww += gap * 2 + 0.5f + ic + 3 + Fonts.width(sg[1], Font.SEMIBOLD, s);
+            ww += pad;
+            w = ww; h = 18;
             panel(ctx, x, y, w, h, h / 2f);
-            accentLine(ctx, x, y, w);
-            float cx = x + pad;
-            R2D.icon(ctx, "logo", cx, y + (h - iconSize) / 2f, iconSize, Theme.accentWave(0));
-            cx += iconSize + 4;
-            for (int i = 0; i < parts.length; i++) {
-                Fonts.drawV(ctx, parts[i], cx, y + h / 2f + 0.5f, i == 0 ? Theme.text() : Theme.textDim(), fonts[i], s);
-                cx += Fonts.width(parts[i], fonts[i], s);
-                if (i == 0) {
-                    Fonts.draw(ctx, "2.0", cx + 1.5f, y + 4.2f, Theme.accentWave(1), Font.BOLD, 0.5f);
-                    cx += Fonts.width("2.0", Font.BOLD, 0.5f) + 3;
-                }
-                if (i < parts.length - 1) {
-                    cx += dotGap;
-                    R2D.circle(ctx, cx + 1, y + h / 2f, 0.9f, Theme.textFaint());
-                    cx += 2 + dotGap;
-                }
+            float cx = x + pad, cy = y + h / 2f;
+            // logo z poświatą
+            int ac = Theme.accentWave(0);
+            R2D.texture(ctx, GLOW, cx - 6, cy - 12, 24, 24, R2D.withAlpha(ac, 0.45f));
+            R2D.icon(ctx, "logo", cx, cy - 6, 12, ac);
+            cx += 12 + 5;
+            Fonts.drawV(ctx, "Razer", cx, cy + 0.5f, mono() ? Theme.text() : ac, Font.BOLD, 0.74f);
+            cx += Fonts.width("Razer", Font.BOLD, 0.74f);
+            Fonts.drawV(ctx, "Client", cx, cy + 0.5f, Theme.text(), Font.BOLD, 0.74f);
+            cx += Fonts.width("Client", Font.BOLD, 0.74f) + 1.5f;
+            Fonts.draw(ctx, "2.0", cx, y + 3.6f, mono() ? Theme.textDim() : Theme.accentWave(1.5f), Font.BOLD, 0.48f);
+            cx += Fonts.width("2.0", Font.BOLD, 0.48f) + 0.5f;
+            for (String[] sg : seg) {
+                cx += gap;
+                R2D.rect(ctx, cx, y + 5, 0.5f, h - 10, Theme.stroke());
+                cx += 0.5f + gap;
+                R2D.icon(ctx, sg[0], cx, cy - ic / 2f, ic, mono() ? Theme.textDim() : Theme.accentWave(0.6f));
+                cx += ic + 3;
+                Fonts.drawV(ctx, sg[1], cx, cy + 0.5f, Theme.textDim(), Font.SEMIBOLD, s);
+                cx += Fonts.width(sg[1], Font.SEMIBOLD, s);
             }
         }
     }
@@ -180,11 +230,11 @@ public class Hud {
             for (Module m : rc.modules.all()) if (m.hudAnim.animate(m.isEnabled() ? 1 : 0) > 0.01f) shown.add(m);
             shown.sort(Comparator.comparingDouble(m -> -Fonts.width(m.getName(), Font.SEMIBOLD, NAME)));
             float tw = 84;
-            for (Module m : shown) tw = Math.max(tw, rowWidth(m.getName(), null));
+            for (Module m : shown) tw = Math.max(tw, rowWidth(m.getName(), null) + Fonts.width(m.getCategory().getName(), Font.REGULAR, 0.52f) + 10);
             float contentH = 0;
             for (Module m : shown) contentH += ROW * Anim.easeOutCubic(m.hudAnim.raw());
             if (shown.isEmpty()) contentH = ROW;
-            w = aw.animate(tw); h = ah.animate(HEAD + contentH + 4);
+            w = aw.animate(tw); h = ah.animate(HEAD + 1 + contentH + 4);
 
             panel(ctx, x, y, w, h);
             float cy = header(ctx, x, y, w, "list", Lang.get("hud.modules"), String.valueOf(rc.modules.enabledCount()));
@@ -196,8 +246,12 @@ public class Hud {
                 float prev = R2D.alpha;
                 R2D.alpha = prev * a;
                 float ox = (1 - a) * -12;
-                R2D.icon(ctx, m.getIcon(), x + PADX + ox, cy + ROW / 2f - ICON / 2f, ICON, Theme.accentWave(i * 0.5f));
-                Fonts.drawV(ctx, m.getName(), x + PADX + 11 + ox, cy + ROW / 2f + 0.5f, Theme.text(), Font.SEMIBOLD, NAME);
+                int rc2 = Theme.accentWave(i * 0.5f);
+                R2D.roundRect(ctx, x + 3.5f, cy + 2.5f, 1.6f, ROW - 5, 0.8f, mono() ? Theme.textDim() : rc2);
+                R2D.icon(ctx, m.getIcon(), x + PADX + 1 + ox, cy + ROW / 2f - ICON / 2f, ICON, mono() ? Theme.text() : rc2);
+                Fonts.drawV(ctx, m.getName(), x + PADX + 12 + ox, cy + ROW / 2f + 0.5f, Theme.text(), Font.SEMIBOLD, NAME);
+                String cat = m.getCategory().getName();
+                Fonts.drawV(ctx, cat, x + w - PADX - Fonts.width(cat, Font.REGULAR, 0.52f) - ox, cy + ROW / 2f + 0.5f, Theme.textFaint(), Font.REGULAR, 0.52f);
                 R2D.alpha = prev;
                 cy += ROW * a;
                 i++;
@@ -221,8 +275,8 @@ public class Hud {
             List<Module> bound = new ArrayList<>();
             for (Module m : rc.modules.all()) if (m.hasKey()) bound.add(m);
             float tw = 84;
-            for (Module m : bound) tw = Math.max(tw, rowWidth(m.getName(), Keys.name(m.getKey())));
-            w = aw.animate(tw); h = ah.animate(HEAD + Math.max(1, bound.size()) * ROW + 4);
+            for (Module m : bound) tw = Math.max(tw, rowWidth(m.getName(), Keys.name(m.getKey())) + 14);
+            w = aw.animate(tw); h = ah.animate(HEAD + 1 + Math.max(1, bound.size()) * ROW + 4);
 
             panel(ctx, x, y, w, h);
             float cy = header(ctx, x, y, w, "keyboard", Lang.get("hud.keybinds"), String.valueOf(bound.size()));
@@ -230,9 +284,11 @@ public class Hud {
             if (bound.isEmpty()) Fonts.drawV(ctx, Lang.get("hud.nobinds"), x + PADX, cy + ROW / 2f + 0.5f, Theme.textFaint(), Font.REGULAR, 0.6f);
             for (Module m : bound) {
                 float on = m.toggleAnim.animate(m.isEnabled() ? 1 : 0);
-                row(ctx, x, cy, w, m.getIcon(), m.getName(), Keys.name(m.getKey()),
-                        R2D.blend(Theme.textFaint(), Theme.accent(), on), R2D.blend(Theme.textFaint(), Theme.text(), on),
-                        R2D.blend(Theme.textFaint(), Theme.textDim(), on));
+                R2D.icon(ctx, m.getIcon(), x + PADX, cy + ROW / 2f - ICON / 2f, ICON, R2D.blend(Theme.textFaint(), Theme.accentWave(0), on));
+                Fonts.drawV(ctx, m.getName(), x + PADX + 11, cy + ROW / 2f + 0.5f, R2D.blend(Theme.textFaint(), Theme.text(), on), Font.SEMIBOLD, NAME);
+                float kw = keycap(ctx, x + w - PADX + 1, cy + ROW / 2f, Keys.name(m.getKey()), on);
+                // kropka stanu
+                R2D.circle(ctx, x + w - PADX + 1 - kw - 5, cy + ROW / 2f, 1.5f, R2D.blend(Theme.textFaint(), 0xFF4ADE80, on));
                 cy += ROW;
             }
             R2D.endScissor(ctx);
@@ -326,27 +382,38 @@ public class Hud {
                 for (int i = 3; i >= 0; i--) items.add(p.getInventory().getArmorStack(i));
                 items.add(p.getMainHandStack());
             }
-            w = 6 + items.size() * 18 + 2; h = 24;
+            w = 8 + items.size() * 19 + 3; h = 28;
             if (items.isEmpty()) w = 84;
             panel(ctx, x, y, w, h);
-            accentLine(ctx, x, y, w);
             for (int i = 0; i < items.size(); i++) {
-                float ix = x + 5 + i * 18, iy = y + 4;
+                float ix = x + 6 + i * 19, iy = y + 4;
                 ItemStack st = items.get(i);
-                if (st.isEmpty()) { R2D.roundRect(ctx, ix + 2, iy + 2, 12, 12, 3, Theme.toggleOff()); continue; }
+                R2D.roundRect(ctx, ix - 0.5f, iy - 0.5f, 17, 17, 4, R2D.withAlpha(Theme.toggleOff(), 0.6f));
+                if (st.isEmpty()) continue;
                 ctx.draw();
                 ctx.getMatrices().push();
                 ctx.getMatrices().translate(ix, iy, 0);
                 ctx.drawItem(st, 0, 0);
-                ctx.drawItemInSlot(mc().textRenderer, st, 0, 0);
                 ctx.getMatrices().pop();
                 ctx.draw();
+                if (st.getCount() > 1) {
+                    String c = String.valueOf(st.getCount());
+                    Fonts.draw(ctx, c, ix + 16 - Fonts.width(c, Font.BOLD, 0.55f), iy + 10.5f, 0xFFFFFFFF, Font.BOLD, 0.55f);
+                }
+                // pasek wytrzymałości
+                float pct = st.isDamageable() ? 1 - st.getDamage() / (float) st.getMaxDamage() : -1;
+                R2D.roundRect(ctx, ix + 1, iy + 18.5f, 14, 1.8f, 0.9f, Theme.toggleOff());
+                if (pct >= 0) {
+                    int c = pct > 0.5f ? R2D.blend(0xFFFACC15, 0xFF4ADE80, (pct - 0.5f) * 2) : R2D.blend(0xFFEF4444, 0xFFFACC15, pct * 2);
+                    R2D.roundRect(ctx, ix + 1, iy + 18.5f, Math.max(1.8f, 14 * pct), 1.8f, 0.9f, c);
+                } else R2D.roundRect(ctx, ix + 1, iy + 18.5f, 14, 1.8f, 0.9f, R2D.withAlpha(Theme.accentWave(i * 0.5f), 0.7f));
             }
         }
     }
 
     public class Potions extends HudElement {
         private final Anim ah = new Anim(30, 12);
+        private final java.util.Map<Object, Integer> maxDur = new java.util.HashMap<>();
         Potions() { super("potions", "hud.el.potions", "potion", true, 100, 30); }
 
         @Override protected float[] defaultPos(int sw, int sh, Hud hud) {
@@ -369,7 +436,7 @@ public class Hud {
             if (rows.isEmpty() && preview) rows.add(new String[]{Lang.pl() ? "Szybkość II" : "Speed II", "1:30"});
             float tw = 100;
             for (String[] r : rows) tw = Math.max(tw, rowWidth(r[0], r[1]));
-            w = tw; h = ah.animate(HEAD + Math.max(1, rows.size()) * ROW + 4);
+            w = tw; h = ah.animate(HEAD + 1 + Math.max(1, rows.size()) * (ROW + 3) + 3);
             panel(ctx, x, y, w, h);
             float cy = header(ctx, x, y, w, "potion", Lang.get("hud.potions"), String.valueOf(effects.size()));
             R2D.scissor(ctx, x, cy, w, h - HEAD);
@@ -385,11 +452,17 @@ public class Hud {
                     ctx.getMatrices().pop();
                     ctx.draw();
                     Fonts.drawV(ctx, rows.get(i)[0], x + PADX + 11, cy + ROW / 2f + 0.5f, Theme.text(), Font.SEMIBOLD, NAME);
-                    Fonts.drawV(ctx, rows.get(i)[1], x + w - PADX - Fonts.width(rows.get(i)[1], Font.SEMIBOLD, NAME), cy + ROW / 2f + 0.5f, Theme.textDim(), Font.SEMIBOLD, NAME);
+                    Fonts.drawV(ctx, rows.get(i)[1], x + w - PADX - Fonts.width(rows.get(i)[1], Font.BOLD, NAME), cy + ROW / 2f + 0.5f, Theme.textDim(), Font.BOLD, NAME);
+                    int mx = Math.max(maxDur.getOrDefault(e.getEffectType(), 1), e.getDuration());
+                    maxDur.put(e.getEffectType(), mx);
+                    float pct = e.isInfinite() ? 1 : e.getDuration() / (float) mx;
+                    float bx = x + PADX + 11, bw = w - PADX * 2 - 11;
+                    R2D.roundRect(ctx, bx, cy + ROW + 0.5f, bw, 1.2f, 0.6f, Theme.toggleOff());
+                    R2D.roundRect(ctx, bx, cy + ROW + 0.5f, Math.max(1.2f, bw * pct), 1.2f, 0.6f, mono() ? Theme.textDim() : Theme.accentWave(i * 0.7f));
                 } else {
                     row(ctx, x, cy, w, "potion", rows.get(i)[0], rows.get(i)[1], Theme.accent(), Theme.text(), Theme.textDim());
                 }
-                cy += ROW;
+                cy += ROW + 3;
             }
             R2D.endScissor(ctx);
         }
@@ -420,7 +493,7 @@ public class Hud {
             if (other != null) tw = Math.max(tw, rowWidth(otherLabel, other));
             w = Math.max(100, tw);
             int rows = other != null ? 3 : 2;
-            h = HEAD + rows * ROW + 4;
+            h = HEAD + 1 + rows * ROW + 4;
             panel(ctx, x, y, w, h);
             float cy = header(ctx, x, y, w, "coords", Lang.get("hud.coords"), null);
             row(ctx, x, cy, w, "move", "XYZ", xyz, Theme.accent(), Theme.textDim(), Theme.text()); cy += ROW;
@@ -469,7 +542,7 @@ public class Hud {
             };
             float tw = 100;
             for (String[] r : rows) tw = Math.max(tw, rowWidth(r[1], r[2]));
-            w = tw; h = HEAD + rows.length * ROW + 4;
+            w = tw; h = HEAD + 1 + rows.length * ROW + 4;
             panel(ctx, x, y, w, h);
             float cy = header(ctx, x, y, w, "activity", Lang.get("hud.info"), null);
             for (String[] r : rows) { row(ctx, x, cy, w, r[0], r[1], r[2], Theme.accent(), Theme.textDim(), Theme.text()); cy += ROW; }

@@ -10,6 +10,9 @@ To jest **sam interfejs**. Moduły to puste przełączniki bez żadnej funkcji w
 ![ClickGUI](docs/gui_themes.jpg)
 
 ## Co nowego w 2.0
+- 🌃 **Nowe ClickGUI:** motyw **Midnight** (granatowy z niebieskim akcentem, domyślny), wartości ustawień w kolorze akcentu przy nazwie modułu (np. „KillAura Single 3.5”), pasek skrótów pod oknem, przycisk zamknięcia, pasek przewijania w kolorze akcentu, w profilu liczba włączonych modułów
+- 🖱️ **ŚPM na module** przypisuje klawisz bez rozwijania opcji, **kółko na suwaku** zmienia wartość, klik w strzałkę rozwija opcje
+- 👥 **Znajomi:** nowa strona, na której dodajesz i usuwasz nicki (zapisywane w konfiguracji)
 - 🌌 **Własne menu główne:** ekran blokady z datą i dużą godziną na animowanym tle z falami dymu i świecącymi cząsteczkami. Po kliknięciu płynne przejście do menu z napisem RazerClient świecącym w kolorze akcentu i okrągłymi przyciskami (Jednoosobowy, Wieloosobowy, Realms, Ustawienia, Wyjdź), które unoszą się po najechaniu i pokazują podpis. Można wrócić do menu Minecrafta w ustawieniach klienta
 - ✨ **Ambient** (Wizualne): świecące kulki w kolorze akcentu unoszące się w powietrzu wokół gracza. Można ustawić ilość, rozmiar i zasięg
 - 🎯 **TargetESP** (Wizualne): efektowny znacznik na graczu, którego uderzyłeś albo na którego patrzysz. Pierścień z gradientem płynie w górę i w dół po sylwetce i zostawia smugę, a obracający się znacznik pulsuje i błyska na czerwono przy trafieniu. Style: **Mix**, **Duchy** (świecące komety krążące wokół gracza), **Pulse** (pulsujący świecący symbol na klatce), **Krąg** (świecący pierścień pod nogami z falą), **Pierścień**, **Znacznik**. Opcje: tylko gracze, smuga, ilość duchów, prędkość, rozmiar. Kolor bierze z akcentu. Rysowany z testem głębi, więc **nie widać go przez ściany** i jest czysto kosmetyczny
@@ -30,7 +33,7 @@ To jest **sam interfejs**. Moduły to puste przełączniki bez żadnej funkcji w
 - Kategorie: Walka, Ruch, Wizualne, Gracz, Świat, Inne, Ulubione oraz strony HUD, Motywy i Konfiguracje
 - **LPM** na module włącza go, **PPM** rozwija opcje (klawisz, tryby, suwaki, przełączniki)
 - **Profil gracza**. **PPM na profilu** otwiera ustawienia klienta: język PL/EN, rozmiar GUI, szybkość animacji, rozmycie, animowane tło, dźwięki, powiadomienia, powitanie
-- Motywy: Ciemny, Jasny i AMOLED, każdy z dowolnym akcentem
+- Motywy: Ciemny, Midnight, Jasny i AMOLED, każdy z dowolnym akcentem
 - Konfiguracje (`.minecraft/razerclient/configs`), razem z ulubionymi
 - HUD w stylu „embed”: Watermark, Lista modułów, Keybinds, TargetHUD, Efekty, Zbroja, Informacje, Koordynaty oraz powiadomienia o włączeniu i wyłączeniu modułu
 
@@ -41,7 +44,7 @@ To jest **sam interfejs**. Moduły to puste przełączniki bez żadnej funkcji w
 
 ![TargetESP – style](docs/target_esp_styles.jpg)
 | ![](docs/gui_combat.jpg) | ![](docs/gui_hud.jpg) |
-| ![](docs/gui_favorites.jpg) | ![](docs/gui_light.jpg) |
+| ![](docs/gui_favorites.jpg) | ![](docs/gui_friends.jpg) |
 
 ## Budowanie
 ```

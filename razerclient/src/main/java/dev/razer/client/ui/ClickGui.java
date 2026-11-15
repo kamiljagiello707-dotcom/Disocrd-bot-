@@ -32,10 +32,10 @@ import java.util.function.IntConsumer;
  */
 public class ClickGui extends Screen {
     // wymiary okna (przed skalowaniem)
-    private static final float W = 580, H = 384, SB = 156, PAD = 18;
+    private static final float W = 600, H = 400, SB = 158, PAD = 18;
     private static final long OPEN_MS = 320, CLOSE_MS = 200;
 
-    private enum Page { CATEGORY, FAVORITES, HUD, THEMES, CONFIG, PROFILE, SETTINGS }
+    private enum Page { CATEGORY, FAVORITES, FRIENDS, HUD, THEMES, CONFIG, PROFILE, SETTINGS }
 
     // nawigacja zapamiętana między otwarciami
     private static Page page = Page.CATEGORY;
@@ -45,6 +45,9 @@ public class ClickGui extends Screen {
     private final RazerClient rc = RazerClient.get();
     private final Map<String, Anim> anims = new HashMap<>();
     private final List<Hit> hits = new ArrayList<>();
+    private final List<Object[]> sliders = new ArrayList<>();
+    private String friendInput = "";
+    private boolean friendFocused;
     private final Anim scroll = new Anim(0, 16);
     private final Anim indicatorY = new Anim(-1, 16);
     private final Anim indicatorA = new Anim(0, 14);
@@ -95,7 +98,7 @@ public class ClickGui extends Screen {
 
         // skala i pozycja
         ClientSettings s = rc.settings;
-        float fit = Math.min(1f, Math.min((width - 24) / W, (height - 24) / H));
+        float fit = Math.min(1f, Math.min((width - 24) / W, (height - 50) / H));
         float base = Math.min(fit, s.guiScale() * Math.min(1.25f, Math.max(0.85f, Math.min(width / 600f, height / 380f))));
         base = Math.min(base, fit);
         scale = base * (0.9f + 0.1f * p);
@@ -115,6 +118,7 @@ public class ClickGui extends Screen {
         }
 
         hits.clear();
+        sliders.clear();
         clip = null;
         R2D.alpha = p;
         ctx.getMatrices().push();
@@ -169,6 +173,7 @@ public class ClickGui extends Screen {
 
         drawSidebar(ctx);
         drawContent(ctx);
+        drawFooter(ctx);
     }
 
     // ================================================================== sidebar
@@ -193,16 +198,17 @@ public class ClickGui extends Screen {
         List<Runnable> drawLater = new ArrayList<>();
         List<float[]> itemPos = new ArrayList<>();
         int catCount = Category.values().length;
-        Object[][] entries = new Object[catCount + 4][];
+        Object[][] entries = new Object[catCount + 5][];
         int idx = 0;
         for (Category c : Category.values()) entries[idx++] = new Object[]{c.icon, c.getName(), Page.CATEGORY, c};
         entries[idx++] = new Object[]{"star", Lang.get("cat.favorites"), Page.FAVORITES, null};
+        entries[idx++] = new Object[]{"users", Lang.get("page.friends"), Page.FRIENDS, null};
         entries[idx++] = new Object[]{"hud", Lang.get("page.hud"), Page.HUD, null};
         entries[idx++] = new Object[]{"themes", Lang.get("page.themes"), Page.THEMES, null};
         entries[idx] = new Object[]{"config", Lang.get("page.config"), Page.CONFIG, null};
 
         for (int i = 0; i < entries.length; i++) {
-            if (i == catCount + 1) {
+            if (i == catCount) {
                 iy += 6;
                 Fonts.draw(ctx, Lang.get("section.client"), x + 18, iy, Theme.textFaint(), Font.SEMIBOLD, 0.62f);
                 iy += 10;
@@ -265,7 +271,7 @@ public class ClickGui extends Screen {
         R2D.circle(ctx, x + 7 + 21, y + 7 + 21, 2.2f, Theme.accent());
         String name = client.getSession().getUsername();
         Fonts.draw(ctx, Fonts.trim(name, Font.BOLD, 0.86f, w - 52), x + 36, y + 9, Theme.text(), Font.BOLD, 0.86f);
-        Fonts.draw(ctx, Lang.get("profile.sub"), x + 36, y + 20, Theme.textFaint(), Font.REGULAR, 0.62f);
+        Fonts.draw(ctx, Lang.format("profile.modules", rc.modules.enabledCount()), x + 36, y + 20, Theme.textFaint(), Font.REGULAR, 0.62f);
         R2D.icon(ctx, "settings", x + w - 15, y + h / 2f - 4.5f, 9, R2D.blend(Theme.textFaint(), Theme.text(), ha));
         hit(x, y, w, h, b -> {
             if (b == 0) setPage(Page.PROFILE);
@@ -297,6 +303,7 @@ public class ClickGui extends Screen {
         switch (page) {
             case THEMES -> { title = Lang.get("page.themes"); sub = Lang.get("themes.desc"); }
             case HUD -> { title = Lang.get("page.hud"); sub = Lang.get("hud.desc"); }
+            case FRIENDS -> { title = Lang.get("page.friends"); sub = Lang.get("friends.desc"); }
             case CONFIG -> { title = Lang.get("page.config"); sub = Lang.get("config.desc"); }
             case PROFILE -> { title = Lang.get("page.profile"); sub = Lang.get("profile.desc"); }
             case SETTINGS -> { title = Lang.get("page.settings"); sub = Lang.get("settings.desc"); }
@@ -313,7 +320,17 @@ public class ClickGui extends Screen {
         R2D.alpha = prev;
 
         // prawa strona nagłówka
-        if (page == Page.CATEGORY || page == Page.FAVORITES) drawSearch(ctx, cx + cw - PAD - 140, y0 + 16, 140, 22);
+        if (page == Page.CATEGORY || page == Page.FAVORITES) drawSearch(ctx, cx + cw - PAD - 168, y0 + 16, 140, 22);
+        // przycisk zamknięcia
+        {
+            float bx = cx + cw - PAD - 22, byy = y0 + 16;
+            boolean hv = hovered(bx, byy, 22, 22);
+            float hca = anim("closebtn", 18).animate(hv ? 1 : 0);
+            R2D.roundRect(ctx, bx, byy, 22, 22, 11, R2D.blend(Theme.card(), Theme.cardHover(), hca));
+            R2D.roundOutline(ctx, bx, byy, 22, 22, 11, 0.5f, Theme.stroke());
+            R2D.icon(ctx, "cross", bx + 7, byy + 7, 8, R2D.blend(Theme.textDim(), Theme.text(), hca));
+            hit(bx, byy, 22, 22, b -> { if (b == 0) close(); });
+        }
         if (page == Page.CONFIG) {
             float bw = 104;
             button(ctx, "newcfg", cx + cw - PAD - bw, y0 + 16, bw, 22, "plus", Lang.get("config.new"), true, () -> {
@@ -339,6 +356,7 @@ public class ClickGui extends Screen {
         float contentH = switch (page) {
             case CATEGORY, FAVORITES -> drawModules(ctx, cx + PAD, top, cw - PAD * 2);
             case HUD -> drawHudPage(ctx, cx + PAD, top, cw - PAD * 2);
+            case FRIENDS -> drawFriends(ctx, cx + PAD, top, cw - PAD * 2);
             case THEMES -> drawThemes(ctx, cx + PAD, top, cw - PAD * 2);
             case CONFIG -> drawConfigs(ctx, cx + PAD, top, cw - PAD * 2);
             case PROFILE -> drawProfile(ctx, cx + PAD, top, cw - PAD * 2);
@@ -356,7 +374,7 @@ public class ClickGui extends Screen {
             float trackH = vh - 16;
             float thumbH = Math.max(24, trackH * vh / (contentH + 20));
             float ty = vy + 8 + (trackH - thumbH) * (sc / maxScroll);
-            R2D.roundRect(ctx, cx + cw - 7, ty, 3, thumbH, 1.5f, Theme.toggleOff());
+            R2D.roundRect(ctx, cx + cw - 7, ty, 2.5f, thumbH, 1.25f, Theme.accentWave(0));
         }
     }
 
@@ -364,7 +382,7 @@ public class ClickGui extends Screen {
         boolean hov = hovered(x, y, w, h);
         float fa = anim("searchfocus", 16).animate(searchFocused ? 1 : 0);
         float ha = anim("searchhover", 16).animate(hov ? 1 : 0);
-        R2D.roundRect(ctx, x, y, w, h, 8, R2D.blend(Theme.card(), Theme.cardHover(), Math.max(ha, fa) * 0.7f));
+        R2D.roundRect(ctx, x, y, w, h, h / 2f, R2D.blend(R2D.blend(Theme.card(), Theme.cardHover(), ha * 0.7f), R2D.withAlpha(Theme.accent(), 0.22f), fa));
         R2D.roundOutline(ctx, x, y, w, h, 8, 0.6f, R2D.blend(Theme.stroke(), Theme.accent(), fa));
         R2D.icon(ctx, "search", x + 8, y + h / 2f - 4.5f, 9, R2D.blend(Theme.textFaint(), Theme.text(), fa));
         String shown = search.isEmpty() ? Lang.get("search") : search;
@@ -442,11 +460,24 @@ public class ClickGui extends Screen {
         float tx = x + 23;
         Fonts.draw(ctx, m.getName(), tx, y + 8, nameCol, Font.BOLD, 0.86f);
         float right = 60;
-        if (m.hasKey()) {
+        float nx = tx + Fonts.width(m.getName(), Font.BOLD, 0.86f) + 4;
+        if (binding == m) {
+            String k = Lang.get("bind.listening");
+            float kw = Fonts.width(k, Font.BOLD, 0.6f) + 8;
+            R2D.roundRect(ctx, nx, y + 7.5f, kw, 8.5f, 4.25f, Theme.accentWave(0));
+            Fonts.drawV(ctx, k, nx + 4, y + 11.8f, Theme.accentText(), Font.BOLD, 0.6f);
+            nx += kw + 4;
+        } else if (m.hasKey()) {
             String k = Keys.name(m.getKey());
             float kw = Fonts.width(k, Font.BOLD, 0.62f) + 7;
-            R2D.roundRect(ctx, tx + Fonts.width(m.getName(), Font.BOLD, 0.86f) + 4, y + 7.5f, kw, 8.5f, 2.5f, Theme.toggleOff());
-            Fonts.drawV(ctx, k, tx + Fonts.width(m.getName(), Font.BOLD, 0.86f) + 7.5f, y + 11.8f, Theme.textDim(), Font.BOLD, 0.62f);
+            R2D.roundRect(ctx, nx, y + 7.5f, kw, 8.5f, 2.5f, Theme.toggleOff());
+            Fonts.drawV(ctx, k, nx + 3.5f, y + 11.8f, Theme.textDim(), Font.BOLD, 0.62f);
+            nx += kw + 4;
+        }
+        String vals = summary(m);
+        if (!vals.isEmpty()) {
+            float maxW = x + w - right - nx;
+            if (maxW > 12) Fonts.drawV(ctx, Fonts.trim(vals, Font.SEMIBOLD, 0.62f, maxW), nx + 1, y + 11.8f, Theme.accentWave(0), Font.SEMIBOLD, 0.62f);
         }
         Fonts.draw(ctx, Fonts.trim(m.getDescription(), Font.REGULAR, 0.66f, w - (tx - x) - right), tx, y + 19, Theme.textFaint(), Font.REGULAR, 0.66f);
 
@@ -465,7 +496,10 @@ public class ClickGui extends Screen {
         hit(x, y, w, baseH, b -> {
             if (b == 0) m.toggle();
             else if (b == 1) m.expanded = !m.expanded;
+            else if (b == 2) binding = binding == m ? null : m;
         });
+        // strzałka – rozwija opcje
+        hit(ax - 6, ay - 7, 12, 14, b -> { if (b == 0 || b == 1) m.expanded = !m.expanded; });
 
         // gwiazdka ulubionych (widoczna po najechaniu lub gdy ulubiony)
         float fa = m.favAnim.animate(m.favorite ? 1 : 0);
@@ -575,6 +609,7 @@ public class ClickGui extends Screen {
         float r = 3.6f + ha * 0.9f;
         R2D.circle(ctx, x + w * pct, y + 1.5f, r + 1, Theme.card());
         R2D.circle(ctx, x + w * pct, y + 1.5f, r, Theme.accent());
+        sliders.add(new Object[]{n, x - 4, y - 6, w + 8, 14f, clip});
         hit(x - 4, y - 5, w + 8, 13, b -> {
             if (b != 0) return;
             dragging = n; dragTrackX = x; dragTrackW = w;
@@ -615,7 +650,7 @@ public class ClickGui extends Screen {
 
     private float drawThemes(DrawContext ctx, float x, float y, float w) {
         Theme.Preset[] presets = Theme.Preset.values();
-        float gap = 12, cardW = (w - gap * (presets.length - 1)) / presets.length, cardH = 150;
+        float gap = 12, cardW = (w - gap * (presets.length - 1)) / presets.length, cardH = 100 * ((cardW - 20) / 120f) + 56;
         for (int i = 0; i < presets.length; i++) {
             Theme.Preset p = presets[i];
             float cx = x + i * (cardW + gap);
@@ -628,10 +663,17 @@ public class ClickGui extends Screen {
             R2D.roundOutline(ctx, cx, y - lift, cardW, cardH, 12, 0.6f + aa * 0.8f, R2D.blend(Theme.stroke(), Theme.accent(), aa));
 
             // mini podgląd GUI w kolorach motywu
-            float px = cx + 10, py = y - lift + 10, pw = cardW - 20, ph = 92;
-            R2D.roundRect(ctx, px, py, pw, ph, 8, p.color(0));
-            R2D.roundRect(ctx, px, py, pw * 0.3f + 8, ph, 8, p.color(1));
-            R2D.rect(ctx, px + pw * 0.3f, py, 8, ph, p.color(0));
+            float px0 = cx + 10, py0 = y - lift + 10, pwReal = cardW - 20;
+            float ps = pwReal / 120f, ph = 100 * ps;
+            ctx.getMatrices().push();
+            ctx.getMatrices().translate(px0, py0, 0);
+            ctx.getMatrices().scale(ps, ps, 1);
+            float px = 0, py = 0, pw = 120;
+            {
+            float ph0 = 100;
+            R2D.roundRect(ctx, px, py, pw, ph0, 8, p.color(0));
+            R2D.roundRect(ctx, px, py, pw * 0.3f + 8, ph0, 8, p.color(1));
+            R2D.rect(ctx, px + pw * 0.3f, py, 8, ph0, p.color(0));
             R2D.roundRect(ctx, px + 6, py + 6, 8, 8, 2.5f, p.color(8));
             R2D.roundRect(ctx, px + 17, py + 8, pw * 0.3f - 22, 4, 2, p.color(6));
             for (int k = 0; k < 5; k++) {
@@ -640,15 +682,17 @@ public class ClickGui extends Screen {
             }
             for (int k = 0; k < 4; k++) {
                 float bx = px + pw * 0.3f + 8 + (k % 2) * ((pw * 0.7f - 20) / 2f + 4);
-                float by = py + 10 + (k / 2) * 40;
-                float bw = (pw * 0.7f - 20) / 2f, bh = 34;
+                float by = py + 12 + (k / 2) * 44;
+                float bw = (pw * 0.7f - 20) / 2f, bh = 38;
                 R2D.roundRect(ctx, bx, by, bw, bh, 5, p.color(2));
                 R2D.roundRect(ctx, bx + 5, by + 6, 10, 10, 3, k == 0 || k == 3 ? p.color(8) : p.color(10));
                 R2D.roundRect(ctx, bx + 19, by + 8, bw * 0.4f, 3, 1.5f, p.color(5));
                 R2D.roundRect(ctx, bx + 19, by + 14, bw * 0.3f, 2.5f, 1.25f, p.color(6));
                 R2D.roundRect(ctx, bx + bw - 15, by + bh - 10, 10, 5, 2.5f, k == 0 || k == 3 ? p.color(8) : p.color(10));
             }
-            R2D.roundOutline(ctx, px, py, pw, ph, 8, 0.5f, p.color(4));
+            R2D.roundOutline(ctx, px, py, pw, 100, 8, 0.5f, p.color(4));
+            }
+            ctx.getMatrices().pop();
 
             Fonts.draw(ctx, p.getName(), cx + 12, y - lift + ph + 22, Theme.text(), Font.BOLD, 1f);
             if (aa > 0.02f) {
@@ -656,14 +700,16 @@ public class ClickGui extends Screen {
                 R2D.alpha = prev * aa;
                 String t = Lang.get("theme.active");
                 float tw = Fonts.width(t, Font.BOLD, 0.65f) + 18;
-                float tx = cx + cardW - 12 - tw;
-                R2D.roundRect(ctx, tx, y - lift + ph + 21, tw, 12, 6, Theme.accent());
-                R2D.icon(ctx, "check", tx + 4, y - lift + ph + 23.5f, 7, Theme.accentText());
-                Fonts.drawV(ctx, t, tx + 13, y - lift + ph + 27.5f, Theme.accentText(), Font.BOLD, 0.65f);
+                float tx = cx + cardW - 14 - tw, tyb = y - lift + 14;
+                R2D.shadow(ctx, tx, tyb, tw, 12, 5, Theme.shadow());
+                R2D.roundRect(ctx, tx, tyb, tw, 12, 6, Theme.accent());
+                R2D.icon(ctx, "check", tx + 4, tyb + 2.5f, 7, Theme.accentText());
+                Fonts.drawV(ctx, t, tx + 13, tyb + 6.5f, Theme.accentText(), Font.BOLD, 0.65f);
                 R2D.alpha = prev;
             }
             String desc = switch (p) {
                 case DARK -> Lang.pl() ? "Grafit i biel" : "Graphite & white";
+                case MIDNIGHT -> Lang.pl() ? "Granat nocy" : "Night navy";
                 case LIGHT -> Lang.pl() ? "Biel i czerń" : "White & black";
                 case AMOLED -> Lang.pl() ? "Czysta czerń" : "Pure black";
             };
@@ -802,6 +848,96 @@ public class ClickGui extends Screen {
         R2D.icon(ctx, "info", x, hy, 9, Theme.textFaint());
         Fonts.draw(ctx, Lang.get("profile.hint"), x + 14, hy + 1, Theme.textFaint(), Font.REGULAR, 0.72f);
         return hy - y + 16;
+    }
+
+    /** krótki opis ustawień modułu (wartości trybów i suwaków) */
+    private static String summary(Module m) {
+        StringBuilder sb = new StringBuilder();
+        int n = 0;
+        for (Setting<?> s : m.getSettings()) {
+            String v = null;
+            if (s instanceof ModeSetting md) v = md.get();
+            else if (s instanceof NumberSetting num) v = num.display();
+            if (v == null) continue;
+            if (sb.length() > 0) sb.append("  ");
+            sb.append(v);
+            if (++n >= 2) break;
+        }
+        return sb.toString();
+    }
+
+    private void drawFooter(DrawContext ctx) {
+        String[][] items = {{"LPM", "footer.toggle"}, {"PPM / >", "footer.settings"}, {"ŚPM", "footer.bind"},
+                {Lang.pl() ? "Kółko" : "Wheel", "footer.wheel"}, {"RShift / Esc", "footer.close"}};
+        float s = 0.62f, gap = 12, total = 0;
+        for (String[] it : items) total += Fonts.width(it[0], Font.BOLD, s) + 4 + Fonts.width(Lang.get(it[1]), Font.REGULAR, s) + gap;
+        total -= gap;
+        float fx = x0 + W / 2f - total / 2f - 10, fy = y0 + H + 8;
+        R2D.roundRect(ctx, fx, fy, total + 20, 15, 7.5f, R2D.withAlpha(Theme.bg(), 0.85f));
+        R2D.roundOutline(ctx, fx, fy, total + 20, 15, 7.5f, 0.5f, Theme.stroke());
+        float cx = fx + 10;
+        for (String[] it : items) {
+            Fonts.drawV(ctx, it[0], cx, fy + 8, Theme.text(), Font.BOLD, s);
+            cx += Fonts.width(it[0], Font.BOLD, s) + 4;
+            String d = Lang.get(it[1]);
+            Fonts.drawV(ctx, d, cx, fy + 8, Theme.textFaint(), Font.REGULAR, s);
+            cx += Fonts.width(d, Font.REGULAR, s) + gap;
+        }
+    }
+
+    // ------------------------------------------------------------------ znajomi
+
+    private void addFriend() {
+        String n = friendInput.trim();
+        if (dev.razer.client.config.Friends.validName(n) && rc.friends.add(n)) {
+            rc.notifications.info("users", Lang.get("friends.added"), n);
+            rc.config.saveClient();
+        }
+        friendInput = "";
+    }
+
+    private float drawFriends(DrawContext ctx, float x, float y, float w) {
+        // pole dodawania
+        float h = 24, bw = 90;
+        boolean hov = hovered(x, y, w - bw - 8, h);
+        float fa = anim("friendfocus", 16).animate(friendFocused ? 1 : 0);
+        R2D.roundRect(ctx, x, y, w - bw - 8, h, h / 2f, R2D.blend(hov ? Theme.cardHover() : Theme.card(), R2D.withAlpha(Theme.accent(), 0.18f), fa));
+        R2D.roundOutline(ctx, x, y, w - bw - 8, h, h / 2f, 0.6f, R2D.blend(Theme.stroke(), Theme.accent(), fa));
+        R2D.icon(ctx, "users", x + 10, y + h / 2f - 4.5f, 9, Theme.textFaint());
+        String shown = friendInput.isEmpty() ? Lang.get("friends.placeholder") : friendInput;
+        Fonts.drawV(ctx, shown, x + 25, y + h / 2f + 0.5f, friendInput.isEmpty() ? Theme.textFaint() : Theme.text(), Font.REGULAR, 0.78f);
+        if (friendFocused && (System.currentTimeMillis() / 500) % 2 == 0) {
+            float cxp = x + 25 + (friendInput.isEmpty() ? 0 : Fonts.width(friendInput, Font.REGULAR, 0.78f) + 1);
+            R2D.rect(ctx, cxp, y + 7, 0.7f, h - 14, Theme.text());
+        }
+        hit(x, y, w - bw - 8, h, b -> { friendFocused = true; searchFocused = false; });
+        button(ctx, "addfriend", x + w - bw, y, bw, h, "plus", Lang.get("friends.add"), true, this::addFriend);
+
+        float cy = y + h + 12;
+        java.util.List<String> list = new java.util.ArrayList<>(rc.friends.all());
+        if (list.isEmpty()) {
+            R2D.icon(ctx, "users", x + w / 2f - 12, cy + 30, 24, Theme.textFaint());
+            Fonts.drawCentered(ctx, Lang.get("friends.empty"), x + w / 2f, cy + 62, Theme.textDim(), Font.SEMIBOLD, 0.85f);
+            return cy + 90 - y;
+        }
+        float gap = 8, colW = (w - gap) / 2f, rh = 30;
+        for (int i = 0; i < list.size(); i++) {
+            String name = list.get(i);
+            float fx = x + (i % 2) * (colW + gap), fy = cy + (i / 2) * (rh + gap);
+            boolean hv = hovered(fx, fy, colW, rh);
+            float ha = anim("fr" + name, 18).animate(hv ? 1 : 0);
+            R2D.roundRect(ctx, fx, fy, colW, rh, 8, R2D.blend(Theme.card(), Theme.cardHover(), ha));
+            R2D.roundOutline(ctx, fx, fy, colW, rh, 8, 0.5f, Theme.stroke());
+            R2D.circle(ctx, fx + 15, fy + rh / 2f, 7, Theme.toggleOff());
+            Fonts.drawCentered(ctx, name.substring(0, 1).toUpperCase(), fx + 15, fy + rh / 2f - Fonts.height(0.7f) / 2f + 0.5f, Theme.accentWave(i * 0.4f), Font.BOLD, 0.7f);
+            Fonts.drawV(ctx, name, fx + 28, fy + rh / 2f + 0.5f, Theme.text(), Font.BOLD, 0.82f);
+            float bx = fx + colW - 24;
+            boolean hb = hovered(bx, fy + 7, 16, 16);
+            R2D.roundRect(ctx, bx, fy + 7, 16, 16, 8, R2D.withAlpha(Theme.cardHover(), hb ? 1 : ha));
+            R2D.icon(ctx, "trash", bx + 4, fy + 11, 8, hb ? 0xFFFF5A5A : Theme.textFaint());
+            hit(bx, fy + 7, 16, 16, b -> { if (b == 0) { rc.friends.remove(name); rc.config.saveClient(); } });
+        }
+        return cy + ((list.size() + 1) / 2) * (rh + gap) - y;
     }
 
     // ------------------------------------------------------------------ HUD
@@ -968,6 +1104,7 @@ public class ClickGui extends Screen {
         updateMouse(mouseX, mouseY);
         boolean wasFocused = searchFocused;
         searchFocused = false;
+        friendFocused = false;
         if (binding != null && button > 1) { // przypisanie przycisku myszy nie jest wspierane – anuluj
             binding = null;
             return true;
@@ -1001,6 +1138,17 @@ public class ClickGui extends Screen {
 
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double horizontalAmount, double verticalAmount) {
+        updateMouse(mouseX, mouseY);
+        for (Object[] sl : sliders) {
+            float[] cl = (float[]) sl[5];
+            if (cl != null && !inside(mx, my, cl[0], cl[1], cl[2], cl[3])) continue;
+            if (inside(mx, my, (float) sl[1], (float) sl[2], (float) sl[3], (float) sl[4])) {
+                NumberSetting n = (NumberSetting) sl[0];
+                n.set(n.get() + n.step * Math.signum(verticalAmount));
+                if (n == rc.settings.animSpeed) Anim.globalSpeed = n.get().floatValue();
+                return true;
+            }
+        }
         scrollTarget = (float) Math.max(0, Math.min(maxScroll, scrollTarget - verticalAmount * 32));
         return true;
     }
@@ -1013,6 +1161,12 @@ public class ClickGui extends Screen {
                 binding.setKey(GLFW.GLFW_KEY_UNKNOWN);
             else binding.setKey(keyCode);
             binding = null;
+            return true;
+        }
+        if (friendFocused) {
+            if (keyCode == GLFW.GLFW_KEY_BACKSPACE && !friendInput.isEmpty()) friendInput = friendInput.substring(0, friendInput.length() - 1);
+            else if (keyCode == GLFW.GLFW_KEY_ENTER) addFriend();
+            else if (keyCode == GLFW.GLFW_KEY_ESCAPE) friendFocused = false;
             return true;
         }
         if (searchFocused) {
@@ -1043,6 +1197,10 @@ public class ClickGui extends Screen {
     @Override
     public boolean charTyped(char chr, int modifiers) {
         if (closing || binding != null) return true;
+        if (friendFocused) {
+            if ((Character.isLetterOrDigit(chr) || chr == '_') && friendInput.length() < 16) friendInput += chr;
+            return true;
+        }
         if ((page == Page.CATEGORY || page == Page.FAVORITES) && chr >= ' ' && chr != 127) {
             if (!searchFocused && Character.isLetterOrDigit(chr)) searchFocused = true;
             if (searchFocused && search.length() < 24) { search += chr; scrollTarget = 0; }

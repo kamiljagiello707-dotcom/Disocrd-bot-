@@ -31,6 +31,7 @@ public class RazerClient implements ClientModInitializer {
     private static RazerClient instance;
 
     public final ClientSettings settings = new ClientSettings();
+    public final dev.razer.client.config.Friends friends = new dev.razer.client.config.Friends();
     public ModuleManager modules;
     public Notifications notifications;
     public Hud hud;

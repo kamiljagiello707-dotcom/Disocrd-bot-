@@ -29,7 +29,7 @@ public final class Lang {
         put("page.profile", "Profil gracza", "Player profile");
         put("page.settings", "Ustawienia klienta", "Client settings");
         put("section.modules", "MODUŁY", "MODULES");
-        put("section.client", "KLIENT", "CLIENT");
+        put("section.client", "INNE", "OTHER");
         put("search", "Szukaj modułów...", "Search modules...");
         put("modules.count", "%d modułów • %d włączonych", "%d modules • %d enabled");
         put("profile.sub", "PPM – ustawienia", "Right click – settings");
@@ -47,7 +47,7 @@ public final class Lang {
         put("notif.key", "Klawisz %s", "Key %s");
         // motywy
         put("themes.title", "Wybierz motyw", "Choose a theme");
-        put("themes.desc", "Biało-czarne motywy z płynnym przejściem kolorów.", "Black & white themes with smooth color transitions.");
+        put("themes.desc", "Motywy i kolory akcentu z płynnym przejściem.", "Themes and accent colors with smooth transitions.");
         put("theme.dark", "Ciemny", "Dark");
         put("theme.light", "Jasny", "Light");
         put("theme.amoled", "AMOLED", "AMOLED");
@@ -100,6 +100,19 @@ public final class Lang {
         put("size.normal", "Średni", "Normal");
         put("size.large", "Duży", "Large");
         put("wm.fps", "FPS", "FPS");
+        put("page.friends", "Znajomi", "Friends");
+        put("friends.desc", "Lista Twoich znajomych na serwerach", "Your friends list");
+        put("friends.placeholder", "Wpisz nick znajomego...", "Type a friend's name...");
+        put("friends.add", "Dodaj", "Add");
+        put("friends.added", "Dodano znajomego", "Friend added");
+        put("friends.empty", "Brak znajomych – dodaj kogoś powyżej", "No friends yet – add someone above");
+        put("profile.modules", "%d modułów włączonych", "%d modules on");
+        put("theme.midnight", "Midnight", "Midnight");
+        put("footer.toggle", "włącz", "toggle");
+        put("footer.settings", "opcje", "settings");
+        put("footer.bind", "klawisz", "bind");
+        put("footer.wheel", "przewijanie (na suwakach: wartość)", "scroll (on sliders: value)");
+        put("footer.close", "zamknij", "close");
         put("set.menu", "Własne menu główne", "Custom main menu");
         put("set.menu.desc", "Ekran blokady z godziną i nowoczesne menu RazerClient", "Lock screen with clock and modern RazerClient menu");
         put("menu.continue", "Kliknij, aby kontynuować", "Click to continue");

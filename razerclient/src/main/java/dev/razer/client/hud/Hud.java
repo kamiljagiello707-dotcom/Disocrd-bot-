@@ -33,7 +33,7 @@ public class Hud {
     private static final DateTimeFormatter TIME = DateTimeFormatter.ofPattern("HH:mm");
 
     // wspólny styl
-    public static final float R = 4.5f, PADX = 6, HEAD = 15, ROW = 10.5f, NAME = 0.66f, ICON = 6.5f;
+    public static final float R = 8f, PADX = 8, HEAD = 16, ROW = 10.5f, NAME = 0.66f, ICON = 6.5f;
 
     public final Watermark watermark = new Watermark();
     public final ModuleList moduleList = new ModuleList();
@@ -90,17 +90,20 @@ public class Hud {
 
     // ================================================================== styl
 
-    public static void panel(DrawContext ctx, float x, float y, float w, float h) {
-        R2D.shadow(ctx, x, y, w, h, 7, Theme.shadow());
-        R2D.roundRect(ctx, x, y, w, h, R, Theme.hudBg());
-        R2D.roundOutline(ctx, x, y, w, h, R, 0.5f, Theme.stroke());
+    public static void panel(DrawContext ctx, float x, float y, float w, float h) { panel(ctx, x, y, w, h, R); }
+
+    public static void panel(DrawContext ctx, float x, float y, float w, float h, float r) {
+        R2D.shadow(ctx, x, y, w, h, 8, Theme.shadow());
+        R2D.roundRect(ctx, x, y, w, h, r, Theme.hudBg());
+        R2D.roundOutline(ctx, x, y, w, h, r, 0.5f, Theme.stroke());
     }
 
     /** cienki pasek akcentu z gradientem u góry panelu */
     public static void accentLine(DrawContext ctx, float x, float y, float w) {
         if (Theme.accentPreset() == Theme.Accent.MONO) return;
-        R2D.gradientH(ctx, x + R, y + 0.5f, (w - 2 * R) / 2f, 1f, Theme.accentWave(0), Theme.accentWave(1.5f));
-        R2D.gradientH(ctx, x + w / 2f, y + 0.5f, (w - 2 * R) / 2f, 1f, Theme.accentWave(1.5f), Theme.accentWave(3f));
+        float lw = Math.min(w - 2 * R - 4, 40);
+        R2D.gradientH(ctx, x + w / 2f - lw / 2f, y + 0.5f, lw / 2f, 1.2f, R2D.withAlpha(Theme.accentWave(0), 0f), Theme.accentWave(1.5f));
+        R2D.gradientH(ctx, x + w / 2f, y + 0.5f, lw / 2f, 1.2f, Theme.accentWave(1.5f), R2D.withAlpha(Theme.accentWave(3f), 0f));
     }
 
     public static float header(DrawContext ctx, float x, float y, float w, String icon, String title, String count) {
@@ -136,15 +139,15 @@ public class Hud {
             MinecraftClient mc = mc();
             String[] parts = {"RazerClient", mc.getCurrentFps() + " " + Lang.get("wm.fps"), LocalTime.now().format(TIME), mc.getSession().getUsername()};
             Font[] fonts = {Font.BOLD, Font.SEMIBOLD, Font.SEMIBOLD, Font.SEMIBOLD};
-            float s = 0.7f, pad = 6, dotGap = 5, iconSize = 8.5f;
+            float s = 0.7f, pad = 8, dotGap = 5, iconSize = 8.5f;
             float ww = pad + iconSize + 4;
             for (int i = 0; i < parts.length; i++) {
                 ww += Fonts.width(parts[i], fonts[i], s);
                 if (i < parts.length - 1) ww += dotGap * 2 + 2;
             }
             ww += pad + Fonts.width("2.0", Font.BOLD, 0.5f) + 3;
-            w = ww; h = 15;
-            panel(ctx, x, y, w, h);
+            w = ww; h = 17;
+            panel(ctx, x, y, w, h, h / 2f);
             accentLine(ctx, x, y, w);
             float cx = x + pad;
             R2D.icon(ctx, "logo", cx, y + (h - iconSize) / 2f, iconSize, Theme.accentWave(0));
@@ -153,7 +156,7 @@ public class Hud {
                 Fonts.drawV(ctx, parts[i], cx, y + h / 2f + 0.5f, i == 0 ? Theme.text() : Theme.textDim(), fonts[i], s);
                 cx += Fonts.width(parts[i], fonts[i], s);
                 if (i == 0) {
-                    Fonts.draw(ctx, "2.0", cx + 1.5f, y + 3.2f, Theme.accentWave(1), Font.BOLD, 0.5f);
+                    Fonts.draw(ctx, "2.0", cx + 1.5f, y + 4.2f, Theme.accentWave(1), Font.BOLD, 0.5f);
                     cx += Fonts.width("2.0", Font.BOLD, 0.5f) + 3;
                 }
                 if (i < parts.length - 1) {
@@ -257,41 +260,55 @@ public class Hud {
         @Override public void render(DrawContext ctx, float x, float y, boolean preview) {
             LivingEntity t = current();
             if (t == null && preview) t = mc().player;
-            w = 124; h = 38;
-            panel(ctx, x, y, w, h);
+            w = 138; h = 44;
+            float r = 12;
+            panel(ctx, x, y, w, h, r);
             accentLine(ctx, x, y, w);
             if (t == null) return;
-            float hs = 24;
-            R2D.roundRect(ctx, x + 6, y + 7, hs, hs, 4, Theme.toggleOff());
+            // zaokrąglona głowa
+            float hs = 30, hx = x + 7, hy = y + 7;
+            R2D.roundRect(ctx, hx - 1, hy - 1, hs + 2, hs + 2, 9, Theme.toggleOff());
             if (t instanceof AbstractClientPlayerEntity p) {
-                ctx.draw();
-                RenderSystem.enableBlend();
-                RenderSystem.setShaderColor(1, 1, 1, R2D.alpha);
-                ctx.getMatrices().push();
-                ctx.getMatrices().translate(x + 8, y + 9, 0);
-                PlayerSkinDrawer.draw(ctx, p.getSkinTextures(), 0, 0, 20);
-                ctx.getMatrices().pop();
-                ctx.draw();
-                RenderSystem.setShaderColor(1, 1, 1, 1);
+                net.minecraft.util.Identifier skin = p.getSkinTextures().texture();
+                R2D.roundTexture(ctx, skin, hx, hy, hs, hs, 8, 8 / 64f, 8 / 64f, 16 / 64f, 16 / 64f, 0xFFFFFFFF);
+                R2D.roundTexture(ctx, skin, hx - 0.8f, hy - 0.8f, hs + 1.6f, hs + 1.6f, 8.5f, 40 / 64f, 8 / 64f, 48 / 64f, 16 / 64f, 0xFFFFFFFF);
             } else {
-                R2D.icon(ctx, "targethud", x + 12, y + 13, 12, Theme.textDim());
+                R2D.icon(ctx, "targethud", hx + 8, hy + 8, 14, Theme.textDim());
             }
-            float tx = x + 36;
-            String name = Fonts.trim(t.getName().getString(), Font.BOLD, 0.74f, w - 44);
-            Fonts.draw(ctx, name, tx, y + 7, Theme.text(), Font.BOLD, 0.74f);
+            // trafienie – czerwony błysk na głowie
+            if (t.hurtTime > 0) R2D.roundRect(ctx, hx, hy, hs, hs, 8, R2D.withAlpha(0xFFFF3B3B, t.hurtTime / 10f * 0.45f));
+
+            float tx = hx + hs + 8;
+            float tw = x + w - 9 - tx;
+            String name = Fonts.trim(t.getName().getString(), Font.BOLD, 0.78f, tw);
+            Fonts.draw(ctx, name, tx, y + 8, Theme.text(), Font.BOLD, 0.78f);
             float hp = t.getHealth() + t.getAbsorptionAmount(), max = Math.max(1, t.getMaxHealth());
             float dist = mc().player != null && t != mc().player ? mc().player.distanceTo(t) : 0;
-            String info = String.format(Locale.ROOT, "%.1f HP  •  %.1fm", hp, dist);
-            Fonts.draw(ctx, info, tx, y + 16.5f, Theme.textDim(), Font.SEMIBOLD, 0.6f);
+            // pigułki z informacjami
+            String hpS = String.format(Locale.ROOT, "%.1f", hp), dS = String.format(Locale.ROOT, "%.1fm", dist);
+            float px = tx;
+            px = pill(ctx, px, y + 18.5f, "heart", hpS) + 4;
+            pill(ctx, px, y + 18.5f, "coords", dS);
+            // pasek zdrowia
             float pct = health.animate(Math.min(1, hp / max));
-            float bw = w - 42;
-            R2D.roundRect(ctx, tx, y + 27, bw, 3, 1.5f, Theme.toggleOff());
+            float by = y + h - 9.5f, bh = 4;
+            R2D.roundRect(ctx, tx, by, tw, bh, bh / 2f, Theme.toggleOff());
             int c1 = Theme.accentPreset() == Theme.Accent.MONO ? Theme.accent() : Theme.accentWave(0);
-            int c2 = Theme.accentPreset() == Theme.Accent.MONO ? Theme.accent() : Theme.accentWave(2);
-            R2D.scissor(ctx, tx, y + 26, bw * pct, 5);
-            R2D.roundRect(ctx, tx, y + 27, bw, 3, 1.5f, c1);
-            R2D.gradientH(ctx, tx + 1.5f, y + 27, bw - 3, 3, c1, c2);
+            int c2 = Theme.accentPreset() == Theme.Accent.MONO ? Theme.textDim() : Theme.accentWave(2);
+            float fw = Math.max(bh, tw * pct);
+            R2D.scissor(ctx, tx, by - 1, fw, bh + 2);
+            R2D.roundRect(ctx, tx, by, fw, bh, bh / 2f, c1);
+            R2D.gradientH(ctx, tx + bh / 2f, by, Math.max(0, fw - bh), bh, c1, R2D.blend(c1, c2, pct));
+            R2D.circle(ctx, tx + fw - bh / 2f, by + bh / 2f, bh / 2f, R2D.blend(c1, c2, pct));
             R2D.endScissor(ctx);
+        }
+
+        private float pill(DrawContext ctx, float x, float y, String icon, String text) {
+            float pw = Fonts.width(text, Font.SEMIBOLD, 0.56f) + 15, ph = 9.5f;
+            R2D.roundRect(ctx, x, y, pw, ph, ph / 2f, Theme.toggleOff());
+            R2D.icon(ctx, icon, x + 3.5f, y + 2.25f, 5, Theme.accentWave(0));
+            Fonts.drawV(ctx, text, x + 11, y + ph / 2f + 0.4f, Theme.textDim(), Font.SEMIBOLD, 0.56f);
+            return x + pw;
         }
     }
 

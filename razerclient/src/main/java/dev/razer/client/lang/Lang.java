@@ -100,6 +100,7 @@ public final class Lang {
         put("size.normal", "Średni", "Normal");
         put("size.large", "Duży", "Large");
         put("wm.fps", "FPS", "FPS");
+        put("chatdrag.hint", "Przeciągnij HUD myszką  •  ŚPM – domyślna pozycja", "Drag the HUD with your mouse  •  MMB – default position");
         put("welcome", "Witaj, %s!  •  Prawy Shift – menu", "Welcome, %s!  •  Right Shift – menu");
         put("cat.favorites", "Ulubione", "Favorites");
         put("page.hud", "HUD", "HUD");

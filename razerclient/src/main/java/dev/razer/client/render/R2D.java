@@ -200,6 +200,38 @@ public final class R2D {
         end(b);
     }
 
+    /** tekstura przycięta do zaokrąglonego prostokąta (wachlarz trójkątów) */
+    public static void roundTexture(DrawContext ctx, Identifier tex, float x, float y, float w, float h, float r,
+                                    float u0, float v0, float u1, float v1, int color) {
+        int c = col(color);
+        if ((c >>> 24) == 0) return;
+        r = Math.max(0, Math.min(r, Math.min(w, h) / 2f));
+        Matrix4f m = ctx.getMatrices().peek().getPositionMatrix();
+        RenderSystem.enableBlend();
+        RenderSystem.defaultBlendFunc();
+        RenderSystem.disableDepthTest();
+        RenderSystem.disableCull();
+        RenderSystem.setShader(GameRenderer::getPositionTexColorProgram);
+        RenderSystem.setShaderTexture(0, tex);
+        BufferBuilder b = Tessellator.getInstance().begin(VertexFormat.DrawMode.TRIANGLE_FAN, VertexFormats.POSITION_TEXTURE_COLOR);
+        float cx = x + w / 2f, cy = y + h / 2f;
+        b.vertex(m, cx, cy, 0).texture(u0 + (u1 - u0) / 2f, v0 + (v1 - v0) / 2f).color(c);
+        float[][] corners = {{x + w - r, y + r, 270}, {x + w - r, y + h - r, 0}, {x + r, y + h - r, 90}, {x + r, y + r, 180}};
+        int seg = 8;
+        float fx = 0, fy = 0;
+        boolean first = true;
+        for (float[] cc : corners) {
+            for (int i = 0; i <= seg; i++) {
+                double a = Math.toRadians(cc[2] + 90.0 * i / seg);
+                float px = cc[0] + (float) Math.cos(a) * r, py = cc[1] + (float) Math.sin(a) * r;
+                if (first) { fx = px; fy = py; first = false; }
+                b.vertex(m, px, py, 0).texture(u0 + (u1 - u0) * (px - x) / w, v0 + (v1 - v0) * (py - y) / h).color(c);
+            }
+        }
+        b.vertex(m, fx, fy, 0).texture(u0 + (u1 - u0) * (fx - x) / w, v0 + (v1 - v0) * (fy - y) / h).color(c);
+        end(b);
+    }
+
     public static void icon(DrawContext ctx, String name, float x, float y, float size, int color) {
         Identifier tex = ICONS.computeIfAbsent(name, n -> id("textures/icons/" + n + ".png"));
         texture(ctx, tex, x, y, size, size, color);

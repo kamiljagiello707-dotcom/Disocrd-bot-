@@ -47,7 +47,7 @@ public class Notifications {
     public void render(DrawContext ctx, int sw, int sh) {
         long now = System.currentTimeMillis();
         list.removeIf(n -> now - n.start > n.duration + 400);
-        float w = 118, h = 28, gap = 4;
+        float w = 124, h = 28, gap = 5;
         float baseY = sh - 8;
         int i = 0;
         for (Notification n : list) {
@@ -69,17 +69,19 @@ public class Notifications {
 
     private void drawCard(DrawContext ctx, Notification n, float x, float y, float w, float h, float progress) {
         R2D.shadow(ctx, x, y, w, h, 7, Theme.shadow());
-        R2D.roundRect(ctx, x, y, w, h, 4.5f, Theme.hudBg());
-        R2D.roundOutline(ctx, x, y, w, h, 4.5f, 0.5f, Theme.stroke());
+        R2D.roundRect(ctx, x, y, w, h, 9, Theme.hudBg());
+        R2D.roundOutline(ctx, x, y, w, h, 9, 0.5f, Theme.stroke());
         boolean on = n.state != 0;
-        R2D.icon(ctx, n.icon, x + 7, y + 7, 8, on ? Theme.accent() : Theme.textFaint());
-        float tx = x + 20;
-        Fonts.drawV(ctx, n.title, tx, y + 11.5f, Theme.text(), Font.BOLD, 0.72f);
+        R2D.circle(ctx, x + 13, y + 14, 8, Theme.toggleOff());
+        R2D.icon(ctx, n.icon, x + 9, y + 10, 8, on ? Theme.accentWave(0) : Theme.textFaint());
+        float tx = x + 25;
+        Fonts.drawV(ctx, n.title, tx, y + 10, Theme.text(), Font.BOLD, 0.72f);
         if (n.state >= 0) {
             String st = on ? "ON" : "OFF";
-            Fonts.drawV(ctx, st, x + w - 7 - Fonts.width(st, Font.BOLD, 0.58f), y + 11.5f, on ? Theme.text() : Theme.textFaint(), Font.BOLD, 0.58f);
+            Fonts.drawV(ctx, st, x + w - 7 - Fonts.width(st, Font.BOLD, 0.58f), y + 10, on ? Theme.text() : Theme.textFaint(), Font.BOLD, 0.58f);
         }
-        Fonts.drawV(ctx, Fonts.trim(n.subtitle, Font.REGULAR, 0.62f, w - 27), tx, y + 21, Theme.textDim(), Font.REGULAR, 0.62f);
-        R2D.rect(ctx, x + 4.5f, y + h - 1.5f, (w - 9) * (1 - progress), 1, Theme.accent());
+        Fonts.drawV(ctx, Fonts.trim(n.subtitle, Font.REGULAR, 0.62f, w - 32), tx, y + 19.5f, Theme.textDim(), Font.REGULAR, 0.62f);
+        float pw = (w - 24) * (1 - progress);
+        if (pw > 1) R2D.roundRect(ctx, x + 12, y + h - 3, pw, 1.4f, 0.7f, Theme.accentWave(0));
     }
 }

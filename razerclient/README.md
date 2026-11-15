@@ -7,6 +7,8 @@ To jest **sam interfejs**. Moduły to puste przełączniki bez żadnej funkcji w
 
 ## Co nowego w 2.0
 - 🎨 **Kolory akcentu z gradientem:** Mono (biało-czarny), Fiolet, Róż, Niebieski, Cyjan, Zielony, Czerwony, Złoty, z płynnym przejściem kolorów
+- 🖱️ **Przesuwanie HUD przy otwartym czacie (T):** złap Watermark, KeyBinds albo dowolny inny element i przeciągnij go, gdzie chcesz. ŚPM przywraca domyślną pozycję
+- 🟣 **Zaokrąglony HUD:** pigułkowy Watermark, okrągłe panele, nowy TargetHUD z zaokrągloną głową skina, pigułkami HP i dystansu, czerwonym błyskiem przy trafieniu i zaokrąglonym paskiem zdrowia
 - 🖱️ **Edytor HUD:** przeciągasz każdy element myszką, z przyciąganiem do krawędzi i środka ekranu. PPM ukrywa element, ŚPM resetuje jego pozycję. Pozycje zapisują się względem rogów ekranu
 - 🧩 **Nowe elementy HUD:** TargetHUD (nick, HP z animowanym paskiem, dystans, głowa skina), Zbroja (z wytrzymałością), Efekty (zastępują ikony z Minecrafta), Koordynaty (XYZ, kierunek, koordynaty Netheru/Overworldu), Informacje (ping, prędkość, serwer, czas sesji)
 - ⭐ **Ulubione:** gwiazdka na module i osobna kategoria
@@ -28,6 +30,7 @@ To jest **sam interfejs**. Moduły to puste przełączniki bez żadnej funkcji w
 | | |
 |---|---|
 | ![](docs/hud.jpg) | ![](docs/hud_editor.jpg) |
+| ![](docs/hud_chat_drag.jpg) | |
 | ![](docs/gui_combat.jpg) | ![](docs/gui_hud.jpg) |
 | ![](docs/gui_favorites.jpg) | ![](docs/gui_light.jpg) |
 

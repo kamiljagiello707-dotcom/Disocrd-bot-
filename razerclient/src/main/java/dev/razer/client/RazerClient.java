@@ -63,6 +63,7 @@ public class RazerClient implements ClientModInitializer {
             if (settings.welcome.get())
                 notifications.info("sparkles", "RazerClient " + VERSION, Lang.format("welcome", client.getSession().getUsername()));
         }));
+        dev.razer.client.hud.ChatDrag.init();
         ClientLifecycleEvents.CLIENT_STOPPING.register(c -> config.save(config.current()));
         LOGGER.info("{} {} załadowany", NAME, VERSION);
     }

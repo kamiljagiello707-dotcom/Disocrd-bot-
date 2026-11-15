@@ -6,7 +6,7 @@ To jest **sam interfejs**. Moduły to puste przełączniki bez żadnej funkcji w
 ![ClickGUI](docs/gui_combat.jpg)
 
 ## Funkcje
-- **ClickGUI** (`Prawy Shift`): duże okno z płynną animacją otwierania i zamykania (skala + przenikanie), gładka czcionka Inter (nie pikselowa), zaokrąglone panele z cieniem, własne ikony
+- **ClickGUI** (`Prawy Shift`): duże okno z płynną animacją otwierania i zamykania (skala + przenikanie), gładka czcionka Inter (nie pikselowa), zaokrąglone panele z cieniem, małe ikony [Lucide](https://lucide.dev) (licencja ISC)
 - **Kategorie:** Walka, Ruch, Wizualne, Gracz, Świat, Inne, a do tego osobne strony **Motywy** i **Konfiguracje**
 - Animowany wskaźnik kategorii, hover, przełączniki, suwaki i przejścia między stronami
 - **LPM** na module włącza go, **PPM** rozwija opcje (klawisz, tryby, suwaki, przełączniki)
@@ -18,8 +18,8 @@ To jest **sam interfejs**. Moduły to puste przełączniki bez żadnej funkcji w
 
 ### HUD
 - **Watermark** (prawy górny róg): logo • FPS • godzina • nick
-- **Lista modułów** (lewy górny róg): panel z ikonami włączonych modułów, animowany
-- **KeyBinds** pod listą: moduły z przypisanym klawiszem i ich stan
+- **Lista modułów** (lewy górny róg): kompaktowy panel z małymi ikonami włączonych modułów, animowany
+- **Keybinds** pod listą: mały panel w stylu „embed”, czyli ikona, nazwa modułu i klawisz po prawej (wyszarzone, gdy moduł jest wyłączony)
 - **Powiadomienia** (prawy dolny róg): ikona modułu, Włączono/Wyłączono, nazwa i klawisz, z paskiem czasu
 
 ![HUD](docs/hud.jpg)

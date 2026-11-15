@@ -192,8 +192,8 @@ public class ClickGui extends Screen {
                 near *= indicatorA.raw();
                 int fg = R2D.blend(R2D.blend(Theme.textDim(), Theme.text(), ha), Theme.accentText(), near);
                 float off = anim("navoff" + fi, 16).animate(selected ? 4 : (hov ? 2 : 0));
-                R2D.icon(ctx, (String) e[0], x + 20 + off, fy + 5.5f, 11, fg);
-                Fonts.drawV(ctx, (String) e[1], x + 38 + off, fy + itemH / 2f + 0.5f, fg, selected ? Font.BOLD : Font.SEMIBOLD, 0.86f);
+                R2D.icon(ctx, (String) e[0], x + 20 + off, fy + 6.5f, 9, fg);
+                Fonts.drawV(ctx, (String) e[1], x + 35 + off, fy + itemH / 2f + 0.5f, fg, selected ? Font.BOLD : Font.SEMIBOLD, 0.86f);
                 if (pg == Page.CATEGORY) {
                     long en = rc.modules.byCategory(cat).stream().filter(Module::isEnabled).count();
                     if (en > 0) {
@@ -366,7 +366,7 @@ public class ClickGui extends Screen {
             Fonts.drawCentered(ctx, Lang.pl() ? "Nic nie znaleziono" : "Nothing found", x + w / 2f, y + 82, Theme.textDim(), Font.SEMIBOLD, 0.9f);
             return 120;
         }
-        float gap = 10, colW = (w - gap) / 2f;
+        float gap = 8, colW = (w - gap) / 2f;
         float[] colY = {y, y};
         for (int i = 0; i < list.size(); i++) {
             int col = i % 2;
@@ -383,40 +383,39 @@ public class ClickGui extends Screen {
     }
 
     private float drawModuleCard(DrawContext ctx, Module m, float x, float y, float w) {
-        float baseH = 44;
+        float baseH = 34;
         float ex = Anim.easeOutCubic(m.expandAnim.animate(m.expanded ? 1 : 0));
         float h = baseH + settingsHeight(m) * ex;
         boolean hov = hovered(x, y, w, baseH);
         float ha = m.hoverAnim.animate(hov ? 1 : 0);
         float on = m.toggleAnim.animate(m.isEnabled() ? 1 : 0);
 
-        R2D.roundRect(ctx, x, y, w, h, 10, R2D.blend(Theme.card(), Theme.cardHover(), ha));
-        R2D.roundOutline(ctx, x, y, w, h, 10, 0.6f, R2D.blend(Theme.stroke(), Theme.textFaint(), on * 0.6f));
+        R2D.roundRect(ctx, x, y, w, h, 7, R2D.blend(Theme.card(), Theme.cardHover(), ha));
+        R2D.roundOutline(ctx, x, y, w, h, 7, 0.5f, R2D.blend(Theme.stroke(), Theme.textFaint(), on * 0.5f));
+        // pasek aktywności po lewej
+        if (on > 0.01f) R2D.roundRect(ctx, x + 3, y + 10, 1.5f, (baseH - 20) * on, 0.75f, Theme.accent());
 
-        // ikona
-        float tile = 26;
-        R2D.roundRect(ctx, x + 9, y + 9, tile, tile, 8, R2D.blend(Theme.toggleOff(), Theme.accent(), on));
-        R2D.icon(ctx, m.getIcon(), x + 9 + 6.5f, y + 9 + 6.5f, 13, R2D.blend(Theme.textDim(), Theme.accentText(), on));
-
-        // nazwa / opis
-        float tx = x + 9 + tile + 9;
-        Fonts.draw(ctx, m.getName(), tx, y + 11, Theme.text(), Font.BOLD, 0.95f);
+        // mała ikona + nazwa / opis
+        int nameCol = R2D.blend(Theme.textDim(), Theme.text(), on);
+        R2D.icon(ctx, m.getIcon(), x + 10, y + 8.5f, 8.5f, R2D.blend(Theme.textFaint(), Theme.accent(), on));
+        float tx = x + 23;
+        Fonts.draw(ctx, m.getName(), tx, y + 8, nameCol, Font.BOLD, 0.86f);
         float right = 40;
         if (m.hasKey()) {
             String k = Keys.name(m.getKey());
             float kw = Fonts.width(k, Font.BOLD, 0.62f) + 7;
-            R2D.roundRect(ctx, tx + Fonts.width(m.getName(), Font.BOLD, 0.95f) + 5, y + 11.5f, kw, 9, 3, Theme.toggleOff());
-            Fonts.drawV(ctx, k, tx + Fonts.width(m.getName(), Font.BOLD, 0.95f) + 8.5f, y + 16, Theme.textDim(), Font.BOLD, 0.62f);
+            R2D.roundRect(ctx, tx + Fonts.width(m.getName(), Font.BOLD, 0.86f) + 4, y + 7.5f, kw, 8.5f, 2.5f, Theme.toggleOff());
+            Fonts.drawV(ctx, k, tx + Fonts.width(m.getName(), Font.BOLD, 0.86f) + 7.5f, y + 11.8f, Theme.textDim(), Font.BOLD, 0.62f);
         }
-        Fonts.draw(ctx, Fonts.trim(m.getDescription(), Font.REGULAR, 0.72f, w - (tx - x) - right), tx, y + 24, Theme.textDim(), Font.REGULAR, 0.72f);
+        Fonts.draw(ctx, Fonts.trim(m.getDescription(), Font.REGULAR, 0.66f, w - (tx - x) - right), tx, y + 19, Theme.textFaint(), Font.REGULAR, 0.66f);
 
         // przełącznik
-        drawSwitch(ctx, x + w - 34, y + baseH / 2f - 6.5f, on);
+        drawSwitch(ctx, x + w - 30, y + baseH / 2f - 5.5f, on);
 
         // strzałka rozwinięcia
         float rot = ex;
         ctx.getMatrices().push();
-        float ax = x + w - 46, ay = y + baseH / 2f;
+        float ax = x + w - 39, ay = y + baseH / 2f;
         ctx.getMatrices().translate(ax, ay, 0);
         ctx.getMatrices().multiply(net.minecraft.util.math.RotationAxis.POSITIVE_Z.rotationDegrees(180 + 90 * rot));
         R2D.icon(ctx, "arrow_left", -3.5f, -3.5f, 7, R2D.withAlpha(Theme.textFaint(), m.getSettings().isEmpty() ? 0.6f : 1f));
@@ -469,8 +468,8 @@ public class ClickGui extends Screen {
             float h = 20;
             Fonts.drawV(ctx, s.getName(), x, y + h / 2f + 0.5f, Theme.textDim(), Font.SEMIBOLD, 0.75f);
             float on = b.anim.animate(b.get() ? 1 : 0);
-            drawSwitch(ctx, x + w - 24, y + h / 2f - 6.5f, on);
-            hit(x + w - 28, y, 30, h, bt -> b.toggle());
+            drawSwitch(ctx, x + w - 20, y + h / 2f - 5.5f, on);
+            hit(x + w - 24, y, 26, h, bt -> b.toggle());
             return y + h;
         }
         if (s instanceof NumberSetting n) {
@@ -505,7 +504,7 @@ public class ClickGui extends Screen {
     // ------------------------------------------------------------------ widgety
 
     private void drawSwitch(DrawContext ctx, float x, float y, float on) {
-        float w = 24, h = 13;
+        float w = 20, h = 11;
         R2D.roundRect(ctx, x, y, w, h, h / 2f, R2D.blend(Theme.toggleOff(), Theme.accent(), on));
         float kx = x + h / 2f + (w - h) * on;
         R2D.circle(ctx, kx, y + h / 2f, h / 2f - 2, R2D.blend(Theme.textDim(), Theme.accentText(), on));
@@ -638,40 +637,39 @@ public class ClickGui extends Screen {
             Fonts.drawCentered(ctx, Lang.get("config.empty"), x + w / 2f, y + 72, Theme.textDim(), Font.SEMIBOLD, 0.9f);
             return 110;
         }
-        float rowH = 38, gap = 8, cy = y;
+        float rowH = 34, gap = 6, cy = y;
         for (String name : list) {
             boolean current = name.equals(rc.config.current());
             boolean hov = hovered(x, cy, w, rowH);
             float ha = anim("cfg" + name, 18).animate(hov ? 1 : 0);
-            R2D.roundRect(ctx, x, cy, w, rowH, 10, R2D.blend(Theme.card(), Theme.cardHover(), ha));
-            R2D.roundOutline(ctx, x, cy, w, rowH, 10, 0.6f, current ? Theme.textFaint() : Theme.stroke());
-            R2D.roundRect(ctx, x + 8, cy + 8, 22, 22, 7, current ? Theme.accent() : Theme.toggleOff());
-            R2D.icon(ctx, "disk", x + 14, cy + 14, 10, current ? Theme.accentText() : Theme.textDim());
-            Fonts.draw(ctx, name, x + 38, cy + 10, Theme.text(), Font.BOLD, 0.9f);
+            R2D.roundRect(ctx, x, cy, w, rowH, 7, R2D.blend(Theme.card(), Theme.cardHover(), ha));
+            R2D.roundOutline(ctx, x, cy, w, rowH, 7, 0.5f, current ? Theme.textFaint() : Theme.stroke());
+            R2D.icon(ctx, "disk", x + 10, cy + 10, 8.5f, current ? Theme.accent() : Theme.textFaint());
+            Fonts.draw(ctx, name, x + 24, cy + 10, Theme.text(), Font.BOLD, 0.86f);
             java.nio.file.Path file = rc.config.folder().resolve(name + ".json");
             String info;
             try {
                 info = new java.text.SimpleDateFormat("dd.MM.yyyy HH:mm").format(new Date(java.nio.file.Files.getLastModifiedTime(file).toMillis()));
             } catch (Exception e) { info = "-"; }
-            Fonts.draw(ctx, info, x + 38, cy + 22, Theme.textFaint(), Font.REGULAR, 0.68f);
+            Fonts.draw(ctx, info, x + 24, cy + 21, Theme.textFaint(), Font.REGULAR, 0.66f);
             if (current) {
                 String t = Lang.get("config.current");
                 float tw = Fonts.width(t, Font.BOLD, 0.62f) + 8;
-                float tx = x + 38 + Fonts.width(name, Font.BOLD, 0.9f) + 6;
+                float tx = x + 24 + Fonts.width(name, Font.BOLD, 0.86f) + 6;
                 R2D.roundRect(ctx, tx, cy + 10.5f, tw, 10, 5, Theme.toggleOff());
                 Fonts.drawV(ctx, t, tx + 4, cy + 15.5f, Theme.textDim(), Font.BOLD, 0.62f);
             }
             float bx = x + w - 8;
-            bx -= 24; button(ctx, "del" + name, bx, cy + 8, 22, 22, "trash", null, false, () -> {
+            bx -= 22; button(ctx, "del" + name, bx, cy + 7, 20, 20, "trash", null, false, () -> {
                 rc.config.delete(name);
                 rc.notifications.info("trash", Lang.get("config.deleted"), name);
             });
-            bx -= 26; button(ctx, "save" + name, bx, cy + 8, 22, 22, "disk", null, false, () -> {
+            bx -= 24; button(ctx, "save" + name, bx, cy + 7, 20, 20, "disk", null, false, () -> {
                 rc.config.save(name);
                 rc.notifications.info("disk", Lang.get("config.saved"), name);
             });
             float lw = Fonts.width(Lang.get("config.load"), Font.SEMIBOLD, 0.75f) + 30;
-            bx -= lw + 4; button(ctx, "load" + name, bx, cy + 8, lw, 22, "folder", Lang.get("config.load"), true, () -> {
+            bx -= lw + 4; button(ctx, "load" + name, bx, cy + 7, lw, 20, "folder", Lang.get("config.load"), true, () -> {
                 rc.config.load(name);
                 rc.notifications.info("folder", Lang.get("config.loaded"), name);
             });
@@ -711,18 +709,17 @@ public class ClickGui extends Screen {
                 {"keyboard", Lang.get("profile.binds"), String.valueOf(rc.modules.all().stream().filter(Module::hasKey).count())},
                 {"globe_lang", Lang.get("profile.lang"), Lang.current().display},
         };
-        float gap = 10, tw = (w - gap * 2) / 3f, th = 46;
+        float gap = 8, tw = (w - gap * 2) / 3f, th = 40;
         float ty = y + h + 12;
         for (int i = 0; i < tiles.length; i++) {
             float tx = x + (i % 3) * (tw + gap), tyy = ty + (i / 3) * (th + gap);
             boolean hov = hovered(tx, tyy, tw, th);
             float ha = anim("tile" + i, 18).animate(hov ? 1 : 0);
-            R2D.roundRect(ctx, tx, tyy, tw, th, 10, R2D.blend(Theme.card(), Theme.cardHover(), ha));
-            R2D.roundOutline(ctx, tx, tyy, tw, th, 10, 0.5f, Theme.stroke());
-            R2D.roundRect(ctx, tx + 9, tyy + 11, 24, 24, 7, Theme.toggleOff());
-            R2D.icon(ctx, tiles[i][0], tx + 15, tyy + 17, 12, Theme.text());
-            Fonts.draw(ctx, tiles[i][1], tx + 40, tyy + 12, Theme.textFaint(), Font.SEMIBOLD, 0.68f);
-            Fonts.draw(ctx, Fonts.trim(tiles[i][2], Font.BOLD, 0.82f, tw - 48), tx + 40, tyy + 24, Theme.text(), Font.BOLD, 0.82f);
+            R2D.roundRect(ctx, tx, tyy, tw, th, 7, R2D.blend(Theme.card(), Theme.cardHover(), ha));
+            R2D.roundOutline(ctx, tx, tyy, tw, th, 7, 0.5f, Theme.stroke());
+            R2D.icon(ctx, tiles[i][0], tx + 10, tyy + 9, 8, Theme.textDim());
+            Fonts.draw(ctx, tiles[i][1], tx + 22, tyy + 9.5f, Theme.textFaint(), Font.SEMIBOLD, 0.66f);
+            Fonts.draw(ctx, Fonts.trim(tiles[i][2], Font.BOLD, 0.84f, tw - 20), tx + 10, tyy + 23, Theme.text(), Font.BOLD, 0.84f);
         }
         float hy = ty + (th + gap) * 2 + 2;
         R2D.icon(ctx, "info", x, hy, 9, Theme.textFaint());
@@ -733,24 +730,23 @@ public class ClickGui extends Screen {
     // ------------------------------------------------------------------ ustawienia klienta
 
     private float settingRow(DrawContext ctx, float x, float y, float w, String icon, String title, String desc) {
-        float h = 40;
+        float h = 34;
         boolean hov = hovered(x, y, w, h);
         float ha = anim("row" + title, 18).animate(hov ? 1 : 0);
-        R2D.roundRect(ctx, x, y, w, h, 10, R2D.blend(Theme.card(), Theme.cardHover(), ha));
-        R2D.roundOutline(ctx, x, y, w, h, 10, 0.5f, Theme.stroke());
-        R2D.roundRect(ctx, x + 9, y + 9, 22, 22, 7, Theme.toggleOff());
-        R2D.icon(ctx, icon, x + 14.5f, y + 14.5f, 11, Theme.text());
-        Fonts.draw(ctx, title, x + 39, y + 10, Theme.text(), Font.BOLD, 0.88f);
-        Fonts.draw(ctx, Fonts.trim(desc, Font.REGULAR, 0.68f, w - 39 - 170), x + 39, y + 22, Theme.textDim(), Font.REGULAR, 0.68f);
+        R2D.roundRect(ctx, x, y, w, h, 7, R2D.blend(Theme.card(), Theme.cardHover(), ha));
+        R2D.roundOutline(ctx, x, y, w, h, 7, 0.5f, Theme.stroke());
+        R2D.icon(ctx, icon, x + 10, y + 8.5f, 8.5f, Theme.text());
+        Fonts.draw(ctx, title, x + 23, y + 8, Theme.text(), Font.BOLD, 0.86f);
+        Fonts.draw(ctx, Fonts.trim(desc, Font.REGULAR, 0.66f, w - 23 - 170), x + 23, y + 19, Theme.textFaint(), Font.REGULAR, 0.66f);
         return h;
     }
 
     private float drawSettings(DrawContext ctx, float x, float y, float w) {
         ClientSettings s = rc.settings;
-        float cy = y, gap = 7, h;
+        float cy = y, gap = 6, h;
 
         h = settingRow(ctx, x, cy, w, "globe_lang", Lang.get("set.language"), Lang.get("set.language.desc"));
-        segmented(ctx, "lang", x + w - 160, cy + 10, 150, 20, new String[]{"Polski", "English"}, Lang.current().ordinal(), i -> {
+        segmented(ctx, "lang", x + w - 150, cy + 8, 140, 18, new String[]{"Polski", "English"}, Lang.current().ordinal(), i -> {
             Lang.set(Lang.Language.values()[i]); rc.config.saveClient();
         });
         cy += h + gap;
@@ -758,7 +754,7 @@ public class ClickGui extends Screen {
         h = settingRow(ctx, x, cy, w, "layers", Lang.get("set.guisize"), Lang.get("set.guisize.desc"));
         String[] sizes = {"size.small", "size.normal", "size.large"};
         int sel = Arrays.asList(sizes).indexOf(s.guiSize.get());
-        segmented(ctx, "size", x + w - 160, cy + 10, 150, 20, new String[]{Lang.get("size.small"), Lang.get("size.normal"), Lang.get("size.large")}, sel, i -> {
+        segmented(ctx, "size", x + w - 150, cy + 8, 140, 18, new String[]{Lang.get("size.small"), Lang.get("size.normal"), Lang.get("size.large")}, sel, i -> {
             s.guiSize.set(sizes[i]); rc.config.saveClient();
         });
         cy += h + gap;
@@ -779,7 +775,7 @@ public class ClickGui extends Screen {
         for (Object[] t : toggles) {
             BoolSetting b = (BoolSetting) t[2];
             h = settingRow(ctx, x, cy, w, (String) t[0], Lang.get((String) t[1]), Lang.get(t[1] + ".desc"));
-            drawSwitch(ctx, x + w - 34, cy + h / 2f - 6.5f, b.anim.animate(b.get() ? 1 : 0));
+            drawSwitch(ctx, x + w - 30, cy + h / 2f - 5.5f, b.anim.animate(b.get() ? 1 : 0));
             float fy = cy;
             hit(x, fy, w, h, bt -> { if (bt == 0) { b.toggle(); rc.config.saveClient(); } });
             cy += h + gap;

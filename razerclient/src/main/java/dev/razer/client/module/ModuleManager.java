@@ -22,48 +22,48 @@ public class ModuleManager {
                 .add(new NumberSetting("Poziomo", "Horizontal", 0, 0, 100, 1), new NumberSetting("Pionowo", "Vertical", 0, 0, 100, 1)));
         reg(new Module("Criticals", Category.COMBAT, "bolt", "Uderzenia krytyczne", "Critical hits")
                 .add(new ModeSetting("Tryb", "Mode", "Packet", "Jump")));
-        reg(new Module("AutoTotem", Category.COMBAT, "shield", "Totem w drugiej ręce", "Totem in offhand")
+        reg(new Module("AutoTotem", Category.COMBAT, "heart", "Totem w drugiej ręce", "Totem in offhand")
                 .add(new NumberSetting("Opóźnienie", "Delay", 0, 0, 10, 1)));
-        reg(new Module("TriggerBot", Category.COMBAT, "target", "Atak po najechaniu", "Attack on crosshair")
+        reg(new Module("TriggerBot", Category.COMBAT, "click", "Atak po najechaniu", "Attack on crosshair")
                 .add(new NumberSetting("CPS", "CPS", 10, 1, 20, 1)));
         // MOVEMENT
-        reg(new Module("Sprint", Category.MOVEMENT, "movement", "Automatyczny sprint", "Automatic sprint")
+        reg(new Module("Sprint", Category.MOVEMENT, "footprints", "Automatyczny sprint", "Automatic sprint")
                 .add(new BoolSetting("Wielokierunkowy", "Omni", false)));
-        reg(new Module("Speed", Category.MOVEMENT, "bolt", "Szybsze poruszanie", "Move faster")
+        reg(new Module("Speed", Category.MOVEMENT, "gauge", "Szybsze poruszanie", "Move faster")
                 .add(new ModeSetting("Tryb", "Mode", "Strafe", "Vanilla", "Ground"), new NumberSetting("Szybkość", "Speed", 1.2, 1.0, 3.0, 0.1)));
-        reg(new Module("Flight", Category.MOVEMENT, "feather", "Latanie", "Fly")
+        reg(new Module("Flight", Category.MOVEMENT, "plane", "Latanie", "Fly")
                 .add(new NumberSetting("Szybkość", "Speed", 1.0, 0.1, 5.0, 0.1)));
-        reg(new Module("NoFall", Category.MOVEMENT, "feather", "Brak obrażeń od upadku", "No fall damage"));
-        reg(new Module("Step", Category.MOVEMENT, "layers", "Wchodzenie na bloki", "Step up blocks")
+        reg(new Module("NoFall", Category.MOVEMENT, "nofall", "Brak obrażeń od upadku", "No fall damage"));
+        reg(new Module("Step", Category.MOVEMENT, "step", "Wchodzenie na bloki", "Step up blocks")
                 .add(new NumberSetting("Wysokość", "Height", 1.0, 0.5, 2.5, 0.5)));
         // RENDER
-        reg(new Module("ESP", Category.RENDER, "box", "Obrysy graczy", "Player outlines")
+        reg(new Module("ESP", Category.RENDER, "scan", "Obrysy graczy", "Player outlines")
                 .add(new ModeSetting("Tryb", "Mode", "Box", "Outline", "Glow"), new BoolSetting("Gracze", "Players", true), new BoolSetting("Moby", "Mobs", false)));
         reg(new Module("Fullbright", Category.RENDER, "sun", "Pełna jasność", "Full brightness"));
-        reg(new Module("Tracers", Category.RENDER, "target", "Linie do graczy", "Lines to players"));
-        reg(new Module("Nametags", Category.RENDER, "info", "Większe nicki", "Bigger nametags")
+        reg(new Module("Tracers", Category.RENDER, "radar", "Linie do graczy", "Lines to players"));
+        reg(new Module("Nametags", Category.RENDER, "tag", "Większe nicki", "Bigger nametags")
                 .add(new NumberSetting("Skala", "Scale", 1.5, 1.0, 3.0, 0.1), new BoolSetting("Zdrowie", "Health", true)));
-        reg(new Module("ChestESP", Category.RENDER, "box", "Podświetlanie skrzyń", "Highlights chests"));
+        reg(new Module("ChestESP", Category.RENDER, "package", "Podświetlanie skrzyń", "Highlights chests"));
         // PLAYER
-        reg(new Module("AutoArmor", Category.PLAYER, "shield", "Zakłada najlepszą zbroję", "Equips best armor"));
-        reg(new Module("FastPlace", Category.PLAYER, "plus", "Szybkie stawianie", "Place faster"));
-        reg(new Module("NoSlow", Category.PLAYER, "movement", "Brak spowolnienia", "No slowdown"));
-        reg(new Module("InvManager", Category.PLAYER, "layers", "Porządkuje ekwipunek", "Sorts inventory")
+        reg(new Module("AutoArmor", Category.PLAYER, "shirt", "Zakłada najlepszą zbroję", "Equips best armor"));
+        reg(new Module("FastPlace", Category.PLAYER, "blocks", "Szybkie stawianie", "Place faster"));
+        reg(new Module("NoSlow", Category.PLAYER, "snail", "Brak spowolnienia", "No slowdown"));
+        reg(new Module("InvManager", Category.PLAYER, "backpack", "Porządkuje ekwipunek", "Sorts inventory")
                 .add(new NumberSetting("Opóźnienie", "Delay", 2, 0, 10, 1)));
         // WORLD
-        reg(new Module("Nuker", Category.WORLD, "pickaxe", "Niszczy bloki wokół", "Breaks blocks around")
+        reg(new Module("Nuker", Category.WORLD, "bomb", "Niszczy bloki wokół", "Breaks blocks around")
                 .add(new NumberSetting("Zasięg", "Range", 4, 1, 6, 1)));
-        reg(new Module("Scaffold", Category.WORLD, "box", "Stawia bloki pod nogami", "Places blocks below")
+        reg(new Module("Scaffold", Category.WORLD, "construction", "Stawia bloki pod nogami", "Places blocks below")
                 .add(new BoolSetting("Wieża", "Tower", true)));
         reg(new Module("FastBreak", Category.WORLD, "pickaxe", "Szybsze kopanie", "Break faster"));
-        reg(new Module("Timer", Category.WORLD, "clock", "Zmienia prędkość gry", "Changes game speed")
+        reg(new Module("Timer", Category.WORLD, "timer", "Zmienia prędkość gry", "Changes game speed")
                 .add(new NumberSetting("Prędkość", "Speed", 1.0, 0.1, 5.0, 0.1)));
         // MISC
-        reg(new Module("AntiAFK", Category.MISC, "clock", "Zapobiega wyrzuceniu za AFK", "Prevents AFK kick"));
-        reg(new Module("AutoReconnect", Category.MISC, "power", "Automatyczne łączenie", "Auto reconnect")
+        reg(new Module("AntiAFK", Category.MISC, "coffee", "Zapobiega wyrzuceniu za AFK", "Prevents AFK kick"));
+        reg(new Module("AutoReconnect", Category.MISC, "refresh", "Automatyczne łączenie", "Auto reconnect")
                 .add(new NumberSetting("Opóźnienie", "Delay", 5, 1, 30, 1)));
-        reg(new Module("MiddleClick", Category.MISC, "player", "Znajomi pod kółkiem myszy", "Friends on middle click"));
-        reg(new Module("DiscordRPC", Category.MISC, "world", "Status w Discordzie", "Discord rich presence"));
+        reg(new Module("MiddleClick", Category.MISC, "mouse", "Znajomi pod kółkiem myszy", "Friends on middle click"));
+        reg(new Module("DiscordRPC", Category.MISC, "message", "Status w Discordzie", "Discord rich presence"));
     }
 
     private void reg(Module m) { modules.add(m); }

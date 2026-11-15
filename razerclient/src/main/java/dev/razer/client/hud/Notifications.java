@@ -47,8 +47,8 @@ public class Notifications {
     public void render(DrawContext ctx, int sw, int sh) {
         long now = System.currentTimeMillis();
         list.removeIf(n -> now - n.start > n.duration + 400);
-        float w = 150, h = 34, gap = 6;
-        float baseY = sh - 12;
+        float w = 118, h = 28, gap = 4;
+        float baseY = sh - 8;
         int i = 0;
         for (Notification n : list) {
             long t = now - n.start;
@@ -58,7 +58,7 @@ public class Notifications {
             float targetY = baseY - (i + 1) * (h + gap) + gap;
             if (n.y.raw() == -1) n.y.snap(targetY);
             float y = n.y.animate(targetY);
-            float x = sw - w - 12 + slide * (w + 24);
+            float x = sw - w - 8 + slide * (w + 20);
             float prevAlpha = R2D.alpha;
             R2D.alpha = prevAlpha * (1 - out);
             drawCard(ctx, n, x, y, w, h, Math.min(1, t / (float) n.duration));
@@ -68,22 +68,18 @@ public class Notifications {
     }
 
     private void drawCard(DrawContext ctx, Notification n, float x, float y, float w, float h, float progress) {
-        R2D.shadow(ctx, x, y, w, h, 10, Theme.shadow());
-        R2D.roundRect(ctx, x, y, w, h, 7, Theme.hudBg());
-        R2D.roundOutline(ctx, x, y, w, h, 7, 0.5f, Theme.stroke());
-        // kafelek z ikoną
-        float tile = 22;
+        R2D.shadow(ctx, x, y, w, h, 7, Theme.shadow());
+        R2D.roundRect(ctx, x, y, w, h, 4.5f, Theme.hudBg());
+        R2D.roundOutline(ctx, x, y, w, h, 4.5f, 0.5f, Theme.stroke());
         boolean on = n.state != 0;
-        R2D.roundRect(ctx, x + 6, y + 6, tile, tile, 6, on ? Theme.accent() : Theme.toggleOff());
-        R2D.icon(ctx, n.icon, x + 6 + 5, y + 6 + 5, 12, on ? Theme.accentText() : Theme.textDim());
-        // tekst
-        float tx = x + 6 + tile + 7;
-        Fonts.draw(ctx, n.title, tx, y + 8, Theme.text(), Font.BOLD, 0.95f);
-        Fonts.draw(ctx, Fonts.trim(n.subtitle, Font.REGULAR, 0.8f, w - (tx - x) - 20), tx, y + 19, Theme.textDim(), Font.REGULAR, 0.8f);
-        // stan
-        if (n.state >= 0) R2D.circle(ctx, x + w - 10, y + 10, 2.5f, n.state == 1 ? Theme.accent() : Theme.textFaint());
-        // pasek czasu
-        R2D.roundRect(ctx, x + 6, y + h - 3, (w - 12), 1.2f, 0.6f, Theme.toggleOff());
-        R2D.roundRect(ctx, x + 6, y + h - 3, (w - 12) * (1 - progress), 1.2f, 0.6f, Theme.accent());
+        R2D.icon(ctx, n.icon, x + 7, y + 7, 8, on ? Theme.accent() : Theme.textFaint());
+        float tx = x + 20;
+        Fonts.drawV(ctx, n.title, tx, y + 11.5f, Theme.text(), Font.BOLD, 0.72f);
+        if (n.state >= 0) {
+            String st = on ? "ON" : "OFF";
+            Fonts.drawV(ctx, st, x + w - 7 - Fonts.width(st, Font.BOLD, 0.58f), y + 11.5f, on ? Theme.text() : Theme.textFaint(), Font.BOLD, 0.58f);
+        }
+        Fonts.drawV(ctx, Fonts.trim(n.subtitle, Font.REGULAR, 0.62f, w - 27), tx, y + 21, Theme.textDim(), Font.REGULAR, 0.62f);
+        R2D.rect(ctx, x + 4.5f, y + h - 1.5f, (w - 9) * (1 - progress), 1, Theme.accent());
     }
 }

@@ -124,6 +124,7 @@ public class ModuleManager {
         modules.add(new ChinaHat());
         modules.add(new JumpCircles());
         modules.add(new Sky());
+        modules.add(new ToolColor());
         mod("Zoom", Category.RENDER, "i_zoom", "Przybliżenie widoku", "Zoom in your view",
                 n("Zoom", 4.0, 1.5, 10.0, 0.5), b("Smooth", true), b("Scroll Zoom", true), b("Cinematic Camera", false), b("Hide Hand", true));
         mod("FreeLook", Category.RENDER, "render", "Rozglądanie bez obracania postaci", "Look around without turning",

@@ -1,7 +1,7 @@
 # RazerClient 2.0
 
 Nowoczesne GUI klienta do Minecraft **1.21.1 (Fabric)**: ClickGUI, edytor HUD, motywy z kolorami akcentu i powiadomienia.
-To jest **sam interfejs**. Moduły to puste przełączniki bez żadnej funkcji w grze, z wyjątkiem kosmetycznych **TargetESP**, **Ambient**, **ChinaHat**, **JumpCircles**, **Cosmetic**, **HitSound**, **Nametags** i **Sky**.
+To jest **sam interfejs**. Moduły to puste przełączniki bez żadnej funkcji w grze, z wyjątkiem kosmetycznych **TargetESP**, **Ambient**, **ChinaHat**, **JumpCircles**, **Cosmetic**, **HitSound**, **Nametags**, **Sky** i **ToolColor**.
 
 | | |
 |---|---|
@@ -10,6 +10,7 @@ To jest **sam interfejs**. Moduły to puste przełączniki bez żadnej funkcji w
 ![ClickGUI](docs/gui_themes.jpg)
 
 ## Co nowego w 2.0
+- 🗡️ **ToolColor** (Render): własny kolor mieczy, siekier, kilofów, łopat, motyk, trójzębu, buzdyganu i łuków, w ręce i w ekwipunku. Tekstura jest zamieniana na odcienie szarości i kolorowana, więc kolor jest czysty. Do wyboru: Purple, White, Black, Blue, Red, Green, Gold, Pink, Cyan, Accent i Rainbow. Opcje: intensywność, połysk, miecze, narzędzia, inna broń
 - 🌌 **Sky** (Render): własne animowane niebo z presetami **Aurora**, **Galaxy**, **Sunset**, **Midnight** i **Accent**. Gradient nieba, migoczące kolorowe gwiazdy, falująca zorza polarna, mgławice, Droga Mleczna (Galaxy), spadające gwiazdy i kolor mgły dopasowany do nieba. Opcje: gwiazdy, ich ilość, zorza, mgławice, spadające gwiazdy, kolor mgły, prędkość, jasność
 - 🏷️ **Nametags** (Render): nowoczesne, zaokrąglone nicki zamiast tych z Minecrafta. Głowa skina z drugą warstwą, nick, pigułka z HP w kolorze od zielonego do czerwonego, pancerz, ping, dystans i pasek zdrowia w kolorze akcentu. Znajomi są wyróżnieni akcentem i ikonką. Tło Dark, Glass albo None, opcja „Self” pokazuje własny nick w F5. Rysowane z testem głębi, więc nie widać ich przez ściany
 - 🌍 **Klient domyślnie po angielsku** (polski do wyboru w ustawieniach klienta)
@@ -61,6 +62,8 @@ To jest **sam interfejs**. Moduły to puste przełączniki bez żadnej funkcji w
 ![Sky](docs/sky_aurora.jpg)
 
 ![Sky – presety](docs/sky_presets.jpg)
+
+![ToolColor](docs/toolcolor.jpg)
 
 ![Nametags](docs/nametags.jpg)
 

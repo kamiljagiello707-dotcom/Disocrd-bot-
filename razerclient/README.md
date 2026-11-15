@@ -26,7 +26,7 @@ To jest **sam interfejs**. Moduły to puste przełączniki bez żadnej funkcji w
 - 👥 **Znajomi:** nowa strona, na której dodajesz i usuwasz nicki (zapisywane w konfiguracji)
 - 🌌 **Własne menu główne:** ekran blokady z datą i dużą godziną na animowanym tle z falami dymu i świecącymi cząsteczkami. Po kliknięciu płynne przejście do menu z napisem RazerClient świecącym w kolorze akcentu i okrągłymi przyciskami (Jednoosobowy, Wieloosobowy, Realms, Ustawienia, Wyjdź), które unoszą się po najechaniu i pokazują podpis. Można wrócić do menu Minecrafta w ustawieniach klienta
 - ✨ **Ambient** (Wizualne): świecące kulki w kolorze akcentu unoszące się w powietrzu wokół gracza. Można ustawić ilość, rozmiar i zasięg
-- 🎯 **TargetESP** (Wizualne): efektowny znacznik na graczu, którego uderzyłeś albo na którego patrzysz. Pierścień z gradientem płynie w górę i w dół po sylwetce i zostawia smugę, a obracający się znacznik pulsuje i błyska na czerwono przy trafieniu. Style: **Mix**, **Duchy** (świecące komety krążące wokół gracza), **Pulse** (pulsujący świecący symbol na klatce), **Krąg** (świecący pierścień pod nogami z falą), **Pierścień**, **Znacznik**. Opcje: tylko gracze, smuga, ilość duchów, prędkość, rozmiar. Kolor bierze z akcentu. Rysowany z testem głębi, więc **nie widać go przez ściany** i jest czysto kosmetyczny
+- 🎯 **TargetESP** (Wizualne): efektowny znacznik na graczu, którego uderzyłeś albo na którego patrzysz. Pierścień z gradientem płynie w górę i w dół po sylwetce i zostawia smugę, a obracający się znacznik pulsuje i błyska na czerwono przy trafieniu. Style (13): **Mix**, **Ghosts** (świecące komety krążące wokół gracza), **Pulse** (pulsujący symbol na klatce), **Circle** (krąg pod nogami z falą), **Ring**, **Marker**, **Orbit** (pierścienie jak atom), **Helix** (podwójna spirala DNA), **Halo** (aureola nad głową), **Sparkles** (iskierki), **Brackets** (narożniki celownika i pasek HP), **Vortex** (wir kropek) i **Crystal** (obracający się kryształ nad głową). Opcje: tylko gracze, smuga, ilość duchów, prędkość, rozmiar.
 - 🎨 **Kolory akcentu z gradientem:** Mono (biało-czarny), Fiolet, Róż, Niebieski, Cyjan, Zielony, Czerwony, Złoty, z płynnym przejściem kolorów
 - 🖱️ **Przesuwanie HUD przy otwartym czacie (T):** złap Watermark, KeyBinds albo dowolny inny element i przeciągnij go, gdzie chcesz. ŚPM przywraca domyślną pozycję
 - 🟣 **Zaokrąglony HUD:** pigułkowy Watermark, okrągłe panele, nowy TargetHUD z zaokrągloną głową skina, pigułkami HP i dystansu, czerwonym błyskiem przy trafieniu i zaokrąglonym paskiem zdrowia
@@ -55,6 +55,8 @@ To jest **sam interfejs**. Moduły to puste przełączniki bez żadnej funkcji w
 | ![](docs/hud_chat_drag.jpg) | ![](docs/target_esp.jpg) |
 
 ![TargetESP – style](docs/target_esp_styles.jpg)
+
+![TargetESP – nowe style](docs/target_esp_modes2.jpg)
 
 ![Sky](docs/sky_aurora.jpg)
 

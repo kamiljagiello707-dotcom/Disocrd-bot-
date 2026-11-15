@@ -9,7 +9,7 @@ import dev.razer.client.setting.NumberSetting;
  * Rysowany z testem głębi, więc NIE jest widoczny przez ściany.
  */
 public class TargetEsp extends Module {
-    public final ModeSetting mode = new ModeSetting("Styl", "Style", "Mix", "Ghosts", "Pulse", "Circle", "Ring", "Marker");
+    public final ModeSetting mode = new ModeSetting("Styl", "Style", "Mix", "Ghosts", "Pulse", "Circle", "Ring", "Marker", "Orbit", "Helix", "Halo", "Sparkles", "Brackets", "Vortex", "Crystal");
     public final BoolSetting playersOnly = new BoolSetting("Tylko gracze", "Players only", true);
     public final BoolSetting trail = new BoolSetting("Smuga", "Trail", true);
     public final NumberSetting ghosts = new NumberSetting("Ilość duchów", "Ghost count", 3, 1, 6, 1);

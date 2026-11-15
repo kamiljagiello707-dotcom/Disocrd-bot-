@@ -3,16 +3,25 @@
   "id": "razerclient",
   "version": "${version}",
   "name": "RazerClient",
-  "description": "RazerClient - nowoczesne bialo-czarne GUI (ClickGUI, HUD, powiadomienia).",
-  "authors": ["RazerClient"],
+  "description": "RazerClient 2.0 - nowoczesne GUI: ClickGUI, edytor HUD, motywy z akcentem, powiadomienia.",
+  "authors": [
+    "RazerClient"
+  ],
   "license": "All-Rights-Reserved",
   "icon": "assets/razerclient/textures/icons/logo.png",
   "environment": "client",
-  "entrypoints": { "client": ["dev.razer.client.RazerClient"] },
+  "entrypoints": {
+    "client": [
+      "dev.razer.client.RazerClient"
+    ]
+  },
   "depends": {
     "fabricloader": ">=0.16.0",
     "fabric-api": "*",
     "minecraft": "~1.21.1",
     "java": ">=21"
-  }
+  },
+  "mixins": [
+    "razerclient.mixins.json"
+  ]
 }

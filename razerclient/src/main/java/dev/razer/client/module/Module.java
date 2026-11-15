@@ -28,6 +28,8 @@ public class Module {
     public final Anim expandAnim = new Anim(0, 14);
     public final Anim hudAnim = new Anim(0, 12);
     public boolean expanded;
+    public boolean favorite;
+    public final Anim favAnim = new Anim(0, 16);
 
     public Module(String name, Category category, String icon, String descPl, String descEn) {
         this.name = name; this.category = category; this.icon = icon; this.descPl = descPl; this.descEn = descEn;

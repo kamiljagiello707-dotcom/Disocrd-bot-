@@ -4,6 +4,8 @@ import dev.razer.client.config.ClientSettings;
 import dev.razer.client.config.ConfigManager;
 import dev.razer.client.hud.Hud;
 import dev.razer.client.hud.Notifications;
+import dev.razer.client.lang.Lang;
+import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import dev.razer.client.module.Module;
 import dev.razer.client.module.ModuleManager;
 import dev.razer.client.ui.ClickGui;
@@ -24,7 +26,7 @@ import java.util.Set;
 
 public class RazerClient implements ClientModInitializer {
     public static final String NAME = "RazerClient";
-    public static final String VERSION = "1.0.0";
+    public static final String VERSION = "2.0.0";
     public static final Logger LOGGER = LoggerFactory.getLogger(NAME);
     private static RazerClient instance;
 
@@ -57,6 +59,10 @@ public class RazerClient implements ClientModInitializer {
             if (!(MinecraftClient.getInstance().currentScreen instanceof ClickGui))
                 hud.render(ctx, tickCounter.getTickDelta(true));
         });
+        ClientPlayConnectionEvents.JOIN.register((handler, sender, client) -> client.execute(() -> {
+            if (settings.welcome.get())
+                notifications.info("sparkles", "RazerClient " + VERSION, Lang.format("welcome", client.getSession().getUsername()));
+        }));
         ClientLifecycleEvents.CLIENT_STOPPING.register(c -> config.save(config.current()));
         LOGGER.info("{} {} załadowany", NAME, VERSION);
     }

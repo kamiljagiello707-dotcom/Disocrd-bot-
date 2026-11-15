@@ -1,37 +1,38 @@
-# RazerClient
+# RazerClient 2.0
 
-Biało-czarne, nowoczesne GUI klienta do Minecraft **1.21.1 (Fabric)**: ClickGUI, HUD i powiadomienia.
+Nowoczesne GUI klienta do Minecraft **1.21.1 (Fabric)**: ClickGUI, edytor HUD, motywy z kolorami akcentu i powiadomienia.
 To jest **sam interfejs**. Moduły to puste przełączniki bez żadnej funkcji w grze.
 
-![ClickGUI](docs/gui_combat.jpg)
+![ClickGUI](docs/gui_themes.jpg)
 
-## Funkcje
-- **ClickGUI** (`Prawy Shift`): duże okno z płynną animacją otwierania i zamykania (skala + przenikanie), gładka czcionka Inter (nie pikselowa), zaokrąglone panele z cieniem, małe ikony [Lucide](https://lucide.dev) (licencja ISC)
-- **Kategorie:** Walka, Ruch, Wizualne, Gracz, Świat, Inne, a do tego osobne strony **Motywy** i **Konfiguracje**
-- Animowany wskaźnik kategorii, hover, przełączniki, suwaki i przejścia między stronami
+## Co nowego w 2.0
+- 🎨 **Kolory akcentu z gradientem:** Mono (biało-czarny), Fiolet, Róż, Niebieski, Cyjan, Zielony, Czerwony, Złoty, z płynnym przejściem kolorów
+- 🖱️ **Edytor HUD:** przeciągasz każdy element myszką, z przyciąganiem do krawędzi i środka ekranu. PPM ukrywa element, ŚPM resetuje jego pozycję. Pozycje zapisują się względem rogów ekranu
+- 🧩 **Nowe elementy HUD:** TargetHUD (nick, HP z animowanym paskiem, dystans, głowa skina), Zbroja (z wytrzymałością), Efekty (zastępują ikony z Minecrafta), Koordynaty (XYZ, kierunek, koordynaty Netheru/Overworldu), Informacje (ping, prędkość, serwer, czas sesji)
+- ⭐ **Ulubione:** gwiazdka na module i osobna kategoria
+- ✨ **Animowane tło GUI:** cząsteczki i poświata w kolorze akcentu
+- 🔊 **Ciche dźwięki kliknięć** (można wyłączyć)
+- 👋 **Powitanie** po wejściu na serwer
+- ⌨️ **Skróty:** Ctrl+F szuka, Tab przechodzi do następnej kategorii (Shift+Tab do poprzedniej)
+- 🗂️ Nowa strona **HUD** w ClickGUI z przełącznikami wszystkich elementów
+
+## Wszystkie funkcje
+- **ClickGUI** (`Prawy Shift`): płynne otwieranie i zamykanie, gładka czcionka Inter, małe ikony [Lucide](https://lucide.dev) (ISC), przeciąganie okna za logo
+- Kategorie: Walka, Ruch, Wizualne, Gracz, Świat, Inne, Ulubione oraz strony HUD, Motywy i Konfiguracje
 - **LPM** na module włącza go, **PPM** rozwija opcje (klawisz, tryby, suwaki, przełączniki)
-- Wyszukiwarka modułów: wystarczy zacząć pisać
-- Okno można przeciągać za logo
-- **Profil gracza** (głowa skina, nick, UUID, serwer, czas sesji). **PPM na profilu** otwiera ustawienia klienta: język (Polski/English), rozmiar GUI, szybkość animacji, rozmycie tła, włączanie i wyłączanie elementów HUD
-- **Motywy:** Ciemny, Jasny, AMOLED, z płynnym przejściem kolorów
-- **Konfiguracje:** tworzenie, zapis, wczytywanie i usuwanie (`.minecraft/razerclient/configs`)
-
-### HUD
-- **Watermark** (prawy górny róg): logo • FPS • godzina • nick
-- **Lista modułów** (lewy górny róg): kompaktowy panel z małymi ikonami włączonych modułów, animowany
-- **Keybinds** pod listą: mały panel w stylu „embed”, czyli ikona, nazwa modułu i klawisz po prawej (wyszarzone, gdy moduł jest wyłączony)
-- **Powiadomienia** (prawy dolny róg): ikona modułu, Włączono/Wyłączono, nazwa i klawisz, z paskiem czasu
-
-![HUD](docs/hud.jpg)
+- **Profil gracza**. **PPM na profilu** otwiera ustawienia klienta: język PL/EN, rozmiar GUI, szybkość animacji, rozmycie, animowane tło, dźwięki, powiadomienia, powitanie
+- Motywy: Ciemny, Jasny i AMOLED, każdy z dowolnym akcentem
+- Konfiguracje (`.minecraft/razerclient/configs`), razem z ulubionymi
+- HUD w stylu „embed”: Watermark, Lista modułów, Keybinds, TargetHUD, Efekty, Zbroja, Informacje, Koordynaty oraz powiadomienia o włączeniu i wyłączeniu modułu
 
 | | |
 |---|---|
-| ![](docs/gui_expanded.jpg) | ![](docs/gui_themes.jpg) |
-| ![](docs/gui_settings.jpg) | ![](docs/gui_profile.jpg) |
+| ![](docs/hud.jpg) | ![](docs/hud_editor.jpg) |
+| ![](docs/gui_combat.jpg) | ![](docs/gui_hud.jpg) |
+| ![](docs/gui_favorites.jpg) | ![](docs/gui_light.jpg) |
 
 ## Budowanie
 ```
 ./gradlew build
 ```
 Plik `.jar` znajdziesz w `build/libs/`. Wrzuć go do folderu `mods` razem z **Fabric API** (Fabric Loader 0.16+, MC 1.21.1).
-Uruchomienie w trybie dev: `./gradlew runClient`.

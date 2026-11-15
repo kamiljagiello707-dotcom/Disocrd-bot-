@@ -20,8 +20,55 @@ public final class Theme {
     private static final int BG = 0, SIDEBAR = 1, CARD = 2, CARD_HOVER = 3, STROKE = 4, TEXT = 5, TEXT_DIM = 6,
             TEXT_FAINT = 7, ACCENT = 8, ACCENT_TEXT = 9, TOGGLE_OFF = 10, HUD_BG = 11, SHADOW = 12;
 
+    /** kolor akcentu (MONO = biało-czarny z motywu), każdy ma 2 kolory do gradientu */
+    public enum Accent {
+        MONO("accent.mono", 0, 0),
+        PURPLE("accent.purple", 0xFFA855F7, 0xFFEC4899),
+        PINK("accent.pink", 0xFFEC4899, 0xFFF9A8D4),
+        BLUE("accent.blue", 0xFF3B82F6, 0xFF22D3EE),
+        CYAN("accent.cyan", 0xFF22D3EE, 0xFF34D399),
+        GREEN("accent.green", 0xFF22C55E, 0xFFA3E635),
+        RED("accent.red", 0xFFEF4444, 0xFFF97316),
+        GOLD("accent.gold", 0xFFF59E0B, 0xFFFDE047);
+        public final int a, b;
+        private final String key;
+        Accent(String key, int a, int b) { this.key = key; this.a = a; this.b = b; }
+        public String getName() { return Lang.get(key); }
+        public int first(Preset p) { return this == MONO ? p.c[ACCENT] : a; }
+        public int second(Preset p) { return this == MONO ? p.c[TEXT_DIM] : b; }
+    }
+
     private static Preset preset = Preset.DARK, from = Preset.DARK;
-    private static long switchTime = 0;
+    private static Accent accent = Accent.MONO, fromAccent = Accent.MONO;
+    private static long switchTime = 0, accentTime = 0;
+
+    public static Accent accentPreset() { return accent; }
+
+    public static void setAccent(Accent a) {
+        if (a == accent) return;
+        fromAccent = accent; accent = a; accentTime = System.currentTimeMillis();
+    }
+
+    public static void setAccentInstant(Accent a) { accent = a; fromAccent = a; }
+
+    private static float accentT() {
+        return Anim.easeOutCubic((System.currentTimeMillis() - accentTime) / (450f / Anim.globalSpeed));
+    }
+
+    /** drugi kolor gradientu */
+    public static int accent2() {
+        return R2D.blend(fromAccent.second(preset), accent.second(preset), accentT());
+    }
+
+    /** kolor akcentu "płynący" w czasie – do gradientów w HUD */
+    public static int accentWave(float phase) {
+        float t = 0.5f + 0.5f * (float) Math.sin(System.currentTimeMillis() / 600.0 + phase);
+        return R2D.blend(accent(), accent2(), t);
+    }
+
+    private static float luminance(int c) {
+        return (0.299f * ((c >> 16) & 0xFF) + 0.587f * ((c >> 8) & 0xFF) + 0.114f * (c & 0xFF)) / 255f;
+    }
 
     private Theme() {}
 
@@ -47,8 +94,13 @@ public final class Theme {
     public static int text() { return c(TEXT); }
     public static int textDim() { return c(TEXT_DIM); }
     public static int textFaint() { return c(TEXT_FAINT); }
-    public static int accent() { return c(ACCENT); }
-    public static int accentText() { return c(ACCENT_TEXT); }
+    public static int accent() {
+        int base = c(ACCENT);
+        int fromC = fromAccent == Accent.MONO ? base : fromAccent.a;
+        int toC = accent == Accent.MONO ? base : accent.a;
+        return R2D.blend(fromC, toC, accentT());
+    }
+    public static int accentText() { return luminance(accent()) > 0.6f ? 0xFF0A0A0B : 0xFFFFFFFF; }
     public static int toggleOff() { return c(TOGGLE_OFF); }
     public static int hudBg() { return c(HUD_BG); }
     public static int shadow() { return c(SHADOW); }

@@ -2,6 +2,7 @@ package dev.razer.client.config;
 
 import com.google.gson.*;
 import dev.razer.client.RazerClient;
+import dev.razer.client.hud.HudElement;
 import dev.razer.client.lang.Lang;
 import dev.razer.client.module.Module;
 import dev.razer.client.setting.Setting;
@@ -52,6 +53,7 @@ public class ConfigManager {
             JsonObject o = new JsonObject();
             o.addProperty("enabled", m.isEnabled());
             o.addProperty("key", m.getKey());
+            o.addProperty("favorite", m.favorite);
             JsonObject set = new JsonObject();
             for (Setting<?> s : m.getSettings()) set.add(s.getId(), s.save());
             o.add("settings", set);
@@ -74,6 +76,7 @@ public class ConfigManager {
                 JsonObject o = mods.getAsJsonObject(m.getName());
                 m.setEnabledSilent(o.get("enabled").getAsBoolean());
                 m.setKey(o.get("key").getAsInt());
+                if (o.has("favorite")) m.favorite = o.get("favorite").getAsBoolean();
                 JsonObject set = o.getAsJsonObject("settings");
                 for (Setting<?> s : m.getSettings()) if (set != null && set.has(s.getId())) s.load(set.get(s.getId()));
             } catch (Exception ignored) {}
@@ -105,11 +108,15 @@ public class ConfigManager {
         o.addProperty("config", current);
         o.add("guiSize", s.guiSize.save());
         o.add("animSpeed", s.animSpeed.save());
+        o.addProperty("accent", Theme.accentPreset().name());
         o.add("blur", s.blur.save());
-        o.add("watermark", s.watermark.save());
-        o.add("arraylist", s.arraylist.save());
-        o.add("keybinds", s.keybinds.save());
+        o.add("particles", s.particles.save());
+        o.add("sounds", s.sounds.save());
+        o.add("welcome", s.welcome.save());
         o.add("notifications", s.notifications.save());
+        JsonObject hud = new JsonObject();
+        for (HudElement e : RazerClient.get().hud.elements) hud.add(e.id, e.save());
+        o.add("hud", hud);
         write(clientFile, o);
     }
 
@@ -124,10 +131,15 @@ public class ConfigManager {
                 s.guiSize.load(o.get("guiSize"));
                 s.animSpeed.load(o.get("animSpeed"));
                 s.blur.load(o.get("blur"));
-                s.watermark.load(o.get("watermark"));
-                s.arraylist.load(o.get("arraylist"));
-                s.keybinds.load(o.get("keybinds"));
                 s.notifications.load(o.get("notifications"));
+                if (o.has("accent")) Theme.setAccentInstant(Theme.Accent.valueOf(o.get("accent").getAsString()));
+                if (o.has("particles")) s.particles.load(o.get("particles"));
+                if (o.has("sounds")) s.sounds.load(o.get("sounds"));
+                if (o.has("welcome")) s.welcome.load(o.get("welcome"));
+                if (o.has("hud")) {
+                    JsonObject hud = o.getAsJsonObject("hud");
+                    for (HudElement e : RazerClient.get().hud.elements) if (hud.has(e.id)) e.load(hud.getAsJsonObject(e.id));
+                }
             } catch (Exception ignored) {}
         }
         Anim.globalSpeed = s.animSpeed.get().floatValue();

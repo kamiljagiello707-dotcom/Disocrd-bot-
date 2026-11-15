@@ -9,10 +9,10 @@ public class ClientSettings {
     public final ModeSetting guiSize = new ModeSetting("Rozmiar GUI", "GUI size", "size.normal", "size.small", "size.large");
     public final NumberSetting animSpeed = new NumberSetting("Szybkość animacji", "Animation speed", 1.0, 0.5, 2.0, 0.1);
     public final BoolSetting blur = new BoolSetting("Rozmycie tła", "Background blur", true);
-    public final BoolSetting watermark = new BoolSetting("Watermark", "Watermark", true);
-    public final BoolSetting arraylist = new BoolSetting("Lista modułów", "Module list", true);
-    public final BoolSetting keybinds = new BoolSetting("KeyBinds", "KeyBinds", true);
+    public final BoolSetting particles = new BoolSetting("Animowane tło", "Animated background", true);
+    public final BoolSetting sounds = new BoolSetting("Dźwięki GUI", "GUI sounds", true);
     public final BoolSetting notifications = new BoolSetting("Powiadomienia", "Notifications", true);
+    public final BoolSetting welcome = new BoolSetting("Powitanie", "Welcome", true);
 
     public float guiScale() {
         return switch (guiSize.get()) {
@@ -23,7 +23,7 @@ public class ClientSettings {
     }
 
     public void reset() {
-        guiSize.reset(); animSpeed.reset(); blur.reset(); watermark.reset();
-        arraylist.reset(); keybinds.reset(); notifications.reset();
+        guiSize.reset(); animSpeed.reset(); blur.reset(); particles.reset();
+        sounds.reset(); notifications.reset(); welcome.reset();
     }
 }

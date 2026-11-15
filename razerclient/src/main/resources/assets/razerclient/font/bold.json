@@ -1,0 +1,1 @@
+{ "providers": [ { "type": "ttf", "file": "razerclient:Inter-Bold.otf", "size": 9, "oversample": 4.0, "shift": [0, 0.5] } ] }

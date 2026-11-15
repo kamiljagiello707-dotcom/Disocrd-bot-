@@ -585,7 +585,11 @@ public class ClickGui extends Screen {
             R2D.icon(ctx, "arrow_left", -2.5f, -2.5f, 5, Theme.textFaint());
             ctx.getMatrices().pop();
             Fonts.drawCentered(ctx, v, bx + bw / 2f, y + h / 2f - Fonts.height(0.7f) / 2f + 0.5f, Theme.text(), Font.BOLD, 0.7f);
-            hit(bx, y + 3, bw, h - 6, bt -> md.cycle(bt == 1 ? -1 : 1));
+            hit(bx, y + 3, bw, h - 6, bt -> {
+                md.cycle(bt == 1 ? -1 : 1);
+                for (Module mm : rc.modules.all())
+                    if (mm instanceof dev.razer.client.module.HitSound hs && hs.sound == md) hs.play();
+            });
             return y + h;
         }
         return y;

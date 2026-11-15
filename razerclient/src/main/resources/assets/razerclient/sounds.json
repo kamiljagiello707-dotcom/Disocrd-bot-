@@ -1,0 +1,37 @@
+{
+  "hit.razer": {
+    "sounds": [
+      "razerclient:razer"
+    ]
+  },
+  "hit.pop": {
+    "sounds": [
+      "razerclient:pop"
+    ]
+  },
+  "hit.glass": {
+    "sounds": [
+      "razerclient:glass"
+    ]
+  },
+  "hit.coin": {
+    "sounds": [
+      "razerclient:coin"
+    ]
+  },
+  "hit.laser": {
+    "sounds": [
+      "razerclient:laser"
+    ]
+  },
+  "hit.bubble": {
+    "sounds": [
+      "razerclient:bubble"
+    ]
+  },
+  "hit.thump": {
+    "sounds": [
+      "razerclient:thump"
+    ]
+  }
+}

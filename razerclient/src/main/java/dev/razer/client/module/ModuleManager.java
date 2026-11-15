@@ -64,6 +64,7 @@ public class ModuleManager {
                 .add(new NumberSetting("Prędkość", "Speed", 1.0, 0.1, 5.0, 0.1)));
         // MISC
         reg(new Cosmetic());
+        reg(new HitSound());
         reg(new Module("AntiAFK", Category.MISC, "coffee", "Zapobiega wyrzuceniu za AFK", "Prevents AFK kick"));
         reg(new Module("AutoReconnect", Category.MISC, "refresh", "Automatyczne łączenie", "Auto reconnect")
                 .add(new NumberSetting("Opóźnienie", "Delay", 5, 1, 30, 1)));

@@ -1,7 +1,7 @@
 # RazerClient 2.0
 
 Nowoczesne GUI klienta do Minecraft **1.21.1 (Fabric)**: ClickGUI, edytor HUD, motywy z kolorami akcentu i powiadomienia.
-To jest **sam interfejs**. Moduły to puste przełączniki bez żadnej funkcji w grze, z wyjątkiem kosmetycznych **TargetESP**, **Ambient**, **ChinaHat**, **JumpCircles** i **Cosmetic**.
+To jest **sam interfejs**. Moduły to puste przełączniki bez żadnej funkcji w grze, z wyjątkiem kosmetycznych **TargetESP**, **Ambient**, **ChinaHat**, **JumpCircles**, **Cosmetic** i **HitSound**.
 
 | | |
 |---|---|
@@ -10,6 +10,7 @@ To jest **sam interfejs**. Moduły to puste przełączniki bez żadnej funkcji w
 ![ClickGUI](docs/gui_themes.jpg)
 
 ## Co nowego w 2.0
+- 🔊 **HitSound** (Inne): dźwięk przy każdym uderzeniu. Do wyboru 13 dźwięków: 7 własnych, zsyntetyzowanych do RazerClient (Razer, Pop, Glass, Coin, Laser, Bubble, Thump) i 6 z Minecrafta (Dzwonek, Pling, Kurant, XP, Ametyst, Krytyk). Zmiana dźwięku w opcjach od razu go odtwarza. Opcje: głośność, wysokość, losowa wysokość, tylko gracze
 - 🎩 **ChinaHat** (Wizualne): świecący stożkowy kapelusz nad głową z gradientem w kolorze akcentu. Opcjonalnie także na znajomych. Opcje: rozmiar, wysokość, obrót
 - ⭕ **JumpCircles** (Wizualne): świecące kręgi rozchodzące się pod nogami przy każdym skoku. Opcje: rozmiar, czas
 - 🧥 **Cosmetic** (Inne): własna peleryna z logo RazerClient w wersjach Midnight, Czarna i Fiolet (widoczna u Ciebie)

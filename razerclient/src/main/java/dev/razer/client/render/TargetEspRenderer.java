@@ -42,6 +42,9 @@ public final class TargetEspRenderer {
     public static void init() {
         AttackEntityCallback.EVENT.register((player, world, hand, entity, hit) -> {
             if (world.isClient && entity instanceof LivingEntity le) { attacked = le; attackTime = System.currentTimeMillis(); }
+            if (world.isClient && entity instanceof LivingEntity le && le.isAlive()
+                    && RazerClient.get().modules.get("HitSound") instanceof dev.razer.client.module.HitSound hs && hs.isEnabled()
+                    && (!hs.playersOnly.get() || entity instanceof PlayerEntity)) hs.play();
             return ActionResult.PASS;
         });
         WorldRenderEvents.AFTER_ENTITIES.register(TargetEspRenderer::render);

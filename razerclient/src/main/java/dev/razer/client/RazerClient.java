@@ -26,7 +26,7 @@ import java.util.Set;
 
 public class RazerClient implements ClientModInitializer {
     public static final String NAME = "RazerClient";
-    public static final String VERSION = "3.5.0";
+    public static final String VERSION = "4.0.0";
     public static final Logger LOGGER = LoggerFactory.getLogger(NAME);
     private static RazerClient instance;
 
@@ -46,6 +46,7 @@ public class RazerClient implements ClientModInitializer {
     @Override
     public void onInitializeClient() {
         instance = this;
+        dev.razer.client.render.R2D.initShaders();
         notifications = new Notifications();
         modules = new ModuleManager();
         hud = new Hud();

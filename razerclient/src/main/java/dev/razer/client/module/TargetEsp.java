@@ -22,7 +22,7 @@ public class TargetEsp extends Module {
     public final NumberSetting size = new NumberSetting("Rozmiar", "Size", 1.0, 0.5, 2.0, 0.1);
 
     public TargetEsp() {
-        super("TargetESP", Category.RENDER, "targethud", "Efektowny znacznik na celu", "Fancy marker on your target");
+        super("TargetESP", Category.VISUALS, "targethud", "Efektowny znacznik na celu", "Fancy marker on your target");
         add(mode, playersOnly, trail, ghosts, speed, size, colorMode, customColor);
     }
 

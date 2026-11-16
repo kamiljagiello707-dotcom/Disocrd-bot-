@@ -19,7 +19,7 @@ public class ToolColor extends Module {
     public final BoolSetting weapons = new BoolSetting("Inna broń", "Other Weapons", true);
 
     public ToolColor() {
-        super("ToolColor", Category.RENDER, "pickaxe", "Własny kolor narzędzi i mieczy", "Custom color for tools and swords");
+        super("ToolColor", Category.VISUALS, "pickaxe", "Własny kolor narzędzi i mieczy", "Custom color for tools and swords");
         add(color, intensity, glint, swords, tools, weapons);
     }
 

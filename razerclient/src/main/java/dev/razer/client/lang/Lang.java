@@ -20,10 +20,34 @@ public final class Lang {
         // kategorie
         put("cat.combat", "Walka", "Combat");
         put("cat.movement", "Ruch", "Movement");
-        put("cat.render", "Wizualne", "Render");
         put("cat.player", "Gracz", "Player");
+        put("cat.visuals", "Wizualne", "Visuals");
+        put("cat.camera", "Kamera", "Camera");
         put("cat.world", "Świat", "World");
-        put("cat.misc", "Inne", "Misc");
+        put("cat.cosmetics", "Kosmetyki", "Cosmetics");
+        put("cat.utility", "Narzędzia", "Utility");
+        put("cat.combat.desc", "Ustawienia walki, celowania i obrony", "Fighting, aiming and defense options");
+        put("cat.movement.desc", "Poruszanie się po ziemi, w powietrzu i po terenie", "Moving on the ground, in the air and over terrain");
+        put("cat.player.desc", "Ekwipunek, akcje i przetrwanie", "Inventory, actions and survival");
+        put("cat.visuals.desc", "Znaczniki celu, nametagi, obrysy bloków i nakładki", "Target markers, nametags, block outlines and overlays");
+        put("cat.camera.desc", "Zoom, swobodna kamera, celownik i model ręki", "Zoom, free camera, crosshair and hand view");
+        put("cat.world.desc", "Niebo, pogoda, pora dnia i budowanie", "Sky, weather, time of day and building");
+        put("cat.cosmetics.desc", "Peleryny, kapelusze, smugi, efekty i dźwięki", "Capes, hats, trails, effects and sounds");
+        put("cat.utility.desc", "Czat, znajomi, serwer i prywatność", "Chat, friends, server and privacy");
+        String[][] groups = {{"aura", "Aura", "Aura"}, {"assist", "Wspomaganie", "Assist"}, {"tweaks", "Poprawki", "Tweaks"}, {"defense", "Obrona", "Defense"},
+                {"ground", "Ziemia", "Ground"}, {"air", "Powietrze", "Air"}, {"terrain", "Teren", "Terrain"},
+                {"inventory", "Ekwipunek", "Inventory"}, {"actions", "Akcje", "Actions"}, {"survival", "Przetrwanie", "Survival"},
+                {"entities", "Byty", "Entities"}, {"blocks", "Bloki", "Blocks"}, {"overlays", "Nakładki", "Overlays"},
+                {"view", "Widok", "View"}, {"hand", "Ręka", "Hand"}, {"effects", "Efekty", "Effects"},
+                {"atmosphere", "Atmosfera", "Atmosphere"}, {"building", "Budowanie", "Building"}, {"automation", "Automatyzacja", "Automation"},
+                {"wearables", "Ubrania", "Wearables"}, {"items", "Przedmioty", "Items"}, {"sounds", "Dźwięki", "Sounds"},
+                {"chat", "Czat", "Chat"}, {"social", "Znajomi", "Social"}, {"server", "Serwer", "Server"}, {"privacy", "Prywatność", "Privacy"}, {"tools", "Narzędzia", "Tools"},
+                {"all", "Wszystkie", "All"}};
+        for (String[] g : groups) put("group." + g[0], g[1], g[2]);
+        put("section.overview", "PRZEGLĄD", "OVERVIEW");
+        put("hero.stats", "%d modułów  •  %d włączonych  •  %d z klawiszem", "%d modules  •  %d enabled  •  %d bound");
+        put("hero.enableAll", "Włącz wszystkie", "Enable all");
+        put("hero.disableAll", "Wyłącz wszystkie", "Disable all");
         put("page.themes", "Motywy", "Themes");
         put("page.config", "Konfiguracje", "Config");
         put("page.profile", "Profil gracza", "Player profile");
@@ -117,6 +141,14 @@ public final class Lang {
         put("hud.el.stats.desc", "Zabójstwa, śmierci, K/D i seria", "Kills, deaths, K/D and streak");
         put("hud.el.performance", "Wydajność", "Performance");
         put("hud.el.performance.desc", "Wykres FPS i ping", "FPS graph and ping");
+        put("hud.el.speed", "Prędkość", "Speed");
+        put("hud.el.speed.desc", "Bloki na sekundę z wykresem", "Blocks per second with a graph");
+        put("hud.el.helditem", "Przedmiot w ręce", "Held item");
+        put("hud.el.helditem.desc", "Nazwa, wytrzymałość i zaklęcia", "Name, durability and enchantments");
+        put("hud.el.playermodel", "Model gracza", "Player model");
+        put("hud.el.playermodel.desc", "Postać 3D ze zdrowiem i pancerzem", "3D player with health and armor");
+        put("hud.el.server", "Serwer", "Server");
+        put("hud.el.server.desc", "Adres, gracze, ping, wymiar i sesja", "Address, players, ping, dimension and session");
         put("hud.kills", "Zabójstwa", "Kills");
         put("hud.deaths", "Śmierci", "Deaths");
         put("hud.streak", "Seria", "Streak");

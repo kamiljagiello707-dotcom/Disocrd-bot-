@@ -17,4 +17,10 @@ public class InGameHudMixin {
         RazerClient rc = RazerClient.get();
         if (rc != null && rc.hud != null && rc.hud.potions.enabled.get()) ci.cancel();
     }
+
+    /** Crosshair: własny celownik zamiast vanilla */
+    @Inject(method = "renderCrosshair", at = @At("HEAD"), cancellable = true)
+    private void razer$crosshair(DrawContext context, RenderTickCounter tickCounter, CallbackInfo ci) {
+        if (RazerClient.get() != null && RazerClient.get().modules != null && dev.razer.client.module.Crosshair.render(context)) ci.cancel();
+    }
 }

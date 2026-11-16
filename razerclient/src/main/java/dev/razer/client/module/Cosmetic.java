@@ -8,7 +8,7 @@ public class Cosmetic extends Module {
     public final ModeSetting cape = new ModeSetting("Peleryna", "Cape", "Midnight", "Black", "Purple");
 
     public Cosmetic() {
-        super("Cosmetic", Category.MISC, "shirt", "Peleryna z logo RazerClient", "Cape with the RazerClient logo");
+        super("Cosmetic", Category.UTILITY, "shirt", "Peleryna z logo RazerClient", "Cape with the RazerClient logo");
         add(cape);
     }
 

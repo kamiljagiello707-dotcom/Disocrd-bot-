@@ -305,61 +305,55 @@ public class ClickGui extends Screen {
             if (b == 0) { draggingWindow = true; dragStartMx = mx; dragStartMy = my; dragStartX = dragX; dragStartY = dragY; }
         });
 
-        float iy = y + 58;
-
-        // pozycje nawigacji
-        float itemH = 20;
+        float iy = y + 54;
+        float itemH = 19;
         float selY = -1;
         List<Runnable> drawLater = new ArrayList<>();
-        List<float[]> itemPos = new ArrayList<>();
-        int catCount = Category.values().length;
-        Object[][] entries = new Object[catCount + 6][];
-        int idx = 0;
-        entries[idx++] = new Object[]{"misc", Lang.get("page.home"), Page.HOME, null};
-        for (Category c : Category.values()) entries[idx++] = new Object[]{c.icon, c.getName(), Page.CATEGORY, c};
-        entries[idx++] = new Object[]{"star", Lang.get("cat.favorites"), Page.FAVORITES, null};
-        entries[idx++] = new Object[]{"users", Lang.get("page.friends"), Page.FRIENDS, null};
-        entries[idx++] = new Object[]{"hud", Lang.get("page.hud"), Page.HUD, null};
-        entries[idx++] = new Object[]{"themes", Lang.get("page.themes"), Page.THEMES, null};
-        entries[idx] = new Object[]{"config", Lang.get("page.config"), Page.CONFIG, null};
+        List<Object[]> entries = new ArrayList<>();
+        entries.add(new Object[]{"section", Lang.get("section.overview")});
+        entries.add(new Object[]{"misc", Lang.get("page.home"), Page.HOME, null});
+        entries.add(new Object[]{"star", Lang.get("cat.favorites"), Page.FAVORITES, null});
+        entries.add(new Object[]{"section", Lang.get("section.modules")});
+        for (Category c : Category.values()) entries.add(new Object[]{c.icon, c.getName(), Page.CATEGORY, c});
 
-        for (int i = 0; i < entries.length; i++) {
-            if (i == 1) {
-                iy += 4;
-                Fonts.draw(ctx, Lang.get("section.modules"), x + 18, iy, Theme.textFaint(), Font.SEMIBOLD, 0.62f);
+        int fi = 0;
+        for (Object[] e : entries) {
+            if (e[0].equals("section")) {
+                iy += 5;
+                Fonts.draw(ctx, (String) e[1], x + 18, iy, Theme.textFaint(), Font.SEMIBOLD, 0.58f);
                 iy += 10;
+                continue;
             }
-            if (i == catCount + 1) {
-                iy += 4;
-                Fonts.draw(ctx, Lang.get("section.client"), x + 18, iy, Theme.textFaint(), Font.SEMIBOLD, 0.62f);
-                iy += 10;
-            }
-            Object[] e = entries[i];
             Page pg = (Page) e[2];
             Category cat = (Category) e[3];
             boolean selected = page == pg && ((pg != Page.CATEGORY && pg != Page.FAVORITES) || ((pg == Page.FAVORITES || cat == category) && search.isEmpty()));
             if (selected) selY = iy;
-            itemPos.add(new float[]{iy});
             float fy = iy;
-            final int fi = i;
+            final int idx = fi++;
             drawLater.add(() -> {
                 boolean hov = hovered(x + 10, fy, SB - 20, itemH);
-                float ha = anim("nav" + fi, 18).animate(hov && !selected ? 1 : 0);
+                float ha = anim("nav" + idx, 18).animate(hov && !selected ? 1 : 0);
                 R2D.roundRect(ctx, x + 10, fy, SB - 20, itemH, 7, R2D.withAlpha(Theme.cardHover(), ha));
                 float near = 1 - Anim.clamp01(Math.abs(indicatorY.raw() - fy) / itemH);
                 near *= indicatorA.raw();
                 int fg = R2D.blend(R2D.blend(Theme.textDim(), Theme.text(), ha), Theme.accentText(), near);
-                float off = anim("navoff" + fi, 16).animate(selected ? 4 : (hov ? 2 : 0));
-                R2D.icon(ctx, (String) e[0], x + 20 + off, fy + 5.5f, 9, fg);
-                Fonts.drawV(ctx, (String) e[1], x + 35 + off, fy + itemH / 2f + 0.5f, fg, selected ? Font.BOLD : Font.SEMIBOLD, 0.86f);
+                float off = anim("navoff" + idx, 16).animate(selected ? 2 : (hov ? 1 : 0));
+                // kafelek ikony w kolorze kategorii
+                int tint = cat != null ? cat.color : Theme.accent();
+                float tx = x + 16 + off, ty = fy + 3;
+                R2D.roundRect(ctx, tx, ty, 13, 13, 4, R2D.blend(R2D.withAlpha(tint, 0.16f + 0.08f * ha), R2D.withAlpha(Theme.accentText(), 0.2f), near));
+                R2D.icon(ctx, (String) e[0], tx + 2.5f, ty + 2.5f, 8, R2D.blend(R2D.blend(tint, 0xFFFFFFFF, 0.15f), Theme.accentText(), near));
+                Fonts.drawV(ctx, (String) e[1], tx + 19, fy + itemH / 2f + 0.5f, fg, selected ? Font.BOLD : Font.SEMIBOLD, 0.82f);
                 if (pg == Page.CATEGORY || pg == Page.FAVORITES) {
-                    long en = (cat != null ? rc.modules.byCategory(cat) : favorites()).stream().filter(Module::isEnabled).count();
+                    List<Module> ms = cat != null ? rc.modules.byCategory(cat) : favorites();
+                    long en = ms.stream().filter(Module::isEnabled).count();
+                    String t = en > 0 ? String.valueOf(en) : String.valueOf(ms.size());
+                    float tw = Fonts.width(t, Font.BOLD, 0.6f) + 7;
+                    float bx = x + SB - 16 - tw;
                     if (en > 0) {
-                        String t = String.valueOf(en);
-                        float tw = Fonts.width(t, Font.BOLD, 0.65f) + 7;
-                        R2D.roundRect(ctx, x + SB - 18 - tw, fy + 5, tw, 10, 5, R2D.blend(Theme.toggleOff(), Theme.accentText(), near));
-                        Fonts.drawV(ctx, t, x + SB - 18 - tw + 3.5f, fy + 10, R2D.blend(Theme.textDim(), Theme.accent(), near), Font.BOLD, 0.65f);
-                    }
+                        R2D.roundRect(ctx, bx, fy + 4.5f, tw, 10, 5, R2D.blend(R2D.withAlpha(tint, 0.22f), Theme.accentText(), near));
+                        Fonts.drawV(ctx, t, bx + 3.5f, fy + 9.5f, R2D.blend(R2D.blend(tint, 0xFFFFFFFF, 0.25f), Theme.accent(), near), Font.BOLD, 0.6f);
+                    } else Fonts.drawV(ctx, t, bx + 3.5f, fy + 9.5f, R2D.blend(Theme.textFaint(), Theme.accentText(), near * 0.7f), Font.SEMIBOLD, 0.6f);
                 }
             });
             hit(x + 10, iy, SB - 20, itemH, b -> {
@@ -376,11 +370,44 @@ public class ClickGui extends Screen {
         float ia = indicatorA.animate(selY >= 0 ? 1 : 0);
         float iyv = indicatorY.animate(selY >= 0 ? selY : indicatorY.target());
         if (Theme.neon() > 0.01f) R2D.glow(ctx, x + 2, iyv - 10, SB - 4, itemH + 20, R2D.withAlpha(Theme.accentWave(0), 0.35f * ia * Theme.neon()));
-        R2D.roundRect(ctx, x + 10, iyv, SB - 20, itemH, 7, R2D.withAlpha(Theme.accent(), ia));
+        R2D.shadow(ctx, x + 12, iyv + 2, SB - 24, itemH, 8, R2D.withAlpha(Theme.accent(), 0.35f * ia));
+        R2D.roundRectV(ctx, x + 10, iyv, SB - 20, itemH, 7, R2D.withAlpha(R2D.blend(Theme.accent(), 0xFFFFFFFF, 0.12f), ia), R2D.withAlpha(Theme.accent(), ia));
         for (Runnable r : drawLater) r.run();
 
+        drawDockBar(ctx, x + 10, y0 + H - 46 - 30, SB - 20, 24);
         drawProfileCard(ctx, x + 10, y0 + H - 46, SB - 20, 36);
     }
+
+    /** pasek szybkich skrótów nad profilem: Znajomi, HUD, Motywy, Konfiguracje */
+    private void drawDockBar(DrawContext ctx, float x, float y, float w, float h) {
+        Object[][] items = {{"users", "page.friends", Page.FRIENDS}, {"hud", "page.hud", Page.HUD}, {"themes", "page.themes", Page.THEMES}, {"config", "page.config", Page.CONFIG}};
+        R2D.roundRect(ctx, x, y, w, h, 9, Theme.card());
+        R2D.roundOutline(ctx, x, y, w, h, 9, 0.5f, Theme.stroke());
+        float bw = (w - 6) / items.length;
+        String label = null;
+        float lx = 0;
+        for (int i = 0; i < items.length; i++) {
+            Page pg = (Page) items[i][2];
+            float bx = x + 3 + i * bw;
+            boolean act = page == pg, hv = hovered(bx, y + 3, bw, h - 6);
+            float aa = anim("dock" + i, 16).animate(act ? 1 : 0), ha = anim("dockh" + i, 18).animate(hv ? 1 : 0);
+            R2D.roundRect(ctx, bx + 1, y + 3, bw - 2, h - 6, 6, R2D.blend(R2D.withAlpha(Theme.cardHover(), ha), Theme.accent(), aa));
+            R2D.icon(ctx, (String) items[i][0], bx + bw / 2f - 4.5f, y + h / 2f - 4.5f, 9, R2D.blend(R2D.blend(Theme.textDim(), Theme.text(), ha), Theme.accentText(), aa));
+            if (hv) { label = Lang.get((String) items[i][1]); lx = bx + bw / 2f; }
+            hit(bx, y + 3, bw, h - 6, b -> { if (b == 0) setPage(pg); });
+        }
+        if (label != null) {
+            float tw = Fonts.width(label, Font.SEMIBOLD, 0.62f) + 12;
+            float tx = Math.max(x, Math.min(x + w - tw, lx - tw / 2f));
+            R2D.shadow(ctx, tx, y - 18, tw, 14, 6, Theme.shadow());
+            R2D.roundRect(ctx, tx, y - 18, tw, 14, 7, opaque(Theme.bg()));
+            R2D.roundOutline(ctx, tx, y - 18, tw, 14, 7, 0.5f, Theme.stroke());
+            Fonts.drawV(ctx, label, tx + 6, y - 11, Theme.text(), Font.SEMIBOLD, 0.62f);
+        }
+    }
+
+    /** kolor tła bez przezroczystości (dymki, menu – żeby nic nie prześwitywało) */
+    private static int opaque(int c) { return 0xF7000000 | (c & 0xFFFFFF); }
 
     private void drawProfileCard(DrawContext ctx, float x, float y, float w, float h) {
         boolean hov = hovered(x, y, w, h);
@@ -433,7 +460,8 @@ public class ClickGui extends Screen {
             default -> {
                 List<Module> list = currentModules();
                 title = !search.isEmpty() ? "„" + search + "”" : page == Page.FAVORITES ? Lang.get("cat.favorites") : category.getName();
-                sub = Lang.format("modules.count", list.size(), list.stream().filter(Module::isEnabled).count()) + "  •  " + Lang.get("rmb.settings");
+                sub = page == Page.CATEGORY && search.isEmpty() ? category.getDescription() + "  •  " + Lang.get("rmb.settings")
+                        : Lang.format("modules.count", list.size(), list.stream().filter(Module::isEnabled).count()) + "  •  " + Lang.get("rmb.settings");
             }
         }
         float prev = R2D.alpha;
@@ -589,33 +617,140 @@ public class ClickGui extends Screen {
         return out;
     }
 
+    /** wybrana podgrupa w każdej kategorii (null = wszystkie) */
+    private static final Map<Category, String> groupSel = new java.util.EnumMap<>(Category.class);
+
     private float drawModules(DrawContext ctx, float x, float y, float w) {
-        List<Module> list = filtered(currentModules());
+        boolean catPage = page == Page.CATEGORY && search.isEmpty();
+        float startY = y;
+        String grp = catPage ? groupSel.get(category) : null;
+        if (catPage) {
+            y += drawCategoryHero(ctx, x, y, w) + 8;
+            y += drawGroupChips(ctx, x, y, w) + 10;
+        }
+        List<Module> base = currentModules();
+        if (grp != null) base.removeIf(m -> !grp.equals(m.getGroup()));
+        List<Module> list = filtered(base);
         shownModules = list;
         if (focusIndex >= list.size()) focusIndex = list.size() - 1;
         if (list.isEmpty()) {
             boolean fav = page == Page.FAVORITES && search.isEmpty();
-            R2D.icon(ctx, fav ? "star" : "search", x + w / 2f - 12, y + 50, 24, Theme.textFaint());
-            Fonts.drawCentered(ctx, fav ? Lang.get("fav.empty") : Lang.pl() ? "Nic nie znaleziono" : "Nothing found", x + w / 2f, y + 82, Theme.textDim(), Font.SEMIBOLD, 0.9f);
-            return 120;
+            R2D.icon(ctx, fav ? "star" : "search", x + w / 2f - 12, y + 40, 24, Theme.textFaint());
+            Fonts.drawCentered(ctx, fav ? Lang.get("fav.empty") : Lang.pl() ? "Nic nie znaleziono" : "Nothing found", x + w / 2f, y + 72, Theme.textDim(), Font.SEMIBOLD, 0.9f);
+            return y - startY + 110;
         }
         int cols = listView ? 1 : (w > 560 ? 3 : w > 330 ? 2 : 1);
         lastCols = cols;
+        boolean grouped = catPage && grp == null && sort == Sort.DEFAULT;
+        float cy = y;
+        if (!grouped) cy = drawGrid(ctx, list, 0, x, cy, w, cols);
+        else {
+            int idx = 0;
+            for (String g : category.groups) {
+                List<Module> sub = new ArrayList<>();
+                for (Module m : list) if (g.equals(m.getGroup())) sub.add(m);
+                if (sub.isEmpty()) continue;
+                // nagłówek podgrupy
+                String gn = Category.groupName(g).toUpperCase(Locale.ROOT);
+                Fonts.drawV(ctx, gn, x + 2, cy + 5, Theme.textFaint(), Font.BOLD, 0.58f);
+                float gw = Fonts.width(gn, Font.BOLD, 0.58f);
+                String cnt = String.valueOf(sub.size());
+                Fonts.drawV(ctx, cnt, x + 2 + gw + 5, cy + 5, R2D.blend(category.color, Theme.textFaint(), 0.35f), Font.BOLD, 0.58f);
+                float lx = x + 2 + gw + 5 + Fonts.width(cnt, Font.BOLD, 0.58f) + 7;
+                R2D.gradientH(ctx, lx, cy + 5, x + w - lx, 0.5f, Theme.stroke(), R2D.withAlpha(Theme.stroke(), 0f));
+                cy += 13;
+                cy = drawGrid(ctx, sub, idx, x, cy, w, cols) + 4;
+                idx += sub.size();
+            }
+        }
+        return cy - startY;
+    }
+
+    /** siatka kart modułów; zwraca y pod siatką */
+    private float drawGrid(DrawContext ctx, List<Module> list, int startIndex, float x, float y, float w, int cols) {
         float gap = listView ? 5 : 8, colW = (w - gap * (cols - 1)) / cols;
         long now = System.currentTimeMillis();
         float cy = y;
         for (int i = 0; i < list.size(); i++) {
             int col = i % cols;
+            int gi = startIndex + i;
             // wejście kart z opóźnieniem (stagger)
-            float e = Anim.easeOutCubic((now - listTime - i * 22) / (260f / Anim.globalSpeed));
+            float e = Anim.easeOutCubic((now - listTime - gi * 22) / (260f / Anim.globalSpeed));
             float prev = R2D.alpha;
             R2D.alpha = prev * e;
-            float cardY = cy + (1 - e) * 10;
-            drawModuleCard(ctx, list.get(i), x + col * (colW + gap), cardY, colW, i);
+            drawModuleCard(ctx, list.get(i), x + col * (colW + gap), cy + (1 - e) * 10, colW, gi);
             R2D.alpha = prev;
             if (col == cols - 1 || i == list.size() - 1) cy += (listView ? 30 : 34) + gap;
         }
-        return cy - y;
+        return cy;
+    }
+
+    /** nagłówek strony kategorii: kafelek, statystyki, pasek aktywności */
+    private float drawCategoryHero(DrawContext ctx, float x, float y, float w) {
+        Category c = category;
+        int col = c.color;
+        float h = 48;
+        List<Module> ms = rc.modules.byCategory(c);
+        long en = ms.stream().filter(Module::isEnabled).count(), bound = ms.stream().filter(Module::hasKey).count();
+        R2D.roundRectH(ctx, x, y, w, h, 11, R2D.withAlpha(col, 0.17f), R2D.withAlpha(col, 0.03f));
+        R2D.glow(ctx, x - 40, y - 40, 170, h + 80, R2D.withAlpha(col, 0.10f));
+        R2D.roundOutline(ctx, x, y, w, h, 11, 0.5f, R2D.withAlpha(col, 0.32f));
+        // kafelek z ikoną
+        float tx = x + 9, ty = y + 9;
+        R2D.shadow(ctx, tx, ty + 2, 30, 30, 8, R2D.withAlpha(col, 0.35f));
+        R2D.roundRectV(ctx, tx, ty, 30, 30, 9, R2D.blend(col, 0xFFFFFFFF, 0.18f), R2D.blend(col, 0xFF000000, 0.18f));
+        R2D.roundOutline(ctx, tx, ty, 30, 30, 9, 0.5f, R2D.withAlpha(0xFFFFFFFF, 0.25f));
+        R2D.icon(ctx, c.icon, tx + 8, ty + 8, 14, 0xFFFFFFFF);
+        // statystyki
+        String[][] stats = {{String.valueOf(ms.size()), Lang.pl() ? "Moduły" : "Modules"},
+                {String.valueOf(en), Lang.pl() ? "Włączone" : "Enabled"},
+                {String.valueOf(bound), Lang.pl() ? "Klawisze" : "Keybinds"},
+                {String.valueOf(c.groups.size()), Lang.pl() ? "Grupy" : "Groups"}};
+        float sx = tx + 42;
+        for (int i = 0; i < stats.length; i++) {
+            if (sx + 46 > x + w - 120) break;
+            Fonts.draw(ctx, stats[i][0], sx, y + 12, i == 1 && en > 0 ? R2D.blend(col, 0xFFFFFFFF, 0.3f) : Theme.text(), Font.BOLD, 1.0f);
+            Fonts.draw(ctx, stats[i][1], sx, y + 26, Theme.textFaint(), Font.SEMIBOLD, 0.58f);
+            sx += Math.max(46, Fonts.width(stats[i][1], Font.SEMIBOLD, 0.58f) + 16);
+            if (i < stats.length - 1) R2D.rect(ctx, sx - 9, y + 13, 0.5f, 22, R2D.withAlpha(col, 0.25f));
+        }
+        // aktywność kategorii
+        float bw = 104, bx = x + w - bw - 12;
+        float pct = ms.isEmpty() ? 0 : (float) en / ms.size();
+        float pa = anim("heroPct" + c, 10).animate(pct);
+        String pl = Math.round(pct * 100) + "%";
+        Fonts.draw(ctx, Lang.pl() ? "Aktywność" : "Activity", bx, y + 13, Theme.textDim(), Font.SEMIBOLD, 0.62f);
+        Fonts.draw(ctx, pl, bx + bw - Fonts.width(pl, Font.BOLD, 0.66f), y + 13, Theme.text(), Font.BOLD, 0.66f);
+        R2D.roundRect(ctx, bx, y + 27, bw, 5, 2.5f, R2D.withAlpha(col, 0.18f));
+        if (pa > 0.005f) R2D.roundRectH(ctx, bx, y + 27, Math.max(5, bw * pa), 5, 2.5f, R2D.blend(col, 0xFFFFFFFF, 0.25f), col);
+        return h;
+    }
+
+    /** chipy podgrup („Wszystkie”, „Aura”, „Assist” …) */
+    private float drawGroupChips(DrawContext ctx, float x, float y, float w) {
+        Category c = category;
+        String sel = groupSel.get(c);
+        List<String> gs = new ArrayList<>();
+        gs.add(null);
+        gs.addAll(c.groups);
+        float cx = x;
+        for (String g : gs) {
+            String label = g == null ? Category.groupName("all") : Category.groupName(g);
+            int count = rc.modules.byGroup(c, g).size();
+            String cnt = String.valueOf(count);
+            float cw = Fonts.width(label, Font.SEMIBOLD, 0.64f) + Fonts.width(cnt, Font.BOLD, 0.56f) + 19;
+            if (cx + cw > x + w) break;
+            boolean act = java.util.Objects.equals(sel, g);
+            boolean hv = hovered(cx, y, cw, 16);
+            float aa = anim("grp" + c + g, 16).animate(act ? 1 : 0), ha = anim("grph" + c + g, 18).animate(hv ? 1 : 0);
+            R2D.roundRect(ctx, cx, y, cw, 16, 8, R2D.blend(R2D.blend(Theme.card(), Theme.cardHover(), ha), R2D.withAlpha(c.color, 0.9f), aa));
+            R2D.roundOutline(ctx, cx, y, cw, 16, 8, 0.5f, R2D.blend(Theme.stroke(), R2D.withAlpha(0xFFFFFFFF, 0.3f), aa));
+            Fonts.drawV(ctx, label, cx + 7, y + 8.5f, R2D.blend(Theme.textDim(), 0xFFFFFFFF, aa), Font.SEMIBOLD, 0.64f);
+            Fonts.drawV(ctx, cnt, cx + cw - 7 - Fonts.width(cnt, Font.BOLD, 0.56f), y + 8.5f, R2D.blend(Theme.textFaint(), R2D.withAlpha(0xFFFFFFFF, 0.75f), aa), Font.BOLD, 0.56f);
+            hit(cx, y, cw, 16, b -> { if (b == 0) { if (g == null) groupSel.remove(c); else groupSel.put(c, g); listTime = System.currentTimeMillis(); focusIndex = -1; } });
+            cx += cw + 5;
+        }
+        return 16;
     }
 
     private float settingsHeight(Module m) {
@@ -1426,7 +1561,7 @@ public class ClickGui extends Screen {
         float maxX = panelMode() ? vLeft + vW : x0 + W, maxY = panelMode() ? vTop + vH : y0 + H;
         float tx = Math.min(mx + 12, maxX - tw - 6), ty = Math.min(my + 14, maxY - th - 6);
         R2D.shadow(ctx, tx, ty, tw, th, 10, Theme.shadow());
-        R2D.roundRect(ctx, tx, ty, tw, th, 8, Theme.bg());
+        R2D.roundRect(ctx, tx, ty, tw, th, 8, opaque(Theme.bg()));
         R2D.roundOutline(ctx, tx, ty, tw, th, 8, 0.6f, R2D.blend(Theme.stroke(), Theme.accent(), 0.35f));
         R2D.icon(ctx, m.getIcon(), tx + 8, ty + 7, 8, Theme.accentWave(0));
         Fonts.draw(ctx, m.getName(), tx + 20, ty + 7, Theme.text(), Font.BOLD, 0.78f);

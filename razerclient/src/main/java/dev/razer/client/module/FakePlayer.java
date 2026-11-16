@@ -15,7 +15,7 @@ public class FakePlayer extends Module {
     private OtherClientPlayerEntity dummy;
 
     public FakePlayer() {
-        super("FakePlayer", Category.MISC, "i_userx", "Kopia gracza do testów (tylko u Ciebie)", "Client-side test dummy");
+        super("FakePlayer", Category.UTILITY, "i_userx", "Kopia gracza do testów (tylko u Ciebie)", "Client-side test dummy");
         add(new BoolSetting("Copy Inventory", "Copy Inventory", true), new BoolSetting("Copy Skin", "Copy Skin", true),
                 new NumberSetting("Health", "Health", 20, 1, 20, 1));
     }

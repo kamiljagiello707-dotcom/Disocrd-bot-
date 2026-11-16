@@ -4,6 +4,7 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.render.*;
+import net.minecraft.client.gl.ShaderProgram;
 import net.minecraft.util.Identifier;
 import org.joml.Matrix4f;
 import org.joml.Vector4f;
@@ -107,10 +108,127 @@ public final class R2D {
         quad(b, m, x + r, y + r, x2 - r, y2 - r, h5, h5, h5, h5, c);
     }
 
+    // ---------------------------------------------------------------- shadery SDF (pixel-perfect)
+
+    private static ShaderProgram SHAPE, TEX;
+    /** shader tekstu z wygładzaniem (używany przez SmoothTextLayer) */
+    public static ShaderProgram TEXT;
+
+    /** rejestracja shaderów – wywołać w onInitializeClient (przed wczytaniem zasobów) */
+    public static void initShaders() {
+        net.fabricmc.fabric.api.client.rendering.v1.CoreShaderRegistrationCallback.EVENT.register(c -> {
+            c.register(id("ui_shape"), VertexFormats.POSITION_TEXTURE_COLOR, p -> SHAPE = p);
+            c.register(id("ui_tex"), VertexFormats.POSITION_TEXTURE_COLOR, p -> TEX = p);
+            c.register(id("ui_text"), VertexFormats.POSITION_COLOR_TEXTURE_LIGHT, p -> TEXT = p);
+        });
+    }
+
+    /** gęstość pikseli ekranu na jednostkę GUI w osi X/Y (0 gdy macierz nie jest płaska 2D) */
+    private static float pxX(Matrix4f m) { return (float) MinecraftClient.getInstance().getWindow().getScaleFactor() * m.m00(); }
+    private static float pxY(Matrix4f m) { return (float) MinecraftClient.getInstance().getWindow().getScaleFactor() * m.m11(); }
+    private static boolean flat(Matrix4f m) { return !worldDepth && m.m01() == 0 && m.m10() == 0 && m.m00() > 0 && m.m11() > 0; }
+
+    /** liczba fizycznych pikseli ekranu na jednostkę GUI (z uwzględnieniem bieżącej macierzy) */
+    public static float px(DrawContext ctx) { return Math.max(0.25f, pxX(ctx.getMatrices().peek().getPositionMatrix())); }
+
+    /** przyciąga współrzędną X do siatki fizycznych pikseli ekranu */
+    public static float snapX(Matrix4f m, float x) {
+        if (!flat(m)) return x;
+        float s = pxX(m), o = m.m30() * (float) MinecraftClient.getInstance().getWindow().getScaleFactor();
+        return (Math.round(x * s + o) - o) / s;
+    }
+
+    public static float snapY(Matrix4f m, float y) {
+        if (!flat(m)) return y;
+        float s = pxY(m), o = m.m31() * (float) MinecraftClient.getInstance().getWindow().getScaleFactor();
+        return (Math.round(y * s + o) - o) / s;
+    }
+
+    /**
+     * Rysuje zaokrąglony prostokąt shaderem SDF: idealnie gładkie krawędzie (1 px AA), ostre linie
+     * przyciągnięte do pikseli, gradient z 4 rogów (lg, pg, pd, ld), obrys (thick>0) lub miękki cień (soft>0).
+     * @return false gdy shader niedostępny (wtedy używana jest stara ścieżka)
+     */
+    private static boolean shape(DrawContext ctx, float x, float y, float w, float h, float r,
+                                 float thick, float soft, int ctl, int ctr, int cbr, int cbl) {
+        if (SHAPE == null) return false;
+        if ((((ctl | ctr | cbr | cbl) >>> 24) & 0xFF) == 0) return true;
+        Matrix4f m = ctx.getMatrices().peek().getPositionMatrix();
+        if (soft <= 0 && flat(m)) {
+            float sx = pxX(m), sy = pxY(m);
+            float x1 = snapX(m, x), y1 = snapY(m, y), x2 = snapX(m, x + w), y2 = snapY(m, y + h);
+            // linie cieńsze niż piksel -> dokładnie 1 piksel (zamiast rozmytych pół-pikseli)
+            if (w > 0 && x2 - x1 < 1 / sx) { x1 = snapX(m, x + w / 2 - 0.5f / sx); x2 = x1 + 1 / sx; }
+            if (h > 0 && y2 - y1 < 1 / sy) { y1 = snapY(m, y + h / 2 - 0.5f / sy); y2 = y1 + 1 / sy; }
+            x = x1; y = y1; w = x2 - x1; h = y2 - y1;
+            if (thick > 0) thick = Math.max(1 / Math.min(sx, sy), Math.round(thick * Math.min(sx, sy)) / Math.min(sx, sy));
+        }
+        if (w <= 0 || h <= 0) return true;
+        r = Math.max(0, Math.min(r, Math.min(w, h) / 2f));
+        float ps = flat(m) ? Math.min(pxX(m), pxY(m)) : 0;
+        float pad = soft > 0 ? soft * 1.05f : (ps > 0 ? 2f / ps : Math.max(w, h) * 0.04f);
+        RenderSystem.enableBlend();
+        RenderSystem.defaultBlendFunc();
+        if (worldDepth) { RenderSystem.enableDepthTest(); RenderSystem.depthMask(false); } else RenderSystem.disableDepthTest();
+        RenderSystem.disableCull();
+        RenderSystem.setShader(() -> SHAPE);
+        RenderSystem.setShaderColor(1, 1, 1, 1);
+        uni(SHAPE, "Size", w, h);
+        uni(SHAPE, "Radius", r, r, r, r);
+        uni(SHAPE, "Thickness", thick);
+        uni(SHAPE, "Soft", soft);
+        BufferBuilder b = Tessellator.getInstance().begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_TEXTURE_COLOR);
+        float ax = x - pad, ay = y - pad, bx = x + w + pad, by = y + h + pad;
+        b.vertex(m, ax, ay, 0).texture(-pad, -pad).color(ctl);
+        b.vertex(m, ax, by, 0).texture(-pad, h + pad).color(cbl);
+        b.vertex(m, bx, by, 0).texture(w + pad, h + pad).color(cbr);
+        b.vertex(m, bx, ay, 0).texture(w + pad, -pad).color(ctr);
+        end(b);
+        return true;
+    }
+
+    /** tekstura shaderem z 16 próbkami (bez schodków przy pomniejszaniu), opcjonalnie zaokrąglona */
+    private static boolean tex(DrawContext ctx, Identifier tex, float x, float y, float w, float h, float r,
+                               float u0, float v0, float u1, float v1, int c, boolean additive) {
+        if (TEX == null) return false;
+        if (((c >>> 24) & 0xFF) == 0 || w <= 0 || h <= 0) return true;
+        Matrix4f m = ctx.getMatrices().peek().getPositionMatrix();
+        RenderSystem.enableBlend();
+        if (additive) RenderSystem.blendFunc(com.mojang.blaze3d.platform.GlStateManager.SrcFactor.ONE, com.mojang.blaze3d.platform.GlStateManager.DstFactor.ONE);
+        else RenderSystem.defaultBlendFunc();
+        if (worldDepth) { RenderSystem.enableDepthTest(); RenderSystem.depthMask(false); } else RenderSystem.disableDepthTest();
+        RenderSystem.disableCull();
+        RenderSystem.setShader(() -> TEX);
+        RenderSystem.setShaderTexture(0, tex);
+        RenderSystem.setShaderColor(1, 1, 1, 1);
+        r = Math.max(0, Math.min(r, Math.min(w, h) / 2f));
+        uni(TEX, "UVRect", u0, v0, u1, v1);
+        uni(TEX, "Size", w, h);
+        uni(TEX, "Radius", r, r, r, r);
+        uni(TEX, "Rounded", r > 0 ? 1 : 0);
+        BufferBuilder b = Tessellator.getInstance().begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_TEXTURE_COLOR);
+        quad(b, m, x, y, x + w, y + h, u0, v0, u1, v1, c);
+        end(b);
+        if (additive) RenderSystem.defaultBlendFunc();
+        return true;
+    }
+
+    private static void uni(ShaderProgram p, String name, float... v) {
+        net.minecraft.client.gl.GlUniform u = p.getUniform(name);
+        if (u == null) return;
+        switch (v.length) {
+            case 1 -> u.set(v[0]);
+            case 2 -> u.set(v[0], v[1]);
+            case 4 -> u.set(v[0], v[1], v[2], v[3]);
+            default -> {}
+        }
+    }
+
     public static void roundRect(DrawContext ctx, float x, float y, float w, float h, float r, int color) {
         r *= radiusMul;
         int c = col(color);
         if ((c >>> 24) == 0 || w <= 0 || h <= 0) return;
+        if (shape(ctx, x, y, w, h, r, 0, 0, c, c, c, c)) return;
         r = Math.max(0, Math.min(r, Math.min(w, h) / 2f));
         float px = r * 2 * pixelScale(ctx);
         Identifier tex = CIRCLES[CIRCLES.length - 1];
@@ -125,6 +243,7 @@ public final class R2D {
     public static void roundRectV(DrawContext ctx, float x, float y, float w, float h, float r, int top, int bottom) {
         r *= radiusMul;
         if (w <= 0 || h <= 0) return;
+        if (shape(ctx, x, y, w, h, r, 0, 0, col(top), col(top), col(bottom), col(bottom))) return;
         r = Math.max(0, Math.min(r, Math.min(w, h) / 2f));
         float px = r * 2 * pixelScale(ctx);
         Identifier tex = CIRCLES[CIRCLES.length - 1];
@@ -151,6 +270,14 @@ public final class R2D {
         end(b);
     }
 
+    /** zaokrąglony prostokąt z gradientem lewo -> prawo */
+    public static void roundRectH(DrawContext ctx, float x, float y, float w, float h, float r, int left, int right) {
+        r *= radiusMul;
+        if (w <= 0 || h <= 0) return;
+        if (shape(ctx, x, y, w, h, r, 0, 0, col(left), col(right), col(right), col(left))) return;
+        roundRect(ctx, x, y, w, h, r / radiusMul, blend(left, right, 0.5f));
+    }
+
     public static void rect(DrawContext ctx, float x, float y, float w, float h, int color) {
         roundRect(ctx, x, y, w, h, 0, color);
     }
@@ -160,6 +287,7 @@ public final class R2D {
         r *= radiusMul;
         int c = col(color);
         if ((c >>> 24) == 0) return;
+        if (shape(ctx, x, y, w, h, r, t, 0, c, c, c, c)) return;
         r = Math.max(t, Math.min(r, Math.min(w, h) / 2f));
         Matrix4f m = ctx.getMatrices().peek().getPositionMatrix();
         RenderSystem.enableBlend();
@@ -194,6 +322,7 @@ public final class R2D {
         r *= radiusMul;
         int l = col(cl), rr = col(cr);
         if (((l >>> 24) | (rr >>> 24)) == 0) return;
+        if (shape(ctx, x, y, w, h, r, t, 0, l, rr, rr, l)) return;
         r = Math.max(t, Math.min(r, Math.min(w, h) / 2f));
         Matrix4f m = ctx.getMatrices().peek().getPositionMatrix();
         RenderSystem.enableBlend();
@@ -238,6 +367,7 @@ public final class R2D {
 
     /** pionowy gradient (góra -> dół) */
     public static void gradientV(DrawContext ctx, float x, float y, float w, float h, int top, int bottom) {
+        if (shape(ctx, x, y, w, h, 0, 0, 0, col(top), col(top), col(bottom), col(bottom))) return;
         Matrix4f m = ctx.getMatrices().peek().getPositionMatrix();
         RenderSystem.enableBlend();
         RenderSystem.defaultBlendFunc();
@@ -254,6 +384,7 @@ public final class R2D {
 
     /** pozioma gradientowa belka (np. pasek postępu) */
     public static void gradientH(DrawContext ctx, float x, float y, float w, float h, int left, int right) {
+        if (shape(ctx, x, y, w, h, 0, 0, 0, col(left), col(right), col(right), col(left))) return;
         Matrix4f m = ctx.getMatrices().peek().getPositionMatrix();
         RenderSystem.enableBlend();
         RenderSystem.defaultBlendFunc();
@@ -279,6 +410,7 @@ public final class R2D {
     public static void shadow(DrawContext ctx, float x, float y, float w, float h, float spread, int color) {
         int c = col(color);
         if ((c >>> 24) == 0) return;
+        if (shape(ctx, x, y, w, h, Math.min(Math.min(w, h) / 2f, Math.max(8, spread * 0.75f) * radiusMul), 0, spread * 0.6f, c, c, c, c)) return;
         spread = Math.min(spread, Math.min(w, h) / 2f);
         Matrix4f m = ctx.getMatrices().peek().getPositionMatrix();
         BufferBuilder b = begin(SHADOW);
@@ -289,6 +421,7 @@ public final class R2D {
     public static void texture(DrawContext ctx, Identifier tex, float x, float y, float w, float h, int color) {
         int c = col(color);
         if ((c >>> 24) == 0) return;
+        if (tex(ctx, tex, x, y, w, h, 0, 0, 0, 1, 1, c, false)) return;
         Matrix4f m = ctx.getMatrices().peek().getPositionMatrix();
         BufferBuilder b = begin(tex);
         quad(b, m, x, y, x + w, y + h, 0, 0, 1, 1, c);
@@ -300,7 +433,9 @@ public final class R2D {
                                     float u0, float v0, float u1, float v1, int color) {
         int c = col(color);
         if ((c >>> 24) == 0) return;
+        if (tex(ctx, tex, x, y, w, h, 0, u0, v0, u1, v1, c, false)) return;
         r = Math.max(0, Math.min(r, Math.min(w, h) / 2f));
+        if (tex(ctx, tex, x, y, w, h, Math.max(r, 0.001f), u0, v0, u1, v1, c, false)) return;
         Matrix4f m = ctx.getMatrices().peek().getPositionMatrix();
         RenderSystem.enableBlend();
         RenderSystem.defaultBlendFunc();
@@ -349,6 +484,7 @@ public final class R2D {
         float a = ((c >>> 24) & 0xFF) / 255f;
         if (a <= 0.003f) return;
         int pm = 0xFF000000 | ((int) (((c >> 16) & 0xFF) * a) << 16) | ((int) (((c >> 8) & 0xFF) * a) << 8) | (int) ((c & 0xFF) * a);
+        if (tex(ctx, GLOW_ADD, x, y, w, h, 0, 0, 0, 1, 1, pm, true)) return;
         Matrix4f m = ctx.getMatrices().peek().getPositionMatrix();
         BufferBuilder b = begin(GLOW_ADD);
         RenderSystem.blendFunc(com.mojang.blaze3d.platform.GlStateManager.SrcFactor.ONE, com.mojang.blaze3d.platform.GlStateManager.DstFactor.ONE);

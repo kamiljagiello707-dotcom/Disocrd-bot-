@@ -13,7 +13,7 @@ public class JumpCircles extends Module {
     public final NumberSetting time = new NumberSetting("Czas", "Duration", 1.2, 0.4, 3.0, 0.1);
 
     public JumpCircles() {
-        super("JumpCircles", Category.RENDER, "radar", "Kręgi pod nogami przy skoku", "Rings under your feet when jumping");
+        super("JumpCircles", Category.VISUALS, "radar", "Kręgi pod nogami przy skoku", "Rings under your feet when jumping");
         add(size, time, colorMode, customColor);
     }
 }

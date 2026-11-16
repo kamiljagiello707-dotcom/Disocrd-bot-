@@ -57,9 +57,10 @@ public class HudEditor extends Screen {
 
         // elementy
         HudElement hovered = null;
+        java.util.List<float[]> placed = hud.reserved(width, height);
         for (HudElement e : hud.elements) {
             if (!e.enabled.get()) continue;
-            float[] pos = e.position(width, height, hud);
+            float[] pos = hud.place(e, width, height, placed);
             R2D.alpha = 1;
             e.render(ctx, pos[0], pos[1], true);
             e.lastX = pos[0]; e.lastY = pos[1];

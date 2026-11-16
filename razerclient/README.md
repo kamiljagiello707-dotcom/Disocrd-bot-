@@ -1,14 +1,31 @@
-# RazerClient 3.5
+# RazerClient 4.0
 
 Nowoczesne GUI klienta do Minecraft **1.21.1 (Fabric)**: ClickGUI, edytor HUD, motywy z kolorami akcentu i powiadomienia.
 Działają moduły **kosmetyczne i legit** (wszystko po stronie klienta, bez przewagi nad innymi graczami):
 
-- **Render:** TargetESP, Nametags (bez widzenia przez ściany), Ambient, ChinaHat, JumpCircles, Sky, ToolColor, **Zoom** (klawisz C, kółko myszy zmienia przybliżenie), **FreeLook** (lewy Alt), **Fullbright**, **NoHurtCam**, **BlockOutline**, **NoFire**
-- **World:** **TimeChanger**, **Weather** (tylko u Ciebie)
+- **Visuals:** TargetESP, Nametags (bez widzenia przez ściany), **BlockOutline**, **Fullbright**, **NoFire**
+- **Camera:** **Zoom** (klawisz C, kółko myszy zmienia przybliżenie), **FreeLook** (lewy Alt), **Crosshair**, **ViewModel**, **NoHurtCam**
+- **World:** Sky, Ambient, **TimeChanger**, **Weather** (tylko u Ciebie)
+- **Cosmetics:** Cosmetic (peleryny), ChinaHat, **Trail**, JumpCircles, ToolColor, HitSound
+- **Utility:** **NameProtect**, **AutoGG**, **ChatSuffix**, **MiddleClick** (znajomi), **AutoReconnect**, **FakePlayer**
 - **Movement / Player:** **Sprint** (jak wciśnięty klawisz sprintu), **AutoRespawn**
-- **Misc:** Cosmetic, HitSound, **NameProtect**, **AutoGG**, **ChatSuffix**, **MiddleClick** (znajomi), **AutoReconnect**, **FakePlayer**
 
 Moduły typu cheat (KillAura, Reach, Velocity, Speed, Flight, Scaffold, ESP/Tracers/ChestESP, Nuker, AutoClicker itd.) pozostają **przełącznikami bez logiki w grze**.
+
+## Co nowego w 4.0
+
+- 🎯 **Render bez artefaktów:** wszystkie zaokrąglone kształty (panele, obrysy, gradienty, cienie, przełączniki) rysuje własny shader SDF z wygładzaniem krawędzi i cienkimi liniami przyciągniętymi do pikseli ekranu. Ikony i tekst Inter są próbkowane 16 razy na piksel, więc nie mają schodków przy żadnej skali GUI
+- 🗂️ **8 nowych kategorii:** Combat, Movement, Player, Visuals, Camera, World, Cosmetics, Utility. Każda ma kolor, opis i **podgrupy** (np. Visuals: Entities / Blocks / Overlays), a jej strona ma nagłówek ze statystykami i paskiem aktywności, chipy podgrup oraz moduły pogrupowane z nagłówkami
+- 🧭 **Nowy sidebar:** sekcje Przegląd / Moduły, kafelki ikon w kolorach kategorii, pasek skrótów (Znajomi, HUD, Motywy, Konfiguracje) nad profilem, nieprzezroczyste dymki
+- 🆕 **Nowe moduły:** **Crosshair** (5 stylów, dynamiczny rozrzut, hit marker, cooldown ataku, kolor przy celu), **ViewModel** (pozycja / skala przedmiotu w ręce), **Trail** (gradientowa smuga za postacią)
+- 📊 **Nowe elementy HUD:** **Prędkość** (wykres BPS), **Przedmiot w ręce** (wytrzymałość, zaklęcia), **Model gracza** (postać 3D ze zdrowiem i pancerzem), **Serwer** (gracze, ping, wymiar, sesja). Wykresy mają słupki dokładnie co do piksela
+- 🧩 **Elementy HUD nigdy na siebie nie nachodzą:** domyślne pozycje są automatycznie przesuwane na najbliższe wolne miejsce (z pominięciem paska przedmiotów i czatu), a toasty Minecrafta zjeżdżają pod HUD w prawym górnym rogu
+
+| | |
+|---|---|
+| ![](docs/v4_gui_home.jpg) | ![](docs/v4_gui_visuals.jpg) |
+| ![](docs/v4_gui_cosmetics.jpg) | ![](docs/v4_gui_utility.jpg) |
+| ![](docs/v4_hud_full.jpg) | ![](docs/v4_hud_pvp.jpg) |
 
 ![Moduły legit](docs/legit_modules.jpg)
 

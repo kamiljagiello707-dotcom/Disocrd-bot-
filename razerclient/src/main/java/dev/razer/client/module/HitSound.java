@@ -19,7 +19,7 @@ public class HitSound extends Module {
     public final BoolSetting playersOnly = new BoolSetting("Tylko gracze", "Players only", false);
 
     public HitSound() {
-        super("HitSound", Category.MISC, "sound", "Dźwięk przy każdym uderzeniu", "Sound on every hit");
+        super("HitSound", Category.UTILITY, "sound", "Dźwięk przy każdym uderzeniu", "Sound on every hit");
         add(sound, volume, pitch, randomPitch, playersOnly);
     }
 

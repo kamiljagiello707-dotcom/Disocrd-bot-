@@ -106,18 +106,18 @@ public class ModuleManager {
                 m("Mode", "Infinite", "Double", "Triple"), n("Height", 0.42, 0.2, 1.0, 0.02), b("Only On Key", true), b("Reset On Ground", true));
 
         // ======================================================== RENDER
-        mod("ESP", Category.RENDER, "scan", "Obrysy graczy", "Player outlines",
+        mod("ESP", Category.VISUALS, "scan", "Obrysy graczy", "Player outlines",
                 m("Mode", "Box", "2D", "Outline", "Glow", "Shader"),
                 n("Line Width", 1.5, 0.5, 5.0, 0.5), n("Fill Opacity", 25, 0, 100, 5), n("Range", 128, 16, 512, 16),
                 b("Players", true), b("Mobs", false), b("Animals", false), b("Items", false), b("Health Bar", true),
                 b("Friends Color", true), b("Self", false));
-        mod("Fullbright", Category.RENDER, "sun", "Pełna jasność", "Full brightness",
+        mod("Fullbright", Category.VISUALS, "sun", "Pełna jasność", "Full brightness",
                 m("Mode", "Gamma", "Night Vision"), n("Gamma", 100, 0, 100, 5), b("Fade", true));
-        mod("Tracers", Category.RENDER, "radar", "Linie do graczy", "Lines to players",
+        mod("Tracers", Category.VISUALS, "radar", "Linie do graczy", "Lines to players",
                 m("Origin", "Crosshair", "Feet", "Top"), n("Width", 1.0, 0.5, 4.0, 0.5), n("Opacity", 80, 10, 100, 5),
                 b("Players", true), b("Mobs", false), b("Distance Color", true), b("Ignore Friends", false));
         modules.add(new Nametags());
-        mod("ChestESP", Category.RENDER, "package", "Podświetlanie skrzyń", "Highlights chests",
+        mod("ChestESP", Category.VISUALS, "package", "Podświetlanie skrzyń", "Highlights chests",
                 m("Mode", "Box", "Outline", "Glow"), n("Range", 64, 16, 256, 8), b("Chests", true), b("Ender Chests", true),
                 b("Shulkers", true), b("Barrels", false), b("Spawners", false), b("Tracers", false));
         modules.add(new TargetEsp());
@@ -126,16 +126,16 @@ public class ModuleManager {
         modules.add(new JumpCircles());
         modules.add(new Sky());
         modules.add(new ToolColor());
-        mod("Zoom", Category.RENDER, "i_zoom", "Przybliżenie widoku", "Zoom in your view",
+        mod("Zoom", Category.VISUALS, "i_zoom", "Przybliżenie widoku", "Zoom in your view",
                 n("Zoom", 4.0, 1.5, 10.0, 0.5), b("Smooth", true), b("Scroll Zoom", true), b("Cinematic Camera", false), b("Hide Hand", true));
-        mod("FreeLook", Category.RENDER, "render", "Rozglądanie bez obracania postaci", "Look around without turning",
+        mod("FreeLook", Category.VISUALS, "render", "Rozglądanie bez obracania postaci", "Look around without turning",
                 m("Mode", "Hold", "Toggle"), n("Sensitivity", 1.0, 0.1, 3.0, 0.1), b("Invert Pitch", false), b("Third Person", true));
-        mod("NoHurtCam", Category.RENDER, "i_camera", "Brak trzęsienia kamery", "No camera shake on damage",
+        mod("NoHurtCam", Category.VISUALS, "i_camera", "Brak trzęsienia kamery", "No camera shake on damage",
                 n("Strength", 0, 0, 100, 5), b("No Bobbing", false), b("No Totem Animation", false));
-        mod("BlockOutline", Category.RENDER, "i_outline", "Własny obrys bloku", "Custom block outline",
+        mod("BlockOutline", Category.VISUALS, "i_outline", "Własny obrys bloku", "Custom block outline",
                 m("Mode", "Outline", "Fill", "Both"), n("Width", 2.0, 0.5, 5.0, 0.5), n("Fill Opacity", 20, 0, 100, 5),
                 b("Accent Color", true), b("Animated", true));
-        mod("NoFire", Category.RENDER, "i_flame", "Mniejszy ogień na ekranie", "Lower fire overlay",
+        mod("NoFire", Category.VISUALS, "i_flame", "Mniejszy ogień na ekranie", "Lower fire overlay",
                 n("Height", 0.3, 0.0, 1.0, 0.05), n("Opacity", 50, 0, 100, 5), b("Hide In Water", true));
 
         // ======================================================== PLAYER
@@ -187,25 +187,82 @@ public class ModuleManager {
                 m("Time", "Day", "Sunset", "Night", "Midnight", "Custom"), n("Custom Time", 6000, 0, 24000, 500), b("Animate", true));
 
         // ======================================================== MISC
-        mod("AntiAFK", Category.MISC, "coffee", "Zapobiega wyrzuceniu za AFK", "Prevents AFK kicks",
+        mod("AntiAFK", Category.UTILITY, "coffee", "Zapobiega wyrzuceniu za AFK", "Prevents AFK kicks",
                 m("Mode", "Jump", "Rotate", "Walk", "Swing"), n("Interval", 30, 5, 300, 5), b("Random", true));
-        mod("AutoReconnect", Category.MISC, "refresh", "Automatyczne łączenie", "Reconnects automatically",
+        mod("AutoReconnect", Category.UTILITY, "refresh", "Automatyczne łączenie", "Reconnects automatically",
                 n("Delay", 5, 1, 30, 1), n("Attempts", 5, 1, 50, 1), b("Show Button", true));
-        mod("MiddleClick", Category.MISC, "player", "Znajomi pod kółkiem myszy", "Add friends with middle click",
+        mod("MiddleClick", Category.UTILITY, "player", "Znajomi pod kółkiem myszy", "Add friends with middle click",
                 b("Notify", true), b("Only Players", true));
-        mod("DiscordRPC", Category.MISC, "message", "Status w Discordzie", "Discord rich presence",
+        mod("DiscordRPC", Category.UTILITY, "message", "Status w Discordzie", "Discord rich presence",
                 m("Large Image", "Logo", "Skin"), b("Show Server", true), b("Show Name", true), b("Show Time", true));
         modules.add(new Cosmetic());
         modules.add(new HitSound());
-        mod("NameProtect", Category.MISC, "i_mask", "Ukrywa Twój nick na ekranie", "Hides your name on screen",
+        mod("NameProtect", Category.UTILITY, "i_mask", "Ukrywa Twój nick na ekranie", "Hides your name on screen",
                 m("Replace With", "You", "Player", "Stars"), b("Friends", false));
-        mod("AutoGG", Category.MISC, "i_trophy", "Pisze GG po wygranej", "Says GG after a win",
+        mod("AutoGG", Category.UTILITY, "i_trophy", "Pisze GG po wygranej", "Says GG after a win",
                 m("Message", "gg", "GG", "good game", "gg wp"), n("Delay", 1, 0, 10, 1), b("Only Win", true));
-        mod("ChatSuffix", Category.MISC, "i_msgplus", "Dopisek do wiadomości", "Adds a suffix to messages",
+        mod("ChatSuffix", Category.UTILITY, "i_msgplus", "Dopisek do wiadomości", "Adds a suffix to messages",
                 m("Suffix", "| RazerClient", "» Razer", "razer.dev"), b("Small Font", true));
-        mod("AntiBot", Category.MISC, "i_bot", "Ignoruje boty serwera", "Ignores server bots",
+        mod("AntiBot", Category.UTILITY, "i_bot", "Ignoruje boty serwera", "Ignores server bots",
                 m("Mode", "Tab", "Ping", "Advanced"), b("Hide In Tab", false), b("Remove", false));
         modules.add(new FakePlayer());
+        modules.add(new Crosshair());
+        modules.add(new ViewModel());
+        modules.add(new Trail());
+        placeAll();
+    }
+
+    /** kategoria i podgrupa każdego modułu (RazerClient 4.0) */
+    private static final Object[][] PLACES = {
+            {Category.COMBAT, "Aura", "KillAura", "TriggerBot"},
+            {Category.COMBAT, "Assist", "AimAssist", "AutoClicker"},
+            {Category.COMBAT, "Tweaks", "Criticals", "Reach", "WTap", "HitBoxes"},
+            {Category.COMBAT, "Defense", "Velocity", "AutoTotem"},
+            {Category.MOVEMENT, "Ground", "Sprint", "Speed", "Step", "NoFall"},
+            {Category.MOVEMENT, "Air", "Flight", "LongJump", "AirJump", "ElytraBoost"},
+            {Category.MOVEMENT, "Terrain", "Spider", "Jesus"},
+            {Category.PLAYER, "Inventory", "AutoArmor", "InvManager", "ChestStealer", "AutoTool"},
+            {Category.PLAYER, "Actions", "FastPlace", "FastUse", "NoSlow"},
+            {Category.PLAYER, "Survival", "AutoEat", "AutoRespawn"},
+            {Category.VISUALS, "Entities", "TargetESP", "Nametags", "ESP", "Tracers"},
+            {Category.VISUALS, "Blocks", "BlockOutline", "ChestESP"},
+            {Category.VISUALS, "Overlays", "Fullbright", "NoFire"},
+            {Category.CAMERA, "View", "Zoom", "FreeLook", "Crosshair"},
+            {Category.CAMERA, "Hand", "ViewModel"},
+            {Category.CAMERA, "Effects", "NoHurtCam"},
+            {Category.WORLD, "Atmosphere", "Sky", "Ambient", "TimeChanger", "Weather"},
+            {Category.WORLD, "Building", "Scaffold", "Nuker", "FastBreak", "LiquidPlace", "AutoSign"},
+            {Category.WORLD, "Automation", "AutoFarm", "Timer"},
+            {Category.COSMETICS, "Wearables", "Cosmetic", "ChinaHat"},
+            {Category.COSMETICS, "Effects", "Trail", "JumpCircles"},
+            {Category.COSMETICS, "Items", "ToolColor"},
+            {Category.COSMETICS, "Sounds", "HitSound"},
+            {Category.UTILITY, "Chat", "AutoGG", "ChatSuffix"},
+            {Category.UTILITY, "Social", "MiddleClick", "DiscordRPC"},
+            {Category.UTILITY, "Server", "AutoReconnect", "AntiAFK", "AntiBot"},
+            {Category.UTILITY, "Privacy", "NameProtect"},
+            {Category.UTILITY, "Tools", "FakePlayer"},
+    };
+
+    private void placeAll() {
+        for (Object[] row : PLACES)
+            for (int i = 2; i < row.length; i++) {
+                Module m = get((String) row[i]);
+                if (m != null) m.place((Category) row[0], (String) row[1]);
+            }
+        // kolejność: kategoria -> podgrupa -> kolejność z tabeli
+        List<String> order = new ArrayList<>();
+        for (Object[] row : PLACES) for (int i = 2; i < row.length; i++) order.add((String) row[i]);
+        modules.sort(java.util.Comparator.comparingInt((Module m) -> m.getCategory().ordinal())
+                .thenComparingInt(m -> m.getCategory().groups.indexOf(m.getGroup()))
+                .thenComparingInt(m -> order.indexOf(m.getName())));
+    }
+
+    /** moduły kategorii w danej podgrupie (null = wszystkie) */
+    public List<Module> byGroup(Category c, String group) {
+        List<Module> out = new ArrayList<>();
+        for (Module m : modules) if (m.getCategory() == c && (group == null || group.equals(m.getGroup()))) out.add(m);
+        return out;
     }
 
     /** ostatnio przełączane moduły: {Module, czas} */

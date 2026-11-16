@@ -16,7 +16,7 @@ public class ChinaHat extends Module {
     public final BoolSetting spin = new BoolSetting("Obrót", "Spin", true);
 
     public ChinaHat() {
-        super("ChinaHat", Category.RENDER, "sparkles", "Świecący kapelusz nad głową", "Glowing hat above your head");
+        super("ChinaHat", Category.VISUALS, "sparkles", "Świecący kapelusz nad głową", "Glowing hat above your head");
         add(size, height, friends, spin, colorMode, customColor);
     }
 }

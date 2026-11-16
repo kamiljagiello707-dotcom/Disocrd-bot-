@@ -17,7 +17,7 @@ public class Nametags extends Module {
     public final BoolSetting self = new BoolSetting("Własny (F5)", "Self (F5)", false);
 
     public Nametags() {
-        super("Nametags", Category.RENDER, "tag", "Nowoczesne nicki nad graczami", "Modern nametags above players");
+        super("Nametags", Category.VISUALS, "tag", "Nowoczesne nicki nad graczami", "Modern nametags above players");
         add(scale, background, head, health, healthBar, armor, ping, distance, self);
     }
 }

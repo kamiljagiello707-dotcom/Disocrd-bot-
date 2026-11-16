@@ -17,7 +17,7 @@ public class Sky extends Module {
     public final NumberSetting brightness = new NumberSetting("Jasność", "Brightness", 100, 30, 150, 5);
 
     public Sky() {
-        super("Sky", Category.RENDER, "i_rain", "Piękne, animowane niebo", "Beautiful animated sky");
+        super("Sky", Category.VISUALS, "i_rain", "Piękne, animowane niebo", "Beautiful animated sky");
         add(preset, stars, starAmount, aurora, nebula, shootingStars, fog, speed, brightness);
     }
 }

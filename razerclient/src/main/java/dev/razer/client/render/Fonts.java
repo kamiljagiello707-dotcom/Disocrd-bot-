@@ -32,7 +32,9 @@ public final class Fonts {
         int c = R2D.col(color);
         if (((c >>> 24) & 0xFF) < 6 || s.isEmpty()) return;
         ctx.getMatrices().push();
-        ctx.getMatrices().translate(x, y, 0);
+        // przyciągnięcie linii bazowej do pikseli ekranu – ostry tekst bez rozmycia na pół piksela
+        org.joml.Matrix4f m = ctx.getMatrices().peek().getPositionMatrix();
+        ctx.getMatrices().translate(R2D.snapX(m, x), R2D.snapY(m, y), 0);
         ctx.getMatrices().scale(scale, scale, 1);
         tr().draw(text(s, f), 0, 0, c, false, ctx.getMatrices().peek().getPositionMatrix(), ctx.getVertexConsumers(),
                 TextRenderer.TextLayerType.NORMAL, 0, 0xF000F0);

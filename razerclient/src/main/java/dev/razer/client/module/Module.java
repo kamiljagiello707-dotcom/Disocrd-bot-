@@ -16,7 +16,9 @@ import java.util.List;
 public class Module {
     private final String name;
     private final String descPl, descEn;
-    private final Category category;
+    private Category category;
+    /** podgrupa w kategorii (np. "Entities") */
+    private String group = "";
     private final String icon;
     private boolean enabled;
     private int key = GLFW.GLFW_KEY_UNKNOWN;
@@ -56,6 +58,9 @@ public class Module {
     public String getName() { return name; }
     public String getDescription() { return Lang.pl() ? descPl : descEn; }
     public Category getCategory() { return category; }
+    public String getGroup() { return group; }
+    /** przenosi moduł do kategorii i podgrupy */
+    public Module place(Category c, String g) { this.category = c; this.group = g; return this; }
     public String getIcon() { return icon; }
     public boolean isEnabled() { return enabled; }
     public int getKey() { return key; }

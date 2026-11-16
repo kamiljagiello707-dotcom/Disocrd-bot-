@@ -50,8 +50,16 @@ public class Hud {
     public final Inventory inventory = new Inventory();
     public final Stats statsEl = new Stats();
     public final Perf perf = new Perf();
+    public final Speed speedEl = new Speed();
+    public final HeldItem held = new HeldItem();
+    public final PlayerModel playerModel = new PlayerModel();
+    public final Server server = new Server();
     public final SessionStats stats = new SessionStats();
-    public final List<HudElement> elements = List.of(watermark, moduleList, keybinds, target, potions, armor, info, coords, notifs, keystrokes, compass, clock, inventory, statsEl, perf);
+    public final List<HudElement> elements = List.of(watermark, moduleList, keybinds, target, potions, armor, info, coords, notifs, keystrokes, compass, clock, inventory, statsEl, perf,
+            speedEl, held, playerModel, server);
+
+    /** przesunięcie toastów Minecrafta w dół, żeby nie zasłaniały HUD-a w prawym górnym rogu */
+    public static float toastOffset;
 
     private double lastX, lastZ, speed;
     private long lastSpeedTime;
@@ -63,14 +71,15 @@ public class Hud {
 
     public void render(DrawContext ctx, float delta) {
         MinecraftClient mc = MinecraftClient.getInstance();
-        if (mc.options.hudHidden) return;
+        if (mc.options.hudHidden) { toastOffset = 0; return; }
         int sw = ctx.getScaledWindowWidth(), sh = ctx.getScaledWindowHeight();
         R2D.alpha = 1f;
         updateSpeed(mc);
+        List<float[]> placed = reserved(sw, sh);
         for (HudElement e : elements) {
             float v = e.visible.animate(e.enabled.get() && e.hasContent() ? 1 : 0);
             if (v < 0.01f) continue;
-            float[] p = e.position(sw, sh, this);
+            float[] p = place(e, sw, sh, placed);
             e.lastX = p[0]; e.lastY = p[1];
             R2D.alpha = Anim.easeOutCubic(v);
             ctx.getMatrices().push();
@@ -82,6 +91,78 @@ public class Hud {
             ctx.getMatrices().pop();
         }
         R2D.alpha = 1f;
+        // toasty pod elementami ułożonymi od góry w prawej kolumnie (Watermark, Efekty, Model gracza…)
+        float off = 0;
+        for (int hop = 0; hop < 4; hop++) {
+            float before = off;
+            for (HudElement e : elements) {
+                if (!e.enabled.get() || e.visible.raw() < 0.5f || e == notifs) continue;
+                if (e.lastX + e.w > sw - 165 && e.lastY < off + 12 && e.lastY + e.h > off) off = Math.max(off, e.lastY + e.h + 3);
+            }
+            if (off == before) break;
+        }
+        toastOffset = off;
+    }
+
+    /**
+     * Pozycja elementu bez nachodzenia na inne: elementy z domyślną pozycją, które zachodziłyby
+     * na już narysowane, są przesuwane na najbliższe wolne miejsce (obok / pod / nad kolizją).
+     */
+    public float[] place(HudElement e, int sw, int sh, List<float[]> placed) {
+        float[] p = e.position(sw, sh, this);
+        if (!e.custom && e != notifs) p = resolve(p, e.w, e.h, placed, sw, sh);
+        if (e != notifs) placed.add(new float[]{p[0], p[1], e.w, e.h});
+        return p;
+    }
+
+    /** strefy zarezerwowane dla vanilla: pasek przedmiotów ze zdrowiem/głodem i ostatnie linie czatu */
+    public List<float[]> reserved(int sw, int sh) {
+        List<float[]> l = new ArrayList<>();
+        l.add(new float[]{sw / 2f - 91, sh - 40, 182, 40});
+        l.add(new float[]{0, sh - 85, 240, 45});
+        return l;
+    }
+
+    private static boolean collides(float x, float y, float w, float h, List<float[]> placed) {
+        for (float[] r : placed)
+            if (x < r[0] + r[2] + 3 && x + w + 3 > r[0] && y < r[1] + r[3] + 3 && y + h + 3 > r[1]) return true;
+        return false;
+    }
+
+    private static float[] resolve(float[] p, float w, float h, List<float[]> placed, int sw, int sh) {
+        if (!collides(p[0], p[1], w, h, placed)) return p;
+        float[] best = null;
+        double bestD = Double.MAX_VALUE;
+        for (float[] r : placed) {
+            float[][] cands = {{p[0], r[1] + r[3] + 4}, {p[0], r[1] - h - 4}, {r[0] + r[2] + 4, p[1]}, {r[0] - w - 4, p[1]},
+                    {r[0] + r[2] + 4, r[1]}, {r[0] - w - 4, r[1]}, {r[0], r[1] + r[3] + 4}, {r[0], r[1] - h - 4}};
+            for (float[] c : cands) {
+                if (c[0] < 2 || c[1] < 2 || c[0] + w > sw - 2 || c[1] + h > sh - 2) continue;
+                if (collides(c[0], c[1], w, h, placed)) continue;
+                double d = (c[0] - p[0]) * (c[0] - p[0]) + (c[1] - p[1]) * (c[1] - p[1]);
+                if (d < bestD) { bestD = d; best = c; }
+            }
+        }
+        return best != null ? best : p;
+    }
+
+    /**
+     * Wykres słupkowy idealny co do piksela: każdy słupek ma dokładnie 2 piksele ekranu i 1 piksel odstępu,
+     * więc nie ma nierównych przerw ani rozmytych krawędzi przy żadnej skali GUI.
+     */
+    static void bars(DrawContext ctx, float x, float y, float w, float h, float[] ring, int head, float max, float phase) {
+        float ps = R2D.px(ctx);
+        float unit = 1f / ps;
+        int n = Math.max(1, (int) ((w * ps + 1) / 3));
+        R2D.roundRect(ctx, x, y, w, h, 4, R2D.withAlpha(Theme.toggleOff(), 0.4f));
+        float left = R2D.snapX(ctx.getMatrices().peek().getPositionMatrix(), x + w - (n * 3 - 1) * unit);
+        for (int i = 0; i < n; i++) {
+            int idx = Math.floorMod(head - n + i, ring.length);
+            float f = ring[idx];
+            if (f <= 0) continue;
+            float bh = Math.max(unit, (h - 3) * Math.min(1, f / max));
+            R2D.roundRect(ctx, left + i * 3 * unit, y + h - 1.5f - bh, 2 * unit, bh, 0, R2D.withAlpha(Theme.accentWave(phase + i / 25f), 0.9f));
+        }
     }
 
     private void updateSpeed(MinecraftClient mc) {
@@ -559,8 +640,8 @@ public class Hud {
         java.util.Set<HudElement> on = new java.util.HashSet<>();
         switch (name) {
             case "minimal" -> on.addAll(List.of(watermark, target, notifs));
-            case "pvp" -> on.addAll(List.of(watermark, target, armor, potions, keystrokes, compass, notifs, statsEl));
-            case "full" -> on.addAll(elements);
+            case "pvp" -> on.addAll(List.of(watermark, target, armor, potions, keystrokes, compass, notifs, statsEl, held));
+            case "full" -> { on.addAll(elements); on.remove(info); }
             default -> on.addAll(List.of(watermark, moduleList, keybinds, target, potions, coords, notifs));
         }
         for (HudElement e : elements) { e.enabled.set(on.contains(e)); e.resetPosition(); }
@@ -708,7 +789,7 @@ public class Hud {
     public class Stats extends HudElement {
         Stats() { super("stats", "hud.el.stats", "i_trophy", false, 100, 70); }
 
-        @Override protected float[] defaultPos(int sw, int sh, Hud hud) { return new float[]{sw - w - 6, sh / 2f + 50}; }
+        @Override protected float[] defaultPos(int sw, int sh, Hud hud) { return new float[]{sw - w - 6, sh / 2f + 38}; }
 
         @Override public void render(DrawContext ctx, float x, float y, boolean preview) {
             long sess = (System.currentTimeMillis() - RazerClient.get().startTime) / 1000;
@@ -752,14 +833,7 @@ public class Hud {
             panel(ctx, x, y, w, h);
             float cy = header(ctx, x, y, w, "gauge", Lang.get("hud.el.performance"), mc.getCurrentFps() + " FPS");
             float gx = x + PADX, gw = w - PADX * 2, gy = cy + 2;
-            R2D.roundRect(ctx, gx, gy, gw, gh, 4, R2D.withAlpha(Theme.toggleOff(), 0.4f));
-            float bw = gw / samples.length;
-            for (int i = 0; i < samples.length; i++) {
-                float f = samples[(head + i) % samples.length];
-                if (f <= 0) continue;
-                float bh = Math.max(1, (gh - 3) * f / max);
-                R2D.rect(ctx, gx + i * bw, gy + gh - bh, Math.max(0.6f, bw - 0.15f), bh, R2D.withAlpha(Theme.accentWave(i / 30f), 0.85f));
-            }
+            bars(ctx, gx, gy, gw, gh, samples, head, max, 0);
             cy = gy + gh + 4;
             int ping = 0;
             if (mc.getNetworkHandler() != null && mc.player != null) {
@@ -820,6 +894,155 @@ public class Hud {
             panel(ctx, x, y, w, h);
             float cy = header(ctx, x, y, w, "activity", Lang.get("hud.info"), null);
             for (String[] r : rows) { row(ctx, x, cy, w, r[0], r[1], r[2], Theme.accent(), Theme.textDim(), Theme.text()); cy += ROW; }
+        }
+    }
+
+    // ================================================================== nowe elementy 4.0
+
+    /** Prędkość – BPS z wykresem z ostatnich 30 s */
+    public class Speed extends HudElement {
+        private final float[] samples = new float[160];
+        private int head;
+        private long lastSample;
+        Speed() { super("speed", "hud.el.speed", "gauge", false, 130, 70); }
+
+        @Override protected float[] defaultPos(int sw, int sh, Hud hud) { return new float[]{6, sh * 0.42f}; }
+        @Override public boolean hasContent() { return mc().player != null; }
+
+        @Override public void render(DrawContext ctx, float x, float y, boolean preview) {
+            long now = System.currentTimeMillis();
+            if (now - lastSample > 200) { samples[head] = (float) speed; head = (head + 1) % samples.length; lastSample = now; }
+            float max = 0, sum = 0; int n = 0;
+            for (float f : samples) { max = Math.max(max, f); if (f > 0.05f) { sum += f; n++; } }
+            w = 130; float gh = 24; h = HEAD + 1 + gh + 6 + 2 * ROW + 4;
+            panel(ctx, x, y, w, h);
+            float cy = header(ctx, x, y, w, "gauge", Lang.get("hud.el.speed"), String.format("%.1f b/s", speed));
+            bars(ctx, x + PADX, cy + 2, w - PADX * 2, gh, samples, head, Math.max(6, max), 1.2f);
+            cy += 2 + gh + 4;
+            row(ctx, x, cy, w, "activity", Lang.pl() ? "Maks. / Średnia" : "Max / Avg", String.format("%.1f / %.1f", max, n == 0 ? 0 : sum / n), Theme.accentWave(0), Theme.textDim(), Theme.text());
+            cy += ROW;
+            double vy = mc().player != null ? mc().player.getVelocity().y * 20 : 0;
+            row(ctx, x, cy, w, "i_up", Lang.pl() ? "Pionowo" : "Vertical", String.format("%+.1f b/s", vy), Theme.accentWave(0.5f), Theme.textDim(), Theme.text());
+        }
+    }
+
+    /** Przedmiot w ręce – ikona, nazwa, wytrzymałość i zaklęcia */
+    public class HeldItem extends HudElement {
+        private final Anim dur = new Anim(1, 10);
+        HeldItem() { super("helditem", "hud.el.helditem", "pickaxe", false, 140, 44); }
+
+        @Override protected float[] defaultPos(int sw, int sh, Hud hud) { return new float[]{sw / 2f - w / 2f, sh - 44 - h}; }
+        @Override public boolean hasContent() { return mc().player != null && !mc().player.getMainHandStack().isEmpty(); }
+
+        @Override public void render(DrawContext ctx, float x, float y, boolean preview) {
+            ItemStack st = mc().player != null ? mc().player.getMainHandStack() : ItemStack.EMPTY;
+            if (st.isEmpty() && preview) st = new ItemStack(net.minecraft.item.Items.DIAMOND_SWORD);
+            if (st.isEmpty()) return;
+            String name = st.getName().getString();
+            w = Math.max(120, Math.min(170, Fonts.width(name, Font.BOLD, 0.74f) + 44));
+            h = 40;
+            panel(ctx, x, y, w, h);
+            // ikona w kafelku
+            R2D.roundRect(ctx, x + 6, y + 6, 28, 28, 7, R2D.withAlpha(Theme.toggleOff(), 0.5f));
+            R2D.roundOutline(ctx, x + 6, y + 6, 28, 28, 7, 0.5f, Theme.stroke());
+            ctx.getMatrices().push();
+            ctx.getMatrices().translate(x + 8, y + 8, 0);
+            ctx.getMatrices().scale(1.5f, 1.5f, 1);
+            ctx.drawItem(st, 0, 0);
+            ctx.getMatrices().pop();
+            if (st.getCount() > 1) {
+                String c = "x" + st.getCount();
+                Fonts.draw(ctx, c, x + 34 - Fonts.width(c, Font.BOLD, 0.55f) - 2, y + 27, Theme.text(), Font.BOLD, 0.55f);
+            }
+            float tx = x + 40, tw = w - 40 - PADX;
+            Fonts.draw(ctx, Fonts.trim(name, Font.BOLD, 0.74f, tw), tx, y + 7, Theme.text(), Font.BOLD, 0.74f);
+            int ench = st.getEnchantments().getSize();
+            if (st.isDamageable()) {
+                int max = st.getMaxDamage(), left = max - st.getDamage();
+                float f = dur.animate((float) left / max);
+                int col = f > 0.5f ? R2D.blend(0xFFF2C94C, 0xFF4ADE80, (f - 0.5f) * 2) : R2D.blend(0xFFEF4444, 0xFFF2C94C, f * 2);
+                String d = left + " / " + max;
+                Fonts.draw(ctx, d, tx, y + 18, Theme.textDim(), Font.SEMIBOLD, 0.6f);
+                if (ench > 0) {
+                    String e = ench + (Lang.pl() ? " zakl." : " ench.");
+                    Fonts.draw(ctx, e, x + w - PADX - Fonts.width(e, Font.SEMIBOLD, 0.6f), y + 18, R2D.blend(0xFFB197FC, Theme.text(), 0.2f), Font.SEMIBOLD, 0.6f);
+                }
+                R2D.roundRect(ctx, tx, y + 28, tw, 4, 2, R2D.withAlpha(Theme.toggleOff(), 0.6f));
+                R2D.roundRectH(ctx, tx, y + 28, Math.max(4, tw * f), 4, 2, R2D.blend(col, 0xFFFFFFFF, 0.2f), col);
+            } else {
+                String sub = ench > 0 ? ench + (Lang.pl() ? " zaklęć" : " enchantments") : st.getRarity().name().charAt(0) + st.getRarity().name().substring(1).toLowerCase(Locale.ROOT);
+                Fonts.draw(ctx, sub, tx, y + 19, Theme.textDim(), Font.SEMIBOLD, 0.62f);
+            }
+        }
+    }
+
+    /** Model gracza – postać 3D z paskami zdrowia i pancerza */
+    public class PlayerModel extends HudElement {
+        private final Anim hp = new Anim(1, 10);
+        PlayerModel() { super("playermodel", "hud.el.playermodel", "player", false, 74, 112); }
+
+        @Override protected float[] defaultPos(int sw, int sh, Hud hud) { return new float[]{sw - w - 6, sh / 2f - h - 44}; }
+        @Override public boolean hasContent() { return mc().player != null; }
+
+        @Override public void render(DrawContext ctx, float x, float y, boolean preview) {
+            var p = mc().player;
+            if (p == null) return;
+            w = 74; h = 112;
+            panel(ctx, x, y, w, h);
+            float cy = header(ctx, x, y, w, "player", Lang.pl() ? "Gracz" : "Player", null);
+            // poświata za postacią
+            if (!mono()) R2D.glow(ctx, x + 2, cy + 4, w - 4, 70, R2D.withAlpha(Theme.accentWave(0), 0.18f));
+            ctx.draw();
+            int bx = Math.round(x + 6), by = Math.round(cy + 2);
+            net.minecraft.client.gui.screen.ingame.InventoryScreen.drawEntity(ctx, bx, by, bx + (int) w - 12, by + 66, 30, 0.0625f,
+                    x + w / 2f + (float) Math.sin(System.currentTimeMillis() / 1600.0) * 30, cy + 20, p);
+            float hy = cy + 72;
+            float f = hp.animate(Math.min(1, p.getHealth() / p.getMaxHealth()));
+            R2D.roundRect(ctx, x + PADX, hy, w - PADX * 2, 4, 2, R2D.withAlpha(Theme.toggleOff(), 0.6f));
+            R2D.roundRectH(ctx, x + PADX, hy, Math.max(4, (w - PADX * 2) * f), 4, 2, 0xFFFF6B81, 0xFFE11D48);
+            float ar = Math.min(1, p.getArmor() / 20f);
+            R2D.roundRect(ctx, x + PADX, hy + 7, w - PADX * 2, 3, 1.5f, R2D.withAlpha(Theme.toggleOff(), 0.6f));
+            if (ar > 0) R2D.roundRectH(ctx, x + PADX, hy + 7, Math.max(3, (w - PADX * 2) * ar), 3, 1.5f, 0xFF9AD0FF, 0xFF4D8BFF);
+            String t = String.format("%.0f HP  •  %d AP", p.getHealth(), p.getArmor());
+            Fonts.drawCentered(ctx, t, x + w / 2f, hy + 13, Theme.textDim(), Font.SEMIBOLD, 0.58f);
+        }
+    }
+
+    /** Serwer – adres, gracze, ping, wymiar i czas sesji */
+    public class Server extends HudElement {
+        Server() { super("server", "hud.el.server", "wifi", false, 120, 70); }
+
+        @Override protected float[] defaultPos(int sw, int sh, Hud hud) { return new float[]{6, sh * 0.62f}; }
+        @Override public boolean hasContent() { return mc().player != null && mc().getNetworkHandler() != null; }
+
+        @Override public void render(DrawContext ctx, float x, float y, boolean preview) {
+            MinecraftClient mc = mc();
+            ServerInfo si = mc.getCurrentServerEntry();
+            String addr = si != null ? si.address : (Lang.pl() ? "Świat lokalny" : "Singleplayer");
+            int players = mc.getNetworkHandler() != null ? mc.getNetworkHandler().getPlayerList().size() : 1;
+            int ping = 0;
+            if (mc.getNetworkHandler() != null && mc.player != null) {
+                PlayerListEntry e = mc.getNetworkHandler().getPlayerListEntry(mc.player.getUuid());
+                if (e != null) ping = e.getLatency();
+            }
+            String dim = mc.world == null ? "-" : mc.world.getRegistryKey() == World.NETHER ? "Nether" : mc.world.getRegistryKey() == World.END ? "End" : "Overworld";
+            long sess = (System.currentTimeMillis() - RazerClient.get().startTime) / 1000;
+            String[][] rows = {
+                    {"users", Lang.pl() ? "Gracze" : "Players", String.valueOf(players)},
+                    {"wifi", "Ping", ping + " ms"},
+                    {"world", Lang.pl() ? "Wymiar" : "Dimension", dim},
+                    {"clock", Lang.pl() ? "Sesja" : "Session", String.format("%02d:%02d:%02d", sess / 3600, (sess / 60) % 60, sess % 60)},
+            };
+            float tw = Math.max(110, Fonts.width(addr, Font.BOLD, 0.74f) + PADX * 2 + 26);
+            for (String[] r : rows) tw = Math.max(tw, rowWidth(r[1], r[2]));
+            w = Math.min(180, tw); h = HEAD + 1 + rows.length * ROW + 4;
+            panel(ctx, x, y, w, h);
+            float cy = header(ctx, x, y, w, "wifi", Fonts.trim(addr, Font.BOLD, 0.74f, w - PADX * 2 - 26), null);
+            int pc = ping < 80 ? 0xFF4ADE80 : ping < 160 ? 0xFFF2C94C : 0xFFEF4444;
+            for (String[] r : rows) {
+                row(ctx, x, cy, w, r[0], r[1], r[2], Theme.accentWave(0), Theme.textDim(), r[0].equals("wifi") ? pc : Theme.text());
+                cy += ROW;
+            }
         }
     }
 }

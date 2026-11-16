@@ -472,7 +472,7 @@ public class ClickGui extends Screen {
         float prev = R2D.alpha;
         R2D.alpha = prev * pa;
         Fonts.draw(ctx, title, cx + PAD + (1 - pa) * 8, y0 + 17, Theme.text(), Font.BOLD, 1.45f);
-        Fonts.draw(ctx, Fonts.trim(sub, Font.REGULAR, 0.72f, cw - PAD * 2 - 150), cx + PAD + (1 - pa) * 8, y0 + 34, Theme.textDim(), Font.REGULAR, 0.72f);
+        Fonts.draw(ctx, Fonts.trim(sub, Font.REGULAR, 0.72f, cw - PAD * 2 - (page == Page.CATEGORY || page == Page.FAVORITES ? 268 : 130)), cx + PAD + (1 - pa) * 8, y0 + 34, Theme.textDim(), Font.REGULAR, 0.72f);
         R2D.alpha = prev;
 
         // prawa strona nagłówka
@@ -2194,7 +2194,7 @@ public class ClickGui extends Screen {
         cy += h + gap;
 
         h = settingRow(ctx, x, cy, w, "layers", Lang.get("layout.title"), Lang.get("layout.desc"));
-        segmented(ctx, "layout", x + w - 170, cy + 8, 160, 18, new String[]{"3D", "Window", "Panels"}, s.layout.modes.indexOf(s.layout.get()), i -> {
+        segmented(ctx, "layout", x + w - 170, cy + 8, 160, 18, new String[]{"Window", "3D", "Panels"}, s.layout.modes.indexOf(s.layout.get()), i -> {
             s.layout.set(s.layout.modes.get(i)); rc.config.saveClient();
         });
         cy += h + gap;

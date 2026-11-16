@@ -193,8 +193,7 @@ public class ModuleManager {
                 n("Delay", 5, 1, 30, 1), n("Attempts", 5, 1, 50, 1), b("Show Button", true));
         mod("MiddleClick", Category.UTILITY, "player", "Znajomi pod kółkiem myszy", "Add friends with middle click",
                 b("Notify", true), b("Only Players", true));
-        mod("DiscordRPC", Category.UTILITY, "message", "Status w Discordzie", "Discord rich presence",
-                m("Large Image", "Logo", "Skin"), b("Show Server", true), b("Show Name", true), b("Show Time", true));
+        modules.add(new DiscordPresence());
         modules.add(new Cosmetic());
         modules.add(new HitSound());
         mod("NameProtect", Category.UTILITY, "i_mask", "Ukrywa Twój nick na ekranie", "Hides your name on screen",

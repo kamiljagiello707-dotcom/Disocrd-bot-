@@ -26,7 +26,7 @@ import java.util.Set;
 
 public class VescClient implements ClientModInitializer {
     public static final String NAME = "VescClient";
-    public static final String VERSION = "5.0.0";
+    public static final String VERSION = "5.1.0";
     public static final Logger LOGGER = LoggerFactory.getLogger(NAME);
     private static VescClient instance;
 
@@ -52,6 +52,7 @@ public class VescClient implements ClientModInitializer {
         hud = new Hud();
         config = new ConfigManager();
         config.loadAll();
+        if (modules.get("DiscordRPC") instanceof dev.vesc.client.module.DiscordPresence dp) dp.ensureRunning();
 
         openGui = KeyBindingHelper.registerKeyBinding(new KeyBinding("key.vescclient.gui",
                 InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_RIGHT_SHIFT, "category.vescclient"));

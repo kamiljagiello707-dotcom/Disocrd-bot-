@@ -85,6 +85,7 @@ public final class Legit {
 
     public static void tick(MinecraftClient mc) {
         if (m("FakePlayer") instanceof FakePlayer fp) fp.tick(mc);
+        if (m("DiscordRPC") instanceof DiscordPresence dp) dp.ensureRunning();
 
         // Sprint – dokładnie jak wciśnięty klawisz sprintu (vanilla nadal pilnuje głodu, ślepoty itd.)
         boolean sprint = on("Sprint") && mc.player != null && mc.currentScreen == null;

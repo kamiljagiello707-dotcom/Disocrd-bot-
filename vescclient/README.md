@@ -1,8 +1,8 @@
 <p align="center"><img src="docs/logo.png" width="96" alt="VescClient"></p>
 
-# VescClient 5.0
+# VescClient 5.1
 
-Nowoczesny klient do Minecraft **1.21.1 (Fabric)** z przestrzennym (3D) ClickGUI, HUD-em w stylu „pigułek”, motywami i modułami wizualnymi.
+Nowoczesny klient do Minecraft **1.21.1 (Fabric)**: proste ClickGUI (opcjonalnie w 3D), HUD w stylu „pigułek”, status w Discordzie, motywy i moduły wizualne.
 
 Działają moduły **kosmetyczne i legit** (wszystko po stronie klienta, bez przewagi nad innymi graczami):
 
@@ -10,15 +10,35 @@ Działają moduły **kosmetyczne i legit** (wszystko po stronie klienta, bez prz
 - **Camera:** Zoom (C, kółko myszy zmienia przybliżenie), FreeLook (lewy Alt), Crosshair, ViewModel, **SwordAnimations**, NoHurtCam
 - **World:** Sky, Ambient, TimeChanger, Weather (tylko u Ciebie)
 - **Cosmetics:** Cosmetic (peleryny z logo VescClient), ChinaHat, Trail, JumpCircles, ToolColor (kolor mieczy i narzędzi), HitSound
-- **Utility:** NameProtect, AutoGG, ChatSuffix, MiddleClick (znajomi), AutoReconnect, FakePlayer
+- **Utility:** **DiscordRPC** (logo, nazwa i wersja klienta w statusie Discorda), NameProtect, AutoGG, ChatSuffix, MiddleClick (znajomi), AutoReconnect, FakePlayer
 - **Movement / Player:** Sprint, AutoRespawn
 
 Moduły typu cheat (KillAura, Reach, Velocity, Speed, Flight, Scaffold, ESP/Tracers/ChestESP, Nuker, AutoClicker itd.) są **przełącznikami bez logiki w grze**.
 
+## Co nowego w 5.1
+
+- 🪟 **Proste GUI:** domyślnie zwykłe, wyśrodkowane okno. Widok 3D (panel z boku) można włączyć w Ustawieniach → Układ GUI
+- 🎯 **4 nowe tryby Target ESP:** **Reticle** (celownik „lock-on” z obracającymi się segmentami i strzałkami, które zbiegają się przy trafieniu), **Gyro** (żyroskop z 3 pierścieni), **Aura** (świecąca kolumna z iskrami) i **Souls** (świetliki z długimi ogonami). Razem 17 trybów, wszystkie z testem głębi (nie widać ich przez ściany)
+- 🎮 **Discord Rich Presence:** gdy grasz, na profilu Discord widać logo VescClient, nazwę, wersję, plakietkę (np. Premium), serwer, czas gry i opcjonalny przycisk. Działa bez dodatkowych bibliotek (IPC Discorda: Windows, Linux, macOS)
+
+![Target ESP – Reticle, Gyro, Aura, Souls](docs/target_esp_new.jpg)
+
+![GUI](docs/gui_window.jpg)
+
+### Discord – konfiguracja (2 minuty)
+
+1. Wejdź na https://discord.com/developers/applications → **New Application**. Nazwa aplikacji to pogrubiony tytuł w statusie, np. `VescClient (5.1)`
+2. **Rich Presence → Art Assets** → wgraj `docs/discord_logo.png` (1024×1024) pod nazwą **`logo`**
+3. Skopiuj **Application ID** i wklej do `.minecraft/vescclient/discord.json` w pole `appId` (plik tworzy się sam przy pierwszym uruchomieniu)
+4. Opcjonalnie przycisk: `buttonLabel` (np. `Discord`) i `buttonUrl` (link zaczynający się od `https://`)
+5. W Discordzie: Ustawienia → Prywatność aktywności → włącz udostępnianie aktywności
+
+Moduł **DiscordRPC** (Utility) jest domyślnie włączony. Ma ustawienia: plakietka (Premium / Beta / Free / brak), duży obraz (logo lub skin), pokazywanie serwera, nicku i czasu.
+
 ## Co nowego w 5.0
 
 - 💜 **Nowa marka VescClient:** własne logo (geometryczne „V” z iskrą), ikona moda, peleryny, motyw **Charcoal** (grafit) z akcentem **Violet**
-- 🧊 **GUI przestrzenne (3D):** po otwarciu w świecie kamera przechodzi do trzeciej osoby i odsuwa się w bok, postać stoi po lewej, a okno GUI unosi się po prawej jako przechylony panel w perspektywie. GUI jest najpierw rysowane płasko (ostre co do piksela), potem nakładane jako panel 3D. Kliknięcia są przeliczane odwrotną homografią, więc działają w każdym miejscu panelu. Układ można zmienić w Ustawieniach (3D / Window / Panels)
+- 🧊 **GUI przestrzenne (3D, opcjonalne):** po otwarciu w świecie kamera przechodzi do trzeciej osoby i odsuwa się w bok, postać stoi po lewej, a okno GUI unosi się po prawej jako przechylony panel w perspektywie. GUI jest najpierw rysowane płasko (ostre co do piksela), potem nakładane jako panel 3D. Kliknięcia są przeliczane odwrotną homografią, więc działają w każdym miejscu panelu. Układ można zmienić w Ustawieniach (3D / Window / Panels)
 - 💊 **HUD „Vesc”:** Watermark na środku u góry (logo • FPS • ping • serwer • **TPS** • nick), pigułka z koordynatami, Keybinds jako osobne pigułki modułu i klawisza, zaokrąglony hotbar z płynnie przesuwanym zaznaczeniem, panele i powiadomienia w tym samym stylu
 - ⚔️ **SwordAnimations:** 6 animacji machnięcia mieczem z pierwszej osoby (Smooth, Slide, Swipe, Stab, Spin, Chop) z regulacją siły
 - 🎯 Render bez artefaktów z 4.0: shadery SDF, wygładzony tekst i ikony, linie dociągnięte do pikseli
@@ -39,7 +59,7 @@ Wymagana Java 21.
 ./gradlew build        # Windows: gradlew.bat build
 ```
 
-Gotowy plik: `build/libs/vescclient-5.0.0.jar` – wrzuć go do folderu `mods` razem z **Fabric API** (Minecraft 1.21.1, Fabric Loader 0.16.14+).
+Gotowy plik: `build/libs/vescclient-5.1.0.jar` – wrzuć go do folderu `mods` razem z **Fabric API** (Minecraft 1.21.1, Fabric Loader 0.16.14+).
 Testowe uruchomienie gry: `./gradlew runClient`.
 
 ## Sterowanie

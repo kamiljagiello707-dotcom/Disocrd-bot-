@@ -25,6 +25,7 @@ public class ConfigManager {
     private final Path configs = dir.resolve("configs");
     private final Path clientFile = dir.resolve("client.json");
     private String current = "default";
+    private boolean firstRun;
 
     public Path folder() { return configs; }
     public String current() { return current; }
@@ -126,7 +127,7 @@ public class ConfigManager {
         o.add("panels", pan);
         o.addProperty("style", Theme.style().name());
         o.addProperty("guiH", s.guiH);
-        o.addProperty("ui", 8);
+        o.addProperty("ui", 9);
         com.google.gson.JsonArray fr = new com.google.gson.JsonArray();
         for (String f : VescClient.get().friends.all()) fr.add(f);
         o.add("friends", fr);
@@ -178,10 +179,20 @@ public class ConfigManager {
         if (o == null || !o.has("ui") || o.get("ui").getAsInt() < 8) {
             // VescClient 5.0: grafit + fiolet, pełne panele, styl HUD "Vesc"
             Theme.setInstant(Theme.Preset.CHARCOAL); Theme.setAccentInstant(Theme.Accent.VIOLET);
-            Theme.setStyleInstant(Theme.Style.SOLID); s.hudStyle.set("Vesc"); s.layout.set("Spatial");
+            Theme.setStyleInstant(Theme.Style.SOLID); s.hudStyle.set("Vesc");
+        }
+        if (o == null || !o.has("ui") || o.get("ui").getAsInt() < 9) {
+            // 5.1: proste, wyśrodkowane okno GUI domyślnie (3D jako opcja) + Discord Rich Presence włączony
+            s.layout.set("Window");
+            firstRun = true;
         }
         Anim.globalSpeed = s.animSpeed.get().floatValue();
         if (!load(current)) save(current);
+        if (firstRun) {
+            var d = VescClient.get().modules.get("DiscordRPC");
+            if (d != null && !d.isEnabled()) d.setEnabledSilent(true);
+            firstRun = false;
+        }
     }
 
     // ---------------------------------------------------------------- io

@@ -125,6 +125,10 @@ public final class TargetEspRenderer {
             case "Brackets" -> markerFront(ms, cam, x, y, z, () -> drawBrackets(ms, cam, target, time, a, hurt, scale));
             case "Vortex" -> drawVortex(ms, cam, target, time, a, hurt, scale);
             case "Crystal" -> drawCrystal(ms, cam, target, time, a, hurt, scale);
+            case "Reticle" -> markerFront(ms, cam, x, y, z, () -> drawReticle(ms, cam, target, time, a, hurt, scale));
+            case "Gyro" -> drawGyro(ms, cam, target, time, a, hurt, scale);
+            case "Aura" -> drawAura(ms, cam, target, time, a, hurt, scale);
+            case "Souls" -> drawSouls(ms, cam, target, time, a, hurt, scale);
             default -> {
                 drawRing(ms, target, time, a, hurt, scale, m.trail.get());
                 markerFront(ms, cam, x, y, z, () -> drawMarker(ms, cam, target, time, a, hurt, scale));
@@ -316,6 +320,162 @@ public final class TargetEspRenderer {
         ms.translate(x, y, z);
         billboard(ms, cam, GLOW, size, 0, c);
         ms.pop();
+    }
+
+    // ------------------------------------------------------------------ nowe tryby 5.1
+
+    /** łuk w płaszczyźnie XY bieżącej macierzy (grubość th), kolor z fazą wzdłuż łuku */
+    private static void arc(MatrixStack ms, float r, float th, float a0, float a1, float alpha, float hurt, float phase) {
+        Matrix4f mat = ms.peek().getPositionMatrix();
+        RenderSystem.setShader(GameRenderer::getPositionColorProgram);
+        BufferBuilder b = Tessellator.getInstance().begin(VertexFormat.DrawMode.TRIANGLE_STRIP, VertexFormats.POSITION_COLOR);
+        int seg = Math.max(4, (int) (Math.abs(a1 - a0) / 0.07f));
+        for (int i = 0; i <= seg; i++) {
+            float an = a0 + (a1 - a0) * i / seg;
+            float cos = (float) Math.cos(an), sin = (float) Math.sin(an);
+            int c = color(an + phase, alpha, hurt);
+            b.vertex(mat, cos * (r - th), sin * (r - th), 0).color(c);
+            b.vertex(mat, cos * (r + th), sin * (r + th), 0).color(c);
+        }
+        BufferRenderer.drawWithGlobalProgram(b.end());
+    }
+
+    /** pierścień w płaszczyźnie XZ z miękką poświatą po obu stronach */
+    private static void glowRing(MatrixStack ms, float r, float alpha, float hurt, float phase, float core, float soft) {
+        Matrix4f mat = ms.peek().getPositionMatrix();
+        RenderSystem.setShader(GameRenderer::getPositionColorProgram);
+        float[][] bands = {{r - soft, r - core, 0f, 0.45f}, {r - core, r + core, 1f, 1f}, {r + core, r + soft, 0.45f, 0f}};
+        int seg = 64;
+        for (float[] band : bands) {
+            BufferBuilder b = Tessellator.getInstance().begin(VertexFormat.DrawMode.TRIANGLE_STRIP, VertexFormats.POSITION_COLOR);
+            for (int i = 0; i <= seg; i++) {
+                double an = Math.PI * 2 * i / seg;
+                float cos = (float) Math.cos(an), sin = (float) Math.sin(an);
+                int c = color((float) an + phase, alpha, hurt);
+                b.vertex(mat, cos * band[0], 0, sin * band[0]).color(R2D.withAlpha(c, alpha * band[2]));
+                b.vertex(mat, cos * band[1], 0, sin * band[1]).color(R2D.withAlpha(c, alpha * band[3]));
+            }
+            BufferRenderer.drawWithGlobalProgram(b.end());
+        }
+    }
+
+    /** Reticle – celownik „lock-on”: obracające się segmenty, strzałki zbiegające się przy trafieniu */
+    private static void drawReticle(MatrixStack ms, Camera cam, LivingEntity e, float time, float a, float hurt, float scale) {
+        begin(true);
+        float s = (e.getHeight() * 0.36f + 0.12f) * scale;
+        float lock = Math.max(hurt, 0);
+        ms.push();
+        ms.translate(0, e.getHeight() * 0.55f, 0);
+        billboard(ms, cam, GLOW, s * 1.9f, 0, color(time, a * 0.22f, hurt));
+        begin(false); // linie zwykłym mieszaniem – kolor akcentu widoczny także na jasnym tle
+        ms.multiply(cam.getRotation());
+        float th = 0.022f * scale;
+        // zewnętrzne segmenty
+        float rot = time * 1.4f;
+        for (int i = 0; i < 4; i++) {
+            float st = rot + i * (float) Math.PI / 2;
+            arc(ms, s, th, st, st + 0.95f, a * 0.95f, hurt, time);
+        }
+        // wewnętrzne, w przeciwną stronę
+        float rot2 = -time * 2.1f;
+        for (int i = 0; i < 3; i++) {
+            float st = rot2 + i * (float) Math.PI * 2 / 3;
+            arc(ms, s * 0.66f, th * 0.75f, st, st + 1.25f, a * 0.6f, hurt, time + 1);
+        }
+        // strzałki (chevrony) – zbliżają się do środka przy trafieniu
+        float cr = s * (1.32f - 0.22f * lock) + 0.03f * (float) Math.sin(time * 5);
+        Matrix4f mat = ms.peek().getPositionMatrix();
+        RenderSystem.setShader(GameRenderer::getPositionColorProgram);
+        BufferBuilder b = Tessellator.getInstance().begin(VertexFormat.DrawMode.TRIANGLES, VertexFormats.POSITION_COLOR);
+        for (int i = 0; i < 4; i++) {
+            float an = (float) Math.PI / 4 + i * (float) Math.PI / 2;
+            float cos = (float) Math.cos(an), sin = (float) Math.sin(an);
+            float px = -sin, py = cos, w = 0.07f * scale, l = 0.11f * scale;
+            int c = color(an + time, a, hurt);
+            b.vertex(mat, cos * cr, sin * cr, 0).color(c);
+            b.vertex(mat, cos * (cr + l) + px * w, sin * (cr + l) + py * w, 0).color(R2D.withAlpha(c, a * 0.4f));
+            b.vertex(mat, cos * (cr + l) - px * w, sin * (cr + l) - py * w, 0).color(R2D.withAlpha(c, a * 0.4f));
+        }
+        BufferRenderer.drawWithGlobalProgram(b.end());
+        ms.pop();
+        begin(true);
+        // punkt w środku
+        ms.push();
+        ms.translate(0, e.getHeight() * 0.55f, 0);
+        dot(ms, cam, 0, 0, 0, (0.07f + 0.05f * lock) * scale, color(time, a, hurt));
+        ms.pop();
+    }
+
+    /** Gyro – trzy obracające się pierścienie jak żyroskop, z kulkami na obwodzie */
+    private static void drawGyro(MatrixStack ms, Camera cam, LivingEntity e, float time, float a, float hurt, float scale) {
+        begin(true);
+        float h = e.getHeight(), r = (e.getWidth() * 0.8f + 0.42f) * scale;
+        ms.push();
+        ms.translate(0, h * 0.55f, 0);
+        for (int k = 0; k < 3; k++) {
+            float rr = r * (1 - k * 0.1f);
+            ms.push();
+            ms.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(k * 60 + time * 38 * (k % 2 == 0 ? 1 : -1)));
+            ms.multiply(RotationAxis.POSITIVE_X.rotationDegrees(68 + 12 * (float) Math.sin(time * 0.9f + k * 2)));
+            begin(false);
+            glowRing(ms, rr, a * 0.85f, hurt, k * 2 + time, 0.014f * scale, 0.06f * scale);
+            begin(true);
+            float an = time * (2.2f + k * 0.5f) + k * 2;
+            dot(ms, cam, (float) Math.cos(an) * rr, 0, (float) Math.sin(an) * rr, 0.13f * scale, color(an, a, hurt));
+            ms.pop();
+        }
+        dot(ms, cam, 0, 0, 0, 0.3f * scale * (1 + 0.12f * (float) Math.sin(time * 4)), color(time, a * 0.28f, hurt));
+        ms.pop();
+    }
+
+    /** Aura – świecąca kolumna z falującą krawędzią i unoszącymi się iskrami */
+    private static void drawAura(MatrixStack ms, Camera cam, LivingEntity e, float time, float a, float hurt, float scale) {
+        begin(true);
+        float h = e.getHeight() * 1.05f, r = (e.getWidth() * 0.62f + 0.22f) * scale;
+        Matrix4f mat = ms.peek().getPositionMatrix();
+        RenderSystem.setShader(GameRenderer::getPositionColorProgram);
+        int seg = 56;
+        BufferBuilder b = Tessellator.getInstance().begin(VertexFormat.DrawMode.TRIANGLE_STRIP, VertexFormats.POSITION_COLOR);
+        for (int i = 0; i <= seg; i++) {
+            double an = Math.PI * 2 * i / seg;
+            float cos = (float) Math.cos(an), sin = (float) Math.sin(an);
+            float top = h * (0.55f + 0.18f * (float) Math.sin(an * 3 + time * 2.5f));
+            int c = color((float) an + time, a, hurt);
+            b.vertex(mat, cos * r, 0.02f, sin * r).color(R2D.withAlpha(c, a * 0.55f));
+            b.vertex(mat, cos * r, top, sin * r).color(R2D.withAlpha(c, 0f));
+        }
+        BufferRenderer.drawWithGlobalProgram(b.end());
+        ms.push();
+        ms.translate(0, 0.02f, 0);
+        begin(false);
+        glowRing(ms, r, a, hurt, time, 0.018f * scale, 0.1f * scale);
+        begin(true);
+        ms.pop();
+        for (int i = 0; i < 16; i++) {
+            float p = (time * 0.35f + i * 0.618f) % 1f;
+            float an = i * 2.4f + time * 0.7f;
+            float rr = r * (0.75f + 0.25f * (float) Math.sin(i * 1.7f));
+            dot(ms, cam, (float) Math.cos(an) * rr, p * h * 1.15f, (float) Math.sin(an) * rr, (0.05f + 0.05f * (1 - p)) * scale,
+                    color(an + time, a * (1 - p) * (0.6f + 0.4f * (float) Math.sin(time * 6 + i)), hurt));
+        }
+    }
+
+    /** Souls – świetliki krążące spiralą wokół celu, z długimi zanikającymi ogonami */
+    private static void drawSouls(MatrixStack ms, Camera cam, LivingEntity e, float time, float a, float hurt, float scale) {
+        begin(true);
+        float h = e.getHeight(), r = (e.getWidth() * 0.75f + 0.3f) * scale;
+        int souls = 4, tail = 16;
+        for (int s = 0; s < souls; s++) {
+            for (int i = tail - 1; i >= 0; i--) {
+                float t = time * 1.5f - i * 0.045f;
+                float an = t * 2.1f + s * (float) Math.PI * 2 / souls;
+                float yy = h * (0.5f + 0.4f * (float) Math.sin(t * 1.3f + s * 1.7f));
+                float rr = r * (0.85f + 0.15f * (float) Math.sin(t * 2.3f + s));
+                float k = 1 - i / (float) tail;
+                dot(ms, cam, (float) Math.cos(an) * rr, yy, (float) Math.sin(an) * rr, (0.035f + 0.13f * k) * scale,
+                        color(an + s, a * k * k, hurt));
+            }
+        }
     }
 
     /** Orbit – trzy pochylone pierścienie z krążącymi kulkami (jak atom) */

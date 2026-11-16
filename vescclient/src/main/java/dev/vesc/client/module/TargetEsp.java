@@ -14,7 +14,7 @@ public class TargetEsp extends Module {
     /** własny kolor albo null (= kolor akcentu) */
     public Integer custom() { return colorMode.get().equals("Custom") ? customColor.get() : null; }
 
-    public final ModeSetting mode = new ModeSetting("Styl", "Style", "Mix", "Ghosts", "Pulse", "Circle", "Ring", "Marker", "Orbit", "Helix", "Halo", "Sparkles", "Brackets", "Vortex", "Crystal");
+    public final ModeSetting mode = new ModeSetting("Styl", "Style", "Mix", "Ghosts", "Pulse", "Circle", "Ring", "Marker", "Orbit", "Helix", "Halo", "Sparkles", "Brackets", "Vortex", "Crystal", "Reticle", "Gyro", "Aura", "Souls");
     public final BoolSetting playersOnly = new BoolSetting("Tylko gracze", "Players only", true);
     public final BoolSetting trail = new BoolSetting("Smuga", "Trail", true);
     public final NumberSetting ghosts = new NumberSetting("Ilość duchów", "Ghost count", 3, 1, 6, 1);

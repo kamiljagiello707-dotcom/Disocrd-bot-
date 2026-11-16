@@ -21,7 +21,15 @@ Moduły typu cheat (KillAura, Reach, Velocity, Speed, Flight, Scaffold, ESP/Trac
 - 🎯 **4 nowe tryby Target ESP:** **Reticle** (celownik „lock-on” z obracającymi się segmentami i strzałkami, które zbiegają się przy trafieniu), **Gyro** (żyroskop z 3 pierścieni), **Aura** (świecąca kolumna z iskrami) i **Souls** (świetliki z długimi ogonami). Razem 17 trybów, wszystkie z testem głębi (nie widać ich przez ściany)
 - 🎮 **Discord Rich Presence:** gdy grasz, na profilu Discord widać logo VescClient, nazwę, wersję, plakietkę (np. Premium), serwer, czas gry i opcjonalny przycisk. Działa bez dodatkowych bibliotek (IPC Discorda: Windows, Linux, macOS)
 
+- 🧩 **Nowe ikony:** pełne, wypełnione ikony (Phosphor Fill, MIT) zamiast cienkich konturów – czytelniejsze w małym rozmiarze
+
+![Ikony – przed (góra) i po (dół)](docs/icons_new.png)
+
 ![Target ESP – Reticle, Gyro, Aura, Souls](docs/target_esp_new.jpg)
+
+| | |
+|---|---|
+| ![HUD PvP](docs/hud_vesc_pvp.jpg) | ![HUD Full](docs/hud_vesc_full.jpg) |
 
 ![GUI](docs/gui_window.jpg)
 

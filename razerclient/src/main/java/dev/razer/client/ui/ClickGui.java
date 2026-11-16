@@ -391,7 +391,7 @@ public class ClickGui extends Screen {
         drawHead(ctx, x + 7, y + 7, 22);
         R2D.circle(ctx, x + 7 + 21, y + 7 + 21, 3.2f, Theme.card());
         R2D.circle(ctx, x + 7 + 21, y + 7 + 21, 2.2f, Theme.accent());
-        String name = client.getSession().getUsername();
+        String name = dev.razer.client.module.Legit.name();
         Fonts.draw(ctx, Fonts.trim(name, Font.BOLD, 0.86f, w - 52), x + 36, y + 9, Theme.text(), Font.BOLD, 0.86f);
         Fonts.draw(ctx, Lang.format("profile.modules", rc.modules.enabledCount()), x + 36, y + 20, Theme.textFaint(), Font.REGULAR, 0.62f);
         R2D.icon(ctx, "settings", x + w - 15, y + h / 2f - 4.5f, 9, R2D.blend(Theme.textFaint(), Theme.text(), ha));
@@ -1030,7 +1030,7 @@ public class ClickGui extends Screen {
         R2D.roundOutlineGrad(ctx, x, y, w, bh, 12, 0.7f, R2D.withAlpha(Theme.accentWave(0), 0.7f), R2D.withAlpha(Theme.accent2(), 0.3f));
         int hour = java.time.LocalTime.now().getHour();
         String greet = Lang.get(hour < 5 ? "home.night" : hour < 12 ? "home.morning" : hour < 18 ? "home.afternoon" : hour < 22 ? "home.evening" : "home.night");
-        String name = client.getSession().getUsername();
+        String name = dev.razer.client.module.Legit.name();
         Fonts.draw(ctx, greet + ", " + name, x + 16, y + 15, Theme.text(), Font.BOLD, 1.25f);
         java.util.Locale loc = Lang.pl() ? java.util.Locale.forLanguageTag("pl-PL") : java.util.Locale.ENGLISH;
         String date = java.time.LocalDateTime.now().format(java.time.format.DateTimeFormatter.ofPattern(Lang.pl() ? "EEEE, d MMMM  •  HH:mm" : "EEEE, MMMM d  •  HH:mm", loc));
@@ -1811,7 +1811,7 @@ public class ClickGui extends Screen {
         R2D.roundOutline(ctx, x, y, w, h, 12, 0.6f, Theme.stroke());
         R2D.roundRect(ctx, x + 14, y + 14, 56, 56, 12, Theme.toggleOff());
         drawHead(ctx, x + 18, y + 18, 48);
-        String name = client.getSession().getUsername();
+        String name = dev.razer.client.module.Legit.name();
         Fonts.draw(ctx, name, x + 84, y + 22, Theme.text(), Font.BOLD, 1.6f);
         Fonts.draw(ctx, "RazerClient  •  v" + RazerClient.VERSION, x + 84, y + 42, Theme.textDim(), Font.REGULAR, 0.78f);
         float bw = 96;

@@ -62,18 +62,20 @@ public class RazerClient implements ClientModInitializer {
         });
         ClientPlayConnectionEvents.JOIN.register((handler, sender, client) -> client.execute(() -> {
             if (settings.welcome.get())
-                notifications.info("sparkles", "RazerClient " + VERSION, Lang.format("welcome", client.getSession().getUsername()));
+                notifications.info("sparkles", "RazerClient " + VERSION, Lang.format("welcome", dev.razer.client.module.Legit.name()));
         }));
         dev.razer.client.hud.ChatDrag.init();
         dev.razer.client.render.TargetEspRenderer.init();
         dev.razer.client.render.CosmeticsRenderer.init();
         dev.razer.client.render.NametagRenderer.init();
+        dev.razer.client.module.Legit.init();
         ClientLifecycleEvents.CLIENT_STOPPING.register(c -> config.save(config.current()));
         LOGGER.info("{} {} załadowany", NAME, VERSION);
     }
 
     private void tick(MinecraftClient mc) {
         hud.stats.tick(mc);
+        dev.razer.client.module.Legit.tick(mc);
         while (openGui.wasPressed()) {
             if (mc.currentScreen == null) mc.setScreen(new ClickGui());
         }

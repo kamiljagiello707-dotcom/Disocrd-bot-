@@ -10,8 +10,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Moduł klienta. To jest tylko szkielet GUI – moduły nie mają żadnej logiki,
- * przełączają jedynie swój stan (onEnable/onDisable są puste).
+ * Moduł klienta. Moduły kosmetyczne / legit mają logikę (patrz {@link Legit} i podklasy),
+ * moduły typu cheat są wyłącznie przełącznikami w GUI.
  */
 public class Module {
     private final String name;
@@ -62,4 +62,14 @@ public class Module {
     public void setKey(int key) { this.key = key; }
     public boolean hasKey() { return key != GLFW.GLFW_KEY_UNKNOWN; }
     public List<Setting<?>> getSettings() { return settings; }
+
+    /** ustawienie po angielskiej nazwie */
+    public Setting<?> setting(String en) {
+        String id = en.toLowerCase().replace(' ', '_');
+        for (Setting<?> s : settings) if (s.getId().equals(id)) return s;
+        throw new IllegalArgumentException(name + ": no setting " + en);
+    }
+    public double num(String en) { return ((Number) setting(en).get()).doubleValue(); }
+    public boolean bool(String en) { return (Boolean) setting(en).get(); }
+    public String mode(String en) { return (String) setting(en).get(); }
 }

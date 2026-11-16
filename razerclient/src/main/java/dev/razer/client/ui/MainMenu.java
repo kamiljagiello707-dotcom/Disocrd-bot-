@@ -132,7 +132,7 @@ public class MainMenu extends Screen {
             float oy = (1 - u) * 24;
             drawTitle(ctx, cx, cy - 86 + oy, 1f);
             drawClock(ctx, time, cx, cy - 50 + oy, 1.3f, 0xFFD8D8DE);
-            Fonts.drawCentered(ctx, Lang.format("menu.welcome", client.getSession().getUsername()), cx, cy - 16 + oy, 0xFF8C8C96, Font.SEMIBOLD, 0.75f);
+            Fonts.drawCentered(ctx, Lang.format("menu.welcome", dev.razer.client.module.Legit.name()), cx, cy - 16 + oy, 0xFF8C8C96, Font.SEMIBOLD, 0.75f);
 
             // przyciski-ikony
             int n = ICONS.length;

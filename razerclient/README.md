@@ -1,7 +1,16 @@
 # RazerClient 3.5
 
 Nowoczesne GUI klienta do Minecraft **1.21.1 (Fabric)**: ClickGUI, edytor HUD, motywy z kolorami akcentu i powiadomienia.
-To jest **sam interfejs**. Moduły to puste przełączniki bez żadnej funkcji w grze, z wyjątkiem kosmetycznych **TargetESP**, **Ambient**, **ChinaHat**, **JumpCircles**, **Cosmetic**, **HitSound**, **Nametags**, **Sky** i **ToolColor**.
+Działają moduły **kosmetyczne i legit** (wszystko po stronie klienta, bez przewagi nad innymi graczami):
+
+- **Render:** TargetESP, Nametags (bez widzenia przez ściany), Ambient, ChinaHat, JumpCircles, Sky, ToolColor, **Zoom** (klawisz C, kółko myszy zmienia przybliżenie), **FreeLook** (lewy Alt), **Fullbright**, **NoHurtCam**, **BlockOutline**, **NoFire**
+- **World:** **TimeChanger**, **Weather** (tylko u Ciebie)
+- **Movement / Player:** **Sprint** (jak wciśnięty klawisz sprintu), **AutoRespawn**
+- **Misc:** Cosmetic, HitSound, **NameProtect**, **AutoGG**, **ChatSuffix**, **MiddleClick** (znajomi), **AutoReconnect**, **FakePlayer**
+
+Moduły typu cheat (KillAura, Reach, Velocity, Speed, Flight, Scaffold, ESP/Tracers/ChestESP, Nuker, AutoClicker itd.) pozostają **przełącznikami bez logiki w grze**.
+
+![Moduły legit](docs/legit_modules.jpg)
 
 | | |
 |---|---|

@@ -227,7 +227,7 @@ public class Hud {
                     {"gauge", mc.getCurrentFps() + " FPS"},
                     {"wifi", ping + " ms"},
                     {"clock", LocalTime.now().format(TIME)},
-                    {"player", mc.getSession().getUsername()},
+                    {"player", dev.razer.client.module.Legit.name()},
             };
             float s = 0.68f, pad = 7, gap = 6, ic = 6.5f;
             float titleW = Fonts.width("Razer", Font.BOLD, 0.74f) + Fonts.width("Client", Font.BOLD, 0.74f) + Fonts.width(RazerClient.VERSION.substring(0, 3), Font.BOLD, 0.48f) + 2;

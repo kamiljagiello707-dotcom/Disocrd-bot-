@@ -9,8 +9,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Lista modułów. Poza modułami kosmetycznymi (TargetESP, Ambient, ChinaHat, JumpCircles, Cosmetic, HitSound)
- * to wyłącznie przełączniki z ustawieniami w GUI – bez żadnej logiki w grze.
+ * Lista modułów. Działają moduły kosmetyczne i legit (Render/World/Misc oraz Sprint, AutoRespawn) –
+ * logika w {@link Legit} i podklasach. Moduły typu cheat (Combat, Movement poza Sprint, ESP, Nuker...)
+ * są wyłącznie przełącznikami z ustawieniami w GUI, bez żadnej logiki w grze.
  */
 public class ModuleManager {
     private final List<Module> modules = new ArrayList<>();
@@ -78,7 +79,7 @@ public class ModuleManager {
 
         // ======================================================== MOVEMENT
         mod("Sprint", Category.MOVEMENT, "footprints", "Automatyczny sprint", "Automatic sprint",
-                m("Mode", "Legit", "Rage", "Omni"), b("Keep Sprint", true), b("Hunger Check", true), b("Ignore Blindness", false));
+                b("Only Forward", true), b("Stop On Sneak", true));
         mod("Speed", Category.MOVEMENT, "gauge", "Szybsze poruszanie", "Move faster",
                 m("Mode", "Strafe", "Vanilla", "Ground", "BHop", "Low Hop"),
                 n("Speed", 1.2, 1.0, 3.0, 0.05), n("Timer", 1.0, 1.0, 2.0, 0.05), n("Jump Height", 0.42, 0.2, 0.6, 0.01),
@@ -111,7 +112,7 @@ public class ModuleManager {
                 b("Players", true), b("Mobs", false), b("Animals", false), b("Items", false), b("Health Bar", true),
                 b("Friends Color", true), b("Self", false));
         mod("Fullbright", Category.RENDER, "sun", "Pełna jasność", "Full brightness",
-                m("Mode", "Gamma", "Night Vision", "Lightmap"), n("Gamma", 100, 0, 100, 5), b("Fade", true));
+                m("Mode", "Gamma", "Night Vision"), n("Gamma", 100, 0, 100, 5), b("Fade", true));
         mod("Tracers", Category.RENDER, "radar", "Linie do graczy", "Lines to players",
                 m("Origin", "Crosshair", "Feet", "Top"), n("Width", 1.0, 0.5, 4.0, 0.5), n("Opacity", 80, 10, 100, 5),
                 b("Players", true), b("Mobs", false), b("Distance Color", true), b("Ignore Friends", false));
@@ -159,7 +160,7 @@ public class ModuleManager {
         mod("FastUse", Category.PLAYER, "potion", "Szybsze używanie przedmiotów", "Use items faster",
                 n("Speed", 2, 1, 10, 1), b("Food", true), b("Potions", true), b("Bows", false), b("Tridents", false));
         mod("AutoRespawn", Category.PLAYER, "i_skull", "Automatyczne odrodzenie", "Respawns automatically",
-                n("Delay", 0, 0, 20, 1), b("Show Death Coords", true), b("Send Coords To Chat", false));
+                n("Delay", 0, 0, 20, 1), b("Show Death Coords", true), b("Coords In Chat", false));
 
         // ======================================================== WORLD
         mod("Nuker", Category.WORLD, "bomb", "Niszczy bloki wokół", "Breaks blocks around",
@@ -177,13 +178,13 @@ public class ModuleManager {
                 n("Range", 4, 1, 6, 1), n("Delay", 2, 0, 10, 1), b("Harvest", true), b("Replant", true), b("Bonemeal", false),
                 b("Rotate", true));
         mod("Weather", Category.WORLD, "i_rain", "Własna pogoda (tylko u Ciebie)", "Client-side weather",
-                m("Weather", "Clear", "Rain", "Thunder", "Snow"), n("Intensity", 100, 0, 100, 5));
+                m("Weather", "Clear", "Rain", "Thunder"), n("Intensity", 100, 0, 100, 5));
         mod("LiquidPlace", Category.WORLD, "i_drops", "Stawianie bloków na wodzie", "Place blocks on liquids",
                 b("Water", true), b("Lava", true), b("Air Place", false));
         mod("AutoSign", Category.WORLD, "i_pen", "Automatyczny tekst na tabliczkach", "Writes signs automatically",
                 m("Lines", "Custom", "Coords", "Date"), b("Glow", false), b("Waterproof", true));
         mod("TimeChanger", Category.WORLD, "i_time", "Własna pora dnia (tylko u Ciebie)", "Client-side time of day",
-                m("Time", "Day", "Sunset", "Night", "Midnight", "Custom"), n("Custom Time", 6000, 0, 24000, 500), b("Animate", false));
+                m("Time", "Day", "Sunset", "Night", "Midnight", "Custom"), n("Custom Time", 6000, 0, 24000, 500), b("Animate", true));
 
         // ======================================================== MISC
         mod("AntiAFK", Category.MISC, "coffee", "Zapobiega wyrzuceniu za AFK", "Prevents AFK kicks",
@@ -191,21 +192,20 @@ public class ModuleManager {
         mod("AutoReconnect", Category.MISC, "refresh", "Automatyczne łączenie", "Reconnects automatically",
                 n("Delay", 5, 1, 30, 1), n("Attempts", 5, 1, 50, 1), b("Show Button", true));
         mod("MiddleClick", Category.MISC, "player", "Znajomi pod kółkiem myszy", "Add friends with middle click",
-                m("Action", "Friend", "Pearl", "Firework"), b("Notify", true));
+                b("Notify", true), b("Only Players", true));
         mod("DiscordRPC", Category.MISC, "message", "Status w Discordzie", "Discord rich presence",
                 m("Large Image", "Logo", "Skin"), b("Show Server", true), b("Show Name", true), b("Show Time", true));
         modules.add(new Cosmetic());
         modules.add(new HitSound());
         mod("NameProtect", Category.MISC, "i_mask", "Ukrywa Twój nick na ekranie", "Hides your name on screen",
-                m("Replace With", "You", "Custom", "Stars"), b("Friends", false), b("Skin", false));
+                m("Replace With", "You", "Player", "Stars"), b("Friends", false));
         mod("AutoGG", Category.MISC, "i_trophy", "Pisze GG po wygranej", "Says GG after a win",
-                m("Message", "gg", "GG", "good game", "Custom"), n("Delay", 1, 0, 10, 1), b("Only Win", true));
+                m("Message", "gg", "GG", "good game", "gg wp"), n("Delay", 1, 0, 10, 1), b("Only Win", true));
         mod("ChatSuffix", Category.MISC, "i_msgplus", "Dopisek do wiadomości", "Adds a suffix to messages",
-                m("Suffix", "| RazerClient", "» Razer", "Custom"), b("Commands", false), b("Small Font", true));
+                m("Suffix", "| RazerClient", "» Razer", "razer.dev"), b("Small Font", true));
         mod("AntiBot", Category.MISC, "i_bot", "Ignoruje boty serwera", "Ignores server bots",
                 m("Mode", "Tab", "Ping", "Advanced"), b("Hide In Tab", false), b("Remove", false));
-        mod("FakePlayer", Category.MISC, "i_userx", "Kopia gracza do testów", "Spawns a test dummy",
-                b("Copy Inventory", true), b("Copy Skin", true), n("Health", 20, 1, 36, 1));
+        modules.add(new FakePlayer());
     }
 
     /** ostatnio przełączane moduły: {Module, czas} */

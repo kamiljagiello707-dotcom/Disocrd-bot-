@@ -75,9 +75,9 @@ public final class Theme {
 
     // ---------------------------------------------------------------- styl: Solid / Glass
     public enum Style { SOLID, GLASS, NEON }
-    private static Style style = Style.NEON;
-    private static final Anim glassAnim = new Anim(0, 8);
-    private static final Anim neonAnim = new Anim(1, 8);
+    private static Style style = Style.GLASS;
+    private static final Anim glassAnim = new Anim(1, 8);
+    private static final Anim neonAnim = new Anim(0, 8);
 
     public static Style style() { return style; }
     public static void setStyle(Style s) { style = s; }
@@ -87,7 +87,7 @@ public final class Theme {
     /** 0..1 – styl Neon (ciemne tło, obrysy i poświaty w kolorze akcentu, ostrzejsze rogi) */
     public static float neon() { return neonAnim.animate(style == Style.NEON ? 1 : 0); }
     /** mnożnik zaokrągleń rogów dla ClickGUI */
-    public static float radiusScale() { return 1 - 0.45f * neon(); }
+    public static float radiusScale() { return 1.35f; } // wszystkie style mocno zaokrąglone
 
     private static int neonify(int c, int neonColor) {
         float n = neon();

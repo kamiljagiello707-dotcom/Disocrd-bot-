@@ -7,6 +7,8 @@ To jest **sam interfejs**. Moduły to puste przełączniki bez żadnej funkcji w
 |---|---|
 | ![](docs/menu_lock.jpg) | ![](docs/menu.jpg) |
 
+![ClickGUI](docs/combat_rounded.jpg)
+
 ![ClickGUI – Neon](docs/render_purple_neon.jpg)
 
 ![ClickGUI – Glass](docs/home_glass.jpg)
@@ -20,7 +22,8 @@ To jest **sam interfejs**. Moduły to puste przełączniki bez żadnej funkcji w
 | ![](docs/gui_palette.jpg) | ![](docs/gui_colorpicker.jpg) |
 
 ## Co nowego w 3.5
-- 🌌 **Styl Neon** (nowy domyślny wygląd ClickGUI): ten sam układ okna, ale prawie czarne tło, świecące obramowania z gradientem w kolorze akcentu, ostrzejsze rogi, poświaty przy zaznaczonej kategorii i włączonych modułach. Przełącznik **Solid / Glass / Neon** jest na stronie Motywy
+- 🔵 **Mocniej zaokrąglone GUI:** okno, karty, przyciski, Inspektor i paleta we wszystkich stylach. Domyślny styl to Glass
+- 🌌 **Styl Neon:** prawie czarne tło, świecące obramowania z gradientem w kolorze akcentu, poświaty przy zaznaczonej kategorii i włączonych modułach. Przełącznik **Solid / Glass / Neon** jest na stronie Motywy
 - 🎨 **Style HUD:** Glass, Neon (ciemne tło i świecący obrys) oraz Minimal (prawie bez tła). Przełącznik na stronie HUD
 - 🧩 Opcjonalny układ **Panels** (pływające panele kategorii) w ustawieniach klienta; domyślnie zostaje okno
 

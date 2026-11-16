@@ -2,6 +2,9 @@ package dev.vesc.client.module;
 
 import dev.vesc.client.VescClient;
 import dev.vesc.client.lang.Lang;
+import dev.vesc.client.setting.BoolSetting;
+import dev.vesc.client.setting.ModeSetting;
+import dev.vesc.client.setting.NumberSetting;
 import dev.vesc.client.setting.Setting;
 import dev.vesc.client.ui.Anim;
 import org.lwjgl.glfw.GLFW;
@@ -38,6 +41,11 @@ public class Module {
     }
 
     public Module add(Setting<?>... s) { settings.addAll(List.of(s)); return this; }
+
+    // krótkie fabryki ustawień dla klas modułów (nazwa = nazwa angielska)
+    protected static BoolSetting toggle(String name, boolean v) { return new BoolSetting(name, name, v); }
+    protected static NumberSetting slider(String name, double v, double min, double max, double step) { return new NumberSetting(name, name, v, min, max, step); }
+    protected static ModeSetting choice(String name, String... modes) { return new ModeSetting(name, name, modes); }
 
     public void toggle() { setEnabled(!enabled, false); }
 

@@ -3,8 +3,8 @@ package dev.vesc.client.render;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import dev.vesc.client.VescClient;
-import dev.vesc.client.module.Ambient;
-import dev.vesc.client.module.TargetEsp;
+import dev.vesc.client.module.world.Ambient;
+import dev.vesc.client.module.visuals.TargetEsp;
 import dev.vesc.client.ui.Anim;
 import dev.vesc.client.ui.Theme;
 import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderContext;
@@ -45,7 +45,7 @@ public final class TargetEspRenderer {
         AttackEntityCallback.EVENT.register((player, world, hand, entity, hit) -> {
             if (world.isClient && entity instanceof LivingEntity le) { attacked = le; attackTime = System.currentTimeMillis(); }
             if (world.isClient && entity instanceof LivingEntity le && le.isAlive()
-                    && VescClient.get().modules.get("HitSound") instanceof dev.vesc.client.module.HitSound hs && hs.isEnabled()
+                    && VescClient.get().modules.get("HitSound") instanceof dev.vesc.client.module.cosmetics.HitSound hs && hs.isEnabled()
                     && (!hs.playersOnly.get() || entity instanceof PlayerEntity)) hs.play();
             return ActionResult.PASS;
         });

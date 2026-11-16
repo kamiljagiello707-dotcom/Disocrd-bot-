@@ -1,6 +1,6 @@
 package dev.vesc.client.mixin;
 
-import dev.vesc.client.module.ToolColor;
+import dev.vesc.client.module.cosmetics.ToolColor;
 import net.minecraft.item.ItemStack;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;

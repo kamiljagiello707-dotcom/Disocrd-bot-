@@ -3,7 +3,7 @@ package dev.vesc.client.render;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import dev.vesc.client.VescClient;
-import dev.vesc.client.module.Sky;
+import dev.vesc.client.module.world.Sky;
 import dev.vesc.client.ui.Theme;
 import net.minecraft.block.enums.CameraSubmersionType;
 import net.minecraft.client.MinecraftClient;

@@ -1,7 +1,7 @@
 package dev.vesc.client.mixin;
 
 import dev.vesc.client.VescClient;
-import dev.vesc.client.module.ViewModel;
+import dev.vesc.client.module.camera.ViewModel;
 import net.minecraft.client.network.AbstractClientPlayerEntity;
 import net.minecraft.client.render.VertexConsumerProvider;
 import net.minecraft.client.render.item.HeldItemRenderer;
@@ -30,7 +30,7 @@ public class HeldItemRendererMixin {
             target = "Lnet/minecraft/client/render/item/HeldItemRenderer;applySwingOffset(Lnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/util/Arm;F)V"))
     private void vesc$swing(HeldItemRenderer self, MatrixStack matrices, Arm arm, float swingProgress) {
         VescClient rc = VescClient.get();
-        if (rc != null && rc.modules != null && rc.modules.get("SwordAnimations") instanceof dev.vesc.client.module.SwordAnimations sa && sa.applies(vesc$item)) {
+        if (rc != null && rc.modules != null && rc.modules.get("SwordAnimations") instanceof dev.vesc.client.module.camera.SwordAnimations sa && sa.applies(vesc$item)) {
             sa.apply(matrices, arm, swingProgress);
         } else ((HeldItemRendererInvoker) self).vesc$applySwingOffset(matrices, arm, swingProgress);
     }

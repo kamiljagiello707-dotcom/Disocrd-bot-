@@ -1,6 +1,9 @@
 package dev.vesc.client.module;
 
 import dev.vesc.client.VescClient;
+import dev.vesc.client.module.utility.DiscordPresence;
+import dev.vesc.client.module.utility.FakePlayer;
+
 import dev.vesc.client.ui.Theme;
 import net.fabricmc.fabric.api.client.message.v1.ClientReceiveMessageEvents;
 import net.fabricmc.fabric.api.client.message.v1.ClientSendMessageEvents;

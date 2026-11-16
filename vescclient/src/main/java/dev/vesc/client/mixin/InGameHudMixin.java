@@ -30,6 +30,6 @@ public class InGameHudMixin {
     /** Crosshair: własny celownik zamiast vanilla */
     @Inject(method = "renderCrosshair", at = @At("HEAD"), cancellable = true)
     private void vesc$crosshair(DrawContext context, RenderTickCounter tickCounter, CallbackInfo ci) {
-        if (VescClient.get() != null && VescClient.get().modules != null && dev.vesc.client.module.Crosshair.render(context)) ci.cancel();
+        if (VescClient.get() != null && VescClient.get().modules != null && dev.vesc.client.module.camera.Crosshair.render(context)) ci.cancel();
     }
 }

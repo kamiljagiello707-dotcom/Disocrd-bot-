@@ -52,7 +52,7 @@ public class VescClient implements ClientModInitializer {
         hud = new Hud();
         config = new ConfigManager();
         config.loadAll();
-        if (modules.get("DiscordRPC") instanceof dev.vesc.client.module.DiscordPresence dp) dp.ensureRunning();
+        if (modules.get("DiscordRPC") instanceof dev.vesc.client.module.utility.DiscordPresence dp) dp.ensureRunning();
 
         openGui = KeyBindingHelper.registerKeyBinding(new KeyBinding("key.vescclient.gui",
                 InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_RIGHT_SHIFT, "category.vescclient"));

@@ -1,6 +1,6 @@
 package dev.vesc.client.mixin;
 
-import dev.vesc.client.module.ToolColor;
+import dev.vesc.client.module.cosmetics.ToolColor;
 import net.minecraft.client.color.item.ItemColors;
 import net.minecraft.client.render.VertexConsumer;
 import net.minecraft.client.render.item.ItemRenderer;

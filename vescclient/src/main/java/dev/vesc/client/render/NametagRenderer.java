@@ -2,7 +2,7 @@ package dev.vesc.client.render;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import dev.vesc.client.VescClient;
-import dev.vesc.client.module.Nametags;
+import dev.vesc.client.module.visuals.Nametags;
 import dev.vesc.client.render.Fonts.Font;
 import dev.vesc.client.ui.Theme;
 import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderContext;

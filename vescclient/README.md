@@ -59,6 +59,34 @@ Moduł **DiscordRPC** (Utility) jest domyślnie włączony. Ma ustawienia: plaki
 
 ![HUD Vesc](docs/hud_vesc.jpg)
 
+## Struktura kodu
+
+Każdy moduł ma własny plik w folderze swojej kategorii:
+
+```
+src/main/java/dev/vesc/client/
+├─ VescClient.java            klasa główna
+├─ module/
+│  ├─ Module.java, Category.java, ModuleManager.java (rejestr), Legit.java (logika modułów legit)
+│  ├─ combat/     KillAura, TriggerBot, AimAssist, AutoClicker, Criticals, Reach, WTap, HitBoxes, Velocity, AutoTotem
+│  ├─ movement/   Sprint, Speed, Step, NoFall, Flight, LongJump, AirJump, ElytraBoost, Spider, Jesus
+│  ├─ player/     AutoArmor, InvManager, ChestStealer, AutoTool, FastPlace, FastUse, NoSlow, AutoEat, AutoRespawn
+│  ├─ visuals/    TargetEsp, Nametags, ESP, Tracers, BlockOutline, ChestESP, Fullbright, NoFire
+│  ├─ camera/     Zoom, FreeLook, Crosshair, ViewModel, SwordAnimations, NoHurtCam
+│  ├─ world/      Sky, Ambient, TimeChanger, Weather, Scaffold, Nuker, FastBreak, LiquidPlace, AutoSign, AutoFarm, Timer
+│  ├─ cosmetics/  Cosmetic, ChinaHat, Trail, JumpCircles, ToolColor, HitSound
+│  └─ utility/    AutoGG, ChatSuffix, MiddleClick, DiscordPresence, AutoReconnect, AntiAFK, AntiBot, NameProtect, FakePlayer
+├─ ui/        ClickGui, HudEditor, MainMenu, Theme, Anim
+├─ hud/       Hud (wszystkie elementy HUD), Notifications, Tps, …
+├─ render/    R2D (shadery SDF), Fonts, TargetEspRenderer, NametagRenderer, SkyRenderer, …
+├─ mixin/     mixiny Minecrafta
+├─ config/    zapis ustawień i konfiguracji
+├─ setting/   BoolSetting, NumberSetting, ModeSetting, ColorSetting
+└─ lang/      tłumaczenia PL / EN
+```
+
+Moduły typu cheat (combat, movement poza Sprint, ESP/Tracers/ChestESP, Scaffold, Nuker…) to **atrapy** – mają tylko ustawienia w GUI (opis w komentarzu klasy), bez logiki w grze.
+
 ## Budowanie
 
 Wymagana Java 21.

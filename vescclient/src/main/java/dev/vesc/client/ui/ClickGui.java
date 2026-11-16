@@ -932,7 +932,7 @@ public class ClickGui extends Screen {
             hit(bx, y + 3, bw, h - 6, bt -> {
                 md.cycle(bt == 1 ? -1 : 1);
                 for (Module mm : rc.modules.all())
-                    if (mm instanceof dev.vesc.client.module.HitSound hs && hs.sound == md) hs.play();
+                    if (mm instanceof dev.vesc.client.module.cosmetics.HitSound hs && hs.sound == md) hs.play();
             });
             return y + h;
         }
@@ -1472,7 +1472,7 @@ public class ClickGui extends Screen {
             hit(bx, y + 2, bw, h - 4, bt -> {
                 if (bt == 2) md.reset(); else md.cycle(bt == 1 ? -1 : 1);
                 for (Module mm : rc.modules.all())
-                    if (mm instanceof dev.vesc.client.module.HitSound hs && hs.sound == md) hs.play();
+                    if (mm instanceof dev.vesc.client.module.cosmetics.HitSound hs && hs.sound == md) hs.play();
             });
             return y + h + 2;
         }

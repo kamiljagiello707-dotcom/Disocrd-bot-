@@ -1,7 +1,7 @@
 package dev.vesc.client.mixin;
 
 import dev.vesc.client.VescClient;
-import dev.vesc.client.module.Cosmetic;
+import dev.vesc.client.module.cosmetics.Cosmetic;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.AbstractClientPlayerEntity;
 import net.minecraft.client.util.SkinTextures;

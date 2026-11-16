@@ -114,6 +114,8 @@ public class ConfigManager {
         o.add("sounds", s.sounds.save());
         o.add("welcome", s.welcome.save());
         o.add("customMenu", s.customMenu.save());
+        o.addProperty("guiW", s.guiW);
+        o.addProperty("guiH", s.guiH);
         o.addProperty("ui", 4);
         com.google.gson.JsonArray fr = new com.google.gson.JsonArray();
         for (String f : RazerClient.get().friends.all()) fr.add(f);
@@ -142,6 +144,8 @@ public class ConfigManager {
                 if (o.has("sounds")) s.sounds.load(o.get("sounds"));
                 if (o.has("welcome")) s.welcome.load(o.get("welcome"));
                 if (o.has("customMenu")) s.customMenu.load(o.get("customMenu"));
+                if (o.has("guiW")) s.guiW = o.get("guiW").getAsFloat();
+                if (o.has("guiH")) s.guiH = o.get("guiH").getAsFloat();
                 if (o.has("friends")) for (var f : o.getAsJsonArray("friends")) RazerClient.get().friends.add(f.getAsString());
                 // nowy wygląd 2.1 – jednorazowo przełącz na Midnight + niebieski akcent
                 if (!o.has("ui") || o.get("ui").getAsInt() < 3) { Theme.setInstant(Theme.Preset.MIDNIGHT); Theme.setAccentInstant(Theme.Accent.BLUE); }

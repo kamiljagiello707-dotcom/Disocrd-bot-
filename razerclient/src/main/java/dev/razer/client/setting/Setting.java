@@ -20,6 +20,8 @@ public abstract class Setting<T> {
     public T get() { return value; }
     public void set(T v) { value = v; }
     public void reset() { value = defaultValue; }
+    public boolean changed() { return !java.util.Objects.equals(value, defaultValue); }
+    public T getDefault() { return defaultValue; }
 
     public abstract JsonElement save();
     public abstract void load(JsonElement e);

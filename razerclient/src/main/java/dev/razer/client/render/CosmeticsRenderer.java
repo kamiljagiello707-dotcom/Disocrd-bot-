@@ -42,7 +42,10 @@ public final class CosmeticsRenderer {
         WorldRenderEvents.AFTER_ENTITIES.register(CosmeticsRenderer::render);
     }
 
+    private static Integer override;
+
     private static int color(float phase, float alpha) {
+        if (override != null) return R2D.withAlpha(R2D.blend(override, 0xFFFFFFFF, 0.18f * (0.5f + 0.5f * (float) Math.sin(phase))), alpha);
         int c = Theme.accentPreset() == Theme.Accent.MONO ? R2D.blend(0xFFFFFFFF, 0xFFB8B8C0, 0.5f + 0.5f * (float) Math.sin(phase)) : Theme.accentWave(phase);
         return R2D.withAlpha(c, alpha);
     }
@@ -76,6 +79,7 @@ public final class CosmeticsRenderer {
         // ---------------- JumpCircles
         JumpCircles jc = (JumpCircles) rc.modules.get("JumpCircles");
         if (jc != null && jc.isEnabled() && !circles.isEmpty()) {
+            override = jc.custom();
             begin(true);
             long now = System.currentTimeMillis();
             float life = jc.time.get().floatValue() * 1000f;
@@ -108,6 +112,7 @@ public final class CosmeticsRenderer {
         // ---------------- ChinaHat
         ChinaHat hat = (ChinaHat) rc.modules.get("ChinaHat");
         if (hat != null && hat.isEnabled()) {
+            override = hat.custom();
             for (PlayerEntity p : mc.world.getPlayers()) {
                 boolean self = p == mc.player;
                 if (self && mc.options.getPerspective().isFirstPerson()) continue;

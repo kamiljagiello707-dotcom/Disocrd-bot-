@@ -9,6 +9,11 @@ import dev.razer.client.setting.NumberSetting;
  * Rysowany z testem głębi, więc NIE jest widoczny przez ściany.
  */
 public class TargetEsp extends Module {
+    public final dev.razer.client.setting.ModeSetting colorMode = new dev.razer.client.setting.ModeSetting("Kolor", "Color", "Accent", "Custom");
+    public final dev.razer.client.setting.ColorSetting customColor = new dev.razer.client.setting.ColorSetting("Własny kolor", "Custom Color", 0xFFB46BFF);
+    /** własny kolor albo null (= kolor akcentu) */
+    public Integer custom() { return colorMode.get().equals("Custom") ? customColor.get() : null; }
+
     public final ModeSetting mode = new ModeSetting("Styl", "Style", "Mix", "Ghosts", "Pulse", "Circle", "Ring", "Marker", "Orbit", "Helix", "Halo", "Sparkles", "Brackets", "Vortex", "Crystal");
     public final BoolSetting playersOnly = new BoolSetting("Tylko gracze", "Players only", true);
     public final BoolSetting trail = new BoolSetting("Smuga", "Trail", true);
@@ -18,7 +23,7 @@ public class TargetEsp extends Module {
 
     public TargetEsp() {
         super("TargetESP", Category.RENDER, "targethud", "Efektowny znacznik na celu", "Fancy marker on your target");
-        add(mode, playersOnly, trail, ghosts, speed, size);
+        add(mode, playersOnly, trail, ghosts, speed, size, colorMode, customColor);
     }
 
     public boolean is(String m) { return mode.get().equals(m); }

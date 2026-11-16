@@ -57,6 +57,19 @@ public final class Fonts {
     /** wysokość wielkich liter dużej czcionki */
     public static float displayCap(float scale) { return 26f * scale; }
 
+    /** zawija tekst do szerokości maxW (po słowach) */
+    public static java.util.List<String> wrap(String s, Font f, float scale, float maxW) {
+        java.util.List<String> out = new java.util.ArrayList<>();
+        StringBuilder line = new StringBuilder();
+        for (String word : s.split(" ")) {
+            String test = line.length() == 0 ? word : line + " " + word;
+            if (width(test, f, scale) > maxW && line.length() > 0) { out.add(line.toString()); line = new StringBuilder(word); }
+            else line = new StringBuilder(test);
+        }
+        if (line.length() > 0) out.add(line.toString());
+        return out;
+    }
+
     public static String trim(String s, Font f, float scale, float maxW) {
         if (width(s, f, scale) <= maxW) return s;
         while (s.length() > 1 && width(s + "…", f, scale) > maxW) s = s.substring(0, s.length() - 1);

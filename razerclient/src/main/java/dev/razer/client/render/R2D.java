@@ -192,6 +192,22 @@ public final class R2D {
         b.vertex(m, x2, y1, 0).color(c);
     }
 
+    /** pionowy gradient (góra -> dół) */
+    public static void gradientV(DrawContext ctx, float x, float y, float w, float h, int top, int bottom) {
+        Matrix4f m = ctx.getMatrices().peek().getPositionMatrix();
+        RenderSystem.enableBlend();
+        RenderSystem.defaultBlendFunc();
+        RenderSystem.disableDepthTest();
+        RenderSystem.setShader(GameRenderer::getPositionColorProgram);
+        BufferBuilder b = Tessellator.getInstance().begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_COLOR);
+        int t = col(top), bt = col(bottom);
+        b.vertex(m, x, y, 0).color(t);
+        b.vertex(m, x, y + h, 0).color(bt);
+        b.vertex(m, x + w, y + h, 0).color(bt);
+        b.vertex(m, x + w, y, 0).color(t);
+        end(b);
+    }
+
     /** pozioma gradientowa belka (np. pasek postępu) */
     public static void gradientH(DrawContext ctx, float x, float y, float w, float h, int left, int right) {
         Matrix4f m = ctx.getMatrices().peek().getPositionMatrix();

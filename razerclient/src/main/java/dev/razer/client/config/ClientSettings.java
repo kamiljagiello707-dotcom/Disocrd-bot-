@@ -14,6 +14,8 @@ public class ClientSettings {
     public final BoolSetting notifications = new BoolSetting("Powiadomienia", "Notifications", true);
     public final BoolSetting welcome = new BoolSetting("Powitanie", "Welcome", true);
     public final BoolSetting customMenu = new BoolSetting("Menu główne", "Main menu", true);
+    /** rozmiar okna ClickGUI (zmieniany przeciąganiem rogu) */
+    public float guiW = 640, guiH = 420;
 
     public float guiScale() {
         return switch (guiSize.get()) {

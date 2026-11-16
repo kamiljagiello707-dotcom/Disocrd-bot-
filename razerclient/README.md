@@ -7,9 +7,21 @@ To jest **sam interfejs**. Moduły to puste przełączniki bez żadnej funkcji w
 |---|---|
 | ![](docs/menu_lock.jpg) | ![](docs/menu.jpg) |
 
-![ClickGUI](docs/gui_themes.jpg)
+![ClickGUI](docs/gui_inspector.jpg)
+
+| | |
+|---|---|
+| ![](docs/gui_palette.jpg) | ![](docs/gui_colorpicker.jpg) |
 
 ## Co nowego w 2.0
+- 🧠 **Zaawansowane ClickGUI:**
+  - **Inspektor modułu** (PPM na module): panel wysuwany z prawej z opisem, przełącznikiem, klawiszem, ulubionymi, resetem i ustawieniami w sekcjach Modes / Values / Toggles / Colors. Zmienione ustawienia mają kropkę, która po kliknięciu przywraca wartość domyślną. Kliknięcie wartości liczbowej pozwala wpisać dokładną liczbę
+  - **Paleta komend (Ctrl+K):** wyszukiwanie fuzzy modułów, stron i akcji (motyw, akcent, język, edytor HUD, zapis konfiguracji, wyłącz wszystko). Enter uruchamia, Shift+Enter otwiera inspektor
+  - **Filtry** (Wszystkie / Włączone / Wyłączone / Z klawiszem), **sortowanie** (Domyślnie / A–Z / Włączone) i **widok siatki albo listy**
+  - **Picker kolorów** (pole nasycenia i jasności z paskiem odcienia) dla TargetESP, Ambient, ChinaHat i JumpCircles (opcja Color: Accent / Custom)
+  - **Podpowiedzi** po najechaniu na moduł, **animacja wejścia kart** i **fala przy kliknięciu**
+  - **Nawigacja klawiaturą:** strzałki, Enter włącza, Spacja otwiera inspektor, Esc zamyka inspektor
+  - **Zmiana rozmiaru okna** przeciąganiem prawego dolnego rogu (zapamiętywana)
 - 🗡️ **ToolColor** (Render): własny kolor mieczy, siekier, kilofów, łopat, motyk, trójzębu, buzdyganu i łuków, w ręce i w ekwipunku. Tekstura jest zamieniana na odcienie szarości i kolorowana, więc kolor jest czysty. Do wyboru: Purple, White, Black, Blue, Red, Green, Gold, Pink, Cyan, Accent i Rainbow. Opcje: intensywność, połysk, miecze, narzędzia, inna broń
 - 🌌 **Sky** (Render): własne animowane niebo z presetami **Aurora**, **Galaxy**, **Sunset**, **Midnight** i **Accent**. Gradient nieba, migoczące kolorowe gwiazdy, falująca zorza polarna, mgławice, Droga Mleczna (Galaxy), spadające gwiazdy i kolor mgły dopasowany do nieba. Opcje: gwiazdy, ich ilość, zorza, mgławice, spadające gwiazdy, kolor mgły, prędkość, jasność
 - 🏷️ **Nametags** (Render): nowoczesne, zaokrąglone nicki zamiast tych z Minecrafta. Głowa skina z drugą warstwą, nick, pigułka z HP w kolorze od zielonego do czerwonego, pancerz, ping, dystans i pasek zdrowia w kolorze akcentu. Znajomi są wyróżnieni akcentem i ikonką. Tło Dark, Glass albo None, opcja „Self” pokazuje własny nick w F5. Rysowane z testem głębi, więc nie widać ich przez ściany

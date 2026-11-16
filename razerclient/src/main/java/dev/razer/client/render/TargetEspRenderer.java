@@ -91,10 +91,11 @@ public final class TargetEspRenderer {
         float delta = ctx.tickCounter().getTickDelta(true);
 
         Ambient amb = (Ambient) rc.modules.get("Ambient");
-        if (amb != null && amb.isEnabled()) renderAmbient(ms, cam, amb);
+        if (amb != null && amb.isEnabled()) { override = amb.custom(); renderAmbient(ms, cam, amb); }
 
         TargetEsp m = (TargetEsp) rc.modules.get("TargetESP");
         if (m == null || !m.isEnabled()) { appear.snap(0); return; }
+        override = m.custom();
         LivingEntity t = pick(m);
         if (t != null) target = t;
         float a = appear.animate(t != null ? 1 : 0);
@@ -142,7 +143,14 @@ public final class TargetEspRenderer {
         ms.pop();
     }
 
+    /** własny kolor bieżącego efektu (null = akcent) */
+    private static Integer override;
+
     private static int color(float phase, float alpha, float hurt) {
+        if (override != null) {
+            int c = R2D.blend(override, 0xFFFFFFFF, 0.18f * (0.5f + 0.5f * (float) Math.sin(phase)));
+            return R2D.withAlpha(R2D.blend(c, 0xFFFF3B3B, hurt), alpha);
+        }
         int c = Theme.accentPreset() == Theme.Accent.MONO ? R2D.blend(0xFFFFFFFF, 0xFFB8B8C0, 0.5f + 0.5f * (float) Math.sin(phase)) : Theme.accentWave(phase);
         c = R2D.blend(c, 0xFFFF3B3B, hurt);
         return R2D.withAlpha(c, alpha);

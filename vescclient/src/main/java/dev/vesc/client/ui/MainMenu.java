@@ -1,5 +1,6 @@
 package dev.vesc.client.ui;
 
+import com.mojang.blaze3d.systems.RenderSystem;
 import dev.vesc.client.VescClient;
 import dev.vesc.client.lang.Lang;
 import dev.vesc.client.render.Fonts;
@@ -7,6 +8,7 @@ import dev.vesc.client.render.Fonts.Font;
 import dev.vesc.client.render.R2D;
 import net.minecraft.SharedConstants;
 import net.minecraft.client.gui.DrawContext;
+import net.minecraft.client.gui.PlayerSkinDrawer;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.screen.multiplayer.MultiplayerScreen;
 import net.minecraft.client.gui.screen.multiplayer.MultiplayerWarningScreen;
@@ -20,32 +22,33 @@ import net.minecraft.util.Identifier;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
 import java.util.Random;
 
 /**
- * Menu główne VescClient: ekran blokady (data + godzina + "kliknij, aby kontynuować"),
- * a po kliknięciu nowoczesne menu z ikonami. Animowane tło z falami dymu i świecącymi cząsteczkami.
+ * Menu główne VescClient: wyśrodkowana, zaokrąglona karta w stylu klienta (logo + zegar w nagłówku,
+ * przyciski jako wiersze, stopka z awatarem). Animowane tło z falami i świecącymi cząsteczkami.
  */
 public class MainMenu extends Screen {
     private static final Identifier WAVES = R2D.id("textures/ui/waves.png");
-    private static final Identifier GLOW = R2D.id("textures/ui/glow.png");
-    /** ekran blokady pokazujemy tylko raz na uruchomienie gry */
-    private static boolean unlocked = false;
     private static long firstOpen = 0;
 
     private final long openTime = System.currentTimeMillis();
-    private long unlockTime = unlocked ? 1 : 0;
-    private final Anim[] hover = {new Anim(0, 16), new Anim(0, 16), new Anim(0, 16), new Anim(0, 16), new Anim(0, 16)};
-    private final float[][] particles = new float[60][];
+    private final float[][] particles = new float[56][];
     private long lastFrame = System.nanoTime();
-    private float bx, by, bs = 26, bgap = 14;
+
+    // przyciski menu
     private static final String[] ICONS = {"player", "users", "world", "settings", "power"};
     private static final String[] LABELS = {"menu.singleplayer", "menu.multiplayer", "menu.realms", "menu.options", "menu.quit"};
+    private final Anim[] hover = new Anim[ICONS.length];
+    private final List<float[]> rects = new ArrayList<>(); // {x,y,w,h,index}
 
     public MainMenu() {
         super(Text.literal("VescClient"));
         if (firstOpen == 0) firstOpen = System.currentTimeMillis();
+        for (int i = 0; i < hover.length; i++) hover[i] = new Anim(0, 16);
         Random r = new Random();
         for (int i = 0; i < particles.length; i++)
             particles[i] = new float[]{r.nextFloat(), r.nextFloat(), (r.nextFloat() - 0.5f) * 0.01f, -0.004f - r.nextFloat() * 0.01f,
@@ -56,33 +59,18 @@ public class MainMenu extends Screen {
 
     @Override public void renderBackground(DrawContext context, int mouseX, int mouseY, float delta) {}
 
-    private float unlockProgress() {
-        if (unlockTime == 0) return 0;
-        if (unlockTime == 1) return 1;
-        return Anim.easeOutCubic((System.currentTimeMillis() - unlockTime) / (700f / Anim.globalSpeed));
-    }
-
     // ================================================================== tło
 
     private void drawBackground(DrawContext ctx) {
         R2D.alpha = 1;
-        R2D.rect(ctx, 0, 0, width, height, 0xFF050507);
+        R2D.rect(ctx, 0, 0, width, height, 0xFF060608);
         float t = (System.currentTimeMillis() - firstOpen) / 1000f;
         float aspect = width / (float) height;
-        // dwie warstwy fal przesuwające się w różnych kierunkach
         float s1 = 0.9f, s2 = 1.6f;
-        R2D.textureUV(ctx, WAVES, 0, 0, width, height, t * 0.004f, t * 0.002f, t * 0.004f + s1 * aspect, t * 0.002f + s1, 0x1CFFFFFF);
-        R2D.textureUV(ctx, WAVES, 0, 0, width, height, -t * 0.006f + 0.37f, t * 0.003f + 0.11f, -t * 0.006f + 0.37f + s2 * aspect, t * 0.003f + 0.11f + s2, 0x12FFFFFF);
-        // poświata w kolorze akcentu
-        int glow = Theme.accentPreset() == Theme.Accent.MONO ? 0xFFFFFFFF : Theme.accentWave(0);
-        R2D.glow(ctx, width / 2f - width * 0.45f, height * 0.18f, width * 0.9f, height * 0.7f, R2D.withAlpha(glow, 0.07f));
-        // winieta
-        for (int i = 0; i < 10; i++) {
-            float k = i / 10f;
-            R2D.rect(ctx, 0, height * (1 - 0.25f * (1 - k)), width, height * 0.025f + 1, R2D.withAlpha(0xFF000000, 0.06f));
-            R2D.rect(ctx, 0, height * 0.25f * k - 1, width, height * 0.025f + 1, R2D.withAlpha(0xFF000000, 0.05f * (1 - k)));
-        }
-        // cząsteczki
+        R2D.textureUV(ctx, WAVES, 0, 0, width, height, t * 0.004f, t * 0.002f, t * 0.004f + s1 * aspect, t * 0.002f + s1, 0x1AFFFFFF);
+        R2D.textureUV(ctx, WAVES, 0, 0, width, height, -t * 0.006f + 0.37f, t * 0.003f + 0.11f, -t * 0.006f + 0.37f + s2 * aspect, t * 0.003f + 0.11f + s2, 0x10FFFFFF);
+        int glow = mono() ? 0xFFFFFFFF : Theme.accentWave(0);
+        R2D.glow(ctx, width / 2f - width * 0.45f, height * 0.12f, width * 0.9f, height * 0.75f, R2D.withAlpha(glow, 0.06f));
         long now = System.nanoTime();
         float dt = Math.min(0.05f, (now - lastFrame) / 1e9f);
         lastFrame = now;
@@ -91,100 +79,103 @@ public class MainMenu extends Screen {
             if (p[1] < -0.02f) { p[1] = 1.02f; p[0] = (float) Math.random(); }
             if (p[0] < -0.02f) p[0] = 1.02f; else if (p[0] > 1.02f) p[0] = -0.02f;
             float tw = 0.5f + 0.5f * (float) Math.sin(t * 1.4f + p[5]);
-            int c = Theme.accentPreset() == Theme.Accent.MONO ? 0xFFFFFFFF : Theme.accentWave(p[5]);
-            R2D.circle(ctx, p[0] * width, p[1] * height, p[4], R2D.withAlpha(c, 0.08f + 0.22f * tw));
+            int c = mono() ? 0xFFFFFFFF : Theme.accentWave(p[5]);
+            R2D.circle(ctx, p[0] * width, p[1] * height, p[4], R2D.withAlpha(c, 0.07f + 0.2f * tw));
         }
     }
+
+    private static boolean mono() { return Theme.accentPreset() == Theme.Accent.MONO; }
 
     // ================================================================== render
 
     @Override
     public void render(DrawContext ctx, int mouseX, int mouseY, float delta) {
         drawBackground(ctx);
-        float intro = Anim.easeOutCubic((System.currentTimeMillis() - openTime) / 900f);
-        float u = unlockProgress();
-        LocalDateTime now = LocalDateTime.now();
-        String time = now.format(DateTimeFormatter.ofPattern("HH:mm"));
+        float intro = Anim.easeOutCubic((System.currentTimeMillis() - openTime) / 650f);
+        R2D.alpha = intro;
+        int accent = mono() ? 0xFFFFFFFF : Theme.accentWave(0);
+
+        // --- karta ---
+        float cw = Math.min(330, width - 36);
+        float rowH = 30, gap = 7, headH = 54, footH = 30;
+        float ch = Math.min(height - 30, headH + ICONS.length * rowH + (ICONS.length - 1) * gap + footH + 24);
+        float x = (width - cw) / 2f, y = (height - ch) / 2f + (1 - intro) * 12;
+
+        R2D.shadow(ctx, x, y + 3, cw, ch, 22, R2D.withAlpha(0xFF000000, 0.55f));
+        R2D.glow(ctx, x - 30, y - 30, cw + 60, ch + 60, R2D.withAlpha(accent, 0.10f));
+        R2D.roundRect(ctx, x, y, cw, ch, 18, 0xF2121216);
+        R2D.roundRectV(ctx, x, y, cw, 64, 18, R2D.withAlpha(accent, 0.10f), R2D.withAlpha(accent, 0f));
+        R2D.roundOutline(ctx, x, y, cw, ch, 18, 0.7f, R2D.withAlpha(0xFFFFFFFF, 0.10f));
+
+        // --- nagłówek: logo + nazwa + zegar ---
+        float hx = x + 16, hy = y + 14;
+        R2D.glow(ctx, hx - 4, hy - 4, 36, 36, R2D.withAlpha(accent, 0.4f));
+        R2D.roundRectV(ctx, hx, hy, 30, 30, 10, R2D.blend(accent, 0xFFFFFFFF, 0.12f), accent);
+        R2D.icon(ctx, "logo_v", hx + 7, hy + 7, 16, Theme.contrast(accent));
+        Fonts.draw(ctx, "VescClient", hx + 40, hy + 3, 0xFFF4F3F8, Font.BOLD, 1.12f);
+        Fonts.draw(ctx, "v" + VescClient.VERSION + "  •  Minecraft " + SharedConstants.getGameVersion().getName(), hx + 40, hy + 18, 0xFF8A8A96, Font.REGULAR, 0.62f);
+        LocalDateTime dt = LocalDateTime.now();
+        String time = dt.format(DateTimeFormatter.ofPattern("HH:mm"));
         Locale loc = Lang.pl() ? Locale.forLanguageTag("pl-PL") : Locale.ENGLISH;
-        String date = now.format(DateTimeFormatter.ofPattern(Lang.pl() ? "EEEE, d MMMM" : "EEEE, MMMM d", loc));
+        String date = dt.format(DateTimeFormatter.ofPattern(Lang.pl() ? "EEE, d MMM" : "EEE, MMM d", loc));
         date = date.substring(0, 1).toUpperCase(loc) + date.substring(1);
-        float cx = width / 2f, cy = height / 2f;
+        float clockR = x + cw - 16;
+        Fonts.draw(ctx, time, clockR - Fonts.width(time, Font.BOLD, 1.05f), hy + 2, 0xFFF4F3F8, Font.BOLD, 1.05f);
+        Fonts.draw(ctx, date, clockR - Fonts.width(date, Font.SEMIBOLD, 0.6f), hy + 19, 0xFF8A8A96, Font.SEMIBOLD, 0.6f);
 
-        // ---------------- ekran blokady
-        if (u < 1) {
-            R2D.alpha = intro * (1 - u);
-            float oy = -u * 40 + (1 - intro) * 10;
-            drawTitle(ctx, cx, cy - 62 + oy, 1f);
-            Fonts.drawCentered(ctx, date, cx, cy - 26 + oy, 0xFF8E8E98, Font.SEMIBOLD, 0.9f);
-            drawClock(ctx, time, cx, cy - 12 + oy, 1.75f, 0xFFD2D2D8);
-            float pulse = 0.45f + 0.35f * (float) Math.sin(System.currentTimeMillis() / 500.0);
-            float hy = height - 30 + oy * 0.5f;
-            float bob = (float) Math.sin(System.currentTimeMillis() / 300.0) * 1.5f;
-            R2D.icon(ctx, "arrow_left", cx - 3.5f, hy - 12 + bob, 7, R2D.withAlpha(0xFFFFFFFF, pulse * 0.6f));
-            Fonts.drawCentered(ctx, Lang.get("menu.continue"), cx, hy, R2D.withAlpha(0xFFFFFFFF, pulse), Font.SEMIBOLD, 0.7f);
-            R2D.alpha = 1;
+        // separator
+        R2D.rect(ctx, x + 16, y + headH - 4, cw - 32, 0.5f, 0x18FFFFFF);
+
+        // --- przyciski ---
+        rects.clear();
+        float by = y + headH + 2;
+        for (int i = 0; i < ICONS.length; i++) {
+            float bx = x + 16, bw = cw - 32;
+            boolean hov = intro >= 1 && mouseX >= bx && mouseX < bx + bw && mouseY >= by && mouseY < by + rowH;
+            float h = hover[i].animate(hov ? 1 : 0);
+            boolean primary = i == 0;
+            int bg = primary ? R2D.blend(accent, R2D.blend(accent, 0xFFFFFFFF, 0.18f), h)
+                             : R2D.blend(0x14FFFFFF, 0x2EFFFFFF, h);
+            R2D.roundRect(ctx, bx + h * 0, by, bw, rowH, 10, bg);
+            if (primary) R2D.glow(ctx, bx - 6, by - 4, bw + 12, rowH + 8, R2D.withAlpha(accent, 0.18f + 0.12f * h));
+            else R2D.roundOutline(ctx, bx, by, bw, rowH, 10, 0.5f, R2D.withAlpha(0xFFFFFFFF, 0.08f + 0.1f * h));
+            int fg = primary ? Theme.contrast(accent) : R2D.blend(0xFFD6D6DC, 0xFFFFFFFF, h);
+            // kafelek ikony
+            float ix = bx + 8, iy = by + rowH / 2f - 9;
+            if (!primary) R2D.roundRect(ctx, ix, iy, 18, 18, 6, R2D.withAlpha(0xFFFFFFFF, 0.08f));
+            R2D.icon(ctx, ICONS[i], ix + 4, iy + 4, 10, fg);
+            Fonts.drawV(ctx, Lang.get(LABELS[i]), bx + 34, by + rowH / 2f + 0.5f, fg, Font.BOLD, 0.82f);
+            // strzałka po prawej
+            R2D.icon(ctx, "arrow_left", bx + bw - 16 + h * 2, by + rowH / 2f - 4, 8, R2D.withAlpha(fg, 0.5f + 0.5f * h));
+            rects.add(new float[]{bx, by, bw, rowH, i});
+            by += rowH + gap;
         }
 
-        // ---------------- menu
-        if (u > 0) {
-            float a = u;
-            R2D.alpha = a;
-            float oy = (1 - u) * 24;
-            drawTitle(ctx, cx, cy - 86 + oy, 1f);
-            drawClock(ctx, time, cx, cy - 50 + oy, 1.3f, 0xFFD8D8DE);
-            Fonts.drawCentered(ctx, Lang.format("menu.welcome", dev.vesc.client.module.Legit.name()), cx, cy - 16 + oy, 0xFF8C8C96, Font.SEMIBOLD, 0.75f);
+        // --- stopka: awatar + nick ---
+        float fy = y + ch - footH + 4;
+        R2D.rect(ctx, x + 16, fy - 4, cw - 32, 0.5f, 0x14FFFFFF);
+        drawHead(ctx, x + 16, fy + 1, 18);
+        R2D.circle(ctx, x + 16 + 15, fy + 1 + 15, 2.6f, 0xF2121216);
+        R2D.circle(ctx, x + 16 + 15, fy + 1 + 15, 1.7f, 0xFF4ADE80);
+        Fonts.draw(ctx, dev.vesc.client.module.Legit.name(), x + 40, fy + 6, 0xFFF4F3F8, Font.BOLD, 0.74f);
+        String sub = Lang.pl() ? "Zalogowano" : "Signed in";
+        Fonts.draw(ctx, sub, x + cw - 16 - Fonts.width(sub, Font.SEMIBOLD, 0.6f), fy + 8, 0xFF7A7A86, Font.SEMIBOLD, 0.6f);
 
-            // przyciski-ikony
-            int n = ICONS.length;
-            float total = n * bs + (n - 1) * bgap;
-            bx = cx - total / 2f; by = cy + 6 + oy;
-            for (int i = 0; i < n; i++) {
-                float x = bx + i * (bs + bgap);
-                boolean hov = mouseX >= x && mouseX < x + bs && mouseY >= by && mouseY < by + bs && u >= 1;
-                float h = hover[i].animate(hov ? 1 : 0);
-                float lift = h * 2.5f;
-                R2D.shadow(ctx, x, by - lift, bs, bs, 8, R2D.withAlpha(0xFF000000, 0.5f));
-                R2D.roundRect(ctx, x, by - lift, bs, bs, bs / 2f, R2D.blend(0x26FFFFFF, 0xF2FFFFFF, h));
-                R2D.roundOutline(ctx, x, by - lift, bs, bs, bs / 2f, 0.6f, R2D.blend(0x40FFFFFF, 0x00FFFFFF, h));
-                R2D.icon(ctx, ICONS[i], x + bs / 2f - 5, by - lift + bs / 2f - 5, 10, R2D.blend(0xFFE6E6EA, 0xFF0A0A0B, h));
-                if (h > 0.02f) {
-                    float pa = R2D.alpha;
-                    R2D.alpha = pa * h;
-                    String l = Lang.get(LABELS[i]);
-                    float lw = Fonts.width(l, Font.SEMIBOLD, 0.62f) + 12;
-                    R2D.roundRect(ctx, x + bs / 2f - lw / 2f, by + bs + 6 - lift * 0.4f, lw, 12, 6, 0xE6111114);
-                    Fonts.drawCentered(ctx, l, x + bs / 2f, by + bs + 12 - lift * 0.4f - Fonts.height(0.62f) / 2f + 0.5f, 0xFFE6E6EA, Font.SEMIBOLD, 0.62f);
-                    R2D.alpha = pa;
-                }
-            }
-            // "home indicator"
-            R2D.roundRect(ctx, cx - 26, by + bs + 26, 52, 2, 1, 0x66FFFFFF);
-
-            // dół ekranu
-            Fonts.draw(ctx, "VescClient " + VescClient.VERSION + "  •  Minecraft " + SharedConstants.getGameVersion().getName(), 6, height - 11, 0x66FFFFFF, Font.REGULAR, 0.62f);
-            String c = "Mojang AB. Do not distribute!";
-            Fonts.draw(ctx, c, width - 6 - Fonts.width(c, Font.REGULAR, 0.62f), height - 11, 0x44FFFFFF, Font.REGULAR, 0.62f);
-            R2D.alpha = 1;
-        }
+        R2D.alpha = 1;
     }
 
-    /** y = górna krawędź liter */
-    private void drawTitle(DrawContext ctx, float cx, float y, float scale) {
-        String t = "VescClient";
-        float s = 0.62f * scale;
-        float w = Fonts.width(t, Font.DISPLAY, s), capH = Fonts.displayCap(s);
-        int accent = Theme.accentPreset() == Theme.Accent.MONO ? 0xFFFFFFFF : Theme.accentWave(0);
-        // świecenie: miękka poświata za napisem + rozmyte kopie
-        R2D.glow(ctx, cx - w * 0.8f, y + capH / 2f - 30, w * 1.6f, 60, R2D.withAlpha(accent, 0.12f));
-        for (int i = 0; i < 8; i++) {
-            double an = Math.PI * 2 * i / 8;
-            Fonts.drawDisplay(ctx, t, cx + (float) Math.cos(an) * 1.5f, y + (float) Math.sin(an) * 1.5f, R2D.withAlpha(accent, 0.09f), s);
-        }
-        Fonts.drawDisplay(ctx, t, cx, y, R2D.blend(0xFFFFFFFF, accent, 0.25f), s);
-    }
-
-    private void drawClock(DrawContext ctx, String time, float cx, float y, float scale, int color) {
-        Fonts.drawDisplay(ctx, time, cx, y, color, 0.62f * scale);
+    /** rysuje głowę gracza (skin) w (x, y) o rozmiarze size */
+    private void drawHead(DrawContext ctx, float x, float y, int size) {
+        if (client == null) return;
+        ctx.draw();
+        RenderSystem.enableBlend();
+        RenderSystem.setShaderColor(1, 1, 1, R2D.alpha);
+        ctx.getMatrices().push();
+        ctx.getMatrices().translate(x, y, 0);
+        PlayerSkinDrawer.draw(ctx, client.getSkinProvider().getSkinTextures(client.getGameProfile()), 0, 0, size);
+        ctx.getMatrices().pop();
+        ctx.draw();
+        RenderSystem.setShaderColor(1, 1, 1, 1);
     }
 
     // ================================================================== wejście
@@ -193,31 +184,16 @@ public class MainMenu extends Screen {
         if (client != null) client.getSoundManager().play(PositionedSoundInstance.master(SoundEvents.UI_BUTTON_CLICK.value(), 1.6f, 0.25f));
     }
 
-    private void unlock() {
-        if (unlockTime != 0) return;
-        unlockTime = System.currentTimeMillis();
-        unlocked = true;
-        click();
-    }
-
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        if (unlockProgress() < 1) { unlock(); return true; }
-        for (int i = 0; i < ICONS.length; i++) {
-            float x = bx + i * (bs + bgap);
-            if (mouseX >= x && mouseX < x + bs && mouseY >= by && mouseY < by + bs) {
+        for (float[] r : rects) {
+            if (mouseX >= r[0] && mouseX < r[0] + r[2] && mouseY >= r[1] && mouseY < r[1] + r[3]) {
                 click();
-                open(i);
+                open((int) r[4]);
                 return true;
             }
         }
         return true;
-    }
-
-    @Override
-    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
-        if (unlockProgress() < 1) { unlock(); return true; }
-        return super.keyPressed(keyCode, scanCode, modifiers);
     }
 
     private void open(int i) {

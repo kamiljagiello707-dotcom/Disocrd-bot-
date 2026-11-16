@@ -7,6 +7,10 @@ To jest **sam interfejs**. Moduły to puste przełączniki bez żadnej funkcji w
 |---|---|
 | ![](docs/menu_lock.jpg) | ![](docs/menu.jpg) |
 
+![ClickGUI – Glass](docs/home_glass.jpg)
+
+![HUD – Glass](docs/hud_full_glass.jpg)
+
 ![ClickGUI](docs/gui_inspector.jpg)
 
 | | |
@@ -14,6 +18,10 @@ To jest **sam interfejs**. Moduły to puste przełączniki bez żadnej funkcji w
 | ![](docs/gui_palette.jpg) | ![](docs/gui_colorpicker.jpg) |
 
 ## Co nowego w 2.0
+- 🪟 **Styl Glass:** półprzezroczyste panele z gradientowym obramowaniem, połyskiem i poświatami w kolorach akcentu, w ClickGUI, HUD, powiadomieniach, Inspektorze i palecie. Przełącznik **Solid / Glass** jest na stronie Motywy
+- 🏠 **Strona Home:** powitanie z datą, kafelki statystyk (moduły, klawisze, czas sesji, FPS), szybkie przełączniki ulubionych, ostatnio używane moduły i szybkie akcje
+- 🧩 **Nowe elementy HUD:** **Keystrokes** (WASD, spacja, LMB/RMB z licznikiem CPS), **Kompas** (pasek kierunków ze stopniami), **Zegar** (z sekundami i datą), **Ekwipunek** (podgląd 3 rzędów), **Statystyki sesji** (zabójstwa, śmierci, K/D, seria) i **Wydajność** (wykres FPS z 30 s, min/średnia/max, ping)
+- 🗂️ **Presety układu HUD:** Klasyczny, Minimalny, PvP, Wszystko (strona HUD)
 - 🧠 **Zaawansowane ClickGUI:**
   - **Inspektor modułu** (PPM na module): panel wysuwany z prawej z opisem, przełącznikiem, klawiszem, ulubionymi, resetem i ustawieniami w sekcjach Modes / Values / Toggles / Colors. Zmienione ustawienia mają kropkę, która po kliknięciu przywraca wartość domyślną. Kliknięcie wartości liczbowej pozwala wpisać dokładną liczbę
   - **Paleta komend (Ctrl+K):** wyszukiwanie fuzzy modułów, stron i akcji (motyw, akcent, język, edytor HUD, zapis konfiguracji, wyłącz wszystko). Enter uruchamia, Shift+Enter otwiera inspektor

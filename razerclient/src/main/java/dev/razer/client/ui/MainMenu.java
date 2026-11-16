@@ -75,7 +75,7 @@ public class MainMenu extends Screen {
         R2D.textureUV(ctx, WAVES, 0, 0, width, height, -t * 0.006f + 0.37f, t * 0.003f + 0.11f, -t * 0.006f + 0.37f + s2 * aspect, t * 0.003f + 0.11f + s2, 0x12FFFFFF);
         // poświata w kolorze akcentu
         int glow = Theme.accentPreset() == Theme.Accent.MONO ? 0xFFFFFFFF : Theme.accentWave(0);
-        R2D.texture(ctx, GLOW, width / 2f - width * 0.45f, height * 0.18f, width * 0.9f, height * 0.7f, R2D.withAlpha(glow, 0.07f));
+        R2D.glow(ctx, width / 2f - width * 0.45f, height * 0.18f, width * 0.9f, height * 0.7f, R2D.withAlpha(glow, 0.07f));
         // winieta
         for (int i = 0; i < 10; i++) {
             float k = i / 10f;
@@ -175,7 +175,7 @@ public class MainMenu extends Screen {
         float w = Fonts.width(t, Font.DISPLAY, s), capH = Fonts.displayCap(s);
         int accent = Theme.accentPreset() == Theme.Accent.MONO ? 0xFFFFFFFF : Theme.accentWave(0);
         // świecenie: miękka poświata za napisem + rozmyte kopie
-        R2D.texture(ctx, GLOW, cx - w * 0.8f, y + capH / 2f - 30, w * 1.6f, 60, R2D.withAlpha(accent, 0.12f));
+        R2D.glow(ctx, cx - w * 0.8f, y + capH / 2f - 30, w * 1.6f, 60, R2D.withAlpha(accent, 0.12f));
         for (int i = 0; i < 8; i++) {
             double an = Math.PI * 2 * i / 8;
             Fonts.drawDisplay(ctx, t, cx + (float) Math.cos(an) * 1.5f, y + (float) Math.sin(an) * 1.5f, R2D.withAlpha(accent, 0.09f), s);

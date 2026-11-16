@@ -44,7 +44,14 @@ public class Hud {
     public final Coords coords = new Coords();
     public final Info info = new Info();
     public final NotifElement notifs = new NotifElement();
-    public final List<HudElement> elements = List.of(watermark, moduleList, keybinds, target, potions, armor, info, coords, notifs);
+    public final Keystrokes keystrokes = new Keystrokes();
+    public final Compass compass = new Compass();
+    public final Clock clock = new Clock();
+    public final Inventory inventory = new Inventory();
+    public final Stats statsEl = new Stats();
+    public final Perf perf = new Perf();
+    public final SessionStats stats = new SessionStats();
+    public final List<HudElement> elements = List.of(watermark, moduleList, keybinds, target, potions, armor, info, coords, notifs, keystrokes, compass, clock, inventory, statsEl, perf);
 
     private double lastX, lastZ, speed;
     private long lastSpeedTime;
@@ -104,6 +111,8 @@ public class Hud {
         int top = R2D.withAlpha(R2D.blend(bg, Theme.text(), 0.06f), ((bg >>> 24) & 0xFF) / 255f);
         R2D.roundRectV(ctx, x, y, w, h, r, top, bg);
         R2D.roundOutline(ctx, x, y, w, h, r, 0.5f, R2D.blend(Theme.stroke(), Theme.accent(), mono() ? 0 : 0.18f));
+        float g = Theme.glass();
+        if (g > 0.01f) R2D.roundOutlineGrad(ctx, x, y, w, h, r, 0.6f, R2D.withAlpha(Theme.accentWave(0), 0.5f * g), R2D.withAlpha(Theme.accent2(), 0.18f * g));
         // połysk na górnej krawędzi
         R2D.gradientH(ctx, x + r, y + 0.6f, (w - 2 * r) / 2f, 0.5f, R2D.withAlpha(Theme.text(), 0f), R2D.withAlpha(Theme.text(), 0.16f));
         R2D.gradientH(ctx, x + w / 2f, y + 0.6f, (w - 2 * r) / 2f, 0.5f, R2D.withAlpha(Theme.text(), 0.16f), R2D.withAlpha(Theme.text(), 0f));
@@ -120,7 +129,7 @@ public class Hud {
     /** plakietka z ikoną w kolorze akcentu */
     public static void badge(DrawContext ctx, float x, float y, float size, String icon) {
         int ac = Theme.accentWave(0);
-        R2D.texture(ctx, GLOW, x - size * 0.6f, y - size * 0.6f, size * 2.2f, size * 2.2f, R2D.withAlpha(ac, 0.35f));
+        R2D.glow(ctx, x - size * 0.6f, y - size * 0.6f, size * 2.2f, size * 2.2f, R2D.withAlpha(ac, 0.35f));
         R2D.roundRectV(ctx, x, y, size, size, size * 0.32f, R2D.blend(ac, 0xFFFFFFFF, 0.12f), R2D.blend(ac, 0xFF000000, 0.12f));
         float is = size * 0.64f;
         R2D.icon(ctx, icon, x + (size - is) / 2f, y + (size - is) / 2f, is, Theme.accentText());
@@ -197,7 +206,7 @@ public class Hud {
             float cx = x + pad, cy = y + h / 2f;
             // logo z poświatą
             int ac = Theme.accentWave(0);
-            R2D.texture(ctx, GLOW, cx - 6, cy - 12, 24, 24, R2D.withAlpha(ac, 0.45f));
+            R2D.glow(ctx, cx - 6, cy - 12, 24, 24, R2D.withAlpha(ac, 0.45f));
             R2D.icon(ctx, "logo", cx, cy - 6, 12, ac);
             cx += 12 + 5;
             Fonts.drawV(ctx, "Razer", cx, cy + 0.5f, mono() ? Theme.text() : ac, Font.BOLD, 0.74f);
@@ -509,6 +518,224 @@ public class Hud {
                 case "west" -> pl ? "Zachód (-X)" : "West (-X)";
                 default -> pl ? "Wschód (+X)" : "East (+X)";
             };
+        }
+    }
+
+    /** zastosuj preset układu HUD */
+    public void applyPreset(String name) {
+        java.util.Set<HudElement> on = new java.util.HashSet<>();
+        switch (name) {
+            case "minimal" -> on.addAll(List.of(watermark, target, notifs));
+            case "pvp" -> on.addAll(List.of(watermark, target, armor, potions, keystrokes, compass, notifs, statsEl));
+            case "full" -> on.addAll(elements);
+            default -> on.addAll(List.of(watermark, moduleList, keybinds, target, potions, coords, notifs));
+        }
+        for (HudElement e : elements) { e.enabled.set(on.contains(e)); e.resetPosition(); }
+    }
+
+    /** Keystrokes – WASD, spacja i myszka z licznikiem CPS */
+    public class Keystrokes extends HudElement {
+        private final Anim[] press = new Anim[7];
+        Keystrokes() {
+            super("keystrokes", "hud.el.keystrokes", "keyboard", false, 70, 72);
+            for (int i = 0; i < press.length; i++) press[i] = new Anim(0, 22);
+        }
+
+        @Override protected float[] defaultPos(int sw, int sh, Hud hud) { return new float[]{sw - w - 6, sh / 2f - h / 2f}; }
+
+        private void key(DrawContext ctx, float x, float y, float kw, float kh, String label, String sub, int idx, boolean down) {
+            float a = press[idx].animate(down ? 1 : 0);
+            int ac = Theme.accentWave(idx * 0.4f);
+            if (a > 0.02f) R2D.glow(ctx, x - kw * 0.4f, y - kh * 0.4f, kw * 1.8f, kh * 1.8f, R2D.withAlpha(ac, 0.45f * a));
+            float sc = 1 - 0.06f * a;
+            float cxk = x + kw / 2f, cyk = y + kh / 2f;
+            float dw = kw * sc, dh = kh * sc;
+            R2D.roundRect(ctx, cxk - dw / 2f, cyk - dh / 2f, dw, dh, 5, R2D.blend(Theme.hudBg(), ac, a * 0.9f));
+            R2D.roundOutline(ctx, cxk - dw / 2f, cyk - dh / 2f, dw, dh, 5, 0.5f, R2D.blend(Theme.stroke(), ac, Math.max(a, 0.25f)));
+            int tc = R2D.blend(Theme.text(), Theme.accentText(), a);
+            if (sub == null) Fonts.drawCentered(ctx, label, cxk, cyk - Fonts.height(0.7f) / 2f + 0.6f, tc, Font.BOLD, 0.7f);
+            else {
+                Fonts.drawCentered(ctx, label, cxk, cyk - 6, tc, Font.BOLD, 0.62f);
+                Fonts.drawCentered(ctx, sub, cxk, cyk + 1.5f, R2D.withAlpha(tc, 0.75f), Font.SEMIBOLD, 0.5f);
+            }
+        }
+
+        @Override public void render(DrawContext ctx, float x, float y, boolean preview) {
+            MinecraftClient mc = mc();
+            float k = 20, g = 2.5f;
+            w = k * 3 + g * 2; h = k * 2 + g + 2 * g + 16 + g + 9;
+            key(ctx, x + k + g, y, k, k, "W", null, 0, mc.options.forwardKey.isPressed());
+            float r2 = y + k + g;
+            key(ctx, x, r2, k, k, "A", null, 1, mc.options.leftKey.isPressed());
+            key(ctx, x + k + g, r2, k, k, "S", null, 2, mc.options.backKey.isPressed());
+            key(ctx, x + 2 * (k + g), r2, k, k, "D", null, 3, mc.options.rightKey.isPressed());
+            float r3 = r2 + k + g, mw = (w - g) / 2f;
+            key(ctx, x, r3, mw, 16, "LMB", Input.cps(0) + " CPS", 4, mc.options.attackKey.isPressed());
+            key(ctx, x + mw + g, r3, mw, 16, "RMB", Input.cps(1) + " CPS", 5, mc.options.useKey.isPressed());
+            float r4 = r3 + 16 + g;
+            float a = press[6].animate(mc.options.jumpKey.isPressed() ? 1 : 0);
+            R2D.roundRect(ctx, x, r4, w, 9, 4.5f, R2D.blend(Theme.hudBg(), Theme.accentWave(1), a * 0.9f));
+            R2D.roundOutline(ctx, x, r4, w, 9, 4.5f, 0.5f, R2D.blend(Theme.stroke(), Theme.accentWave(1), Math.max(a, 0.25f)));
+            R2D.roundRect(ctx, x + w / 2f - 9, r4 + 4, 18, 1.2f, 0.6f, R2D.blend(Theme.textDim(), Theme.accentText(), a));
+        }
+    }
+
+    /** Kompas – pasek kierunków u góry ekranu */
+    public class Compass extends HudElement {
+        Compass() { super("compass", "hud.el.compass", "compass", false, 180, 31); }
+
+        @Override protected float[] defaultPos(int sw, int sh, Hud hud) { return new float[]{sw / 2f - w / 2f, 4}; }
+
+        @Override public void render(DrawContext ctx, float x, float y, boolean preview) {
+            w = 180; h = 31;
+            float ph = 18;
+            panel(ctx, x, y, w, ph, ph / 2f);
+            float yaw = mc().player != null ? mc().player.getYaw() : 0;
+            float heading = ((yaw + 180) % 360 + 360) % 360;
+            float cx = x + w / 2f, half = w / 2f - 10;
+            R2D.scissor(ctx, x + 4, y, w - 8, ph);
+            String[] names = {"N", "NE", "E", "SE", "S", "SW", "W", "NW"};
+            for (int d = 0; d < 360; d += 15) {
+                float off = d - heading;
+                off = ((off + 540) % 360) - 180;
+                if (Math.abs(off) > 90) continue;
+                float px = cx + off / 90f * half;
+                float a = 1 - Math.abs(off) / 90f;
+                float prev = R2D.alpha;
+                R2D.alpha = prev * a;
+                if (d % 45 == 0) {
+                    String n = names[d / 45];
+                    boolean main = d % 90 == 0;
+                    int col = d == 0 ? 0xFFFF5A5A : main ? Theme.text() : Theme.textDim();
+                    Fonts.drawCentered(ctx, n, px, y + ph / 2f - Fonts.height(main ? 0.72f : 0.6f) / 2f + 0.6f, col, main ? Font.BOLD : Font.SEMIBOLD, main ? 0.72f : 0.6f);
+                } else R2D.rect(ctx, px - 0.3f, y + 7, 0.6f, 4, Theme.textFaint());
+                R2D.alpha = prev;
+            }
+            R2D.endScissor(ctx);
+            // znacznik środka i pigułka ze stopniami
+            int ac = Theme.accentWave(0);
+            R2D.roundRect(ctx, cx - 0.8f, y + 1.5f, 1.6f, 3.5f, 0.8f, ac);
+            String deg = Math.round(heading) % 360 + "°";
+            float dw = Fonts.width(deg, Font.BOLD, 0.56f) + 10;
+            R2D.roundRect(ctx, cx - dw / 2f, y + ph + 2, dw, 10, 5, R2D.withAlpha(ac, 0.3f));
+            Fonts.drawCentered(ctx, deg, cx, y + ph + 7.2f - Fonts.height(0.56f) / 2f, ac, Font.BOLD, 0.56f);
+        }
+    }
+
+    /** Zegar – godzina z sekundami i data */
+    public class Clock extends HudElement {
+        Clock() { super("clock", "hud.el.clock", "clock", false, 96, 34); }
+
+        @Override protected float[] defaultPos(int sw, int sh, Hud hud) { return new float[]{sw / 2f - w / 2f, 40}; }
+
+        @Override public void render(DrawContext ctx, float x, float y, boolean preview) {
+            java.time.LocalDateTime now = java.time.LocalDateTime.now();
+            String t = now.format(DateTimeFormatter.ofPattern("HH:mm:ss"));
+            Locale loc = Lang.pl() ? Locale.forLanguageTag("pl-PL") : Locale.ENGLISH;
+            String d = now.format(DateTimeFormatter.ofPattern(Lang.pl() ? "EEE, d MMM" : "EEE, MMM d", loc));
+            w = Math.max(Fonts.width(t, Font.BOLD, 1.05f), Fonts.width(d, Font.SEMIBOLD, 0.6f)) + 24; h = 34;
+            panel(ctx, x, y, w, h);
+            Fonts.drawCentered(ctx, t, x + w / 2f, y + 6, Theme.text(), Font.BOLD, 1.05f);
+            Fonts.drawCentered(ctx, d, x + w / 2f, y + 22, Theme.accentWave(0), Font.SEMIBOLD, 0.6f);
+        }
+    }
+
+    /** Podgląd ekwipunku (3 rzędy) */
+    public class Inventory extends HudElement {
+        Inventory() { super("inventory", "hud.el.inventory", "backpack", false, 176, 80); }
+
+        @Override protected float[] defaultPos(int sw, int sh, Hud hud) { return new float[]{sw / 2f - w / 2f, sh - h - 52}; }
+
+        @Override public boolean hasContent() { return mc().player != null; }
+
+        @Override public void render(DrawContext ctx, float x, float y, boolean preview) {
+            float s = 18;
+            w = PADX * 2 + 9 * s - 2; h = HEAD + 1 + 3 * s + 6;
+            panel(ctx, x, y, w, h);
+            float cy = header(ctx, x, y, w, "backpack", Lang.get("hud.el.inventory"), null);
+            PlayerEntity p = mc().player;
+            for (int i = 0; i < 27; i++) {
+                float sx = x + PADX + (i % 9) * s, sy = cy + 1 + (i / 9) * s;
+                R2D.roundRect(ctx, sx, sy, 16, 16, 4, R2D.withAlpha(Theme.toggleOff(), 0.55f));
+                if (p == null) continue;
+                ItemStack st = p.getInventory().getStack(9 + i);
+                if (st.isEmpty()) continue;
+                ctx.draw();
+                ctx.getMatrices().push();
+                ctx.getMatrices().translate(sx, sy, 0);
+                ctx.drawItem(st, 0, 0);
+                ctx.drawItemInSlot(mc().textRenderer, st, 0, 0);
+                ctx.getMatrices().pop();
+                ctx.draw();
+            }
+        }
+    }
+
+    /** Statystyki sesji */
+    public class Stats extends HudElement {
+        Stats() { super("stats", "hud.el.stats", "i_trophy", false, 100, 70); }
+
+        @Override protected float[] defaultPos(int sw, int sh, Hud hud) { return new float[]{sw - w - 6, sh / 2f + 50}; }
+
+        @Override public void render(DrawContext ctx, float x, float y, boolean preview) {
+            long sess = (System.currentTimeMillis() - RazerClient.get().startTime) / 1000;
+            String[][] rows = {
+                    {"target", Lang.get("hud.kills"), String.valueOf(stats.kills)},
+                    {"i_skull", Lang.get("hud.deaths"), String.valueOf(stats.deaths)},
+                    {"activity", "K/D", stats.kd()},
+                    {"bolt", Lang.get("hud.streak"), stats.streak + " (" + stats.bestStreak + ")"},
+                    {"clock", Lang.get("profile.session"), String.format("%02d:%02d", sess / 3600, (sess / 60) % 60)},
+            };
+            float tw = 100;
+            for (String[] r : rows) tw = Math.max(tw, rowWidth(r[1], r[2]));
+            w = tw; h = HEAD + 1 + rows.length * ROW + 4;
+            panel(ctx, x, y, w, h);
+            float cy = header(ctx, x, y, w, "i_trophy", Lang.get("hud.el.stats"), null);
+            for (String[] r : rows) { row(ctx, x, cy, w, r[0], r[1], r[2], Theme.accentWave(0), Theme.textDim(), Theme.text()); cy += ROW; }
+        }
+    }
+
+    /** Wydajność – wykres FPS z ostatnich 30 sekund */
+    public class Perf extends HudElement {
+        private final float[] samples = new float[120];
+        private int head;
+        private long lastSample;
+        Perf() { super("performance", "hud.el.performance", "gauge", false, 130, 70); }
+
+        @Override protected float[] defaultPos(int sw, int sh, Hud hud) {
+            HudElement anchor = hud.keybinds.enabled.get() && !hud.keybinds.custom ? hud.keybinds : hud.moduleList.enabled.get() && !hud.moduleList.custom ? hud.moduleList : null;
+            if (anchor == null) return new float[]{6, 6};
+            return new float[]{6, anchor.position(sw, sh, hud)[1] + anchor.h + 4};
+        }
+
+        @Override public void render(DrawContext ctx, float x, float y, boolean preview) {
+            MinecraftClient mc = mc();
+            long now = System.currentTimeMillis();
+            if (now - lastSample > 250) { samples[head] = mc.getCurrentFps(); head = (head + 1) % samples.length; lastSample = now; }
+            float min = Float.MAX_VALUE, max = 1, sum = 0; int n = 0;
+            for (float f : samples) if (f > 0) { min = Math.min(min, f); max = Math.max(max, f); sum += f; n++; }
+            if (n == 0) min = 0;
+            w = 130; float gh = 30; h = HEAD + 1 + gh + 6 + 2 * ROW + 4;
+            panel(ctx, x, y, w, h);
+            float cy = header(ctx, x, y, w, "gauge", Lang.get("hud.el.performance"), mc.getCurrentFps() + " FPS");
+            float gx = x + PADX, gw = w - PADX * 2, gy = cy + 2;
+            R2D.roundRect(ctx, gx, gy, gw, gh, 4, R2D.withAlpha(Theme.toggleOff(), 0.4f));
+            float bw = gw / samples.length;
+            for (int i = 0; i < samples.length; i++) {
+                float f = samples[(head + i) % samples.length];
+                if (f <= 0) continue;
+                float bh = Math.max(1, (gh - 3) * f / max);
+                R2D.rect(ctx, gx + i * bw, gy + gh - bh, Math.max(0.6f, bw - 0.15f), bh, R2D.withAlpha(Theme.accentWave(i / 30f), 0.85f));
+            }
+            cy = gy + gh + 4;
+            int ping = 0;
+            if (mc.getNetworkHandler() != null && mc.player != null) {
+                PlayerListEntry e = mc.getNetworkHandler().getPlayerListEntry(mc.player.getUuid());
+                if (e != null) ping = e.getLatency();
+            }
+            row(ctx, x, cy, w, "activity", "Min / Avg / Max", String.format("%.0f / %.0f / %.0f", min, n == 0 ? 0 : sum / n, max), Theme.accentWave(0), Theme.textDim(), Theme.text());
+            cy += ROW;
+            row(ctx, x, cy, w, "wifi", "Ping", ping + " ms", Theme.accentWave(0), Theme.textDim(), Theme.text());
         }
     }
 

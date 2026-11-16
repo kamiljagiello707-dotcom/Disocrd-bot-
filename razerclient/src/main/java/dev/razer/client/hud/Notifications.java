@@ -86,7 +86,7 @@ public class Notifications {
         float ic = 18, ix = x + 6, iy = y + (h - ic) / 2f;
         if (on) {
             int ac = Theme.accentWave(0);
-            R2D.texture(ctx, R2D.id("textures/ui/glow.png"), ix - 8, iy - 8, ic + 16, ic + 16, R2D.withAlpha(ac, 0.45f));
+            R2D.glow(ctx, ix - 8, iy - 8, ic + 16, ic + 16, R2D.withAlpha(ac, 0.45f));
             R2D.roundRectV(ctx, ix, iy, ic, ic, ic / 2f, R2D.blend(ac, 0xFFFFFFFF, 0.15f), R2D.blend(ac, 0xFF000000, 0.1f));
             R2D.icon(ctx, n.icon, ix + 5, iy + 5, 8, Theme.accentText());
         } else {

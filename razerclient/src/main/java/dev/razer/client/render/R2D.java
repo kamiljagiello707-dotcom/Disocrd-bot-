@@ -184,6 +184,44 @@ public final class R2D {
         end(b);
     }
 
+    /** obramowanie z gradientem od lewej (cl) do prawej (cr) */
+    public static void roundOutlineGrad(DrawContext ctx, float x, float y, float w, float h, float r, float t, int cl, int cr) {
+        int l = col(cl), rr = col(cr);
+        if (((l >>> 24) | (rr >>> 24)) == 0) return;
+        r = Math.max(t, Math.min(r, Math.min(w, h) / 2f));
+        Matrix4f m = ctx.getMatrices().peek().getPositionMatrix();
+        RenderSystem.enableBlend();
+        RenderSystem.defaultBlendFunc();
+        RenderSystem.disableDepthTest();
+        RenderSystem.disableCull();
+        RenderSystem.setShader(GameRenderer::getPositionColorProgram);
+        BufferBuilder b = Tessellator.getInstance().begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_COLOR);
+        java.util.function.Function<Float, Integer> at = px -> blend(l, rr, (px - x) / w);
+        float[][] edges = {{x + r, y, x + w - r, y + t}, {x + r, y + h - t, x + w - r, y + h}, {x, y + r, x + t, y + h - r}, {x + w - t, y + r, x + w, y + h - r}};
+        for (float[] e : edges) {
+            if (e[2] <= e[0] || e[3] <= e[1]) continue;
+            int c1 = at.apply(e[0]), c2 = at.apply(e[2]);
+            b.vertex(m, e[0], e[1], 0).color(c1);
+            b.vertex(m, e[0], e[3], 0).color(c1);
+            b.vertex(m, e[2], e[3], 0).color(c2);
+            b.vertex(m, e[2], e[1], 0).color(c2);
+        }
+        float[][] centers = {{x + r, y + r, 180}, {x + w - r, y + r, 270}, {x + w - r, y + h - r, 0}, {x + r, y + h - r, 90}};
+        int seg = 10;
+        for (float[] cc : centers) {
+            for (int i = 0; i < seg; i++) {
+                double a1 = Math.toRadians(cc[2] + 90.0 * i / seg), a2 = Math.toRadians(cc[2] + 90.0 * (i + 1) / seg);
+                float c1 = (float) Math.cos(a1), s1 = (float) Math.sin(a1), c2 = (float) Math.cos(a2), s2 = (float) Math.sin(a2);
+                float px1 = cc[0] + c1 * r, px2 = cc[0] + c2 * r;
+                b.vertex(m, px1, cc[1] + s1 * r, 0).color(at.apply(px1));
+                b.vertex(m, cc[0] + c1 * (r - t), cc[1] + s1 * (r - t), 0).color(at.apply(px1));
+                b.vertex(m, cc[0] + c2 * (r - t), cc[1] + s2 * (r - t), 0).color(at.apply(px2));
+                b.vertex(m, px2, cc[1] + s2 * r, 0).color(at.apply(px2));
+            }
+        }
+        end(b);
+    }
+
     private static void rq(BufferBuilder b, Matrix4f m, float x1, float y1, float x2, float y2, int c) {
         if (x2 <= x1 || y2 <= y1) return;
         b.vertex(m, x1, y1, 0).color(c);
@@ -289,6 +327,25 @@ public final class R2D {
         BufferBuilder b = begin(tex);
         quad(b, m, x, y, x + w, y + h, u0, v0, u1, v1, c);
         end(b);
+    }
+
+    private static final Identifier GLOW_ADD = id("textures/ui/glow_add.png");
+
+    /**
+     * miękka poświata – rysowana addytywnie (ONE, ONE) z jasnością w RGB,
+     * bo shader Minecrafta odrzuca piksele z alfą &lt; 0.1 (dawało to ostre krawędzie)
+     */
+    public static void glow(DrawContext ctx, float x, float y, float w, float h, int color) {
+        int c = col(color);
+        float a = ((c >>> 24) & 0xFF) / 255f;
+        if (a <= 0.003f) return;
+        int pm = 0xFF000000 | ((int) (((c >> 16) & 0xFF) * a) << 16) | ((int) (((c >> 8) & 0xFF) * a) << 8) | (int) ((c & 0xFF) * a);
+        Matrix4f m = ctx.getMatrices().peek().getPositionMatrix();
+        BufferBuilder b = begin(GLOW_ADD);
+        RenderSystem.blendFunc(com.mojang.blaze3d.platform.GlStateManager.SrcFactor.ONE, com.mojang.blaze3d.platform.GlStateManager.DstFactor.ONE);
+        quad(b, m, x, y, x + w, y + h, 0, 0, 1, 1, pm);
+        end(b);
+        RenderSystem.defaultBlendFunc();
     }
 
     public static void icon(DrawContext ctx, String name, float x, float y, float size, int color) {

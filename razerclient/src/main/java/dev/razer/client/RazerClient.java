@@ -73,6 +73,7 @@ public class RazerClient implements ClientModInitializer {
     }
 
     private void tick(MinecraftClient mc) {
+        hud.stats.tick(mc);
         while (openGui.wasPressed()) {
             if (mc.currentScreen == null) mc.setScreen(new ClickGui());
         }

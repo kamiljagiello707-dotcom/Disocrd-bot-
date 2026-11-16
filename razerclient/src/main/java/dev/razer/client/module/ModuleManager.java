@@ -208,6 +208,15 @@ public class ModuleManager {
                 b("Copy Inventory", true), b("Copy Skin", true), n("Health", 20, 1, 36, 1));
     }
 
+    /** ostatnio przełączane moduły: {Module, czas} */
+    public final java.util.ArrayDeque<Object[]> recent = new java.util.ArrayDeque<>();
+
+    public void noteToggle(Module m) {
+        recent.removeIf(o -> o[0] == m);
+        recent.addFirst(new Object[]{m, System.currentTimeMillis()});
+        while (recent.size() > 8) recent.removeLast();
+    }
+
     public List<Module> all() { return modules; }
 
     public List<Module> byCategory(Category c) {

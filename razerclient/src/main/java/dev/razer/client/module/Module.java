@@ -43,6 +43,7 @@ public class Module {
         if (state == enabled) return;
         enabled = state;
         if (enabled) onEnable(); else onDisable();
+        if (RazerClient.get().modules != null) RazerClient.get().modules.noteToggle(this);
         RazerClient.get().notifications.pushModule(this, byKey);
     }
 

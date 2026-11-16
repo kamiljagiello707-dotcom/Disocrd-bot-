@@ -69,10 +69,10 @@ public class ClickGui extends Screen {
     private float rsW, rsH, rsMx, rsMy;
     private static final long OPEN_MS = 320, CLOSE_MS = 200;
 
-    private enum Page { CATEGORY, FAVORITES, FRIENDS, HUD, THEMES, CONFIG, PROFILE, SETTINGS }
+    private enum Page { HOME, CATEGORY, FAVORITES, FRIENDS, HUD, THEMES, CONFIG, PROFILE, SETTINGS }
 
     // nawigacja zapamiętana między otwarciami
-    private static Page page = Page.CATEGORY;
+    private static Page page = Page.HOME;
     private static Category category = Category.COMBAT;
     private static float dragX = 0, dragY = 0;
 
@@ -149,7 +149,7 @@ public class ClickGui extends Screen {
         }
         if (resizing) {
             s.guiW = Math.max(560, Math.min(1100, rsW + (mx - rsMx) * 2));
-            s.guiH = Math.max(380, Math.min(700, rsH + (my - rsMy) * 2));
+            s.guiH = Math.max(410, Math.min(700, rsH + (my - rsMy) * 2));
             W = s.guiW; H = s.guiH;
             x0 = (width - W) / 2f + dragX;
             y0 = (height - H) / 2f + dragY;
@@ -211,11 +211,22 @@ public class ClickGui extends Screen {
         // cień + tło
         R2D.shadow(ctx, x0, y0, W, H, 26, Theme.shadow());
         R2D.roundRect(ctx, x0, y0, W, H, 14, Theme.bg());
-        // sidebar
+        // sidebar (przycięty scissorem – bez nakładania warstw, ważne przy półprzezroczystym szkle)
+        R2D.scissor(ctx, x0, y0, SB, H);
         R2D.roundRect(ctx, x0, y0, SB + 14, H, 14, Theme.sidebar());
-        R2D.rect(ctx, x0 + SB, y0, 14, H, Theme.bg());
+        R2D.endScissor(ctx);
         R2D.rect(ctx, x0 + SB, y0 + 12, 0.5f, H - 24, Theme.stroke());
+        float g = Theme.glass();
+        if (g > 0.01f) {
+            // połysk szkła u góry i poświaty w kolorach akcentu
+            R2D.roundRectV(ctx, x0, y0, W, 70, 14, R2D.withAlpha(0xFFFFFFFF, 0.06f * g), 0x00FFFFFF);
+            R2D.scissor(ctx, x0, y0, W, H);
+            R2D.glow(ctx, x0 - 80, y0 - 90, 260, 220, R2D.withAlpha(Theme.accentWave(0), 0.10f * g));
+            R2D.glow(ctx, x0 + W - 200, y0 + H - 150, 280, 240, R2D.withAlpha(Theme.accent2(), 0.08f * g));
+            R2D.endScissor(ctx);
+        }
         R2D.roundOutline(ctx, x0, y0, W, H, 14, 0.6f, Theme.stroke());
+        if (g > 0.01f) R2D.roundOutlineGrad(ctx, x0, y0, W, H, 14, 0.8f, R2D.withAlpha(Theme.accentWave(0), 0.55f * g), R2D.withAlpha(Theme.accent2(), 0.35f * g));
 
         drawSidebar(ctx);
         drawContent(ctx);
@@ -237,9 +248,7 @@ public class ClickGui extends Screen {
             if (b == 0) { draggingWindow = true; dragStartMx = mx; dragStartMy = my; dragStartX = dragX; dragStartY = dragY; }
         });
 
-        float iy = y + 62;
-        Fonts.draw(ctx, Lang.get("section.modules"), x + 18, iy, Theme.textFaint(), Font.SEMIBOLD, 0.62f);
-        iy += 10;
+        float iy = y + 58;
 
         // pozycje nawigacji
         float itemH = 20;
@@ -247,8 +256,9 @@ public class ClickGui extends Screen {
         List<Runnable> drawLater = new ArrayList<>();
         List<float[]> itemPos = new ArrayList<>();
         int catCount = Category.values().length;
-        Object[][] entries = new Object[catCount + 5][];
+        Object[][] entries = new Object[catCount + 6][];
         int idx = 0;
+        entries[idx++] = new Object[]{"misc", Lang.get("page.home"), Page.HOME, null};
         for (Category c : Category.values()) entries[idx++] = new Object[]{c.icon, c.getName(), Page.CATEGORY, c};
         entries[idx++] = new Object[]{"star", Lang.get("cat.favorites"), Page.FAVORITES, null};
         entries[idx++] = new Object[]{"users", Lang.get("page.friends"), Page.FRIENDS, null};
@@ -257,8 +267,13 @@ public class ClickGui extends Screen {
         entries[idx] = new Object[]{"config", Lang.get("page.config"), Page.CONFIG, null};
 
         for (int i = 0; i < entries.length; i++) {
-            if (i == catCount) {
-                iy += 6;
+            if (i == 1) {
+                iy += 4;
+                Fonts.draw(ctx, Lang.get("section.modules"), x + 18, iy, Theme.textFaint(), Font.SEMIBOLD, 0.62f);
+                iy += 10;
+            }
+            if (i == catCount + 1) {
+                iy += 4;
                 Fonts.draw(ctx, Lang.get("section.client"), x + 18, iy, Theme.textFaint(), Font.SEMIBOLD, 0.62f);
                 iy += 10;
             }
@@ -350,6 +365,7 @@ public class ClickGui extends Screen {
         // nagłówek
         String title, sub;
         switch (page) {
+            case HOME -> { title = Lang.get("page.home"); sub = Lang.get("home.desc"); }
             case THEMES -> { title = Lang.get("page.themes"); sub = Lang.get("themes.desc"); }
             case HUD -> { title = Lang.get("page.hud"); sub = Lang.get("hud.desc"); }
             case FRIENDS -> { title = Lang.get("page.friends"); sub = Lang.get("friends.desc"); }
@@ -428,7 +444,8 @@ public class ClickGui extends Screen {
             case CATEGORY, FAVORITES -> drawModules(ctx, cx + PAD, top, contentW - PAD * 2 + 6 * ia);
             case HUD -> drawHudPage(ctx, cx + PAD, top, cw - PAD * 2);
             case FRIENDS -> drawFriends(ctx, cx + PAD, top, cw - PAD * 2);
-            case THEMES -> drawThemes(ctx, cx + PAD, top, cw - PAD * 2);
+            case HOME -> drawHome(ctx, cx + PAD, top, cw - PAD * 2);
+            case THEMES -> drawStyleRow(ctx, cx + PAD, top, cw - PAD * 2) + drawThemes(ctx, cx + PAD, top + 34, cw - PAD * 2);
             case CONFIG -> drawConfigs(ctx, cx + PAD, top, cw - PAD * 2);
             case PROFILE -> drawProfile(ctx, cx + PAD, top, cw - PAD * 2);
             case SETTINGS -> drawSettings(ctx, cx + PAD, top, cw - PAD * 2);
@@ -710,6 +727,125 @@ public class ClickGui extends Screen {
             return y + h;
         }
         return y;
+    }
+
+    // ================================================================== strona Home
+
+    private float drawStyleRow(DrawContext ctx, float x, float y, float w) {
+        float h = 26;
+        R2D.roundRect(ctx, x, y, w, h, 8, Theme.card());
+        R2D.roundOutline(ctx, x, y, w, h, 8, 0.5f, Theme.stroke());
+        R2D.icon(ctx, "sparkles", x + 9, y + 9, 8, Theme.accentWave(0));
+        Fonts.drawV(ctx, Lang.get("style.title"), x + 22, y + h / 2f + 0.5f, Theme.text(), Font.BOLD, 0.8f);
+        Fonts.drawV(ctx, Lang.get("style.desc"), x + 22 + Fonts.width(Lang.get("style.title"), Font.BOLD, 0.8f) + 8, y + h / 2f + 0.5f, Theme.textFaint(), Font.REGULAR, 0.62f);
+        segmented(ctx, "style", x + w - 134, y + 4, 128, 18, new String[]{"Solid", "Glass"}, Theme.style().ordinal(), i -> {
+            Theme.setStyle(Theme.Style.values()[i]); rc.config.saveClient();
+        });
+        return 34;
+    }
+
+    private String ago(long t) {
+        long s = (System.currentTimeMillis() - t) / 1000;
+        if (s < 60) return s + "s";
+        if (s < 3600) return (s / 60) + "m";
+        return (s / 3600) + "h";
+    }
+
+    private float drawHome(DrawContext ctx, float x, float y, float w) {
+        // baner powitalny
+        float bh = 64;
+        R2D.roundRect(ctx, x, y, w, bh, 12, Theme.card());
+        R2D.scissor(ctx, x, y, w, bh);
+        R2D.glow(ctx, x - 60, y - 70, 240, 200, R2D.withAlpha(Theme.accentWave(0), 0.45f));
+        R2D.glow(ctx, x + w - 170, y - 50, 230, 180, R2D.withAlpha(Theme.accent2(), 0.3f));
+        R2D.endScissor(ctx);
+        R2D.roundOutlineGrad(ctx, x, y, w, bh, 12, 0.7f, R2D.withAlpha(Theme.accentWave(0), 0.7f), R2D.withAlpha(Theme.accent2(), 0.3f));
+        int hour = java.time.LocalTime.now().getHour();
+        String greet = Lang.get(hour < 5 ? "home.night" : hour < 12 ? "home.morning" : hour < 18 ? "home.afternoon" : hour < 22 ? "home.evening" : "home.night");
+        String name = client.getSession().getUsername();
+        Fonts.draw(ctx, greet + ", " + name, x + 16, y + 15, Theme.text(), Font.BOLD, 1.25f);
+        java.util.Locale loc = Lang.pl() ? java.util.Locale.forLanguageTag("pl-PL") : java.util.Locale.ENGLISH;
+        String date = java.time.LocalDateTime.now().format(java.time.format.DateTimeFormatter.ofPattern(Lang.pl() ? "EEEE, d MMMM  •  HH:mm" : "EEEE, MMMM d  •  HH:mm", loc));
+        Fonts.draw(ctx, date.substring(0, 1).toUpperCase(loc) + date.substring(1), x + 16, y + 34, Theme.textDim(), Font.REGULAR, 0.72f);
+        String ver = "RazerClient " + RazerClient.VERSION;
+        float vw = Fonts.width(ver, Font.BOLD, 0.6f) + 12;
+        R2D.roundRect(ctx, x + 16, y + 46, vw, 11, 5.5f, R2D.withAlpha(Theme.accentWave(0), 0.25f));
+        Fonts.drawV(ctx, ver, x + 22, y + 51.8f, Theme.accentWave(0), Font.BOLD, 0.6f);
+        R2D.glow(ctx, x + w - 66, y + 2, 60, 60, R2D.withAlpha(Theme.accentWave(0), 0.5f));
+        R2D.icon(ctx, "logo", x + w - 50, y + 18, 28, Theme.accentWave(0));
+        float cy = y + bh + 10;
+
+        // kafelki statystyk
+        long sess = (System.currentTimeMillis() - rc.startTime) / 1000;
+        String[][] tiles = {
+                {"layers", rc.modules.enabledCount() + "/" + rc.modules.all().size(), Lang.get("home.enabled")},
+                {"keyboard", String.valueOf(rc.modules.all().stream().filter(Module::hasKey).count()), Lang.get("home.binds")},
+                {"clock", String.format("%d:%02d", sess / 3600, (sess / 60) % 60), Lang.get("home.session")},
+                {"gauge", client.getCurrentFps() + "", "FPS"},
+        };
+        float tg = 8, tw = (w - tg * 3) / 4f, th = 42;
+        for (int i = 0; i < 4; i++) {
+            float tx = x + i * (tw + tg);
+            boolean hv = hovered(tx, cy, tw, th);
+            float ha = anim("htile" + i, 18).animate(hv ? 1 : 0);
+            R2D.roundRect(ctx, tx, cy - ha, tw, th, 9, R2D.blend(Theme.card(), Theme.cardHover(), ha));
+            R2D.roundOutline(ctx, tx, cy - ha, tw, th, 9, 0.5f, Theme.stroke());
+            R2D.roundRect(ctx, tx + 8, cy - ha + 8, 14, 14, 4.5f, R2D.withAlpha(Theme.accentWave(i * 0.6f), 0.22f));
+            R2D.icon(ctx, tiles[i][0], tx + 11, cy - ha + 11, 8, Theme.accentWave(i * 0.6f));
+            Fonts.draw(ctx, tiles[i][1], tx + 27, cy - ha + 8, Theme.text(), Font.BOLD, 0.95f);
+            Fonts.draw(ctx, Fonts.trim(tiles[i][2], Font.REGULAR, 0.6f, tw - 14), tx + 8, cy - ha + 28, Theme.textFaint(), Font.REGULAR, 0.6f);
+        }
+        cy += th + 10;
+
+        // ulubione + ostatnio używane
+        float cg = 8, colW = (w - cg) / 2f, ch = 130;
+        for (int c = 0; c < 2; c++) {
+            float bx = x + c * (colW + cg);
+            R2D.roundRect(ctx, bx, cy, colW, ch, 10, Theme.card());
+            R2D.roundOutline(ctx, bx, cy, colW, ch, 10, 0.5f, Theme.stroke());
+            R2D.icon(ctx, c == 0 ? "star" : "clock", bx + 10, cy + 9, 8, Theme.accentWave(c));
+            Fonts.drawV(ctx, Lang.get(c == 0 ? "home.favorites" : "home.recent"), bx + 23, cy + 13.5f, Theme.text(), Font.BOLD, 0.78f);
+            float ry = cy + 26;
+            List<Module> list = new ArrayList<>();
+            List<Long> times = new ArrayList<>();
+            if (c == 0) list.addAll(favorites());
+            else for (Object[] o : rc.modules.recent) { list.add((Module) o[0]); times.add((Long) o[1]); }
+            if (list.isEmpty())
+                Fonts.drawCentered(ctx, Lang.get(c == 0 ? "home.nofav" : "home.norecent"), bx + colW / 2f, cy + ch / 2f + 4, Theme.textFaint(), Font.REGULAR, 0.66f);
+            for (int i = 0; i < Math.min(5, list.size()); i++) {
+                Module m = list.get(i);
+                boolean hv = hovered(bx + 6, ry, colW - 12, 19);
+                float ha = anim("hrow" + c + m.getName(), 18).animate(hv ? 1 : 0);
+                R2D.roundRect(ctx, bx + 6, ry, colW - 12, 19, 6, R2D.withAlpha(Theme.cardHover(), ha));
+                float on = m.toggleAnim.animate(m.isEnabled() ? 1 : 0);
+                R2D.icon(ctx, m.getIcon(), bx + 12, ry + 5.5f, 8, R2D.blend(Theme.textFaint(), Theme.accentWave(0), on));
+                Fonts.drawV(ctx, m.getName(), bx + 25, ry + 10, R2D.blend(Theme.textDim(), Theme.text(), on), Font.SEMIBOLD, 0.72f);
+                if (c == 0) drawSwitch(ctx, bx + colW - 32, ry + 4, on);
+                else {
+                    String st = (m.isEnabled() ? "ON" : "OFF") + "  •  " + ago(times.get(i));
+                    Fonts.drawV(ctx, st, bx + colW - 12 - Fonts.width(st, Font.SEMIBOLD, 0.56f), ry + 10, m.isEnabled() ? Theme.accentWave(0) : Theme.textFaint(), Font.SEMIBOLD, 0.56f);
+                }
+                hit(bx + 6, ry, colW - 12, 19, b -> { if (b == 0) m.toggle(); else if (b == 1) { setPage(Page.CATEGORY); category = m.getCategory(); inspected = m; } });
+                ry += 20;
+            }
+        }
+        cy += ch + 10;
+
+        // szybkie akcje
+        String[][] acts = {{"move", "hud.editor.open"}, {"themes", "page.themes"}, {"config", "page.config"}, {"keybind", "home.palette"}};
+        float ag = 8, aw = (w - ag * 3) / 4f;
+        for (int i = 0; i < 4; i++) {
+            final int fi = i;
+            button(ctx, "hact" + i, x + i * (aw + ag), cy, aw, 22, acts[i][0], Lang.get(acts[i][1]), i == 0, () -> {
+                switch (fi) {
+                    case 0 -> { if (client != null) client.setScreen(new HudEditor()); }
+                    case 1 -> setPage(Page.THEMES);
+                    case 2 -> setPage(Page.CONFIG);
+                    default -> openPalette();
+                }
+            });
+        }
+        return cy + 22 - y + 6;
     }
 
     // ================================================================== zaawansowane: inspektor, toolbar, paleta
@@ -1136,7 +1272,7 @@ public class ClickGui extends Screen {
         int start = Math.max(0, Math.min(paletteSel - 3, paletteItems.size() - visible));
         float rowH = 24, ph = 34 + Math.max(1, visible) * rowH + 26;
         R2D.shadow(ctx, px, py, pw, ph, 22, Theme.shadow());
-        R2D.texture(ctx, R2D.id("textures/ui/glow.png"), px - 40, py - 40, pw + 80, ph + 80, R2D.withAlpha(Theme.accentWave(0), 0.08f));
+        R2D.glow(ctx, px - 40, py - 40, pw + 80, ph + 80, R2D.withAlpha(Theme.accentWave(0), 0.08f));
         R2D.roundRect(ctx, px, py, pw, ph, 12, Theme.bg());
         R2D.roundOutline(ctx, px, py, pw, ph, 12, 0.7f, R2D.blend(Theme.stroke(), Theme.accentWave(0), 0.5f));
         hit(px, py, pw, ph, b -> {});
@@ -1565,6 +1701,21 @@ public class ClickGui extends Screen {
         hit(x, y, w - bw - 20, eh, b -> { if (b == 0 && client != null) client.setScreen(new HudEditor()); });
 
         float cy = y + eh + 10, gap = 6;
+        // presety układu
+        Fonts.draw(ctx, Lang.get("hud.presets"), x, cy + 1, Theme.textFaint(), Font.SEMIBOLD, 0.62f);
+        cy += 11;
+        String[] presets = {"classic", "minimal", "pvp", "full"};
+        String[] picons = {"layers", "check", "target", "sparkles"};
+        float pg = 6, presW = (w - pg * 3) / 4f;
+        for (int i = 0; i < 4; i++) {
+            final String pr = presets[i];
+            button(ctx, "preset" + i, x + i * (presW + pg), cy, presW, 20, picons[i], Lang.get("preset." + pr), false, () -> {
+                rc.hud.applyPreset(pr);
+                rc.config.saveClient();
+                rc.notifications.info("hud", Lang.get("hud.presets"), Lang.get("preset." + pr));
+            });
+        }
+        cy += 28;
         float colW = (w - gap) / 2f;
         int i = 0;
         for (dev.razer.client.hud.HudElement e : rc.hud.elements) {

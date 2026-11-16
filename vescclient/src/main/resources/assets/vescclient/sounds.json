@@ -1,0 +1,37 @@
+{
+  "hit.vesc": {
+    "sounds": [
+      "vescclient:vesc"
+    ]
+  },
+  "hit.pop": {
+    "sounds": [
+      "vescclient:pop"
+    ]
+  },
+  "hit.glass": {
+    "sounds": [
+      "vescclient:glass"
+    ]
+  },
+  "hit.coin": {
+    "sounds": [
+      "vescclient:coin"
+    ]
+  },
+  "hit.laser": {
+    "sounds": [
+      "vescclient:laser"
+    ]
+  },
+  "hit.bubble": {
+    "sounds": [
+      "vescclient:bubble"
+    ]
+  },
+  "hit.thump": {
+    "sounds": [
+      "vescclient:thump"
+    ]
+  }
+}

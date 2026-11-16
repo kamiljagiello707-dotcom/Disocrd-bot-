@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "id": "vescclient",
+  "version": "${version}",
+  "name": "VescClient",
+  "description": "VescClient 5.0 - nowoczesny klient: przestrzenne ClickGUI, HUD, motywy i moduły wizualne.",
+  "authors": [
+    "VescClient"
+  ],
+  "license": "All-Rights-Reserved",
+  "icon": "assets/vescclient/textures/icons/mod_icon.png",
+  "environment": "client",
+  "entrypoints": {
+    "client": [
+      "dev.vesc.client.VescClient"
+    ]
+  },
+  "depends": {
+    "fabricloader": ">=0.16.0",
+    "fabric-api": "*",
+    "minecraft": "~1.21.1",
+    "java": ">=21"
+  },
+  "mixins": [
+    "vescclient.mixins.json"
+  ]
+}

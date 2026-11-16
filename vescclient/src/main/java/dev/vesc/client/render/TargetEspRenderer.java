@@ -129,6 +129,10 @@ public final class TargetEspRenderer {
             case "Gyro" -> drawGyro(ms, cam, target, time, a, hurt, scale);
             case "Aura" -> drawAura(ms, cam, target, time, a, hurt, scale);
             case "Souls" -> drawSouls(ms, cam, target, time, a, hurt, scale);
+            case "Rune" -> drawRune(ms, cam, target, time, a, hurt, scale);
+            case "Stars" -> drawStars(ms, cam, target, time, a, hurt, scale);
+            case "Comet" -> drawComet(ms, cam, target, time, a, hurt, scale);
+            case "Bubble" -> drawBubble(ms, cam, target, time, a, hurt, scale);
             default -> {
                 drawRing(ms, target, time, a, hurt, scale, m.trail.get());
                 markerFront(ms, cam, x, y, z, () -> drawMarker(ms, cam, target, time, a, hurt, scale));
@@ -476,6 +480,175 @@ public final class TargetEspRenderer {
                         color(an + s, a * k * k, hurt));
             }
         }
+    }
+
+    // ------------------------------------------------------------------ tryby 5.4
+
+    /** cienki odcinek (quad) w płaszczyźnie XZ bieżącej macierzy */
+    private static void segXZ(BufferBuilder b, Matrix4f mat, float x1, float z1, float x2, float z2, float w, int c1, int c2) {
+        float dx = x2 - x1, dz = z2 - z1, len = (float) Math.sqrt(dx * dx + dz * dz);
+        if (len < 1e-4f) return;
+        float nx = -dz / len * w, nz = dx / len * w;
+        b.vertex(mat, x1 + nx, 0, z1 + nz).color(c1);
+        b.vertex(mat, x1 - nx, 0, z1 - nz).color(c1);
+        b.vertex(mat, x2 - nx, 0, z2 - nz).color(c2);
+        b.vertex(mat, x2 + nx, 0, z2 + nz).color(c2);
+    }
+
+    /** Rune – magiczny krąg pod stopami: dwa pierścienie, obracające się znaczniki i heksagram */
+    private static void drawRune(MatrixStack ms, Camera cam, LivingEntity e, float time, float a, float hurt, float scale) {
+        float r1 = (e.getWidth() * 0.9f + 0.55f) * scale, r2 = r1 * 0.72f;
+        ms.push();
+        ms.translate(0, 0.03f, 0);
+        // pierścienie (kolor widoczny także w dzień)
+        begin(false);
+        ms.push();
+        ms.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(time * 20));
+        glowRing(ms, r1, a * 0.9f, hurt, time, 0.014f * scale, 0.05f * scale);
+        ms.pop();
+        ms.push();
+        ms.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(-time * 32));
+        glowRing(ms, r2, a * 0.75f, hurt, time + 1, 0.01f * scale, 0.035f * scale);
+        Matrix4f mat = ms.peek().getPositionMatrix();
+        RenderSystem.setShader(GameRenderer::getPositionColorProgram);
+        BufferBuilder b = Tessellator.getInstance().begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_COLOR);
+        // heksagram: dwa trójkąty wpisane w wewnętrzny krąg
+        for (int t = 0; t < 2; t++) {
+            for (int i = 0; i < 3; i++) {
+                double a1 = Math.PI * 2 * i / 3 + t * Math.PI / 3, a2 = Math.PI * 2 * (i + 1) / 3 + t * Math.PI / 3;
+                int c = color((float) a1 + time, a * 0.9f, hurt);
+                segXZ(b, mat, (float) Math.cos(a1) * r2, (float) Math.sin(a1) * r2, (float) Math.cos(a2) * r2, (float) Math.sin(a2) * r2, 0.016f * scale, c, c);
+            }
+        }
+        BufferRenderer.drawWithGlobalProgram(b.end());
+        ms.pop();
+        // znaczniki między pierścieniami, w przeciwną stronę
+        ms.push();
+        ms.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(time * 45));
+        mat = ms.peek().getPositionMatrix();
+        b = Tessellator.getInstance().begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_COLOR);
+        for (int i = 0; i < 16; i++) {
+            double an = Math.PI * 2 * i / 16;
+            float cos = (float) Math.cos(an), sin = (float) Math.sin(an);
+            float in = r2 + (r1 - r2) * (i % 2 == 0 ? 0.2f : 0.35f), out = r1 - (r1 - r2) * 0.2f;
+            int c = color((float) an + time, a * (i % 2 == 0 ? 0.9f : 0.5f), hurt);
+            segXZ(b, mat, cos * in, sin * in, cos * out, sin * out, 0.013f * scale, c, c);
+        }
+        BufferRenderer.drawWithGlobalProgram(b.end());
+        ms.pop();
+        // świecące punkty na wierzchołkach heksagramu
+        begin(true);
+        for (int i = 0; i < 6; i++) {
+            double an = Math.PI * 2 * i / 6 - time * 32 * Math.PI / 180;
+            float pulse = 0.6f + 0.4f * (float) Math.sin(time * 4 + i);
+            dot(ms, cam, (float) Math.cos(an) * r2, 0.02f, (float) Math.sin(an) * r2, 0.07f * scale * pulse, color((float) an, a, hurt));
+        }
+        dot(ms, cam, 0, 0.02f, 0, r1 * 0.9f, color(time, a * 0.12f, hurt));
+        ms.pop();
+    }
+
+    /** czteroramienna gwiazdka zwrócona do kamery */
+    private static void star(MatrixStack ms, Camera cam, float x, float y, float z, float size, float rot, int c) {
+        ms.push();
+        ms.translate(x, y, z);
+        ms.multiply(cam.getRotation());
+        ms.multiply(RotationAxis.POSITIVE_Z.rotationDegrees(rot));
+        Matrix4f mat = ms.peek().getPositionMatrix();
+        RenderSystem.setShader(GameRenderer::getPositionColorProgram);
+        BufferBuilder b = Tessellator.getInstance().begin(VertexFormat.DrawMode.TRIANGLES, VertexFormats.POSITION_COLOR);
+        float w = size * 0.22f;
+        int edge = R2D.withAlpha(c, ((c >>> 24) & 0xFF) / 255f * 0.15f);
+        float[][] dirs = {{0, 1}, {1, 0}, {0, -1}, {-1, 0}};
+        for (float[] d : dirs) {
+            float px = -d[1] * w, py = d[0] * w;
+            b.vertex(mat, 0, 0, 0).color(c);
+            b.vertex(mat, px, py, 0).color(c);
+            b.vertex(mat, d[0] * size, d[1] * size, 0).color(edge);
+            b.vertex(mat, 0, 0, 0).color(c);
+            b.vertex(mat, d[0] * size, d[1] * size, 0).color(edge);
+            b.vertex(mat, -px, -py, 0).color(c);
+        }
+        BufferRenderer.drawWithGlobalProgram(b.end());
+        ms.pop();
+    }
+
+    /** Stars – gwiazdki krążące nad głową (jak „zawroty głowy”), przy trafieniu kręcą się szybciej */
+    private static void drawStars(MatrixStack ms, Camera cam, LivingEntity e, float time, float a, float hurt, float scale) {
+        int n = 5;
+        float r = (e.getWidth() * 0.55f + 0.2f) * scale, y = e.getHeight() + 0.25f;
+        float spin = time * (1.6f + hurt * 3f);
+        for (int i = 0; i < n; i++) {
+            float an = spin + i * (float) Math.PI * 2 / n;
+            float bob = 0.06f * (float) Math.sin(time * 3 + i * 1.3f);
+            float px = (float) Math.cos(an) * r, pz = (float) Math.sin(an) * r;
+            int c = color(an + time, a, hurt);
+            begin(true);
+            dot(ms, cam, px, y + bob, pz, 0.16f * scale, color(an, a * 0.5f, hurt));
+            begin(false);
+            star(ms, cam, px, y + bob, pz, 0.11f * scale, time * 120 + i * 40, c);
+        }
+        // cienka orbita
+        ms.push();
+        ms.translate(0, y, 0);
+        begin(true);
+        glowRing(ms, r, a * 0.35f, hurt, time, 0.006f * scale, 0.025f * scale);
+        ms.pop();
+    }
+
+    /** Comet – jasna kometa na pochylonej eliptycznej orbicie z długim, zanikającym ogonem */
+    private static void drawComet(MatrixStack ms, Camera cam, LivingEntity e, float time, float a, float hurt, float scale) {
+        begin(true);
+        float h = e.getHeight(), rx = (e.getWidth() * 0.9f + 0.45f) * scale, rz = rx * 0.75f;
+        ms.push();
+        ms.translate(0, h * 0.55f, 0);
+        ms.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(time * 15));
+        ms.multiply(RotationAxis.POSITIVE_X.rotationDegrees(24));
+        int tail = 28;
+        for (int k = 0; k < 2; k++) {
+            float off = k * (float) Math.PI;
+            for (int i = tail - 1; i >= 0; i--) {
+                float t = time * 2.6f + off - i * 0.055f;
+                float kk = 1 - i / (float) tail;
+                dot(ms, cam, (float) Math.cos(t) * rx, 0, (float) Math.sin(t) * rz, (0.03f + 0.16f * kk * kk) * scale,
+                        color(t + k * 2, a * kk * (k == 0 ? 1f : 0.55f), hurt));
+            }
+            float t = time * 2.6f + off;
+            dot(ms, cam, (float) Math.cos(t) * rx, 0, (float) Math.sin(t) * rz, 0.34f * scale * (k == 0 ? 1f : 0.7f), color(t, a * 0.35f, hurt));
+        }
+        ms.pop();
+    }
+
+    /** Bubble – świecąca kula-tarcza z pierścieni równoleżników i południków, błyska przy trafieniu */
+    private static void drawBubble(MatrixStack ms, Camera cam, LivingEntity e, float time, float a, float hurt, float scale) {
+        float h = e.getHeight(), R = (Math.max(h, e.getWidth()) * 0.62f + 0.1f) * scale;
+        float flash = 1 + hurt * 0.8f;
+        ms.push();
+        ms.translate(0, h * 0.5f, 0);
+        ms.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(time * 12));
+        begin(false);
+        // równoleżniki
+        for (int i = -2; i <= 2; i++) {
+            float yy = R * i / 3f;
+            float rr = (float) Math.sqrt(Math.max(0, R * R - yy * yy));
+            ms.push();
+            ms.translate(0, yy, 0);
+            glowRing(ms, rr, a * (i == 0 ? 0.85f : 0.55f) * Math.min(1, flash), hurt, time + i, 0.009f * scale, 0.03f * scale);
+            ms.pop();
+        }
+        // południki
+        for (int i = 0; i < 4; i++) {
+            ms.push();
+            ms.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(i * 45));
+            ms.multiply(RotationAxis.POSITIVE_X.rotationDegrees(90));
+            glowRing(ms, R, a * 0.48f * Math.min(1, flash), hurt, time + i * 0.7f, 0.009f * scale, 0.03f * scale);
+            ms.pop();
+        }
+        // miękkie wypełnienie i biegnący blask
+        begin(true);
+        dot(ms, cam, 0, 0, 0, R * 1.15f, color(time, a * (0.1f + 0.15f * hurt), hurt));
+        float sw = time * 1.8f;
+        dot(ms, cam, (float) Math.cos(sw) * R, (float) Math.sin(sw * 0.7f) * R * 0.5f, (float) Math.sin(sw) * R, 0.12f * scale, color(sw, a, hurt));
+        ms.pop();
     }
 
     /** Orbit – trzy pochylone pierścienie z krążącymi kulkami (jak atom) */

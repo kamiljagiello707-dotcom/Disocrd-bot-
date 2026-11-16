@@ -20,6 +20,9 @@ Moduły typu cheat (KillAura, Reach, Velocity, Speed, Flight, Scaffold, ESP/Trac
 - 🧭 **Całkiem nowy, nowoczesny układ GUI:** zamiast szerokiego menu bocznego jest teraz **wąski pasek ikon** (slim rail) w stylu nowoczesnych klientów – logo na górze, ikony Home / Ulubione / 8 kategorii (z odznaką liczby włączonych modułów), a na dole Ustawienia i awatar. Dzięki temu obszar z modułami jest znacznie szerszy
 - 🏷️ **Dymki** z nazwą po najechaniu na ikonę w pasku
 - 🔘 Strony Znajomi / HUD / Motywy / Konfiguracje / Paleta są pod ręką na stronie **Home** (szybkie akcje)
+- 🎯 **4 nowe tryby Target ESP:** **Rune** (magiczny krąg z heksagramem pod stopami), **Stars** (gwiazdki krążące nad głową, szybciej przy trafieniu), **Comet** (dwie komety z długimi ogonami na pochylonej orbicie) i **Bubble** (świecąca kula-tarcza z równoleżników i południków, błyska przy trafieniu). Razem 21 trybów, wszystkie z testem głębi
+
+![Target ESP – Rune, Stars, Comet, Bubble](docs/target_esp_54.jpg)
 - 🖥️ **Nowe menu główne** (ekran po wczytaniu gry): wielki zegar na środku ekranu, logo i nick, a na dole rząd okrągłych przycisków-ikon: Singleplayer, Multiplayer, Realms, Opcje, ClickGUI i Wyjście. Animowane, dymne tło z cząsteczkami
 
 ![Nowe menu główne](docs/main_menu.jpg)

@@ -1,6 +1,6 @@
 <p align="center"><img src="docs/logo.png" width="96" alt="VescClient"></p>
 
-# VescClient 5.1
+# VescClient 5.2
 
 Nowoczesny klient do Minecraft **1.21.1 (Fabric)**: proste ClickGUI (opcjonalnie w 3D), HUD w stylu „pigułek”, status w Discordzie, motywy i moduły wizualne.
 
@@ -14,6 +14,16 @@ Działają moduły **kosmetyczne i legit** (wszystko po stronie klienta, bez prz
 - **Movement / Player:** Sprint, AutoRespawn
 
 Moduły typu cheat (KillAura, Reach, Velocity, Speed, Flight, Scaffold, ESP/Tracers/ChestESP, Nuker, AutoClicker itd.) są **przełącznikami bez logiki w grze**.
+
+## Co nowego w 5.2
+
+- ⚫⚪ **Motyw biało-czarny (MONO) domyślnie:** czyste, monochromatyczne GUI i HUD – białe akcenty na ciemnym tle, bez kolorów. Kolory wracają po wybraniu innego akcentu w Motywach (fiolet, niebieski, zielony…)
+- 🟤 **Kategorie w czerni i bieli:** nagłówek kategorii, kafelki w menu bocznym i zakładki podgrup są monochromatyczne, gdy akcent to MONO (zachowują kontrast – ikona na białym kaflu jest czarna)
+- ⭕ **Mocniejsze zaokrąglenia** w całym GUI i HUD (okno, karty, pigułki, panele HUD)
+
+![GUI biało-czarne – Home](docs/bw_home.jpg)
+![GUI biało-czarne – kategoria](docs/bw_combat.jpg)
+![HUD biało-czarny](docs/bw_hud.jpg)
 
 ## Co nowego w 5.1
 
@@ -95,7 +105,7 @@ Wymagana Java 21.
 ./gradlew build        # Windows: gradlew.bat build
 ```
 
-Gotowy plik: `build/libs/vescclient-5.1.0.jar` – wrzuć go do folderu `mods` razem z **Fabric API** (Minecraft 1.21.1, Fabric Loader 0.16.14+).
+Gotowy plik: `build/libs/vescclient-5.2.0.jar` – wrzuć go do folderu `mods` razem z **Fabric API** (Minecraft 1.21.1, Fabric Loader 0.16.14+).
 Testowe uruchomienie gry: `./gradlew runClient`.
 
 ## Sterowanie

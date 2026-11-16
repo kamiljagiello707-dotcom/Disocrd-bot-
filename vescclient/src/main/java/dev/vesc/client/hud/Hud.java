@@ -33,7 +33,7 @@ public class Hud {
     private static final DateTimeFormatter TIME = DateTimeFormatter.ofPattern("HH:mm");
 
     // wspólny styl
-    public static final float R = 8f, PADX = 8, HEAD = 18, ROW = 11f, NAME = 0.66f, ICON = 6.5f;
+    public static final float R = 10f, PADX = 8, HEAD = 18, ROW = 11f, NAME = 0.66f, ICON = 6.5f;
 
     public final Watermark watermark = new Watermark();
     public final ModuleList moduleList = new ModuleList();

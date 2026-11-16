@@ -89,7 +89,7 @@ public final class Theme {
     /** 0..1 – styl Neon (ciemne tło, obrysy i poświaty w kolorze akcentu, ostrzejsze rogi) */
     public static float neon() { return neonAnim.animate(style == Style.NEON ? 1 : 0); }
     /** mnożnik zaokrągleń rogów dla ClickGUI */
-    public static float radiusScale() { return 1.35f; } // wszystkie style mocno zaokrąglone
+    public static float radiusScale() { return 1.55f; } // wszystkie style mocno zaokrąglone
 
     private static int neonify(int c, int neonColor) {
         float n = neon();
@@ -133,6 +133,8 @@ public final class Theme {
         return R2D.blend(fromC, toC, accentT());
     }
     public static int accentText() { return luminance(accent()) > 0.6f ? 0xFF0A0A0B : 0xFFFFFFFF; }
+    /** czarny lub biały – kolor tekstu/ikony czytelny na podanym tle */
+    public static int contrast(int bg) { return luminance(bg) > 0.6f ? 0xFF0A0A0B : 0xFFFFFFFF; }
     public static int toggleOff() { return neonify(glassify(c(TOGGLE_OFF), 0.75f), 0xFF181822); }
     public static int hudBg() { return glassify(c(HUD_BG), 0.55f); }
     public static int shadow() { return c(SHADOW); }

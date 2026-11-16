@@ -344,14 +344,14 @@ public class ClickGui extends Screen {
                 int fg = R2D.blend(R2D.blend(Theme.textDim(), Theme.text(), ha), Theme.accentText(), near);
                 float off = anim("navoff" + idx, 16).animate(selected ? 2 : (hov ? 1 : 0));
                 // kafelek ikony w kolorze kategorii
-                int tint = cat != null ? cat.color : Theme.accent();
+                int tint = cat != null ? catColor(cat) : Theme.accent();
                 float tx = x + 16 + off, ty = fy + 2.5f;
                 // kafelek ikony: wygaszony kolor kategorii, przy zaznaczeniu wypełniony pełnym kolorem
                 if (near > 0.3f) R2D.glow(ctx, tx - 4, ty - 4, 22, 22, R2D.withAlpha(tint, 0.3f * near));
                 R2D.roundRectV(ctx, tx, ty, 14, 14, 5,
                         R2D.blend(R2D.withAlpha(tint, 0.18f + 0.1f * ha), R2D.blend(tint, 0xFFFFFFFF, 0.12f), near),
                         R2D.blend(R2D.withAlpha(tint, 0.18f + 0.1f * ha), tint, near));
-                R2D.icon(ctx, (String) e[0], tx + 3, ty + 3, 8, R2D.blend(R2D.blend(tint, 0xFFFFFFFF, 0.2f), 0xFFFFFFFF, near));
+                R2D.icon(ctx, (String) e[0], tx + 3, ty + 3, 8, R2D.blend(R2D.blend(tint, 0xFFFFFFFF, 0.2f), Theme.contrast(tint), near));
                 Fonts.drawV(ctx, (String) e[1], tx + 19, fy + itemH / 2f + 0.5f, fg, selected ? Font.BOLD : Font.SEMIBOLD, 0.82f);
                 if (pg == Page.CATEGORY || pg == Page.FAVORITES) {
                     List<Module> ms = cat != null ? rc.modules.byCategory(cat) : favorites();
@@ -664,7 +664,7 @@ public class ClickGui extends Screen {
                 Fonts.drawV(ctx, gn, x + 2, cy + 5, Theme.textFaint(), Font.BOLD, 0.58f);
                 float gw = Fonts.width(gn, Font.BOLD, 0.58f);
                 String cnt = String.valueOf(sub.size());
-                Fonts.drawV(ctx, cnt, x + 2 + gw + 5, cy + 5, R2D.blend(category.color, Theme.textFaint(), 0.35f), Font.BOLD, 0.58f);
+                Fonts.drawV(ctx, cnt, x + 2 + gw + 5, cy + 5, R2D.blend(catColor(category), Theme.textFaint(), 0.35f), Font.BOLD, 0.58f);
                 float lx = x + 2 + gw + 5 + Fonts.width(cnt, Font.BOLD, 0.58f) + 7;
                 R2D.gradientH(ctx, lx, cy + 5, x + w - lx, 0.5f, Theme.stroke(), R2D.withAlpha(Theme.stroke(), 0f));
                 cy += 13;
@@ -695,9 +695,14 @@ public class ClickGui extends Screen {
     }
 
     /** nagłówek strony kategorii: kafelek, statystyki, pasek aktywności */
+    /** kolor kategorii: w trybie biało-czarnym (MONO) biel/szarość, inaczej własny kolor kategorii */
+    private static int catColor(Category c) {
+        return Theme.accentPreset() == Theme.Accent.MONO ? 0xFFFFFFFF : c.color;
+    }
+
     private float drawCategoryHero(DrawContext ctx, float x, float y, float w) {
         Category c = category;
-        int col = c.color;
+        int col = catColor(c);
         float h = 58;
         List<Module> ms = rc.modules.byCategory(c);
         long en = ms.stream().filter(Module::isEnabled).count(), bound = ms.stream().filter(Module::hasKey).count();
@@ -716,7 +721,7 @@ public class ClickGui extends Screen {
         R2D.shadow(ctx, tx, ty + 2, 38, 38, 9, R2D.withAlpha(col, 0.42f));
         R2D.roundRectV(ctx, tx, ty, 38, 38, 12, R2D.blend(col, 0xFFFFFFFF, 0.24f), R2D.blend(col, 0xFF000000, 0.12f));
         R2D.roundOutline(ctx, tx, ty, 38, 38, 12, 0.6f, R2D.withAlpha(0xFFFFFFFF, 0.3f));
-        R2D.icon(ctx, c.icon, tx + 10, ty + 10, 18, 0xFFFFFFFF);
+        R2D.icon(ctx, c.icon, tx + 10, ty + 10, 18, Theme.contrast(col));
         // nazwa + opis kategorii w nagłówku
         float nx = tx + 50;
         Fonts.draw(ctx, c.getName(), nx, y + 13, Theme.text(), Font.BOLD, 1.32f);
@@ -778,13 +783,13 @@ public class ClickGui extends Screen {
             boolean hv = hovered(bx, by, bw, h);
             float aa = anim("grp" + c + g, 16).animate(act ? 1 : 0), ha = anim("grph" + c + g, 18).animate(hv && !act ? 1 : 0);
             if (aa > 0.01f) {
-                R2D.glow(ctx, bx - 6, by - 6, bw + 12, h + 12, R2D.withAlpha(c.color, 0.3f * aa));
-                R2D.roundRectV(ctx, bx, by, bw, h, h / 2f, R2D.blend(Theme.toggleOff(), R2D.blend(c.color, 0xFFFFFFFF, 0.14f), aa), R2D.blend(Theme.toggleOff(), c.color, aa));
+                R2D.glow(ctx, bx - 6, by - 6, bw + 12, h + 12, R2D.withAlpha(catColor(c), 0.3f * aa));
+                R2D.roundRectV(ctx, bx, by, bw, h, h / 2f, R2D.blend(Theme.toggleOff(), R2D.blend(catColor(c), 0xFFFFFFFF, 0.14f), aa), R2D.blend(Theme.toggleOff(), catColor(c), aa));
             } else if (ha > 0.01f) {
                 R2D.roundRect(ctx, bx, by, bw, h, h / 2f, R2D.withAlpha(Theme.text(), 0.07f * ha));
             }
-            Fonts.drawV(ctx, label, bx + 8, by + h / 2f + 0.5f, R2D.blend(Theme.textDim(), 0xFFFFFFFF, aa), act ? Font.BOLD : Font.SEMIBOLD, 0.64f);
-            Fonts.drawV(ctx, cnt, bx + bw - 7 - Fonts.width(cnt, Font.BOLD, 0.54f), by + h / 2f + 0.5f, R2D.blend(Theme.textFaint(), R2D.withAlpha(0xFFFFFFFF, 0.8f), aa), Font.BOLD, 0.54f);
+            Fonts.drawV(ctx, label, bx + 8, by + h / 2f + 0.5f, R2D.blend(Theme.textDim(), Theme.contrast(catColor(c)), aa), act ? Font.BOLD : Font.SEMIBOLD, 0.64f);
+            Fonts.drawV(ctx, cnt, bx + bw - 7 - Fonts.width(cnt, Font.BOLD, 0.54f), by + h / 2f + 0.5f, R2D.blend(Theme.textFaint(), R2D.withAlpha(Theme.contrast(catColor(c)), 0.8f), aa), Font.BOLD, 0.54f);
             hit(bx, by, bw, h, b -> { if (b == 0) { if (g == null) groupSel.remove(c); else groupSel.put(c, g); listTime = System.currentTimeMillis(); focusIndex = -1; } });
         }
         return h + pad * 2;

@@ -345,9 +345,13 @@ public class ClickGui extends Screen {
                 float off = anim("navoff" + idx, 16).animate(selected ? 2 : (hov ? 1 : 0));
                 // kafelek ikony w kolorze kategorii
                 int tint = cat != null ? cat.color : Theme.accent();
-                float tx = x + 16 + off, ty = fy + 3;
-                R2D.roundRect(ctx, tx, ty, 13, 13, 4, R2D.blend(R2D.withAlpha(tint, 0.16f + 0.08f * ha), R2D.withAlpha(Theme.accentText(), 0.2f), near));
-                R2D.icon(ctx, (String) e[0], tx + 2.5f, ty + 2.5f, 8, R2D.blend(R2D.blend(tint, 0xFFFFFFFF, 0.15f), Theme.accentText(), near));
+                float tx = x + 16 + off, ty = fy + 2.5f;
+                // kafelek ikony: wygaszony kolor kategorii, przy zaznaczeniu wypełniony pełnym kolorem
+                if (near > 0.3f) R2D.glow(ctx, tx - 4, ty - 4, 22, 22, R2D.withAlpha(tint, 0.3f * near));
+                R2D.roundRectV(ctx, tx, ty, 14, 14, 5,
+                        R2D.blend(R2D.withAlpha(tint, 0.18f + 0.1f * ha), R2D.blend(tint, 0xFFFFFFFF, 0.12f), near),
+                        R2D.blend(R2D.withAlpha(tint, 0.18f + 0.1f * ha), tint, near));
+                R2D.icon(ctx, (String) e[0], tx + 3, ty + 3, 8, R2D.blend(R2D.blend(tint, 0xFFFFFFFF, 0.2f), 0xFFFFFFFF, near));
                 Fonts.drawV(ctx, (String) e[1], tx + 19, fy + itemH / 2f + 0.5f, fg, selected ? Font.BOLD : Font.SEMIBOLD, 0.82f);
                 if (pg == Page.CATEGORY || pg == Page.FAVORITES) {
                     List<Module> ms = cat != null ? rc.modules.byCategory(cat) : favorites();
@@ -694,40 +698,51 @@ public class ClickGui extends Screen {
     private float drawCategoryHero(DrawContext ctx, float x, float y, float w) {
         Category c = category;
         int col = c.color;
-        float h = 48;
+        float h = 58;
         List<Module> ms = rc.modules.byCategory(c);
         long en = ms.stream().filter(Module::isEnabled).count(), bound = ms.stream().filter(Module::hasKey).count();
-        R2D.roundRectH(ctx, x, y, w, h, 11, R2D.withAlpha(col, 0.17f), R2D.withAlpha(col, 0.03f));
-        R2D.glow(ctx, x - 40, y - 40, 170, h + 80, R2D.withAlpha(col, 0.10f));
-        R2D.roundOutline(ctx, x, y, w, h, 11, 0.5f, R2D.withAlpha(col, 0.32f));
-        // kafelek z ikoną
-        float tx = x + 9, ty = y + 9;
-        R2D.shadow(ctx, tx, ty + 2, 30, 30, 8, R2D.withAlpha(col, 0.35f));
-        R2D.roundRectV(ctx, tx, ty, 30, 30, 9, R2D.blend(col, 0xFFFFFFFF, 0.18f), R2D.blend(col, 0xFF000000, 0.18f));
-        R2D.roundOutline(ctx, tx, ty, 30, 30, 9, 0.5f, R2D.withAlpha(0xFFFFFFFF, 0.25f));
-        R2D.icon(ctx, c.icon, tx + 8, ty + 8, 14, 0xFFFFFFFF);
-        // statystyki
-        String[][] stats = {{String.valueOf(ms.size()), Lang.pl() ? "Moduły" : "Modules"},
-                {String.valueOf(en), Lang.pl() ? "Włączone" : "Enabled"},
-                {String.valueOf(bound), Lang.pl() ? "Klawisze" : "Keybinds"},
-                {String.valueOf(c.groups.size()), Lang.pl() ? "Grupy" : "Groups"}};
-        float sx = tx + 42;
-        for (int i = 0; i < stats.length; i++) {
-            if (sx + 46 > x + w - 120) break;
-            Fonts.draw(ctx, stats[i][0], sx, y + 12, i == 1 && en > 0 ? R2D.blend(col, 0xFFFFFFFF, 0.3f) : Theme.text(), Font.BOLD, 1.0f);
-            Fonts.draw(ctx, stats[i][1], sx, y + 26, Theme.textFaint(), Font.SEMIBOLD, 0.58f);
-            sx += Math.max(46, Fonts.width(stats[i][1], Font.SEMIBOLD, 0.58f) + 16);
-            if (i < stats.length - 1) R2D.rect(ctx, sx - 9, y + 13, 0.5f, 22, R2D.withAlpha(col, 0.25f));
-        }
-        // aktywność kategorii
-        float bw = 104, bx = x + w - bw - 12;
         float pct = ms.isEmpty() ? 0 : (float) en / ms.size();
+        // tło: ciemna karta z poświatą kategorii wychodzącą z lewego rogu
+        R2D.roundRect(ctx, x, y, w, h, 13, Theme.card());
+        R2D.scissor(ctx, x, y, w, h);
+        R2D.glow(ctx, x - 60, y - 36, 240, h + 72, R2D.withAlpha(col, 0.16f));
+        R2D.endScissor(ctx);
+        R2D.roundRectH(ctx, x, y, w, h, 13, R2D.withAlpha(col, 0.12f), R2D.withAlpha(col, 0f));
+        R2D.roundOutline(ctx, x, y, w, h, 13, 0.6f, R2D.withAlpha(col, 0.3f));
+        // pionowy pasek akcentu po lewej
+        R2D.roundRect(ctx, x + 8, y + 11, 3, h - 22, 1.5f, col);
+        // kafelek z ikoną kategorii
+        float tx = x + 18, ty = y + (h - 38) / 2f;
+        R2D.shadow(ctx, tx, ty + 2, 38, 38, 9, R2D.withAlpha(col, 0.42f));
+        R2D.roundRectV(ctx, tx, ty, 38, 38, 12, R2D.blend(col, 0xFFFFFFFF, 0.24f), R2D.blend(col, 0xFF000000, 0.12f));
+        R2D.roundOutline(ctx, tx, ty, 38, 38, 12, 0.6f, R2D.withAlpha(0xFFFFFFFF, 0.3f));
+        R2D.icon(ctx, c.icon, tx + 10, ty + 10, 18, 0xFFFFFFFF);
+        // nazwa + opis kategorii w nagłówku
+        float nx = tx + 50;
+        Fonts.draw(ctx, c.getName(), nx, y + 13, Theme.text(), Font.BOLD, 1.32f);
+        Fonts.draw(ctx, Fonts.trim(c.getDescription(), Font.REGULAR, 0.66f, w - (nx - x) - 176), nx, y + 33, Theme.textDim(), Font.REGULAR, 0.66f);
+        // mini-statystyki po prawej: Moduły / Aktywne / Klawisze
+        String[][] stats = {
+                {String.valueOf(ms.size()), Lang.pl() ? "MODUŁY" : "MODULES", "0"},
+                {String.valueOf(en), Lang.pl() ? "AKTYWNE" : "ACTIVE", "1"},
+                {String.valueOf(bound), Lang.pl() ? "KLAWISZE" : "KEYS", "0"},
+        };
+        float chipH = 36, gap = 6, total = 0;
+        float[] cw = new float[stats.length];
+        for (int i = 0; i < stats.length; i++) { cw[i] = Math.max(40, Fonts.width(stats[i][1], Font.BOLD, 0.5f) + 14); total += cw[i] + (i > 0 ? gap : 0); }
+        float sx = x + w - 12 - total, sy = y + (h - chipH) / 2f;
+        for (int i = 0; i < stats.length; i++) {
+            boolean hot = stats[i][2].equals("1") && en > 0;
+            R2D.roundRect(ctx, sx, sy, cw[i], chipH, 9, hot ? R2D.withAlpha(col, 0.18f) : R2D.withAlpha(Theme.text(), 0.05f));
+            if (hot) R2D.roundOutline(ctx, sx, sy, cw[i], chipH, 9, 0.6f, R2D.withAlpha(col, 0.5f));
+            Fonts.drawCentered(ctx, stats[i][0], sx + cw[i] / 2f, sy + 7, hot ? R2D.blend(col, 0xFFFFFFFF, 0.4f) : Theme.text(), Font.BOLD, 1.02f);
+            Fonts.drawCentered(ctx, stats[i][1], sx + cw[i] / 2f, sy + chipH - 10, Theme.textFaint(), Font.BOLD, 0.5f);
+            sx += cw[i] + gap;
+        }
+        // cienki pasek aktywności wtopiony w dolną krawędź nagłówka
         float pa = anim("heroPct" + c, 10).animate(pct);
-        String pl = Math.round(pct * 100) + "%";
-        Fonts.draw(ctx, Lang.pl() ? "Aktywność" : "Activity", bx, y + 13, Theme.textDim(), Font.SEMIBOLD, 0.62f);
-        Fonts.draw(ctx, pl, bx + bw - Fonts.width(pl, Font.BOLD, 0.66f), y + 13, Theme.text(), Font.BOLD, 0.66f);
-        R2D.roundRect(ctx, bx, y + 27, bw, 5, 2.5f, R2D.withAlpha(col, 0.18f));
-        if (pa > 0.005f) R2D.roundRectH(ctx, bx, y + 27, Math.max(5, bw * pa), 5, 2.5f, R2D.blend(col, 0xFFFFFFFF, 0.25f), col);
+        R2D.roundRect(ctx, x + 13, y + h - 5, w - 26, 2, 1, R2D.withAlpha(col, 0.14f));
+        if (pa > 0.005f) R2D.roundRectH(ctx, x + 13, y + h - 5, Math.max(4, (w - 26) * pa), 2, 1, R2D.blend(col, 0xFFFFFFFF, 0.3f), col);
         return h;
     }
 
@@ -738,24 +753,41 @@ public class ClickGui extends Screen {
         List<String> gs = new ArrayList<>();
         gs.add(null);
         gs.addAll(c.groups);
-        float cx = x;
+        float h = 18, pad = 3;
+        // policz, ile chipów mieści się w jednym torze (segmented control)
+        List<String> fit = new ArrayList<>();
+        List<float[]> box = new ArrayList<>();
+        float cx = x + pad;
         for (String g : gs) {
             String label = g == null ? Category.groupName("all") : Category.groupName(g);
-            int count = rc.modules.byGroup(c, g).size();
-            String cnt = String.valueOf(count);
-            float cw = Fonts.width(label, Font.SEMIBOLD, 0.64f) + Fonts.width(cnt, Font.BOLD, 0.56f) + 19;
-            if (cx + cw > x + w) break;
-            boolean act = java.util.Objects.equals(sel, g);
-            boolean hv = hovered(cx, y, cw, 16);
-            float aa = anim("grp" + c + g, 16).animate(act ? 1 : 0), ha = anim("grph" + c + g, 18).animate(hv ? 1 : 0);
-            R2D.roundRect(ctx, cx, y, cw, 16, 8, R2D.blend(R2D.blend(Theme.card(), Theme.cardHover(), ha), R2D.withAlpha(c.color, 0.9f), aa));
-            R2D.roundOutline(ctx, cx, y, cw, 16, 8, 0.5f, R2D.blend(Theme.stroke(), R2D.withAlpha(0xFFFFFFFF, 0.3f), aa));
-            Fonts.drawV(ctx, label, cx + 7, y + 8.5f, R2D.blend(Theme.textDim(), 0xFFFFFFFF, aa), Font.SEMIBOLD, 0.64f);
-            Fonts.drawV(ctx, cnt, cx + cw - 7 - Fonts.width(cnt, Font.BOLD, 0.56f), y + 8.5f, R2D.blend(Theme.textFaint(), R2D.withAlpha(0xFFFFFFFF, 0.75f), aa), Font.BOLD, 0.56f);
-            hit(cx, y, cw, 16, b -> { if (b == 0) { if (g == null) groupSel.remove(c); else groupSel.put(c, g); listTime = System.currentTimeMillis(); focusIndex = -1; } });
-            cx += cw + 5;
+            float cw = Fonts.width(label, Font.SEMIBOLD, 0.64f) + Fonts.width(String.valueOf(rc.modules.byGroup(c, g).size()), Font.BOLD, 0.54f) + 17;
+            if (cx + cw + pad > x + w) break;
+            fit.add(g); box.add(new float[]{cx, cw});
+            cx += cw + 2;
         }
-        return 16;
+        float trackW = cx - x - 2 + pad;
+        // tor segmentowy – jedna zaokrąglona wnęka, aktywny chip jako wypełniona pigułka
+        R2D.roundRect(ctx, x, y, trackW, h + pad * 2, (h + pad * 2) / 2f, R2D.withAlpha(Theme.toggleOff(), 0.4f));
+        R2D.roundOutline(ctx, x, y, trackW, h + pad * 2, (h + pad * 2) / 2f, 0.5f, Theme.stroke());
+        for (int i = 0; i < fit.size(); i++) {
+            String g = fit.get(i);
+            float bx = box.get(i)[0], bw = box.get(i)[1], by = y + pad;
+            String label = g == null ? Category.groupName("all") : Category.groupName(g);
+            String cnt = String.valueOf(rc.modules.byGroup(c, g).size());
+            boolean act = java.util.Objects.equals(sel, g);
+            boolean hv = hovered(bx, by, bw, h);
+            float aa = anim("grp" + c + g, 16).animate(act ? 1 : 0), ha = anim("grph" + c + g, 18).animate(hv && !act ? 1 : 0);
+            if (aa > 0.01f) {
+                R2D.glow(ctx, bx - 6, by - 6, bw + 12, h + 12, R2D.withAlpha(c.color, 0.3f * aa));
+                R2D.roundRectV(ctx, bx, by, bw, h, h / 2f, R2D.blend(Theme.toggleOff(), R2D.blend(c.color, 0xFFFFFFFF, 0.14f), aa), R2D.blend(Theme.toggleOff(), c.color, aa));
+            } else if (ha > 0.01f) {
+                R2D.roundRect(ctx, bx, by, bw, h, h / 2f, R2D.withAlpha(Theme.text(), 0.07f * ha));
+            }
+            Fonts.drawV(ctx, label, bx + 8, by + h / 2f + 0.5f, R2D.blend(Theme.textDim(), 0xFFFFFFFF, aa), act ? Font.BOLD : Font.SEMIBOLD, 0.64f);
+            Fonts.drawV(ctx, cnt, bx + bw - 7 - Fonts.width(cnt, Font.BOLD, 0.54f), by + h / 2f + 0.5f, R2D.blend(Theme.textFaint(), R2D.withAlpha(0xFFFFFFFF, 0.8f), aa), Font.BOLD, 0.54f);
+            hit(bx, by, bw, h, b -> { if (b == 0) { if (g == null) groupSel.remove(c); else groupSel.put(c, g); listTime = System.currentTimeMillis(); focusIndex = -1; } });
+        }
+        return h + pad * 2;
     }
 
     private float settingsHeight(Module m) {

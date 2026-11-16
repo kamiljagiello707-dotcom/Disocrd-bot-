@@ -8,10 +8,7 @@ import dev.vesc.client.render.R2D;
 import net.minecraft.SharedConstants;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.screen.multiplayer.MultiplayerScreen;
-import net.minecraft.client.gui.screen.multiplayer.MultiplayerWarningScreen;
 import net.minecraft.client.gui.screen.option.OptionsScreen;
-import net.minecraft.client.gui.screen.world.SelectWorldScreen;
 import net.minecraft.client.realms.gui.screen.RealmsMainScreen;
 import net.minecraft.client.sound.PositionedSoundInstance;
 import net.minecraft.sound.SoundEvents;
@@ -177,8 +174,8 @@ public class MainMenu extends Screen {
     private void open(int i) {
         if (client == null) return;
         switch (i) {
-            case 0 -> client.setScreen(new SelectWorldScreen(this));
-            case 1 -> client.setScreen(client.options.skipMultiplayerWarning ? new MultiplayerScreen(this) : new MultiplayerWarningScreen(this));
+            case 0 -> client.setScreen(new WorldSelectScreen(this));
+            case 1 -> client.setScreen(new ServerSelectScreen(this));
             case 2 -> client.setScreen(new RealmsMainScreen(this));
             case 3 -> client.setScreen(new OptionsScreen(this, client.options));
             case 4 -> client.setScreen(new ClickGui());

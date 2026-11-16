@@ -1,4 +1,4 @@
-# RazerClient 2.0
+# RazerClient 3.5
 
 Nowoczesne GUI klienta do Minecraft **1.21.1 (Fabric)**: ClickGUI, edytor HUD, motywy z kolorami akcentu i powiadomienia.
 To jest **sam interfejs**. Moduły to puste przełączniki bez żadnej funkcji w grze, z wyjątkiem kosmetycznych **TargetESP**, **Ambient**, **ChinaHat**, **JumpCircles**, **Cosmetic**, **HitSound**, **Nametags**, **Sky** i **ToolColor**.
@@ -6,6 +6,8 @@ To jest **sam interfejs**. Moduły to puste przełączniki bez żadnej funkcji w
 | | |
 |---|---|
 | ![](docs/menu_lock.jpg) | ![](docs/menu.jpg) |
+
+![ClickGUI – Neon](docs/render_purple_neon.jpg)
 
 ![ClickGUI – Glass](docs/home_glass.jpg)
 
@@ -16,6 +18,11 @@ To jest **sam interfejs**. Moduły to puste przełączniki bez żadnej funkcji w
 | | |
 |---|---|
 | ![](docs/gui_palette.jpg) | ![](docs/gui_colorpicker.jpg) |
+
+## Co nowego w 3.5
+- 🌌 **Styl Neon** (nowy domyślny wygląd ClickGUI): ten sam układ okna, ale prawie czarne tło, świecące obramowania z gradientem w kolorze akcentu, ostrzejsze rogi, poświaty przy zaznaczonej kategorii i włączonych modułach. Przełącznik **Solid / Glass / Neon** jest na stronie Motywy
+- 🎨 **Style HUD:** Glass, Neon (ciemne tło i świecący obrys) oraz Minimal (prawie bez tła). Przełącznik na stronie HUD
+- 🧩 Opcjonalny układ **Panels** (pływające panele kategorii) w ustawieniach klienta; domyślnie zostaje okno
 
 ## Co nowego w 2.0
 - 🪟 **Styl Glass:** półprzezroczyste panele z gradientowym obramowaniem, połyskiem i poświatami w kolorach akcentu, w ClickGUI, HUD, powiadomieniach, Inspektorze i palecie. Przełącznik **Solid / Glass** jest na stronie Motywy

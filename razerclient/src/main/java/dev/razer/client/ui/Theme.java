@@ -74,15 +74,25 @@ public final class Theme {
     private Theme() {}
 
     // ---------------------------------------------------------------- styl: Solid / Glass
-    public enum Style { SOLID, GLASS }
-    private static Style style = Style.GLASS;
-    private static final Anim glassAnim = new Anim(1, 8);
+    public enum Style { SOLID, GLASS, NEON }
+    private static Style style = Style.NEON;
+    private static final Anim glassAnim = new Anim(0, 8);
+    private static final Anim neonAnim = new Anim(1, 8);
 
     public static Style style() { return style; }
     public static void setStyle(Style s) { style = s; }
-    public static void setStyleInstant(Style s) { style = s; glassAnim.snap(s == Style.GLASS ? 1 : 0); }
+    public static void setStyleInstant(Style s) { style = s; glassAnim.snap(s == Style.GLASS ? 1 : 0); neonAnim.snap(s == Style.NEON ? 1 : 0); }
     /** 0 = pełne panele, 1 = szkło (płynne przejście) */
     public static float glass() { return glassAnim.animate(style == Style.GLASS ? 1 : 0); }
+    /** 0..1 – styl Neon (ciemne tło, obrysy i poświaty w kolorze akcentu, ostrzejsze rogi) */
+    public static float neon() { return neonAnim.animate(style == Style.NEON ? 1 : 0); }
+    /** mnożnik zaokrągleń rogów dla ClickGUI */
+    public static float radiusScale() { return 1 - 0.45f * neon(); }
+
+    private static int neonify(int c, int neonColor) {
+        float n = neon();
+        return n <= 0.001f ? c : R2D.blend(c, neonColor, n);
+    }
 
     private static int glassify(int c, float alphaMul) {
         float g = glass();
@@ -106,11 +116,11 @@ public final class Theme {
         return R2D.blend(from.c[i], preset.c[i], t);
     }
 
-    public static int bg() { return glassify(c(BG), 0.62f); }
-    public static int sidebar() { return glassify(c(SIDEBAR), 0.5f); }
-    public static int card() { return glassify(R2D.blend(c(CARD), c(TEXT), 0.03f * glass()), 0.55f); }
-    public static int cardHover() { return glassify(R2D.blend(c(CARD_HOVER), c(TEXT), 0.05f * glass()), 0.68f); }
-    public static int stroke() { return R2D.blend(c(STROKE), R2D.withAlpha(c(TEXT), 0.14f), glass()); }
+    public static int bg() { return neonify(glassify(c(BG), 0.62f), 0xF207070D); }
+    public static int sidebar() { return neonify(glassify(c(SIDEBAR), 0.5f), 0xF505050A); }
+    public static int card() { return neonify(glassify(R2D.blend(c(CARD), c(TEXT), 0.03f * glass()), 0.55f), R2D.withAlpha(R2D.blend(accent(), 0xFF000000, 0.9f), 0.92f)); }
+    public static int cardHover() { return neonify(glassify(R2D.blend(c(CARD_HOVER), c(TEXT), 0.05f * glass()), 0.68f), R2D.withAlpha(R2D.blend(accent(), 0xFF000000, 0.83f), 0.95f)); }
+    public static int stroke() { return neonify(R2D.blend(c(STROKE), R2D.withAlpha(c(TEXT), 0.14f), glass()), R2D.withAlpha(accent(), 0.38f)); }
     public static int text() { return c(TEXT); }
     public static int textDim() { return c(TEXT_DIM); }
     public static int textFaint() { return c(TEXT_FAINT); }
@@ -121,7 +131,7 @@ public final class Theme {
         return R2D.blend(fromC, toC, accentT());
     }
     public static int accentText() { return luminance(accent()) > 0.6f ? 0xFF0A0A0B : 0xFFFFFFFF; }
-    public static int toggleOff() { return glassify(c(TOGGLE_OFF), 0.75f); }
+    public static int toggleOff() { return neonify(glassify(c(TOGGLE_OFF), 0.75f), 0xFF181822); }
     public static int hudBg() { return glassify(c(HUD_BG), 0.55f); }
     public static int shadow() { return c(SHADOW); }
 }

@@ -24,6 +24,8 @@ public final class R2D {
     public static float alpha = 1f;
     /** gdy true – rysowanie z testem głębi (np. elementy 2D w świecie) */
     public static boolean worldDepth = false;
+    /** mnożnik promienia zaokrągleń (styl Neon w ClickGUI) */
+    public static float radiusMul = 1f;
 
     private static final int[] CIRCLE_SIZES = {16, 32, 64, 128, 256};
     private static final Identifier[] CIRCLES = new Identifier[CIRCLE_SIZES.length];
@@ -106,6 +108,7 @@ public final class R2D {
     }
 
     public static void roundRect(DrawContext ctx, float x, float y, float w, float h, float r, int color) {
+        r *= radiusMul;
         int c = col(color);
         if ((c >>> 24) == 0 || w <= 0 || h <= 0) return;
         r = Math.max(0, Math.min(r, Math.min(w, h) / 2f));
@@ -120,6 +123,7 @@ public final class R2D {
 
     /** zaokrąglony prostokąt z gradientem góra -> dół */
     public static void roundRectV(DrawContext ctx, float x, float y, float w, float h, float r, int top, int bottom) {
+        r *= radiusMul;
         if (w <= 0 || h <= 0) return;
         r = Math.max(0, Math.min(r, Math.min(w, h) / 2f));
         float px = r * 2 * pixelScale(ctx);
@@ -153,6 +157,7 @@ public final class R2D {
 
     /** obramowanie o grubości t z zaokrąglonymi rogami */
     public static void roundOutline(DrawContext ctx, float x, float y, float w, float h, float r, float t, int color) {
+        r *= radiusMul;
         int c = col(color);
         if ((c >>> 24) == 0) return;
         r = Math.max(t, Math.min(r, Math.min(w, h) / 2f));
@@ -186,6 +191,7 @@ public final class R2D {
 
     /** obramowanie z gradientem od lewej (cl) do prawej (cr) */
     public static void roundOutlineGrad(DrawContext ctx, float x, float y, float w, float h, float r, float t, int cl, int cr) {
+        r *= radiusMul;
         int l = col(cl), rr = col(cr);
         if (((l >>> 24) | (rr >>> 24)) == 0) return;
         r = Math.max(t, Math.min(r, Math.min(w, h) / 2f));
@@ -263,7 +269,10 @@ public final class R2D {
     }
 
     public static void circle(DrawContext ctx, float cx, float cy, float radius, int color) {
+        float rm = radiusMul;
+        radiusMul = 1f; // koło zawsze okrągłe
         roundRect(ctx, cx - radius, cy - radius, radius * 2, radius * 2, radius, color);
+        radiusMul = rm;
     }
 
     /** miękki cień pod prostokątem */

@@ -212,6 +212,7 @@ public class ClickGui extends Screen {
         sliders.clear();
         clip = null;
         R2D.alpha = p;
+        R2D.radiusMul = Theme.radiusScale();
         ctx.getMatrices().push();
         ctx.getMatrices().translate(centerX, centerY, 0);
         ctx.getMatrices().scale(scale, scale, 1);
@@ -221,6 +222,7 @@ public class ClickGui extends Screen {
 
         ctx.getMatrices().pop();
         R2D.alpha = 1;
+        R2D.radiusMul = 1f;
         RenderSystem.setShaderColor(1, 1, 1, 1);
     }
 
@@ -272,6 +274,16 @@ public class ClickGui extends Screen {
         }
         R2D.roundOutline(ctx, x0, y0, W, H, 14, 0.6f, Theme.stroke());
         if (g > 0.01f) R2D.roundOutlineGrad(ctx, x0, y0, W, H, 14, 0.8f, R2D.withAlpha(Theme.accentWave(0), 0.55f * g), R2D.withAlpha(Theme.accent2(), 0.35f * g));
+        float n = Theme.neon();
+        if (n > 0.01f) {
+            // Neon: świecący obrys z gradientem, poświata dookoła okna i linia akcentu pod logo
+            R2D.roundOutlineGrad(ctx, x0, y0, W, H, 14, 1.1f, R2D.withAlpha(Theme.accentWave(0), n), R2D.withAlpha(Theme.accent2(), 0.8f * n));
+            R2D.scissor(ctx, x0, y0, W, H);
+            R2D.glow(ctx, x0 - 120, y0 - 120, 360, 300, R2D.withAlpha(Theme.accentWave(0), 0.13f * n));
+            R2D.glow(ctx, x0 + W - 260, y0 + H - 200, 380, 320, R2D.withAlpha(Theme.accent2(), 0.10f * n));
+            R2D.endScissor(ctx);
+            R2D.gradientH(ctx, x0 + 14, y0 + 50, SB - 28, 0.8f, R2D.withAlpha(Theme.accentWave(0), 0.9f * n), R2D.withAlpha(Theme.accent2(), 0f));
+        }
 
         drawSidebar(ctx);
         drawContent(ctx);
@@ -363,6 +375,7 @@ public class ClickGui extends Screen {
         if (selY >= 0 && indicatorY.raw() < 0) indicatorY.snap(selY);
         float ia = indicatorA.animate(selY >= 0 ? 1 : 0);
         float iyv = indicatorY.animate(selY >= 0 ? selY : indicatorY.target());
+        if (Theme.neon() > 0.01f) R2D.glow(ctx, x + 2, iyv - 10, SB - 4, itemH + 20, R2D.withAlpha(Theme.accentWave(0), 0.35f * ia * Theme.neon()));
         R2D.roundRect(ctx, x + 10, iyv, SB - 20, itemH, 7, R2D.withAlpha(Theme.accent(), ia));
         for (Runnable r : drawLater) r.run();
 
@@ -625,6 +638,11 @@ public class ClickGui extends Screen {
         R2D.roundRect(ctx, x, y, w, h, 7, R2D.blend(R2D.blend(Theme.card(), Theme.cardHover(), ha), R2D.withAlpha(Theme.accent(), 0.16f), sa * 0.6f));
         R2D.roundOutline(ctx, x, y, w, h, 7, 0.5f + sa * 0.5f, R2D.blend(R2D.blend(Theme.stroke(), Theme.textFaint(), on * 0.5f), Theme.accentWave(0), sa));
         if (index == focusIndex) R2D.roundOutline(ctx, x - 1.5f, y - 1.5f, w + 3, h + 3, 8.5f, 1, Theme.accentWave(0));
+        float nn = Theme.neon() * on;
+        if (nn > 0.01f) {
+            R2D.glow(ctx, x - 8, y - 8, w + 16, h + 16, R2D.withAlpha(Theme.accentWave(0), 0.12f * nn));
+            R2D.roundOutlineGrad(ctx, x, y, w, h, 7, 0.8f, R2D.withAlpha(Theme.accentWave(0), 0.9f * nn), R2D.withAlpha(Theme.accent2(), 0.3f * nn));
+        }
         // fala po kliknięciu (ripple)
         long[] rp = ripples.get(m);
         if (rp != null) {
@@ -988,7 +1006,7 @@ public class ClickGui extends Screen {
         R2D.icon(ctx, "sparkles", x + 9, y + 9, 8, Theme.accentWave(0));
         Fonts.drawV(ctx, Lang.get("style.title"), x + 22, y + h / 2f + 0.5f, Theme.text(), Font.BOLD, 0.8f);
         Fonts.drawV(ctx, Lang.get("style.desc"), x + 22 + Fonts.width(Lang.get("style.title"), Font.BOLD, 0.8f) + 8, y + h / 2f + 0.5f, Theme.textFaint(), Font.REGULAR, 0.62f);
-        segmented(ctx, "style", x + w - 134, y + 4, 128, 18, new String[]{"Solid", "Glass"}, Theme.style().ordinal(), i -> {
+        segmented(ctx, "style", x + w - 174, y + 4, 168, 18, new String[]{"Solid", "Glass", "Neon"}, Theme.style().ordinal(), i -> {
             Theme.setStyle(Theme.Style.values()[i]); rc.config.saveClient();
         });
         return 34;

@@ -126,7 +126,7 @@ public class ConfigManager {
         o.add("panels", pan);
         o.addProperty("style", Theme.style().name());
         o.addProperty("guiH", s.guiH);
-        o.addProperty("ui", 5);
+        o.addProperty("ui", 6);
         com.google.gson.JsonArray fr = new com.google.gson.JsonArray();
         for (String f : RazerClient.get().friends.all()) fr.add(f);
         o.add("friends", fr);
@@ -162,6 +162,7 @@ public class ConfigManager {
                     s.panels.put(e.getKey(), new float[]{a.get(0).getAsFloat(), a.get(1).getAsFloat(), a.get(2).getAsFloat()});
                 }
                 if (o.has("style")) Theme.setStyleInstant(Theme.Style.valueOf(o.get("style").getAsString()));
+                if (!o.has("ui") || o.get("ui").getAsInt() < 6) Theme.setStyleInstant(Theme.Style.NEON);
                 if (o.has("guiH")) s.guiH = o.get("guiH").getAsFloat();
                 if (o.has("friends")) for (var f : o.getAsJsonArray("friends")) RazerClient.get().friends.add(f.getAsString());
                 // nowy wygląd 2.1 – jednorazowo przełącz na Midnight + niebieski akcent

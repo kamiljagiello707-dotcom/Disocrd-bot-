@@ -227,6 +227,7 @@ public final class Lang {
         put("menu.options", "Ustawienia", "Options");
         put("menu.quit", "Wyjdź", "Quit");
         put("menu.realms", "Realms", "Realms");
+        put("menu.gui", "ClickGUI", "ClickGUI");
         put("menu.welcome", "Witaj, %s", "Welcome, %s");
         put("chatdrag.hint", "Przeciągnij HUD myszką  •  ŚPM – domyślna pozycja", "Drag the HUD with your mouse  •  MMB – default position");
         put("welcome", "Witaj, %s!  •  Prawy Shift – menu", "Welcome, %s!  •  Right Shift – menu");

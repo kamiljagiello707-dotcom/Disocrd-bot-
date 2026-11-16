@@ -20,6 +20,9 @@ Moduły typu cheat (KillAura, Reach, Velocity, Speed, Flight, Scaffold, ESP/Trac
 - ⚫⚪ **Motyw biało-czarny (MONO) domyślnie:** czyste, monochromatyczne GUI i HUD – białe akcenty na ciemnym tle, bez kolorów. Kolory wracają po wybraniu innego akcentu w Motywach (fiolet, niebieski, zielony…)
 - 🟤 **Kategorie w czerni i bieli:** nagłówek kategorii, kafelki w menu bocznym i zakładki podgrup są monochromatyczne, gdy akcent to MONO (zachowują kontrast – ikona na białym kaflu jest czarna)
 - ⭕ **Mocniejsze zaokrąglenia** w całym GUI i HUD (okno, karty, pigułki, panele HUD)
+- 🧰 **Wybór elementów w edytorze HUD:** w edytorze (Open editor / strona HUD) jest lista **Elementy HUD** z przełącznikiem przy każdym elemencie (Watermark, KeyBindy, Powiadomienia, TargetHUD, Zegar…). Włączasz, co chcesz, i przeciągasz w dowolne miejsce ekranu
+
+![Edytor HUD – lista elementów](docs/hud_editor.jpg)
 
 ![GUI biało-czarne – Home](docs/bw_home.jpg)
 ![GUI biało-czarne – kategoria](docs/bw_combat.jpg)

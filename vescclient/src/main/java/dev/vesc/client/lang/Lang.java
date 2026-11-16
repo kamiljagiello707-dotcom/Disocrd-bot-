@@ -260,6 +260,8 @@ public final class Lang {
         put("hud.speed", "Prędkość", "Speed");
         put("editor.hint", "Przeciągnij  •  PPM – ukryj  •  ŚPM – reset", "Drag  •  RMB – hide  •  MMB – reset");
         put("editor.done", "Gotowe", "Done");
+        put("editor.elements", "Elementy HUD", "HUD elements");
+        put("editor.pickhint", "Kliknij, aby pokazać / ukryć, potem przeciągnij", "Click to show / hide, then drag");
         put("themes.accent", "Kolor akcentu", "Accent color");
         put("themes.accent.desc", "Gradient używany w HUD, przełącznikach i zaznaczeniach", "Gradient used in HUD, toggles and selection");
         put("accent.mono", "Mono", "Mono");

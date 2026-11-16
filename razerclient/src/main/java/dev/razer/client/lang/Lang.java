@@ -100,6 +100,11 @@ public final class Lang {
         put("size.normal", "Średni", "Normal");
         put("size.large", "Duży", "Large");
         put("wm.fps", "FPS", "FPS");
+        put("panels.hint", "Przeciągnij nagłówek  •  PPM nagłówek – zwiń  •  LPM moduł – włącz  •  PPM – ustawienia  •  ŚPM – klawisz", "Drag header  •  RMB header – collapse  •  LMB module – toggle  •  RMB – settings  •  MMB – bind");
+        put("layout.title", "Układ GUI", "GUI layout");
+        put("layout.desc", "Pływające panele kategorii albo jedno okno", "Floating category panels or a single window");
+        put("hudstyle.title", "Styl HUD", "HUD style");
+        put("hudstyle.desc", "Szkło, neon albo minimalistyczny", "Glass, neon or minimal");
         put("hud.el.keystrokes", "Keystrokes", "Keystrokes");
         put("hud.el.keystrokes.desc", "WASD, spacja i myszka z licznikiem CPS", "WASD, space and mouse with CPS");
         put("hud.el.compass", "Kompas", "Compass");

@@ -14,6 +14,10 @@ public class ClientSettings {
     public final BoolSetting notifications = new BoolSetting("Powiadomienia", "Notifications", true);
     public final BoolSetting welcome = new BoolSetting("Powitanie", "Welcome", true);
     public final BoolSetting customMenu = new BoolSetting("Menu główne", "Main menu", true);
+    public final ModeSetting layout = new ModeSetting("Układ GUI", "GUI layout", "Window", "Panels");
+    public final ModeSetting hudStyle = new ModeSetting("Styl HUD", "HUD style", "Glass", "Neon", "Minimal");
+    /** pozycje paneli w układzie Panels: kategoria -> {x, y, zwinięty} */
+    public final java.util.Map<String, float[]> panels = new java.util.HashMap<>();
     /** rozmiar okna ClickGUI (zmieniany przeciąganiem rogu) */
     public float guiW = 640, guiH = 420;
 

@@ -26,7 +26,7 @@ import java.util.Set;
 
 public class RazerClient implements ClientModInitializer {
     public static final String NAME = "RazerClient";
-    public static final String VERSION = "2.0.0";
+    public static final String VERSION = "3.5.0";
     public static final Logger LOGGER = LoggerFactory.getLogger(NAME);
     private static RazerClient instance;
 

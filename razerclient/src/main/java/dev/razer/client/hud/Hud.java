@@ -104,7 +104,26 @@ public class Hud {
     public static void panel(DrawContext ctx, float x, float y, float w, float h) { panel(ctx, x, y, w, h, R); }
 
     /** panel: cień, poświata w kolorze akcentu, gradientowe tło z połyskiem i obramowanie */
+    /** styl HUD: Glass / Neon / Minimal */
+    public static String hudStyle() {
+        RazerClient rc = RazerClient.get();
+        return rc == null ? "Glass" : rc.settings.hudStyle.get();
+    }
+
     public static void panel(DrawContext ctx, float x, float y, float w, float h, float r) {
+        String st = hudStyle();
+        if (st.equals("Minimal")) {
+            R2D.roundRect(ctx, x, y, w, h, r, R2D.withAlpha(0xFF000000, 0.3f));
+            return;
+        }
+        if (st.equals("Neon")) {
+            int a1 = Theme.accentWave(0), a2 = Theme.accent2();
+            R2D.glow(ctx, x - 16, y - 16, w + 32, h + 32, R2D.withAlpha(a1, 0.2f));
+            R2D.roundRect(ctx, x, y, w, h, r, 0xE00A0A12);
+            R2D.roundRectV(ctx, x, y, w, Math.min(h, 24), r, R2D.withAlpha(a1, 0.12f), R2D.withAlpha(a1, 0f));
+            R2D.roundOutlineGrad(ctx, x, y, w, h, r, 1f, a1, a2);
+            return;
+        }
         R2D.shadow(ctx, x, y + 1, w, h, 9, Theme.shadow());
         if (!mono()) R2D.shadow(ctx, x, y, w, h, 10, R2D.withAlpha(Theme.accentWave(0), 0.07f));
         int bg = Theme.hudBg();
@@ -129,6 +148,14 @@ public class Hud {
     /** plakietka z ikoną w kolorze akcentu */
     public static void badge(DrawContext ctx, float x, float y, float size, String icon) {
         int ac = Theme.accentWave(0);
+        String st = hudStyle();
+        if (st.equals("Minimal")) { R2D.icon(ctx, icon, x + size * 0.15f, y + size * 0.15f, size * 0.7f, ac); return; }
+        if (st.equals("Neon")) {
+            R2D.glow(ctx, x - size * 0.5f, y - size * 0.5f, size * 2, size * 2, R2D.withAlpha(ac, 0.5f));
+            R2D.roundOutline(ctx, x, y, size, size, size * 0.32f, 0.8f, ac);
+            R2D.icon(ctx, icon, x + size * 0.2f, y + size * 0.2f, size * 0.6f, ac);
+            return;
+        }
         R2D.glow(ctx, x - size * 0.6f, y - size * 0.6f, size * 2.2f, size * 2.2f, R2D.withAlpha(ac, 0.35f));
         R2D.roundRectV(ctx, x, y, size, size, size * 0.32f, R2D.blend(ac, 0xFFFFFFFF, 0.12f), R2D.blend(ac, 0xFF000000, 0.12f));
         float is = size * 0.64f;
@@ -146,6 +173,12 @@ public class Hud {
         }
         // separator zanikający na końcach
         float sy = y + HEAD - 1;
+        if (hudStyle().equals("Minimal")) return y + HEAD + 1;
+        if (hudStyle().equals("Neon")) {
+            R2D.gradientH(ctx, x + 6, sy, (w - 12) / 2f, 0.6f, R2D.withAlpha(Theme.accentWave(0), 0f), Theme.accentWave(0));
+            R2D.gradientH(ctx, x + w / 2f, sy, (w - 12) / 2f, 0.6f, Theme.accentWave(0), R2D.withAlpha(Theme.accent2(), 0f));
+            return y + HEAD + 1;
+        }
         R2D.gradientH(ctx, x + 6, sy, (w - 12) / 2f, 0.5f, R2D.withAlpha(Theme.stroke(), 0f), Theme.stroke());
         R2D.gradientH(ctx, x + w / 2f, sy, (w - 12) / 2f, 0.5f, Theme.stroke(), R2D.withAlpha(Theme.stroke(), 0f));
         return y + HEAD + 1;
@@ -197,7 +230,7 @@ public class Hud {
                     {"player", mc.getSession().getUsername()},
             };
             float s = 0.68f, pad = 7, gap = 6, ic = 6.5f;
-            float titleW = Fonts.width("Razer", Font.BOLD, 0.74f) + Fonts.width("Client", Font.BOLD, 0.74f) + Fonts.width("2.0", Font.BOLD, 0.48f) + 2;
+            float titleW = Fonts.width("Razer", Font.BOLD, 0.74f) + Fonts.width("Client", Font.BOLD, 0.74f) + Fonts.width(RazerClient.VERSION.substring(0, 3), Font.BOLD, 0.48f) + 2;
             float ww = pad + 12 + 5 + titleW;
             for (String[] sg : seg) ww += gap * 2 + 0.5f + ic + 3 + Fonts.width(sg[1], Font.SEMIBOLD, s);
             ww += pad;
@@ -213,8 +246,8 @@ public class Hud {
             cx += Fonts.width("Razer", Font.BOLD, 0.74f);
             Fonts.drawV(ctx, "Client", cx, cy + 0.5f, Theme.text(), Font.BOLD, 0.74f);
             cx += Fonts.width("Client", Font.BOLD, 0.74f) + 1.5f;
-            Fonts.draw(ctx, "2.0", cx, y + 3.6f, mono() ? Theme.textDim() : Theme.accentWave(1.5f), Font.BOLD, 0.48f);
-            cx += Fonts.width("2.0", Font.BOLD, 0.48f) + 0.5f;
+            Fonts.draw(ctx, RazerClient.VERSION.substring(0, 3), cx, y + 3.6f, mono() ? Theme.textDim() : Theme.accentWave(1.5f), Font.BOLD, 0.48f);
+            cx += Fonts.width(RazerClient.VERSION.substring(0, 3), Font.BOLD, 0.48f) + 0.5f;
             for (String[] sg : seg) {
                 cx += gap;
                 R2D.rect(ctx, cx, y + 5, 0.5f, h - 10, Theme.stroke());

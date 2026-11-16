@@ -115,9 +115,18 @@ public class ConfigManager {
         o.add("welcome", s.welcome.save());
         o.add("customMenu", s.customMenu.save());
         o.addProperty("guiW", s.guiW);
+        o.add("layout", s.layout.save());
+        o.add("hudStyle", s.hudStyle.save());
+        JsonObject pan = new JsonObject();
+        for (var e : s.panels.entrySet()) {
+            com.google.gson.JsonArray a = new com.google.gson.JsonArray();
+            for (float f : e.getValue()) a.add(f);
+            pan.add(e.getKey(), a);
+        }
+        o.add("panels", pan);
         o.addProperty("style", Theme.style().name());
         o.addProperty("guiH", s.guiH);
-        o.addProperty("ui", 4);
+        o.addProperty("ui", 5);
         com.google.gson.JsonArray fr = new com.google.gson.JsonArray();
         for (String f : RazerClient.get().friends.all()) fr.add(f);
         o.add("friends", fr);
@@ -146,6 +155,12 @@ public class ConfigManager {
                 if (o.has("welcome")) s.welcome.load(o.get("welcome"));
                 if (o.has("customMenu")) s.customMenu.load(o.get("customMenu"));
                 if (o.has("guiW")) s.guiW = o.get("guiW").getAsFloat();
+                if (o.has("layout") && o.has("ui") && o.get("ui").getAsInt() >= 5) s.layout.load(o.get("layout"));
+                if (o.has("hudStyle")) s.hudStyle.load(o.get("hudStyle"));
+                if (o.has("panels")) for (var e : o.getAsJsonObject("panels").entrySet()) {
+                    var a = e.getValue().getAsJsonArray();
+                    s.panels.put(e.getKey(), new float[]{a.get(0).getAsFloat(), a.get(1).getAsFloat(), a.get(2).getAsFloat()});
+                }
                 if (o.has("style")) Theme.setStyleInstant(Theme.Style.valueOf(o.get("style").getAsString()));
                 if (o.has("guiH")) s.guiH = o.get("guiH").getAsFloat();
                 if (o.has("friends")) for (var f : o.getAsJsonArray("friends")) RazerClient.get().friends.add(f.getAsString());

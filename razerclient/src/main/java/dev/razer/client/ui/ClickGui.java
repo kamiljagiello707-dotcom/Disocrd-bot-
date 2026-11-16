@@ -67,6 +67,39 @@ public class ClickGui extends Screen {
     private record PItem(String icon, String title, String sub, Runnable action, Module module, boolean keepOpen) {}
     private boolean resizing;
     private float rsW, rsH, rsMx, rsMy;
+
+    // ---- układ Panels (3.5)
+    private static final float PW = 128, PHEAD = 22;
+    private static final List<Category> panelOrder = new ArrayList<>(List.of(Category.values()));
+    private Category draggingPanel;
+    private float panGrabX, panGrabY, vLeft, vTop, vW, vH;
+    private final Map<Category, Anim> panelScroll = new HashMap<>();
+    private final Map<Category, float[]> panelScrollT = new HashMap<>(); // {cel, max}
+    private final Map<Category, float[]> panelBody = new HashMap<>();    // {x, y, w, h}
+    private final Map<Module, Float> setHeights = new HashMap<>();
+
+    private boolean panelMode() { return rc.settings.layout.get().equals("Panels"); }
+
+    private float[] panelPos(Category c) {
+        int idx = c.ordinal(), n = Category.values().length;
+        float[] pp = rc.settings.panels.computeIfAbsent(c.name(), k -> {
+            // domyślnie: jeden rząd dopasowany do szerokości ekranu, a gdy się nie mieści – dwa rzędy
+            // (liczone od docelowej skali, nie od skali w trakcie animacji otwierania)
+            float vW = width / rc.settings.guiScale();
+            float gap = Math.min(12, (vW - 24 - n * PW) / (n - 1));
+            if (gap >= 4) {
+                float total = n * PW + (n - 1) * gap;
+                return new float[]{(vW - total) / 2f + idx * (PW + gap), 46, 0};
+            }
+            int perRow = (n + 1) / 2;
+            float g2 = Math.max(4, Math.min(12, (vW - 24 - perRow * PW) / (perRow - 1)));
+            float total = perRow * PW + (perRow - 1) * g2;
+            return new float[]{(vW - total) / 2f + (idx % perRow) * (PW + g2), 46 + (idx / perRow) * 190, 0};
+        });
+        pp[0] = Math.max(0, Math.min(vW - PW, pp[0]));
+        pp[1] = Math.max(0, Math.min(vH - PHEAD, pp[1]));
+        return pp;
+    }
     private static final long OPEN_MS = 320, CLOSE_MS = 200;
 
     private enum Page { HOME, CATEGORY, FAVORITES, FRIENDS, HUD, THEMES, CONFIG, PROFILE, SETTINGS }
@@ -133,13 +166,20 @@ public class ClickGui extends Screen {
         // skala i pozycja
         ClientSettings s = rc.settings;
         W = s.guiW; H = s.guiH;
-        float fit = Math.min(1f, Math.min((width - 24) / W, (height - 50) / H));
-        float base = Math.min(fit, s.guiScale() * Math.min(1.25f, Math.max(0.85f, Math.min(width / 600f, height / 380f))));
-        base = Math.min(base, fit);
-        scale = base * (0.9f + 0.1f * p);
         centerX = width / 2f; centerY = height / 2f;
-        x0 = (width - W) / 2f + dragX;
-        y0 = (height - H) / 2f + dragY + (1 - p) * 14;
+        if (panelMode()) {
+            scale = s.guiScale() * (0.94f + 0.06f * p);
+            vW = width / scale; vH = height / scale; vLeft = centerX - vW / 2f; vTop = centerY - vH / 2f;
+            W = 640; H = Math.max(300, Math.min(440, vH - 80));
+            x0 = vLeft + (vW - W) / 2f; y0 = vTop + 44;
+        } else {
+            float fit = Math.min(1f, Math.min((width - 24) / W, (height - 50) / H));
+            float base = Math.min(fit, s.guiScale() * Math.min(1.25f, Math.max(0.85f, Math.min(width / 600f, height / 380f))));
+            base = Math.min(base, fit);
+            scale = base * (0.9f + 0.1f * p);
+            x0 = (width - W) / 2f + dragX;
+            y0 = (height - H) / 2f + dragY + (1 - p) * 14;
+        }
         mx = (mouseX - centerX) / scale + centerX;
         my = (mouseY - centerY) / scale + centerY;
 
@@ -153,6 +193,11 @@ public class ClickGui extends Screen {
             W = s.guiW; H = s.guiH;
             x0 = (width - W) / 2f + dragX;
             y0 = (height - H) / 2f + dragY;
+        }
+        if (draggingPanel != null) {
+            float[] pp = panelPos(draggingPanel);
+            pp[0] = Math.max(0, Math.min(vW - PW, mx - vLeft - panGrabX));
+            pp[1] = Math.max(0, Math.min(vH - PHEAD, my - vTop - panGrabY));
         }
         if (draggingColor != null) {
             if (colorPart == 0) draggingColor.setHsb(draggingColor.hue, Anim.clamp01((mx - cpX) / cpW), 1 - Anim.clamp01((my - cpY) / cpH));
@@ -172,7 +217,7 @@ public class ClickGui extends Screen {
         ctx.getMatrices().scale(scale, scale, 1);
         ctx.getMatrices().translate(-centerX, -centerY, 0);
 
-        drawWindow(ctx);
+        if (panelMode()) drawPanels(ctx); else drawWindow(ctx);
 
         ctx.getMatrices().pop();
         R2D.alpha = 1;
@@ -397,6 +442,13 @@ public class ClickGui extends Screen {
             R2D.icon(ctx, "keybind", bx + 8, byy + 7, 8, Theme.textDim());
             Fonts.drawV(ctx, "Ctrl K", bx + 19, byy + 11.5f, Theme.textDim(), Font.BOLD, 0.6f);
             hit(bx, byy, bw, 22, b -> { if (b == 0) openPalette(); });
+            float lx = bx - 28;
+            boolean hl = hovered(lx, byy, 22, 22);
+            float hla = anim("layoutbtn", 18).animate(hl ? 1 : 0);
+            R2D.roundRect(ctx, lx, byy, 22, 22, 11, R2D.blend(Theme.card(), Theme.cardHover(), hla));
+            R2D.roundOutline(ctx, lx, byy, 22, 22, 11, 0.5f, R2D.blend(Theme.stroke(), Theme.accent(), hla * 0.6f));
+            R2D.icon(ctx, "layers", lx + 7, byy + 7, 8, R2D.blend(Theme.textDim(), Theme.text(), hla));
+            hit(lx, byy, 22, 22, b -> { if (b == 0) { rc.settings.layout.set("Panels"); rc.config.saveClient(); } });
         }
         // przycisk zamknięcia
         {
@@ -727,6 +779,204 @@ public class ClickGui extends Screen {
             return y + h;
         }
         return y;
+    }
+
+    // ================================================================== układ Panels
+
+    private void drawPanels(DrawContext ctx) {
+        if (rc.settings.particles.get()) drawBackgroundFx(ctx);
+        hoveredCard = null;
+        panelBody.clear();
+        drawDock(ctx);
+        for (Category c : new ArrayList<>(panelOrder)) drawPanel(ctx, c);
+        if (hoveredCard != tooltipModule) { tooltipModule = hoveredCard; tooltipStart = System.currentTimeMillis(); }
+        // podpowiedź na dole
+        String hint = Lang.get("panels.hint");
+        float hw = Fonts.width(hint, Font.REGULAR, 0.6f) + 20;
+        R2D.roundRect(ctx, vLeft + (vW - hw) / 2f, vTop + vH - 20, hw, 13, 6.5f, Theme.bg());
+        Fonts.drawCentered(ctx, hint, vLeft + vW / 2f, vTop + vH - 13.5f - Fonts.height(0.6f) / 2f + 0.5f, Theme.textFaint(), Font.REGULAR, 0.6f);
+        drawTooltip(ctx);
+        drawPalette(ctx);
+    }
+
+    private void dockButton(DrawContext ctx, String key, float x, float y, String icon, Runnable action) {
+        boolean hv = hovered(x, y, 20, 20);
+        float ha = anim("dock" + key, 18).animate(hv ? 1 : 0);
+        R2D.roundRect(ctx, x, y, 20, 20, 10, R2D.blend(Theme.card(), Theme.cardHover(), ha));
+        R2D.roundOutline(ctx, x, y, 20, 20, 10, 0.5f, R2D.blend(Theme.stroke(), Theme.accentWave(0), ha));
+        R2D.icon(ctx, icon, x + 6, y + 6, 8, R2D.blend(Theme.textDim(), Theme.text(), ha));
+        hit(x, y, 20, 20, b -> { if (b == 0) action.run(); });
+    }
+
+    private void drawDock(DrawContext ctx) {
+        float w = 430, h = 28, x = vLeft + (vW - w) / 2f, y = vTop + 8;
+        R2D.shadow(ctx, x, y, w, h, 14, Theme.shadow());
+        R2D.roundRect(ctx, x, y, w, h, h / 2f, Theme.bg());
+        float g = Theme.glass();
+        R2D.roundOutline(ctx, x, y, w, h, h / 2f, 0.6f, Theme.stroke());
+        if (g > 0.01f) R2D.roundOutlineGrad(ctx, x, y, w, h, h / 2f, 0.8f, R2D.withAlpha(Theme.accentWave(0), 0.6f * g), R2D.withAlpha(Theme.accent2(), 0.35f * g));
+        R2D.glow(ctx, x - 4, y - 14, 50, 56, R2D.withAlpha(Theme.accentWave(0), 0.35f));
+        R2D.icon(ctx, "logo", x + 9, y + 7, 14, Theme.accentWave(0));
+        Fonts.drawV(ctx, "RazerClient", x + 28, y + h / 2f + 0.5f, Theme.text(), Font.BOLD, 0.82f);
+        String v = RazerClient.VERSION.substring(0, 3);
+        float tw = Fonts.width("RazerClient", Font.BOLD, 0.82f);
+        Fonts.draw(ctx, v, x + 30 + tw, y + 6, Theme.accentWave(1), Font.BOLD, 0.52f);
+        drawSearch(ctx, x + 112, y + 4, 168, 20);
+        float bx = x + w - 8 - 20;
+        dockButton(ctx, "close", bx, y + 4, "cross", this::close);
+        bx -= 24;
+        dockButton(ctx, "pal", bx, y + 4, "keybind", this::openPalette);
+        bx -= 24;
+        dockButton(ctx, "hud", bx, y + 4, "move", () -> { if (client != null) client.setScreen(new HudEditor()); });
+        bx -= 24;
+        dockButton(ctx, "win", bx, y + 4, "misc", () -> { rc.settings.layout.set("Window"); rc.config.saveClient(); setPage(Page.HOME); });
+        bx -= 24;
+        dockButton(ctx, "reset", bx, y + 4, "reset", () -> { rc.settings.panels.clear(); rc.config.saveClient(); });
+    }
+
+    private List<Module> panelModules(Category c) {
+        List<Module> out = new ArrayList<>();
+        String q = search.toLowerCase(Locale.ROOT);
+        for (Module m : rc.modules.byCategory(c))
+            if (q.isEmpty() || m.getName().toLowerCase(Locale.ROOT).contains(q) || m.getDescription().toLowerCase(Locale.ROOT).contains(q)) out.add(m);
+        return out;
+    }
+
+    private void drawPanel(DrawContext ctx, Category c) {
+        float[] pp = panelPos(c);
+        float x = vLeft + pp[0], y = vTop + pp[1], w = PW;
+        boolean collapsed = pp[2] > 0.5f;
+        float open = Anim.easeOutCubic(anim("pcol" + c, 14).animate(collapsed ? 0 : 1));
+        List<Module> mods = panelModules(c);
+        boolean dim = !search.isEmpty() && mods.isEmpty();
+        float prevA = R2D.alpha;
+        R2D.alpha = prevA * anim("pdim" + c, 14).animate(dim ? 0.35f : 1f);
+
+        // wysokość treści
+        float rowH = 19, content = 4;
+        for (Module m : mods) content += rowH + setHeights.getOrDefault(m, 0f) * Anim.easeOutCubic(m.expandAnim.animate(m.expanded ? 1 : 0));
+        float maxBody = Math.max(60, vTop + vH - 30 - (y + PHEAD));
+        float bodyH = Math.min(content, maxBody) * open;
+        float h = PHEAD + bodyH + (bodyH > 1 ? 4 : 0);
+
+        // tło panelu
+        R2D.shadow(ctx, x, y, w, h, 16, Theme.shadow());
+        R2D.roundRect(ctx, x, y, w, h, 10, Theme.bg());
+        float g = Theme.glass();
+        if (g > 0.01f) R2D.roundRectV(ctx, x, y, w, Math.min(h, 40), 10, R2D.withAlpha(0xFFFFFFFF, 0.06f * g), 0x00FFFFFF);
+        R2D.roundOutline(ctx, x, y, w, h, 10, 0.6f, Theme.stroke());
+        if (g > 0.01f) R2D.roundOutlineGrad(ctx, x, y, w, h, 10, 0.7f, R2D.withAlpha(Theme.accentWave(c.ordinal() * 0.5f), 0.55f * g), R2D.withAlpha(Theme.accent2(), 0.25f * g));
+
+        // nagłówek
+        long en = mods.stream().filter(Module::isEnabled).count();
+        boolean hh = hovered(x, y, w, PHEAD);
+        float hha = anim("phead" + c, 18).animate(hh || draggingPanel == c ? 1 : 0);
+        R2D.roundRect(ctx, x + 2, y + 2, w - 4, PHEAD - 4, 8, R2D.withAlpha(Theme.cardHover(), hha * 0.7f));
+        int ac = Theme.accentWave(c.ordinal() * 0.5f);
+        R2D.glow(ctx, x - 2, y - 6, 30, 32, R2D.withAlpha(ac, 0.35f));
+        R2D.icon(ctx, c.icon, x + 8, y + PHEAD / 2f - 4.5f, 9, ac);
+        Fonts.drawV(ctx, c.getName(), x + 22, y + PHEAD / 2f + 0.5f, Theme.text(), Font.BOLD, 0.8f);
+        String cnt = en + "/" + mods.size();
+        float cw = Fonts.width(cnt, Font.BOLD, 0.54f) + 8;
+        R2D.roundRect(ctx, x + w - 22 - cw, y + PHEAD / 2f - 4.5f, cw, 9, 4.5f, R2D.withAlpha(ac, en > 0 ? 0.28f : 0.12f));
+        Fonts.drawV(ctx, cnt, x + w - 22 - cw + 4, y + PHEAD / 2f + 0.4f, en > 0 ? ac : Theme.textFaint(), Font.BOLD, 0.54f);
+        ctx.getMatrices().push();
+        ctx.getMatrices().translate(x + w - 12, y + PHEAD / 2f, 0);
+        ctx.getMatrices().multiply(net.minecraft.util.math.RotationAxis.POSITIVE_Z.rotationDegrees(180 + 90 * open));
+        R2D.icon(ctx, "arrow_left", -3.5f, -3.5f, 7, Theme.textFaint());
+        ctx.getMatrices().pop();
+        hit(x, y, w, PHEAD, b -> {
+            panelOrder.remove(c); panelOrder.add(c);
+            if (b == 0) { draggingPanel = c; panGrabX = mx - x; panGrabY = my - y; }
+            else if (b == 1) { pp[2] = pp[2] > 0.5f ? 0 : 1; rc.config.saveClient(); }
+        });
+
+        if (bodyH > 1) {
+            float by = y + PHEAD;
+            panelBody.put(c, new float[]{x, by, w, bodyH});
+            float[] st = panelScrollT.computeIfAbsent(c, k -> new float[2]);
+            st[1] = Math.max(0, content - bodyH);
+            st[0] = Math.min(st[0], st[1]);
+            float sc = panelScroll.computeIfAbsent(c, k -> new Anim(0, 16)).animate(st[0]);
+            R2D.scissor(ctx, x, by, w, bodyH);
+            float[] oc = clip;
+            clip = new float[]{x, by, w, bodyH};
+            float cy = by + 2 - sc;
+            for (Module m : mods) {
+                boolean hv = hovered(x + 4, cy, w - 8, rowH - 1);
+                if (hv) hoveredCard = m;
+                float ha = m.hoverAnim.animate(hv ? 1 : 0);
+                float on = m.toggleAnim.animate(m.isEnabled() ? 1 : 0);
+                int mc = Theme.accentWave(c.ordinal() * 0.5f + cy * 0.01f);
+                R2D.roundRect(ctx, x + 4, cy, w - 8, rowH - 1, 6, R2D.blend(R2D.withAlpha(Theme.cardHover(), ha), R2D.withAlpha(mc, 0.2f + 0.08f * ha), on));
+                if (on > 0.01f) R2D.roundRect(ctx, x + 6, cy + 5, 1.6f, (rowH - 11) * on, 0.8f, mc);
+                R2D.icon(ctx, m.getIcon(), x + 11, cy + rowH / 2f - 3.75f, 7, R2D.blend(Theme.textFaint(), mc, on));
+                String name = binding == m ? Lang.get("bind.listening") : m.getName();
+                Fonts.drawV(ctx, Fonts.trim(name, Font.SEMIBOLD, 0.72f, w - 48), x + 22, cy + rowH / 2f, binding == m ? mc : R2D.blend(Theme.textDim(), Theme.text(), Math.max(on, ha * 0.6f)), Font.SEMIBOLD, 0.72f);
+                if (m.hasKey() && binding != m) {
+                    String k = Keys.name(m.getKey());
+                    float kw = Fonts.width(k, Font.BOLD, 0.52f) + 6;
+                    R2D.roundRect(ctx, x + w - 20 - kw, cy + rowH / 2f - 4, kw, 8, 2.5f, Theme.toggleOff());
+                    Fonts.drawV(ctx, k, x + w - 20 - kw + 3, cy + rowH / 2f, Theme.textDim(), Font.BOLD, 0.52f);
+                }
+                float ex = Anim.easeOutCubic(m.expandAnim.raw());
+                if (!m.getSettings().isEmpty()) {
+                    ctx.getMatrices().push();
+                    ctx.getMatrices().translate(x + w - 12, cy + rowH / 2f, 0);
+                    ctx.getMatrices().multiply(net.minecraft.util.math.RotationAxis.POSITIVE_Z.rotationDegrees(180 + 90 * ex));
+                    R2D.icon(ctx, "arrow_left", -2.5f, -2.5f, 5, Theme.textFaint());
+                    ctx.getMatrices().pop();
+                }
+                long[] rp = ripples.get(m);
+                if (rp != null) {
+                    float t = (System.currentTimeMillis() - rp[2]) / 450f;
+                    if (t >= 1) ripples.remove(m);
+                    else {
+                        R2D.scissor(ctx, x + 4, cy, w - 8, rowH - 1);
+                        R2D.circle(ctx, rp[0] / 100f, rp[1] / 100f, w * Anim.easeOutCubic(t), R2D.withAlpha(mc, 0.25f * (1 - t)));
+                        R2D.endScissor(ctx);
+                    }
+                }
+                final float ry = cy;
+                hit(x + 4, cy, w - 8, rowH - 1, b -> {
+                    if (b == 0) { m.toggle(); ripples.put(m, new long[]{(long) (mx * 100), (long) (my * 100), System.currentTimeMillis()}); }
+                    else if (b == 1) m.expanded = !m.expanded;
+                    else if (b == 2) binding = binding == m ? null : m;
+                });
+                cy += rowH;
+                // rozwinięte ustawienia w panelu
+                if (ex > 0.005f) {
+                    float full = setHeights.getOrDefault(m, 60f);
+                    float vis = full * ex;
+                    R2D.scissor(ctx, x, cy, w, vis);
+                    float[] oc2 = clip;
+                    clip = intersect(clip, new float[]{x, cy, w, vis});
+                    float sy = cy + 2;
+                    // klawisz
+                    String key = binding == m ? Lang.get("bind.listening") : Keys.name(m.getKey());
+                    Fonts.drawV(ctx, Lang.get("bind"), x + 10, sy + 7, Theme.textDim(), Font.SEMIBOLD, 0.66f);
+                    float kw = Fonts.width(key, Font.BOLD, 0.58f) + 10;
+                    boolean kh = hovered(x + w - 10 - kw, sy + 1, kw, 12);
+                    R2D.roundRect(ctx, x + w - 10 - kw, sy + 1, kw, 12, 6, binding == m ? mc : kh ? Theme.cardHover() : Theme.toggleOff());
+                    Fonts.drawV(ctx, key, x + w - 10 - kw + 5, sy + 7.3f, binding == m ? Theme.accentText() : Theme.text(), Font.BOLD, 0.58f);
+                    hit(x + w - 10 - kw, sy + 1, kw, 12, b -> { if (b == 0) binding = binding == m ? null : m; else if (b == 1) { m.setKey(GLFW.GLFW_KEY_UNKNOWN); binding = null; } });
+                    sy += 16;
+                    for (Setting<?> stt : m.getSettings()) sy = drawInspSetting(ctx, stt, x + 10, sy, w - 20);
+                    setHeights.put(m, sy - cy + 4);
+                    R2D.rect(ctx, x + 10, cy + vis - 1, w - 20, 0.5f, R2D.withAlpha(Theme.stroke(), ex));
+                    clip = oc2;
+                    R2D.endScissor(ctx);
+                    cy += vis;
+                }
+            }
+            clip = oc;
+            R2D.endScissor(ctx);
+            if (st[1] > 0) {
+                float th = Math.max(14, bodyH * bodyH / content);
+                R2D.roundRect(ctx, x + w - 3, by + (bodyH - th) * (sc / st[1]), 1.6f, th, 0.8f, ac);
+            }
+        }
+        R2D.alpha = prevA;
     }
 
     // ================================================================== strona Home
@@ -1155,7 +1405,8 @@ public class ClickGui extends Screen {
         String meta = m.getCategory().getName() + "  •  " + Lang.format("tip.settings", m.getSettings().size())
                 + (m.hasKey() ? "  •  " + Keys.name(m.getKey()) : "");
         float th = 22 + lines.size() * 9 + 12;
-        float tx = Math.min(mx + 12, x0 + W - tw - 6), ty = Math.min(my + 14, y0 + H - th - 6);
+        float maxX = panelMode() ? vLeft + vW : x0 + W, maxY = panelMode() ? vTop + vH : y0 + H;
+        float tx = Math.min(mx + 12, maxX - tw - 6), ty = Math.min(my + 14, maxY - th - 6);
         R2D.shadow(ctx, tx, ty, tw, th, 10, Theme.shadow());
         R2D.roundRect(ctx, tx, ty, tw, th, 8, Theme.bg());
         R2D.roundOutline(ctx, tx, ty, tw, th, 8, 0.6f, R2D.blend(Theme.stroke(), Theme.accent(), 0.35f));
@@ -1264,8 +1515,8 @@ public class ClickGui extends Screen {
         if (paletteSel >= paletteItems.size()) paletteSel = Math.max(0, paletteItems.size() - 1);
         float prev = R2D.alpha;
         R2D.alpha = prev * pa;
-        R2D.roundRect(ctx, x0, y0, W, H, 14, R2D.withAlpha(0xFF000000, 0.45f));
-        hit(x0, y0, W, H, b -> palette = false);
+        if (panelMode()) { R2D.rect(ctx, vLeft, vTop, vW, vH, R2D.withAlpha(0xFF000000, 0.45f)); hit(vLeft, vTop, vW, vH, b -> palette = false); }
+        else { R2D.roundRect(ctx, x0, y0, W, H, 14, R2D.withAlpha(0xFF000000, 0.45f)); hit(x0, y0, W, H, b -> palette = false); }
 
         float pw = Math.min(400, W - 80), px = x0 + (W - pw) / 2f, py = y0 + 54 - (1 - pa) * 12;
         int visible = Math.min(8, paletteItems.size());
@@ -1677,6 +1928,21 @@ public class ClickGui extends Screen {
     // ------------------------------------------------------------------ HUD
 
     private float drawHudPage(DrawContext ctx, float x, float y, float w) {
+        // styl HUD
+        {
+            float sh = 26;
+            R2D.roundRect(ctx, x, y, w, sh, 8, Theme.card());
+            R2D.roundOutline(ctx, x, y, w, sh, 8, 0.5f, Theme.stroke());
+            R2D.icon(ctx, "sparkles", x + 9, y + 9, 8, Theme.accentWave(0));
+            Fonts.drawV(ctx, Lang.get("hudstyle.title"), x + 22, y + sh / 2f + 0.5f, Theme.text(), Font.BOLD, 0.8f);
+            Fonts.drawV(ctx, Lang.get("hudstyle.desc"), x + 22 + Fonts.width(Lang.get("hudstyle.title"), Font.BOLD, 0.8f) + 8, y + sh / 2f + 0.5f, Theme.textFaint(), Font.REGULAR, 0.62f);
+            var hs = rc.settings.hudStyle;
+            segmented(ctx, "hudstyle", x + w - 170, y + 4, 164, 18, new String[]{"Glass", "Neon", "Minimal"}, hs.modes.indexOf(hs.get()), i -> {
+                hs.set(hs.modes.get(i)); rc.config.saveClient();
+            });
+            y += sh + 8;
+        }
+        float yStart0 = y;
         // karta edytora
         float eh = 52;
         boolean hov = hovered(x, y, w, eh);
@@ -1730,7 +1996,7 @@ public class ClickGui extends Screen {
             for (dev.razer.client.hud.HudElement e : rc.hud.elements) e.resetPosition();
             rc.config.saveClient();
         });
-        return by + 24 - y;
+        return by + 24 - y + 34;
     }
 
     private void settingRowAt(DrawContext ctx, float x, float y, float w, String icon, String title, String desc, float rightSpace) {
@@ -1765,6 +2031,12 @@ public class ClickGui extends Screen {
         h = settingRow(ctx, x, cy, w, "globe_lang", Lang.get("set.language"), Lang.get("set.language.desc"));
         segmented(ctx, "lang", x + w - 150, cy + 8, 140, 18, new String[]{"Polski", "English"}, Lang.current().ordinal(), i -> {
             Lang.set(Lang.Language.values()[i]); rc.config.saveClient();
+        });
+        cy += h + gap;
+
+        h = settingRow(ctx, x, cy, w, "layers", Lang.get("layout.title"), Lang.get("layout.desc"));
+        segmented(ctx, "layout", x + w - 150, cy + 8, 140, 18, new String[]{"Panels", "Window"}, s.layout.modes.indexOf(s.layout.get()), i -> {
+            s.layout.set(s.layout.modes.get(i)); rc.config.saveClient();
         });
         cy += h + gap;
 
@@ -1877,13 +2149,14 @@ public class ClickGui extends Screen {
         }
         binding = null;
         // klik poza oknem zamyka GUI
-        if (!inside(mx, my, x0, y0, W, H)) close();
+        if (!panelMode() && !inside(mx, my, x0, y0, W, H)) close();
         return true;
     }
 
     @Override
     public boolean mouseReleased(double mouseX, double mouseY, int button) {
-        if (dragging != null || resizing || draggingColor != null) { rc.config.saveClient(); }
+        if (dragging != null || resizing || draggingColor != null || draggingPanel != null) { rc.config.saveClient(); }
+        draggingPanel = null;
         resizing = false;
         draggingColor = null;
         dragging = null;
@@ -1907,6 +2180,17 @@ public class ClickGui extends Screen {
                 if (n == rc.settings.animSpeed) Anim.globalSpeed = n.get().floatValue();
                 return true;
             }
+        }
+        if (panelMode()) {
+            for (var e : panelBody.entrySet()) {
+                float[] r = e.getValue();
+                if (inside(mx, my, r[0], r[1], r[2], r[3])) {
+                    float[] t = panelScrollT.computeIfAbsent(e.getKey(), k -> new float[2]);
+                    t[0] = (float) Math.max(0, Math.min(t[1], t[0] - verticalAmount * 24));
+                    return true;
+                }
+            }
+            return true;
         }
         if (inspW > 0 && inside(mx, my, inspX, inspY, inspW, inspH)) {
             inspScrollTarget = (float) Math.max(0, Math.min(inspMax, inspScrollTarget - verticalAmount * 28));
@@ -1952,7 +2236,7 @@ public class ClickGui extends Screen {
         if (keyCode == GLFW.GLFW_KEY_ESCAPE && inspected != null) { inspected = null; return true; }
         if (keyCode == GLFW.GLFW_KEY_ESCAPE || keyCode == GLFW.GLFW_KEY_RIGHT_SHIFT) { close(); return true; }
         // nawigacja strzałkami po modułach
-        if ((page == Page.CATEGORY || page == Page.FAVORITES) && !shownModules.isEmpty()) {
+        if (!panelMode() && (page == Page.CATEGORY || page == Page.FAVORITES) && !shownModules.isEmpty()) {
             int n = shownModules.size();
             int f = focusIndex;
             switch (keyCode) {
@@ -2005,7 +2289,7 @@ public class ClickGui extends Screen {
             if ((Character.isLetterOrDigit(chr) || chr == '_') && friendInput.length() < 16) friendInput += chr;
             return true;
         }
-        if ((page == Page.CATEGORY || page == Page.FAVORITES) && chr >= ' ' && chr != 127) {
+        if ((panelMode() || page == Page.CATEGORY || page == Page.FAVORITES) && chr >= ' ' && chr != 127) {
             if (!searchFocused && Character.isLetterOrDigit(chr)) searchFocused = true;
             if (searchFocused && search.length() < 24) { search += chr; scrollTarget = 0; }
         }

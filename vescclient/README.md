@@ -1,6 +1,6 @@
 <p align="center"><img src="docs/logo.png" width="96" alt="VescClient"></p>
 
-# VescClient 5.2
+# VescClient 5.3
 
 Nowoczesny klient do Minecraft **1.21.1 (Fabric)**: proste ClickGUI (opcjonalnie w 3D), HUD w stylu „pigułek”, status w Discordzie, motywy i moduły wizualne.
 
@@ -14,6 +14,15 @@ Działają moduły **kosmetyczne i legit** (wszystko po stronie klienta, bez prz
 - **Movement / Player:** Sprint, AutoRespawn
 
 Moduły typu cheat (KillAura, Reach, Velocity, Speed, Flight, Scaffold, ESP/Tracers/ChestESP, Nuker, AutoClicker itd.) są **przełącznikami bez logiki w grze**.
+
+## Co nowego w 5.3
+
+- 🧭 **Całkiem nowy, nowoczesny układ GUI:** zamiast szerokiego menu bocznego jest teraz **wąski pasek ikon** (slim rail) w stylu nowoczesnych klientów – logo na górze, ikony Home / Ulubione / 8 kategorii (z odznaką liczby włączonych modułów), a na dole Ustawienia i awatar. Dzięki temu obszar z modułami jest znacznie szerszy
+- 🏷️ **Dymki** z nazwą po najechaniu na ikonę w pasku
+- 🔘 Strony Znajomi / HUD / Motywy / Konfiguracje / Paleta są pod ręką na stronie **Home** (szybkie akcje)
+
+![Nowe GUI – Home](docs/gui_rail_home.jpg)
+![Nowe GUI – kategoria](docs/gui_rail_combat.jpg)
 
 ## Co nowego w 5.2
 
@@ -108,7 +117,7 @@ Wymagana Java 21.
 ./gradlew build        # Windows: gradlew.bat build
 ```
 
-Gotowy plik: `build/libs/vescclient-5.2.0.jar` – wrzuć go do folderu `mods` razem z **Fabric API** (Minecraft 1.21.1, Fabric Loader 0.16.14+).
+Gotowy plik: `build/libs/vescclient-5.3.0.jar` – wrzuć go do folderu `mods` razem z **Fabric API** (Minecraft 1.21.1, Fabric Loader 0.16.14+).
 Testowe uruchomienie gry: `./gradlew runClient`.
 
 ## Sterowanie

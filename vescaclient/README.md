@@ -35,6 +35,12 @@ logo VescaClient z obracającym się pierścieniem, napis **„Wczytywanie…”
 status i nazwa serwera/świata, pasek postępu (przy tworzeniu świata z procentami), przycisk „Anuluj”
 i losowa wskazówka na dole.
 
+### Powitanie na serwerze
+Przy **pierwszym** wejściu na dany serwer na środku ekranu pojawia się **„Hello VescaClient”**
+(logo, litery wjeżdżają po kolei, błysk, linia i podpis „Pierwszy raz na …”), a po ok. 5 sekundach płynnie znika.
+Odwiedzone serwery są zapisane w `config/vescaclient/seen_servers.txt`, więc na tym samym serwerze
+powitanie już się nie pokaże (także po restarcie gry). Usuń ten plik, żeby zobaczyć je znowu.
+
 Napisy są po polsku albo po angielsku, zależnie od języka gry. Układ dopasowuje się do skali GUI.
 
 ## Budowanie
@@ -43,7 +49,7 @@ Napisy są po polsku albo po angielsku, zależnie od języka gry. Układ dopasow
 ./gradlew build
 ```
 
-Gotowy plik: `build/libs/vescaclient-1.1.0.jar` → wrzuć do `.minecraft/mods` razem z Fabric API.
+Gotowy plik: `build/libs/vescaclient-1.2.0.jar` → wrzuć do `.minecraft/mods` razem z Fabric API.
 
 > Nie instaluj go razem ze starym `vescclient-*.jar`: oba podmieniają menu główne.
 
@@ -59,6 +65,7 @@ src/main/java/dev/vesca/client/
   ui/ServersScreen.java         – lista serwerów
   ui/WorldsScreen.java          – lista światów
   ui/Loading.java               – ekran wczytywania
+  ui/Welcome.java               – powitanie „Hello VescaClient” przy pierwszym wejściu na serwer
   ui/Anim.java                  – płynne animacje
   render/R2D.java               – rysowanie 2D (zaokrąglenia SDF, cienie, poświaty, ikony)
   render/Fonts.java             – czcionka Inter

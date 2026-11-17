@@ -127,7 +127,7 @@ public class ConfigManager {
         o.add("panels", pan);
         o.addProperty("style", Theme.style().name());
         o.addProperty("guiH", s.guiH);
-        o.addProperty("ui", 10);
+        o.addProperty("ui", 11);
         com.google.gson.JsonArray fr = new com.google.gson.JsonArray();
         for (String f : VescClient.get().friends.all()) fr.add(f);
         o.add("friends", fr);
@@ -185,6 +185,10 @@ public class ConfigManager {
             // 5.1: proste, wyśrodkowane okno GUI domyślnie (3D jako opcja) + Discord Rich Presence włączony
             s.layout.set("Window");
             firstRun = true;
+        }
+        if (o == null || !o.has("ui") || o.get("ui").getAsInt() < 11) {
+            // 5.4: nowy domyślny układ GUI – zakładki kategorii u góry
+            s.layout.set("Tabs");
         }
         if (o == null || !o.has("ui") || o.get("ui").getAsInt() < 10) {
             // 5.2: czysty motyw biało-czarny (MONO) na ciemnym tle, pełne panele

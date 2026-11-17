@@ -32,7 +32,9 @@ import java.util.function.IntConsumer;
  */
 public class ClickGui extends Screen {
     // wymiary okna (przed skalowaniem)
-    private static final float SB = 58, PAD = 18, IW = 214;
+    private static final float PAD = 18, IW = 214;
+    /** szerokość paska bocznego (0 w układzie Tabs) */
+    private static float SB = 58;
     private String railTip; private float railTipY;
     /** rozmiar okna – zmieniany przeciąganiem prawego dolnego rogu i zapisywany w konfiguracji */
     private float W = 640, H = 420;
@@ -80,6 +82,8 @@ public class ClickGui extends Screen {
     private final Map<Module, Float> setHeights = new HashMap<>();
 
     private boolean panelMode() { return rc.settings.layout.get().equals("Panels"); }
+    /** układ z zakładkami kategorii u góry (bez paska bocznego) */
+    private boolean tabsMode() { return rc.settings.layout.get().equals("Tabs"); }
 
     private float[] panelPos(Category c) {
         int idx = c.ordinal(), n = Category.values().length;
@@ -169,6 +173,8 @@ public class ClickGui extends Screen {
         // skala i pozycja
         ClientSettings s = rc.settings;
         W = s.guiW; H = s.guiH;
+        SB = tabsMode() ? 0 : 58;
+        if (tabsMode()) { W = Math.max(W, 760); H = Math.max(H, 440); }
         centerX = width / 2f; centerY = height / 2f;
         if (panelMode()) {
             scale = s.guiScale() * (0.94f + 0.06f * p);
@@ -265,10 +271,18 @@ public class ClickGui extends Screen {
         R2D.shadow(ctx, x0, y0, W, H, 26, Theme.shadow());
         R2D.roundRect(ctx, x0, y0, W, H, 14, Theme.bg());
         // sidebar (przycięty scissorem – bez nakładania warstw, ważne przy półprzezroczystym szkle)
-        R2D.scissor(ctx, x0, y0, SB, H);
-        R2D.roundRect(ctx, x0, y0, SB + 14, H, 14, Theme.sidebar());
-        R2D.endScissor(ctx);
-        R2D.rect(ctx, x0 + SB, y0 + 12, 0.5f, H - 24, Theme.stroke());
+        if (SB > 0) {
+            R2D.scissor(ctx, x0, y0, SB, H);
+            R2D.roundRect(ctx, x0, y0, SB + 14, H, 14, Theme.sidebar());
+            R2D.endScissor(ctx);
+            R2D.rect(ctx, x0 + SB, y0 + 12, 0.5f, H - 24, Theme.stroke());
+        } else {
+            // pasek górny (Tabs): delikatnie jaśniejsze tło nagłówka
+            R2D.scissor(ctx, x0, y0, W, 78);
+            R2D.roundRect(ctx, x0, y0, W, 92, 14, Theme.sidebar());
+            R2D.endScissor(ctx);
+            R2D.rect(ctx, x0 + 14, y0 + 77.5f, W - 28, 0.5f, Theme.stroke());
+        }
         float g = Theme.glass();
         if (g > 0.01f) {
             // połysk szkła u góry i poświaty w kolorach akcentu
@@ -291,12 +305,13 @@ public class ClickGui extends Screen {
             R2D.gradientH(ctx, x0 + 14, y0 + 50, SB - 28, 0.8f, R2D.withAlpha(Theme.accentWave(0), 0.9f * n), R2D.withAlpha(Theme.accent2(), 0f));
         }
 
-        drawSidebar(ctx);
+        if (SB > 0) drawSidebar(ctx); else railTip = null;
         drawContent(ctx);
         drawFooter(ctx);
         drawResizeGrip(ctx);
         drawTooltip(ctx);
         drawRailTip(ctx);
+        drawTopTip(ctx);
         drawPalette(ctx);
     }
 
@@ -390,6 +405,197 @@ public class ClickGui extends Screen {
         hit(mid - 15, avY, 30, 30, b -> { if (b == 0) setPage(Page.PROFILE); else if (b == 1) setPage(Page.SETTINGS); });
     }
 
+
+    /** wysokość karty modułu w bieżącym układzie */
+    private float cardH() { return listView ? 30 : (tabsMode() ? 28 : 34); }
+
+    private String topTip; private float topTipX, topTipY;
+    private final Anim tabX = new Anim(-1, 18), tabW = new Anim(0, 18), tabA = new Anim(0, 14);
+
+    /** układ Tabs: logo + wyszukiwarka + ikony stron + profil (rząd 1) i zakładki kategorii (rząd 2) */
+    private void drawTopBar(DrawContext ctx, boolean modulesPage) {
+        topTip = null;
+        int acc = Theme.accent();
+        // ---- rząd 1: logo
+        float lx = x0 + 16, ly = y0 + 12;
+        R2D.glow(ctx, lx - 4, ly - 4, 34, 34, R2D.withAlpha(acc, 0.3f));
+        R2D.roundRectV(ctx, lx, ly, 26, 26, 9, R2D.blend(acc, 0xFFFFFFFF, 0.12f), acc);
+        R2D.icon(ctx, "logo_v", lx + 6, ly + 6, 14, Theme.contrast(acc));
+        Fonts.draw(ctx, "VescClient", lx + 34, ly + 2, Theme.text(), Font.BOLD, 1.0f);
+        Fonts.draw(ctx, "v" + VescClient.VERSION + "  •  1.21.1", lx + 34, ly + 16, Theme.textFaint(), Font.REGULAR, 0.6f);
+        hit(x0, y0, 150, 42, b -> {
+            if (b == 0) { draggingWindow = true; dragStartMx = mx; dragStartMy = my; dragStartX = dragX; dragStartY = dragY; }
+        });
+
+        // ---- rząd 1: prawa strona (od prawej): zamknij, awatar, ikony stron, Ctrl K, wyszukiwarka
+        float bs = 26, by = y0 + 12, rx = x0 + W - 16;
+        rx -= bs;
+        {
+            final float bx = rx;
+            boolean hv = hovered(bx, by, bs, bs);
+            float ha = anim("tclose", 18).animate(hv ? 1 : 0);
+            R2D.roundRect(ctx, bx, by, bs, bs, 9, R2D.blend(Theme.card(), Theme.cardHover(), ha));
+            R2D.roundOutline(ctx, bx, by, bs, bs, 9, 0.5f, Theme.stroke());
+            R2D.icon(ctx, "cross", bx + 8.5f, by + 8.5f, 9, R2D.blend(Theme.textDim(), Theme.text(), ha));
+            hit(bx, by, bs, bs, b -> { if (b == 0) close(); });
+        }
+        rx -= bs + 6;
+        {
+            final float bx = rx;
+            boolean hv = hovered(bx, by, bs, bs);
+            float ha = anim("tav", 18).animate(hv || page == Page.PROFILE ? 1 : 0);
+            R2D.roundRect(ctx, bx, by, bs, bs, 9, R2D.blend(Theme.card(), Theme.cardHover(), ha));
+            R2D.roundOutline(ctx, bx, by, bs, bs, 9, 0.5f, R2D.blend(Theme.stroke(), acc, page == Page.PROFILE ? 1 : 0));
+            drawHead(ctx, bx + 4, by + 4, 18);
+            if (hv) { topTip = dev.vesc.client.module.Legit.name(); topTipX = bx + bs / 2f; topTipY = by + bs + 4; }
+            hit(bx, by, bs, bs, b -> { if (b == 0) setPage(Page.PROFILE); else if (b == 1) setPage(Page.SETTINGS); });
+        }
+        rx -= 8;
+        Object[][] pages = {{"settings", Page.SETTINGS, "page.settings"}, {"config", Page.CONFIG, "page.config"}, {"themes", Page.THEMES, "page.themes"},
+                {"hud", Page.HUD, "page.hud"}, {"users", Page.FRIENDS, "page.friends"}, {"star", Page.FAVORITES, "cat.favorites"}, {"misc", Page.HOME, "page.home"}};
+        // grupa ikon w jednym torze
+        float ib = 24, ig = 2;
+        float groupW = pages.length * ib + (pages.length - 1) * ig + 6;
+        float gx = rx - groupW;
+        R2D.roundRect(ctx, gx, by, groupW, bs, 9, R2D.withAlpha(Theme.toggleOff(), 0.45f));
+        R2D.roundOutline(ctx, gx, by, groupW, bs, 9, 0.5f, Theme.stroke());
+        for (int i = 0; i < pages.length; i++) {
+            Page pg = (Page) pages[i][1];
+            float bx = gx + 3 + (pages.length - 1 - i) * (ib + ig);
+            boolean act = page == pg && (pg != Page.FAVORITES || search.isEmpty());
+            boolean hv = hovered(bx, by + 1, ib, bs - 2);
+            float aa = anim("tpg" + i, 16).animate(act ? 1 : 0), ha = anim("tpgh" + i, 18).animate(hv ? 1 : 0);
+            if (aa > 0.01f) R2D.roundRect(ctx, bx, by + 2, ib, bs - 4, 7, R2D.withAlpha(acc, aa));
+            else if (ha > 0.01f) R2D.roundRect(ctx, bx, by + 2, ib, bs - 4, 7, R2D.withAlpha(Theme.text(), 0.07f * ha));
+            R2D.icon(ctx, (String) pages[i][0], bx + ib / 2f - 4.5f, by + bs / 2f - 4.5f, 9,
+                    R2D.blend(R2D.blend(Theme.textDim(), Theme.text(), ha), Theme.contrast(acc), aa));
+            if (hv) { topTip = Lang.get((String) pages[i][2]); topTipX = bx + ib / 2f; topTipY = by + bs + 4; }
+            hit(bx, by, ib, bs, b -> { if (b == 0) { setPage(pg); if (pg == Page.FAVORITES) { search = ""; searchFocused = false; } } });
+        }
+        rx = gx - 8;
+        // Ctrl K
+        {
+            float pw2 = 48, bx = rx - pw2;
+            boolean hv = hovered(bx, by, pw2, bs);
+            float ha = anim("tpal", 18).animate(hv ? 1 : 0);
+            R2D.roundRect(ctx, bx, by, pw2, bs, 9, R2D.blend(Theme.card(), Theme.cardHover(), ha));
+            R2D.roundOutline(ctx, bx, by, pw2, bs, 9, 0.5f, Theme.stroke());
+            R2D.icon(ctx, "keybind", bx + 8, by + bs / 2f - 4, 8, Theme.textDim());
+            Fonts.drawV(ctx, "Ctrl K", bx + 19, by + bs / 2f + 0.5f, Theme.textDim(), Font.BOLD, 0.6f);
+            hit(bx, by, pw2, bs, b -> { if (b == 0) openPalette(); });
+            rx = bx - 8;
+        }
+        // wyszukiwarka (zajmuje resztę miejsca, max 190)
+        float sw = Math.min(190, rx - (lx + 150));
+        if (sw > 80) drawSearch(ctx, rx - sw, by, sw, bs);
+
+        // ---- rząd 2: zakładki kategorii (tor + przesuwana pigułka)
+        Category[] cats = Category.values();
+        float ty = y0 + 46, th = 24, pad = 3;
+        float[] tw = new float[cats.length];
+        float total = 0;
+        boolean labels = true;
+        for (int i = 0; i < cats.length; i++) { tw[i] = 9 + 5 + Fonts.width(cats[i].getName(), Font.SEMIBOLD, 0.72f) + 22; total += tw[i]; }
+        float avail = W - 32 - pad * 2;
+        if (total > avail) { labels = false; total = 0; for (int i = 0; i < cats.length; i++) { tw[i] = 30; total += tw[i]; } }
+        float stretch = labels ? Math.min(1.25f, avail / total) : 1;
+        float trackW = total * stretch + pad * 2;
+        float tx0 = x0 + (W - trackW) / 2f;
+        R2D.roundRect(ctx, tx0, ty, trackW, th + pad * 2, (th + pad * 2) / 2f, R2D.withAlpha(Theme.toggleOff(), 0.45f));
+        R2D.roundOutline(ctx, tx0, ty, trackW, th + pad * 2, (th + pad * 2) / 2f, 0.5f, Theme.stroke());
+        float cxp = tx0 + pad;
+        float selX = -1, selW = 0;
+        float[] xs = new float[cats.length];
+        for (int i = 0; i < cats.length; i++) {
+            xs[i] = cxp; tw[i] *= stretch;
+            boolean act = page == Page.CATEGORY && category == cats[i] && search.isEmpty();
+            if (act) { selX = cxp; selW = tw[i]; }
+            cxp += tw[i];
+        }
+        // pigułka aktywnej zakładki
+        if (selX >= 0 && tabX.raw() < 0) { tabX.snap(selX); tabW.snap(selW); }
+        float pa = tabA.animate(selX >= 0 ? 1 : 0);
+        float px = tabX.animate(selX >= 0 ? selX : tabX.target()), pwv = tabW.animate(selX >= 0 ? selW : tabW.target());
+        if (pa > 0.01f) {
+            R2D.glow(ctx, px - 6, ty + pad - 6, pwv + 12, th + 12, R2D.withAlpha(acc, 0.25f * pa));
+            R2D.roundRectV(ctx, px, ty + pad, pwv, th, th / 2f, R2D.withAlpha(R2D.blend(acc, 0xFFFFFFFF, 0.12f), pa), R2D.withAlpha(acc, pa));
+        }
+        for (int i = 0; i < cats.length; i++) {
+            Category c = cats[i];
+            float bx = xs[i], bw = tw[i];
+            boolean act = page == Page.CATEGORY && category == c && search.isEmpty();
+            boolean hv = hovered(bx, ty + pad, bw, th);
+            float near = 1 - Anim.clamp01(Math.abs(px - bx) / Math.max(1, bw)); near *= pa;
+            float ha = anim("tab" + i, 18).animate(hv && !act ? 1 : 0);
+            if (ha > 0.01f) R2D.roundRect(ctx, bx, ty + pad, bw, th, th / 2f, R2D.withAlpha(Theme.text(), 0.06f * ha));
+            int fg = R2D.blend(R2D.blend(Theme.textDim(), Theme.text(), ha), Theme.contrast(acc), near);
+            long en = rc.modules.byCategory(c).stream().filter(Module::isEnabled).count();
+            if (labels) {
+                float lw = 9 + 5 + Fonts.width(c.getName(), Font.SEMIBOLD, 0.72f);
+                float sx = bx + (bw - lw) / 2f;
+                R2D.icon(ctx, c.icon, sx, ty + pad + th / 2f - 4.5f, 9, fg);
+                Fonts.drawV(ctx, c.getName(), sx + 14, ty + pad + th / 2f + 0.5f, fg, act ? Font.BOLD : Font.SEMIBOLD, 0.72f);
+            } else {
+                R2D.icon(ctx, c.icon, bx + bw / 2f - 4.5f, ty + pad + th / 2f - 4.5f, 9, fg);
+                if (hv) { topTip = c.getName(); topTipX = bx + bw / 2f; topTipY = ty + th + pad * 2 + 4; }
+            }
+            if (en > 0) {
+                float dx = bx + bw - 7, dy = ty + pad + 6;
+                R2D.circle(ctx, dx, dy, 2.2f, R2D.blend(acc, Theme.contrast(acc), near));
+            }
+            hit(bx, ty + pad, bw, th, b -> {
+                if (b != 0) return;
+                setPage(Page.CATEGORY);
+                category = c;
+                search = ""; searchFocused = false;
+            });
+        }
+    }
+
+    private float hdrH = 51;
+
+    /** Tabs: mały nagłówek strony (tytuł + akcje) dla stron innych niż lista modułów; zwraca wysokość nagłówka */
+    private float drawTabsPageHeader(DrawContext ctx, float cx, float cw, float pa) {
+        String title = switch (page) {
+            case HOME -> Lang.get("page.home");
+            case THEMES -> Lang.get("page.themes");
+            case HUD -> Lang.get("page.hud");
+            case FRIENDS -> Lang.get("page.friends");
+            case CONFIG -> Lang.get("page.config");
+            case PROFILE -> Lang.get("page.profile");
+            case SETTINGS -> Lang.get("page.settings");
+            default -> "";
+        };
+        float ty = y0 + 88;
+        float prev = R2D.alpha;
+        R2D.alpha = prev * pa;
+        Fonts.drawV(ctx, title, cx + PAD + (1 - pa) * 6, ty + 11, Theme.text(), Font.BOLD, 1.05f);
+        R2D.alpha = prev;
+        if (page == Page.CONFIG) {
+            float bw = 104;
+            button(ctx, "newcfg", cx + cw - PAD - bw, ty, bw, 22, "plus", Lang.get("config.new"), true, () -> {
+                String n = rc.config.newName();
+                rc.config.save(n);
+                rc.notifications.info("disk", Lang.get("config.created"), n);
+            });
+            float fw = 26;
+            button(ctx, "openfolder", cx + cw - PAD - bw - 6 - fw, ty, fw, 22, "folder", null, false,
+                    () -> Util.getOperatingSystem().open(rc.config.folder().toFile()));
+        }
+        return 88 + 26;
+    }
+
+    /** dymek pod ikoną w pasku górnym (Tabs) */
+    private void drawTopTip(DrawContext ctx) {
+        if (topTip == null || !tabsMode()) return;
+        float tw = Fonts.width(topTip, Font.BOLD, 0.64f) + 14;
+        float tx = Math.max(x0 + 4, Math.min(x0 + W - tw - 4, topTipX - tw / 2f)), ty = topTipY;
+        R2D.shadow(ctx, tx, ty, tw, 15, 6, Theme.shadow());
+        R2D.roundRect(ctx, tx, ty, tw, 15, 7.5f, opaque(Theme.bg()));
+        R2D.roundOutline(ctx, tx, ty, tw, 15, 7.5f, 0.5f, Theme.stroke());
+        Fonts.drawV(ctx, topTip, tx + 7, ty + 8, Theme.text(), Font.BOLD, 0.64f);
+    }
+
     /** dymek nazwy dla slim-railu (rysowany nad treścią) */
     private void drawRailTip(DrawContext ctx) {
         if (railTip == null) return;
@@ -470,6 +676,10 @@ public class ClickGui extends Screen {
         long now = System.currentTimeMillis();
         float pa = Anim.easeOutCubic((now - pageTime) / (260f / Anim.globalSpeed));
 
+        float prev = R2D.alpha;
+        boolean modulesPage = page == Page.CATEGORY || page == Page.FAVORITES;
+        float hy;
+        if (tabsMode()) { drawTopBar(ctx, modulesPage); hy = 80; } else {
         // nagłówek
         String title, sub;
         switch (page) {
@@ -487,14 +697,12 @@ public class ClickGui extends Screen {
                         : Lang.format("modules.count", list.size(), list.stream().filter(Module::isEnabled).count()) + "  •  " + Lang.get("rmb.settings");
             }
         }
-        float prev = R2D.alpha;
         R2D.alpha = prev * pa;
         Fonts.draw(ctx, title, cx + PAD + (1 - pa) * 8, y0 + 17, Theme.text(), Font.BOLD, 1.45f);
         Fonts.draw(ctx, Fonts.trim(sub, Font.REGULAR, 0.72f, cw - PAD * 2 - (page == Page.CATEGORY || page == Page.FAVORITES ? 268 : 130)), cx + PAD + (1 - pa) * 8, y0 + 34, Theme.textDim(), Font.REGULAR, 0.72f);
         R2D.alpha = prev;
 
         // prawa strona nagłówka
-        boolean modulesPage = page == Page.CATEGORY || page == Page.FAVORITES;
         if (modulesPage) drawSearch(ctx, cx + cw - PAD - 168, y0 + 16, 140, 22);
         // przycisk palety komend (Ctrl+K)
         {
@@ -537,6 +745,10 @@ public class ClickGui extends Screen {
         }
 
         R2D.rect(ctx, cx + PAD, y0 + 50, cw - PAD * 2, 0.5f, Theme.stroke());
+        hy = 51;
+        }
+        if (tabsMode() && !modulesPage && page != Page.HOME) hy = drawTabsPageHeader(ctx, cx, cw, pa);
+        hdrH = hy;
 
         // inspektor modułu (panel z prawej) – zwęża obszar treści
         if (inspected != null) lastInspected = inspected;
@@ -545,10 +757,10 @@ public class ClickGui extends Screen {
 
         // pasek narzędzi: filtry, sortowanie, widok
         float barH = 0;
-        if (modulesPage) { drawToolbar(ctx, cx + PAD, y0 + 56, contentW - PAD * 2 + 6 * ia); barH = 22; }
+        if (modulesPage) { drawToolbar(ctx, cx + PAD, y0 + hy + 5, contentW - PAD * 2 + 6 * ia); barH = 22; }
 
         // obszar przewijany
-        float vy = y0 + 51 + barH, vh = H - 51 - barH - 6;
+        float vy = y0 + hy + barH, vh = H - hy - barH - 6;
         float sc = scroll.animate(scrollTarget);
         R2D.scissor(ctx, cx, vy, contentW, vh);
         float[] oldClip = clip;
@@ -581,7 +793,7 @@ public class ClickGui extends Screen {
             R2D.roundRect(ctx, cx + contentW - 7, ty, 2.5f, thumbH, 1.25f, Theme.accentWave(0));
         }
         if (hoveredCard != tooltipModule) { tooltipModule = hoveredCard; tooltipStart = System.currentTimeMillis(); }
-        if (ia > 0.01f && lastInspected != null) drawInspector(ctx, cx + cw - IW * ia, y0 + 51, IW, H - 57, ia);
+        if (ia > 0.01f && lastInspected != null) drawInspector(ctx, cx + cw - IW * ia, y0 + hy, IW, H - hy - 6, ia);
         else inspX = inspW = 0;
     }
 
@@ -648,12 +860,17 @@ public class ClickGui extends Screen {
         float startY = y;
         String grp = catPage ? groupSel.get(category) : null;
         if (catPage) {
-            y += drawCategoryHero(ctx, x, y, w) + 8;
+            if (!tabsMode()) y += drawCategoryHero(ctx, x, y, w) + 8;
             y += drawGroupChips(ctx, x, y, w) + 10;
         }
         List<Module> base = currentModules();
         if (grp != null) base.removeIf(m -> !grp.equals(m.getGroup()));
         List<Module> list = filtered(base);
+        if (tabsMode() && catPage && grp == null && sort == Sort.DEFAULT) {
+            // Tabs: gęsta siatka bez nagłówków podgrup, ale w kolejności podgrup
+            list = new ArrayList<>(list);
+            list.sort(java.util.Comparator.comparingInt(m -> category.groups.indexOf(m.getGroup())));
+        }
         shownModules = list;
         if (focusIndex >= list.size()) focusIndex = list.size() - 1;
         if (list.isEmpty()) {
@@ -664,7 +881,7 @@ public class ClickGui extends Screen {
         }
         int cols = listView ? 1 : (w > 560 ? 3 : w > 330 ? 2 : 1);
         lastCols = cols;
-        boolean grouped = catPage && grp == null && sort == Sort.DEFAULT;
+        boolean grouped = catPage && grp == null && sort == Sort.DEFAULT && !tabsMode();
         float cy = y;
         if (!grouped) cy = drawGrid(ctx, list, 0, x, cy, w, cols);
         else {
@@ -691,7 +908,7 @@ public class ClickGui extends Screen {
 
     /** siatka kart modułów; zwraca y pod siatką */
     private float drawGrid(DrawContext ctx, List<Module> list, int startIndex, float x, float y, float w, int cols) {
-        float gap = listView ? 5 : 8, colW = (w - gap * (cols - 1)) / cols;
+        float gap = listView ? 5 : (tabsMode() ? 6 : 8), colW = (w - gap * (cols - 1)) / cols;
         long now = System.currentTimeMillis();
         float cy = y;
         for (int i = 0; i < list.size(); i++) {
@@ -703,7 +920,7 @@ public class ClickGui extends Screen {
             R2D.alpha = prev * e;
             drawModuleCard(ctx, list.get(i), x + col * (colW + gap), cy + (1 - e) * 10, colW, gi);
             R2D.alpha = prev;
-            if (col == cols - 1 || i == list.size() - 1) cy += (listView ? 30 : 34) + gap;
+            if (col == cols - 1 || i == list.size() - 1) cy += cardH() + gap;
         }
         return cy;
     }
@@ -816,7 +1033,9 @@ public class ClickGui extends Screen {
     }
 
     private float drawModuleCard(DrawContext ctx, Module m, float x, float y, float w, int index) {
-        float baseH = listView ? 30 : 34;
+        float baseH = cardH();
+        boolean compact = tabsMode() && !listView;
+        float cdy = compact ? 2.5f : 0;
         float ex = 0;
         float h = baseH;
         boolean hov = hovered(x, y, w, baseH);
@@ -850,30 +1069,30 @@ public class ClickGui extends Screen {
 
         // mała ikona + nazwa / opis
         int nameCol = R2D.blend(Theme.textDim(), Theme.text(), on);
-        R2D.icon(ctx, m.getIcon(), x + 10, y + 8.5f, 8.5f, R2D.blend(Theme.textFaint(), Theme.accent(), on));
+        R2D.icon(ctx, m.getIcon(), x + 10, y + 8.5f + cdy, 8.5f, R2D.blend(Theme.textFaint(), Theme.accent(), on));
         float tx = x + 23;
-        Fonts.draw(ctx, m.getName(), tx, y + 8, nameCol, Font.BOLD, 0.86f);
+        Fonts.draw(ctx, m.getName(), tx, y + 8 + cdy, nameCol, Font.BOLD, 0.86f);
         float right = 60;
         float nx = tx + Fonts.width(m.getName(), Font.BOLD, 0.86f) + 4;
         if (binding == m) {
             String k = Lang.get("bind.listening");
             float kw = Fonts.width(k, Font.BOLD, 0.6f) + 8;
-            R2D.roundRect(ctx, nx, y + 7.5f, kw, 8.5f, 4.25f, Theme.accentWave(0));
-            Fonts.drawV(ctx, k, nx + 4, y + 11.8f, Theme.accentText(), Font.BOLD, 0.6f);
+            R2D.roundRect(ctx, nx, y + 7.5f + cdy, kw, 8.5f, 4.25f, Theme.accentWave(0));
+            Fonts.drawV(ctx, k, nx + 4, y + 11.8f + cdy, Theme.accentText(), Font.BOLD, 0.6f);
             nx += kw + 4;
         } else if (m.hasKey()) {
             String k = Keys.name(m.getKey());
             float kw = Fonts.width(k, Font.BOLD, 0.62f) + 7;
-            R2D.roundRect(ctx, nx, y + 7.5f, kw, 8.5f, 2.5f, Theme.toggleOff());
-            Fonts.drawV(ctx, k, nx + 3.5f, y + 11.8f, Theme.textDim(), Font.BOLD, 0.62f);
+            R2D.roundRect(ctx, nx, y + 7.5f + cdy, kw, 8.5f, 2.5f, Theme.toggleOff());
+            Fonts.drawV(ctx, k, nx + 3.5f, y + 11.8f + cdy, Theme.textDim(), Font.BOLD, 0.62f);
             nx += kw + 4;
         }
         String vals = summary(m);
         if (!vals.isEmpty()) {
             float maxW = x + w - right - nx;
-            if (maxW > 12) Fonts.drawV(ctx, Fonts.trim(vals, Font.SEMIBOLD, 0.62f, maxW), nx + 1, y + 11.8f, Theme.accentWave(0), Font.SEMIBOLD, 0.62f);
+            if (maxW > 12) Fonts.drawV(ctx, Fonts.trim(vals, Font.SEMIBOLD, 0.62f, maxW), nx + 1, y + 11.8f + cdy, Theme.accentWave(0), Font.SEMIBOLD, 0.62f);
         }
-        Fonts.draw(ctx, Fonts.trim(m.getDescription(), Font.REGULAR, 0.66f, w - (tx - x) - right), tx, y + 19, Theme.textFaint(), Font.REGULAR, 0.66f);
+        if (!compact) Fonts.draw(ctx, Fonts.trim(m.getDescription(), Font.REGULAR, 0.66f, w - (tx - x) - right), tx, y + 19, Theme.textFaint(), Font.REGULAR, 0.66f);
 
         // przełącznik
         drawSwitch(ctx, x + w - 30, y + baseH / 2f - 5.5f, on);
@@ -2248,7 +2467,7 @@ public class ClickGui extends Screen {
         cy += h + gap;
 
         h = settingRow(ctx, x, cy, w, "layers", Lang.get("layout.title"), Lang.get("layout.desc"));
-        segmented(ctx, "layout", x + w - 170, cy + 8, 160, 18, new String[]{"Window", "3D", "Panels"}, s.layout.modes.indexOf(s.layout.get()), i -> {
+        segmented(ctx, "layout", x + w - 210, cy + 8, 200, 18, new String[]{"Tabs", "Window", "3D", "Panels"}, s.layout.modes.indexOf(s.layout.get()), i -> {
             s.layout.set(s.layout.modes.get(i)); rc.config.saveClient();
         });
         cy += h + gap;
@@ -2563,7 +2782,7 @@ public class ClickGui extends Screen {
                 // przewiń, aby fokus był widoczny
                 float rowH = (listView ? 35 : 42);
                 float rowY = (f / lastCols) * rowH;
-                float vh = H - 51 - 22 - 6;
+                float vh = H - hdrH - 22 - 6;
                 if (rowY < scrollTarget) scrollTarget = rowY;
                 else if (rowY + rowH > scrollTarget + vh - 10) scrollTarget = rowY + rowH - vh + 10;
                 return true;
@@ -2599,9 +2818,13 @@ public class ClickGui extends Screen {
             if ((Character.isLetterOrDigit(chr) || chr == '_') && friendInput.length() < 16) friendInput += chr;
             return true;
         }
-        if ((panelMode() || page == Page.CATEGORY || page == Page.FAVORITES) && chr >= ' ' && chr != 127) {
+        if ((panelMode() || page == Page.CATEGORY || page == Page.FAVORITES || (tabsMode() && searchFocused)) && chr >= ' ' && chr != 127) {
             if (!searchFocused && Character.isLetterOrDigit(chr)) searchFocused = true;
-            if (searchFocused && search.length() < 24) { search += chr; scrollTarget = 0; }
+            if (searchFocused && search.length() < 24) {
+                // Tabs: pisanie w wyszukiwarce z innej strony przenosi do listy modułów
+                if (tabsMode() && page != Page.CATEGORY && page != Page.FAVORITES) setPage(Page.CATEGORY);
+                search += chr; scrollTarget = 0;
+            }
         }
         return true;
     }

@@ -22,6 +22,8 @@ import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.RotationAxis;
 import net.minecraft.util.math.Vec3d;
 import org.joml.Matrix4f;
+import org.joml.Quaternionf;
+import org.joml.Vector3f;
 
 import java.util.Random;
 
@@ -133,6 +135,10 @@ public final class TargetEspRenderer {
             case "Stars" -> drawStars(ms, cam, target, time, a, hurt, scale);
             case "Comet" -> drawComet(ms, cam, target, time, a, hurt, scale);
             case "Bubble" -> drawBubble(ms, cam, target, time, a, hurt, scale);
+            case "Spirits" -> drawSpirits(ms, cam, target, time, a, hurt, scale);
+            case "Neon" -> drawNeon(ms, target, time, a, hurt, scale);
+            case "Quad" -> markerFront(ms, cam, x, y, z, () -> drawQuad(ms, cam, target, time, a, hurt, scale));
+            case "Clover" -> markerFront(ms, cam, x, y, z, () -> drawClover(ms, cam, target, time, a, hurt, scale));
             default -> {
                 drawRing(ms, target, time, a, hurt, scale, m.trail.get());
                 markerFront(ms, cam, x, y, z, () -> drawMarker(ms, cam, target, time, a, hurt, scale));
@@ -648,6 +654,162 @@ public final class TargetEspRenderer {
         dot(ms, cam, 0, 0, 0, R * 1.15f, color(time, a * (0.1f + 0.15f * hurt), hurt));
         float sw = time * 1.8f;
         dot(ms, cam, (float) Math.cos(sw) * R, (float) Math.sin(sw * 0.7f) * R * 0.5f, (float) Math.sin(sw) * R, 0.12f * scale, color(sw, a, hurt));
+        ms.pop();
+    }
+
+    // ------------------------------------------------------------------ tryby 5.4 (Spirits / Neon / Quad / Clover)
+
+    /**
+     * łuk w płaszczyźnie XY z miękkimi krawędziami (pełna jasność na środku, zanik do 0 na brzegach);
+     * white > 0 rozjaśnia kolor w stronę bieli – „rozgrzany” rdzeń neonu
+     */
+    private static void softArc(MatrixStack ms, float r, float th, float a0, float a1, float alpha, float hurt, float phase, float white) {
+        Matrix4f mat = ms.peek().getPositionMatrix();
+        RenderSystem.setShader(GameRenderer::getPositionColorProgram);
+        int seg = Math.max(6, (int) (Math.abs(a1 - a0) / 0.05f));
+        for (int side = 0; side < 2; side++) {
+            float r0 = side == 0 ? Math.max(0, r - th) : r, r1 = side == 0 ? r : r + th;
+            float al0 = side == 0 ? 0 : 1, al1 = side == 0 ? 1 : 0;
+            BufferBuilder b = Tessellator.getInstance().begin(VertexFormat.DrawMode.TRIANGLE_STRIP, VertexFormats.POSITION_COLOR);
+            for (int i = 0; i <= seg; i++) {
+                float an = a0 + (a1 - a0) * i / seg;
+                float cos = (float) Math.cos(an), sin = (float) Math.sin(an);
+                int c = color(an + phase, 1, hurt);
+                if (white > 0) c = R2D.blend(c, 0xFFFFFFFF, white);
+                b.vertex(mat, cos * r0, sin * r0, 0).color(R2D.withAlpha(c, alpha * al0));
+                b.vertex(mat, cos * r1, sin * r1, 0).color(R2D.withAlpha(c, alpha * al1));
+            }
+            BufferRenderer.drawWithGlobalProgram(b.end());
+        }
+    }
+
+    /** neonowa rurka: szeroka poświata + jasny pas + biały rdzeń */
+    private static void neonArc(MatrixStack ms, float r, float th, float a0, float a1, float alpha, float hurt, float phase) {
+        neonArc(ms, r, th, a0, a1, alpha, hurt, phase, 4.5f);
+    }
+
+    private static void neonArc(MatrixStack ms, float r, float th, float a0, float a1, float alpha, float hurt, float phase, float glow) {
+        softArc(ms, r, th * glow, a0, a1, alpha * 0.32f, hurt, phase, 0);
+        softArc(ms, r, th * 1.5f, a0, a1, alpha, hurt, phase, 0);
+        softArc(ms, r, th * 0.55f, a0, a1, alpha, hurt, phase, 0.6f);
+    }
+
+    /** kolor z alfą przemnożony do RGB (dla mieszania addytywnego ONE, ONE) */
+    private static int premul(int c) {
+        float al = ((c >>> 24) & 0xFF) / 255f;
+        return 0xFF000000 | ((int) (((c >> 16) & 0xFF) * al) << 16) | ((int) (((c >> 8) & 0xFF) * al) << 8) | (int) ((c & 0xFF) * al);
+    }
+
+    /** jeden miękki punkt zwrócony do kamery, dopisany do wspólnego bufora (p – pozycja w bieżącej macierzy) */
+    private static void quadDot(BufferBuilder b, Matrix4f mat, Vector3f p, Vector3f right, Vector3f up, float s, int c) {
+        int pc = premul(c);
+        float rx = right.x * s, ry = right.y * s, rz = right.z * s, ux = up.x * s, uy = up.y * s, uz = up.z * s;
+        b.vertex(mat, p.x - rx - ux, p.y - ry - uy, p.z - rz - uz).texture(0, 1).color(pc);
+        b.vertex(mat, p.x + rx - ux, p.y + ry - uy, p.z + rz - uz).texture(1, 1).color(pc);
+        b.vertex(mat, p.x + rx + ux, p.y + ry + uy, p.z + rz + uz).texture(1, 0).color(pc);
+        b.vertex(mat, p.x - rx + ux, p.y - ry + uy, p.z - rz + uz).texture(0, 0).color(pc);
+    }
+
+    /** Spirits – świecące „duchy” na pochylonych orbitach, z gładkimi, grubymi ogonami jak smugi neonu */
+    private static void drawSpirits(MatrixStack ms, Camera cam, LivingEntity e, float time, float a, float hurt, float scale) {
+        begin(true);
+        float h = e.getHeight(), r = (e.getWidth() * 0.9f + 0.55f) * scale;
+        ms.push();
+        ms.translate(0, h * 0.52f, 0);
+        Matrix4f mat = ms.peek().getPositionMatrix();
+        Quaternionf cq = cam.getRotation();
+        Vector3f right = cq.transform(new Vector3f(1, 0, 0)), up = cq.transform(new Vector3f(0, 1, 0));
+        RenderSystem.setShader(GameRenderer::getPositionTexColorProgram);
+        RenderSystem.setShaderTexture(0, GLOW_ADD);
+        RenderSystem.blendFunc(GlStateManager.SrcFactor.ONE, GlStateManager.DstFactor.ONE);
+        BufferBuilder b = Tessellator.getInstance().begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_TEXTURE_COLOR);
+        int tail = 84;
+        float[] tilt = {62, -48, 16};
+        Vector3f p = new Vector3f();
+        for (int k = 0; k < 3; k++) {
+            Quaternionf orient = new Quaternionf()
+                    .rotateY((float) Math.toRadians(k * 120 + time * 22))
+                    .rotateX((float) Math.toRadians(tilt[k] + 10 * Math.sin(time * 0.8f + k)));
+            float sp = 2.4f + k * 0.35f, off = k * 2.1f;
+            for (int i = tail - 1; i >= 0; i--) {
+                float t = time * sp + off - i * 0.016f;
+                float kk = 1 - i / (float) tail;
+                orient.transform(p.set((float) Math.cos(t) * r, 0, (float) Math.sin(t) * r));
+                // poświata ogona + jaśniejszy rdzeń
+                quadDot(b, mat, p, right, up, (0.05f + 0.2f * (float) Math.pow(kk, 1.2)) * scale, color(t + k, a * kk * 0.26f, hurt));
+                int core = R2D.blend(color(t + k, 1, hurt), 0xFFFFFFFF, 0.5f);
+                quadDot(b, mat, p, right, up, (0.018f + 0.06f * kk) * scale, R2D.withAlpha(core, a * kk * 0.4f));
+            }
+            // głowa ducha
+            float t = time * sp + off;
+            orient.transform(p.set((float) Math.cos(t) * r, 0, (float) Math.sin(t) * r));
+            quadDot(b, mat, p, right, up, 0.42f * scale, color(t + k, a * (0.3f + 0.2f * hurt), hurt));
+        }
+        BufferRenderer.drawWithGlobalProgram(b.end());
+        RenderSystem.blendFunc(GlStateManager.SrcFactor.SRC_ALPHA, GlStateManager.DstFactor.ONE);
+        ms.pop();
+    }
+
+    /** Neon – gruby, świecący pierścień neonu przy stopach, lekko unoszący się; delikatna ściana światła w górę */
+    private static void drawNeon(MatrixStack ms, LivingEntity e, float time, float a, float hurt, float scale) {
+        begin(true);
+        float r = (e.getWidth() * 0.72f + 0.12f) * scale * (1 + 0.035f * (float) Math.sin(time * 3) + 0.12f * hurt);
+        float yy = 0.07f + 0.05f * (0.5f + 0.5f * (float) Math.sin(time * 1.7f));
+        // ściana światła
+        Matrix4f mat = ms.peek().getPositionMatrix();
+        RenderSystem.setShader(GameRenderer::getPositionColorProgram);
+        int seg = 64;
+        BufferBuilder b = Tessellator.getInstance().begin(VertexFormat.DrawMode.TRIANGLE_STRIP, VertexFormats.POSITION_COLOR);
+        for (int i = 0; i <= seg; i++) {
+            double an = Math.PI * 2 * i / seg;
+            float cos = (float) Math.cos(an), sin = (float) Math.sin(an);
+            int c = color((float) an + time, 1, hurt);
+            b.vertex(mat, cos * r, yy, sin * r).color(R2D.withAlpha(c, a * 0.22f));
+            b.vertex(mat, cos * r, yy + 0.38f * scale, sin * r).color(R2D.withAlpha(c, 0));
+        }
+        BufferRenderer.drawWithGlobalProgram(b.end());
+        ms.push();
+        ms.translate(0, yy, 0);
+        ms.multiply(RotationAxis.POSITIVE_X.rotationDegrees(90));
+        neonArc(ms, r, 0.032f * scale, 0, (float) Math.PI * 2, a, hurt, time);
+        ms.pop();
+    }
+
+    /** Quad – znacznik na celu: cztery neonowe łuki obracające się wokół świecącego środka */
+    private static void drawQuad(MatrixStack ms, Camera cam, LivingEntity e, float time, float a, float hurt, float scale) {
+        begin(true);
+        float s = (e.getHeight() * 0.15f + 0.05f) * scale * (1 + 0.05f * (float) Math.sin(time * 3.5f) + 0.18f * hurt);
+        ms.push();
+        ms.translate(0, e.getHeight() * 0.55f, 0);
+        billboard(ms, cam, GLOW, s * 1.7f, 0, color(time, a * 0.5f, hurt));
+        billboard(ms, cam, GLOW, s * 0.75f, 0, color(time + 1, a * 0.55f, hurt));
+        ms.multiply(cam.getRotation());
+        // równa poświata dookoła (żeby przerwy między łukami nie robiły ciemnych klinów)
+        softArc(ms, s, 0.036f * scale * 3.2f, 0, (float) Math.PI * 2, a * 0.3f, hurt, time, 0);
+        float rot = time * 1.15f, gap = 0.38f;
+        for (int i = 0; i < 4; i++) {
+            float st = rot + i * (float) Math.PI / 2 + gap / 2;
+            neonArc(ms, s, 0.036f * scale, st, st + (float) Math.PI / 2 - gap, a, hurt, time + i, 2.2f);
+        }
+        ms.pop();
+    }
+
+    /** Clover – cztery neonowe pętle ułożone w kwiat (koniczynę), obracające się wokół środka */
+    private static void drawClover(MatrixStack ms, Camera cam, LivingEntity e, float time, float a, float hurt, float scale) {
+        begin(true);
+        float s = (e.getHeight() * 0.15f + 0.05f) * scale * (1 + 0.05f * (float) Math.sin(time * 3.2f) + 0.18f * hurt);
+        ms.push();
+        ms.translate(0, e.getHeight() * 0.55f, 0);
+        billboard(ms, cam, GLOW, s * 1.7f, 0, color(time, a * 0.45f, hurt));
+        ms.multiply(cam.getRotation());
+        ms.multiply(RotationAxis.POSITIVE_Z.rotationDegrees(time * 50));
+        for (int i = 0; i < 4; i++) {
+            float an = i * (float) Math.PI / 2;
+            ms.push();
+            ms.translate((float) Math.cos(an) * s * 0.5f, (float) Math.sin(an) * s * 0.5f, 0);
+            neonArc(ms, s * 0.46f, 0.032f * scale, 0, (float) Math.PI * 2, a, hurt, time + i * 1.5f);
+            ms.pop();
+        }
         ms.pop();
     }
 

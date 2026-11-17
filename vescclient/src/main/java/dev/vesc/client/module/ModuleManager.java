@@ -34,6 +34,7 @@ public class ModuleManager {
         add(new Criticals());
         add(new Reach());
         add(new WTap());
+        add(new FakeLag());
         add(new HitBoxes());
         add(new Velocity());
         add(new AutoTotem());

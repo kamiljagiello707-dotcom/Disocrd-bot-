@@ -1045,7 +1045,8 @@ public class ClickGui extends Screen {
         boolean sel = inspected == m;
         float sa = anim("sel" + m.getName(), 16).animate(sel ? 1 : 0);
 
-        R2D.roundRect(ctx, x, y, w, h, 7, R2D.blend(R2D.blend(Theme.card(), Theme.cardHover(), ha), R2D.withAlpha(Theme.accent(), 0.16f), sa * 0.6f));
+        int cardBase = R2D.blend(Theme.card(), Theme.cardHover(), ha);
+        R2D.roundRect(ctx, x, y, w, h, 7, R2D.blend(cardBase, R2D.blend(cardBase, Theme.accent(), 0.05f), sa));
         R2D.roundOutline(ctx, x, y, w, h, 7, 0.5f + sa * 0.5f, R2D.blend(R2D.blend(Theme.stroke(), Theme.textFaint(), on * 0.5f), Theme.accentWave(0), sa));
         if (index == focusIndex) R2D.roundOutline(ctx, x - 1.5f, y - 1.5f, w + 3, h + 3, 8.5f, 1, Theme.accentWave(0));
         float nn = Theme.neon() * on;

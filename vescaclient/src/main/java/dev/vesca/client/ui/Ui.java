@@ -3,8 +3,10 @@ package dev.vesca.client.ui;
 import dev.vesca.client.render.Fonts;
 import dev.vesca.client.render.Fonts.Font;
 import dev.vesca.client.render.R2D;
+import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
+import net.minecraft.client.gui.PlayerSkinDrawer;
 
 /** Biało-czarna paleta VescaClient i wspólne elementy (logo, napis, przyciski, klawisze). */
 public final class Ui {
@@ -85,5 +87,27 @@ public final class Ui {
         R2D.roundOutline(ctx, x, y, s, s, s * 0.26f, 0.6f, 0x2AFFFFFF);
         String ch = name == null || name.isBlank() ? "?" : name.trim().substring(0, 1).toUpperCase();
         Fonts.drawCentered(ctx, ch, x + s / 2f, y + s / 2f - Fonts.height(1.05f) / 2f + 0.5f, TEXT, Font.BOLD, 1.05f);
+    }
+
+    /** głowa skina gracza */
+    public static void head(DrawContext ctx, float x, float y, int size) {
+        MinecraftClient mc = MinecraftClient.getInstance();
+        ctx.draw();
+        RenderSystem.enableBlend();
+        RenderSystem.setShaderColor(1, 1, 1, R2D.alpha);
+        ctx.getMatrices().push();
+        ctx.getMatrices().translate(x, y, 0);
+        PlayerSkinDrawer.draw(ctx, mc.getSkinProvider().getSkinTextures(mc.getGameProfile()), 0, 0, size);
+        ctx.getMatrices().pop();
+        ctx.draw();
+        RenderSystem.setShaderColor(1, 1, 1, 1);
+    }
+
+    /** przełącznik (wł./wył.): on 0..1 (animowane), hover 0..1 */
+    public static void toggle(DrawContext ctx, float x, float y, float on, float hover) {
+        float w = 20, h = 11;
+        R2D.roundRect(ctx, x, y, w, h, h / 2f, R2D.blend(R2D.blend(0x26FFFFFF, 0x38FFFFFF, hover), 0xFFF4F4F5, on));
+        float k = x + h / 2f + (w - h) * on;
+        R2D.circle(ctx, k, y + h / 2f, 3.6f, R2D.blend(0xFFB4B4BC, BLACK, on));
     }
 }

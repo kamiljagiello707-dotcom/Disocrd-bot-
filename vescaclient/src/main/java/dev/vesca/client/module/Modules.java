@@ -27,11 +27,13 @@ public final class Modules {
     private static final Set<Integer> held = new HashSet<>();
 
     public static List<Module> all() { return ALL; }
+    public static Module get(String name) { for (Module m : ALL) if (m.name.equals(name)) return m; return null; }
+    public static Path configDir() { return FILE.getParent().resolve("configs"); }
     public static List<Module> of(Category c) { return ALL.stream().filter(m -> m.category == c).toList(); }
     public static long enabledIn(Category c) { return ALL.stream().filter(m -> m.category == c && m.isEnabled()).count(); }
 
     private static Module m(String name, Category c, String pl, String en, Setting<?>... s) {
-        Module mod = new Module(name, c, "g_m_" + name.toLowerCase(Locale.ROOT), pl, en).add(s);
+        Module mod = new Module(name, c, "g_m_" + name.toLowerCase(Locale.ROOT).replace(" ", ""), pl, en).add(s);
         ALL.add(mod);
         return mod;
     }
@@ -84,6 +86,8 @@ public final class Modules {
         m("ChestStealer", PLAYER, "Szybko wyjmuje rzeczy ze skrzyń", "Quickly loots chests", n("Delay", 80, 0, 300, 10, "ms"), b("Auto close", true));
         m("AutoRespawn", PLAYER, "Odradza się od razu", "Respawns instantly", n("Delay", 0, 0, 3000, 100, "ms"));
         // --- Wygląd
+        m("3D GUI", RENDER, "ClickGUI jako pochylony panel w przestrzeni", "ClickGUI as a tilted panel in space",
+                n("Tilt", 16, 6, 30, 1, "°"), o("Side", "Right", "Left"), b("Follow mouse", true));
         m("ESP", RENDER, "Podświetla graczy i moby", "Highlights players and mobs",
                 o("Mode", "Box", "Outline", "2D"), b("Players", true), b("Mobs", false), b("Items", false));
         m("Fullbright", RENDER, "Pełna jasność wszędzie", "Full brightness everywhere", n("Gamma", 100, 10, 100, 5, "%"));
@@ -127,7 +131,9 @@ public final class Modules {
 
     // ------------------------------------------------------------------ zapis
 
-    public static void save() {
+    public static void save() { saveTo(FILE); }
+
+    private static void saveTo(Path file) {
         JsonObject root = new JsonObject();
         for (Module m : ALL) {
             JsonObject o = new JsonObject();
@@ -140,15 +146,17 @@ public final class Modules {
             root.add(m.name, o);
         }
         try {
-            Files.createDirectories(FILE.getParent());
-            Files.writeString(FILE, GSON.toJson(root), StandardCharsets.UTF_8);
+            Files.createDirectories(file.getParent());
+            Files.writeString(file, GSON.toJson(root), StandardCharsets.UTF_8);
         } catch (IOException ignored) {}
     }
 
-    private static void load() {
-        if (!Files.exists(FILE)) return;
+    private static void load() { loadFrom(FILE); }
+
+    private static boolean loadFrom(Path file) {
+        if (!Files.exists(file)) return false;
         try {
-            JsonObject root = JsonParser.parseString(Files.readString(FILE, StandardCharsets.UTF_8)).getAsJsonObject();
+            JsonObject root = JsonParser.parseString(Files.readString(file, StandardCharsets.UTF_8)).getAsJsonObject();
             for (Module m : ALL) {
                 if (!root.has(m.name)) continue;
                 JsonObject o = root.getAsJsonObject(m.name);
@@ -160,6 +168,48 @@ public final class Modules {
                     for (Setting<?> st : m.settings) if (s != null && s.has(st.name)) st.load(s.get(st.name));
                 } catch (Exception ignored) {}
             }
-        } catch (Exception ignored) {}
+            return true;
+        } catch (Exception ignored) { return false; }
+    }
+
+    // ------------------------------------------------------------------ konfiguracje (strona "Konfiguracje")
+
+    public record Config(String name, long modified) {}
+
+    public static List<Config> configs() {
+        List<Config> out = new ArrayList<>();
+        try {
+            Files.createDirectories(configDir());
+            try (var s = Files.list(configDir())) {
+                s.filter(p -> p.toString().endsWith(".json")).forEach(p -> {
+                    String n = p.getFileName().toString();
+                    long t = 0;
+                    try { t = Files.getLastModifiedTime(p).toMillis(); } catch (IOException ignored) {}
+                    out.add(new Config(n.substring(0, n.length() - 5), t));
+                });
+            }
+        } catch (IOException ignored) {}
+        out.sort(Comparator.comparing(Config::name, String.CASE_INSENSITIVE_ORDER));
+        return out;
+    }
+
+    public static void saveConfig(String name) { saveTo(configDir().resolve(name + ".json")); }
+
+    public static boolean loadConfig(String name) {
+        for (Module m : ALL) { m.setEnabled(false); m.key = -1; m.favorite = false; for (Setting<?> s : m.settings) s.reset(); }
+        boolean ok = loadFrom(configDir().resolve(name + ".json"));
+        save();
+        return ok;
+    }
+
+    public static void deleteConfig(String name) {
+        try { Files.deleteIfExists(configDir().resolve(name + ".json")); } catch (IOException ignored) {}
+    }
+
+    public static String newConfigName() {
+        List<String> names = configs().stream().map(Config::name).toList();
+        int i = 1;
+        while (names.contains("config-" + i)) i++;
+        return "config-" + i;
     }
 }

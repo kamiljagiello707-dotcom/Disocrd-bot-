@@ -43,13 +43,19 @@ powitanie już się nie pokaże (także po restarcie gry). Usuń ten plik, żeby
 
 ### ClickGUI (w grze, **prawy Shift**)
 Napisane od zera, biało-czarne, z białymi ikonami Phosphor.
-- po lewej kategorie (Walka, Ruch, Gracz, Wygląd, Świat, Inne, Ulubione) z przesuwaną białą pigułką
-  i licznikiem włączonych modułów; na dole Twój skin i nick
-- w środku siatka kart: ikona w kafelku (biały, gdy moduł włączony), nazwa, opis, klawisz, przełącznik
-- z prawej wysuwany panel ustawień: włączony, klawisz, ulubiony, przełączniki, suwaki, tryby, „Przywróć domyślne”
+- **pasek boczny z ikonami** – po najechaniu myszką płynnie się wysuwa z nazwami:
+  Moduły (Walka, Ruch, Gracz, Wygląd, Świat, Inne, Ulubione) i Ustawienia (Konfiguracje, Znajomi, Motyw)
+- **moduły**: siatka kart (ikona, nazwa, opis, klawisz, przełącznik) + wysuwany panel ustawień
+  (włączony, klawisz, ulubiony, przełączniki, suwaki, tryby, „Przywróć domyślne”)
+- **Motyw**: kolor akcentu (biały domyślnie + 8 kolorów), animacje (wolne/normalne/szybkie/wyłączone),
+  rozmiar GUI 80–120 %, pasek boczny (po najechaniu / rozwinięty / zwinięty), rozmycie tła, cień, dźwięki,
+  przyciemnienie tła, skrót do trybu 3D
+- **Konfiguracje**: zapisz nową, wczytaj, nadpisz, usuń (z potwierdzeniem) – pliki w `config/vescaclient/configs/`
+- **Znajomi**: dodawanie po nicku, usuwanie – `config/vescaclient/friends.txt`
+- **3D GUI** (Wygląd → 3D GUI, domyślnie wyłączone): okno jako pochylony panel z perspektywą;
+  pochylenie 6–30°, strona (prawa/lewa), lekki ruch za myszką; klikanie działa normalnie
 - **LPM** włącza/wyłącza, **PPM** otwiera ustawienia, **środkowy** przypisuje klawisz (Delete usuwa), pisanie = szukanie, **Esc** zamyka
-- wszystko zapisuje się w `config/vescaclient/modules.json`; klawisz otwierania zmienisz w Opcje → Sterowanie → VescaClient
-- przy małym oknie pasek boczny zwija się do samych ikon
+- moduły zapisują się w `config/vescaclient/modules.json`, motyw w `gui.json`; klawisz otwierania zmienisz w Opcje → Sterowanie → VescaClient
 
 > Moduły to na razie tylko przełączniki i ustawienia w GUI – nie mają żadnego działania w grze.
 
@@ -61,7 +67,7 @@ Napisy są po polsku albo po angielsku, zależnie od języka gry. Układ dopasow
 ./gradlew build
 ```
 
-Gotowy plik: `build/libs/vescaclient-1.3.0.jar` → wrzuć do `.minecraft/mods` razem z Fabric API.
+Gotowy plik: `build/libs/vescaclient-1.4.0.jar` → wrzuć do `.minecraft/mods` razem z Fabric API.
 
 > Nie instaluj go razem ze starym `vescclient-*.jar`: oba podmieniają menu główne.
 
@@ -78,7 +84,9 @@ src/main/java/dev/vesca/client/
   ui/WorldsScreen.java          – lista światów
   ui/Loading.java               – ekran wczytywania
   ui/Welcome.java               – powitanie „Hello VescaClient” przy pierwszym wejściu na serwer
-  ui/ClickGui.java              – ClickGUI (prawy Shift)
+  ui/ClickGui.java              – ClickGUI (prawy Shift): pasek, strony, panel ustawień, tryb 3D
+  ui/Theme.java                 – ustawienia motywu (gui.json)
+  ui/Friends.java               – lista znajomych (friends.txt)
   module/Category.java          – kategorie
   module/Module.java            – moduł (nazwa, ikona, opis, stan, klawisz, ustawienia)
   module/Setting.java           – ustawienia: przełącznik, suwak, tryb

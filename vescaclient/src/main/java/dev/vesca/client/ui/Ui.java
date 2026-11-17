@@ -106,8 +106,10 @@ public final class Ui {
     /** przełącznik (wł./wył.): on 0..1 (animowane), hover 0..1 */
     public static void toggle(DrawContext ctx, float x, float y, float on, float hover) {
         float w = 20, h = 11;
-        R2D.roundRect(ctx, x, y, w, h, h / 2f, R2D.blend(R2D.blend(0x26FFFFFF, 0x38FFFFFF, hover), 0xFFF4F4F5, on));
+        int acc = Theme.accent();
+        if (on > 0.01f && Theme.accentIndex != 0) R2D.glow(ctx, x - 6, y - 6, w + 12, h + 12, R2D.withAlpha(acc, 0.25f * on));
+        R2D.roundRect(ctx, x, y, w, h, h / 2f, R2D.blend(R2D.blend(0x26FFFFFF, 0x38FFFFFF, hover), acc, on));
         float k = x + h / 2f + (w - h) * on;
-        R2D.circle(ctx, k, y + h / 2f, 3.6f, R2D.blend(0xFFB4B4BC, BLACK, on));
+        R2D.circle(ctx, k, y + h / 2f, 3.6f, R2D.blend(0xFFB4B4BC, Theme.onAccent(), on));
     }
 }

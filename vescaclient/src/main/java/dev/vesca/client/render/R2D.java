@@ -44,6 +44,12 @@ public final class R2D {
                 com.mojang.blaze3d.platform.GlStateManager.SrcFactor.ONE, com.mojang.blaze3d.platform.GlStateManager.DstFactor.ONE_MINUS_SRC_ALPHA);
     }
 
+    /** mieszanie addytywne tylko dla koloru – kanał alfa celu bez zmian (poprawne także przy renderze do przezroczystego bufora) */
+    private static void addBlend() {
+        RenderSystem.blendFuncSeparate(com.mojang.blaze3d.platform.GlStateManager.SrcFactor.ONE, com.mojang.blaze3d.platform.GlStateManager.DstFactor.ONE,
+                com.mojang.blaze3d.platform.GlStateManager.SrcFactor.ZERO, com.mojang.blaze3d.platform.GlStateManager.DstFactor.ONE);
+    }
+
     public static Identifier id(String path) { return Identifier.of("vescaclient", path); }
 
     // ---------------------------------------------------------------- kolory
@@ -200,7 +206,7 @@ public final class R2D {
         if (((c >>> 24) & 0xFF) == 0 || w <= 0 || h <= 0) return true;
         Matrix4f m = ctx.getMatrices().peek().getPositionMatrix();
         RenderSystem.enableBlend();
-        if (additive) RenderSystem.blendFunc(com.mojang.blaze3d.platform.GlStateManager.SrcFactor.ONE, com.mojang.blaze3d.platform.GlStateManager.DstFactor.ONE);
+        if (additive) addBlend();
         else blend();
         if (worldDepth) { RenderSystem.enableDepthTest(); RenderSystem.depthMask(false); } else RenderSystem.disableDepthTest();
         RenderSystem.disableCull();
@@ -493,7 +499,7 @@ public final class R2D {
         if (tex(ctx, GLOW_ADD, x, y, w, h, 0, 0, 0, 1, 1, pm, true)) return;
         Matrix4f m = ctx.getMatrices().peek().getPositionMatrix();
         BufferBuilder b = begin(GLOW_ADD);
-        RenderSystem.blendFunc(com.mojang.blaze3d.platform.GlStateManager.SrcFactor.ONE, com.mojang.blaze3d.platform.GlStateManager.DstFactor.ONE);
+        addBlend();
         quad(b, m, x, y, x + w, y + h, 0, 0, 1, 1, pm);
         end(b);
         blend();

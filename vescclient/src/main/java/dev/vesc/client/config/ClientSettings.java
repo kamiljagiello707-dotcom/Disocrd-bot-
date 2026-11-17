@@ -16,6 +16,8 @@ public class ClientSettings {
     public final BoolSetting customMenu = new BoolSetting("Menu główne", "Main menu", true);
     public final ModeSetting layout = new ModeSetting("Układ GUI", "GUI layout", "Tabs", "Window", "Spatial", "Panels");
     public final ModeSetting hudStyle = new ModeSetting("Styl HUD", "HUD style", "Vesc", "Glass", "Neon", "Minimal");
+    /** styl powiadomień o modułach: pigułki na środku na dole albo karty w rogu */
+    public final ModeSetting notifStyle = new ModeSetting("Styl powiadomień", "Notification style", "Pill", "Card");
     /** pozycje paneli w układzie Panels: kategoria -> {x, y, zwinięty} */
     public final java.util.Map<String, float[]> panels = new java.util.HashMap<>();
     /** rozmiar okna ClickGUI (zmieniany przeciąganiem rogu) */

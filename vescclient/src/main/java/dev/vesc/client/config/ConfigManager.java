@@ -118,6 +118,7 @@ public class ConfigManager {
         o.addProperty("guiW", s.guiW);
         o.add("layout", s.layout.save());
         o.add("hudStyle", s.hudStyle.save());
+        o.add("notifStyle", s.notifStyle.save());
         JsonObject pan = new JsonObject();
         for (var e : s.panels.entrySet()) {
             com.google.gson.JsonArray a = new com.google.gson.JsonArray();
@@ -158,6 +159,7 @@ public class ConfigManager {
                 if (o.has("guiW")) s.guiW = o.get("guiW").getAsFloat();
                 if (o.has("layout") && o.has("ui") && o.get("ui").getAsInt() >= 5) s.layout.load(o.get("layout"));
                 if (o.has("hudStyle")) s.hudStyle.load(o.get("hudStyle"));
+                if (o.has("notifStyle")) s.notifStyle.load(o.get("notifStyle"));
                 if (o.has("panels")) for (var e : o.getAsJsonObject("panels").entrySet()) {
                     var a = e.getValue().getAsJsonArray();
                     s.panels.put(e.getKey(), new float[]{a.get(0).getAsFloat(), a.get(1).getAsFloat(), a.get(2).getAsFloat()});

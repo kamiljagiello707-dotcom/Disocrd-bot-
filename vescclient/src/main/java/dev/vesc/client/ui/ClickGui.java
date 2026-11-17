@@ -2369,8 +2369,24 @@ public class ClickGui extends Screen {
             Fonts.drawV(ctx, Lang.get("hudstyle.title"), x + 22, y + sh / 2f + 0.5f, Theme.text(), Font.BOLD, 0.8f);
             Fonts.drawV(ctx, Lang.get("hudstyle.desc"), x + 22 + Fonts.width(Lang.get("hudstyle.title"), Font.BOLD, 0.8f) + 8, y + sh / 2f + 0.5f, Theme.textFaint(), Font.REGULAR, 0.62f);
             var hs = rc.settings.hudStyle;
-            segmented(ctx, "hudstyle", x + w - 170, y + 4, 164, 18, new String[]{"Glass", "Neon", "Minimal"}, hs.modes.indexOf(hs.get()), i -> {
+            segmented(ctx, "hudstyle", x + w - 214, y + 4, 208, 18, new String[]{"Vesc", "Glass", "Neon", "Minimal"}, hs.modes.indexOf(hs.get()), i -> {
                 hs.set(hs.modes.get(i)); rc.config.saveClient();
+            });
+            y += sh + 6;
+        }
+        // styl powiadomień o modułach
+        {
+            float sh = 26;
+            R2D.roundRect(ctx, x, y, w, sh, 8, Theme.card());
+            R2D.roundOutline(ctx, x, y, w, sh, 8, 0.5f, Theme.stroke());
+            R2D.icon(ctx, "bell", x + 9, y + 9, 8, Theme.accentWave(0));
+            Fonts.drawV(ctx, Lang.get("notifstyle.title"), x + 22, y + sh / 2f + 0.5f, Theme.text(), Font.BOLD, 0.8f);
+            Fonts.drawV(ctx, Lang.get("notifstyle.desc"), x + 22 + Fonts.width(Lang.get("notifstyle.title"), Font.BOLD, 0.8f) + 8, y + sh / 2f + 0.5f, Theme.textFaint(), Font.REGULAR, 0.62f);
+            var ns = rc.settings.notifStyle;
+            segmented(ctx, "notifstyle", x + w - 120, y + 4, 114, 18, new String[]{"Pill", "Card"}, ns.modes.indexOf(ns.get()), i -> {
+                ns.set(ns.modes.get(i)); rc.config.saveClient();
+                // pokaż od razu, jak to wygląda
+                rc.notifications.info("bell", Lang.get("notifstyle.title"), ns.get());
             });
             y += sh + 8;
         }

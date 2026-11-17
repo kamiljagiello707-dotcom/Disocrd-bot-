@@ -991,12 +991,21 @@ public class Hud {
     public class NotifElement extends HudElement {
         NotifElement() { super("notifications", "hud.el.notifications", "bell", true, Notifications.W, Notifications.H); }
 
-        @Override protected float[] defaultPos(int sw, int sh, Hud hud) { return new float[]{sw - w - 8, sh - h - 8}; }
+        @Override protected float[] defaultPos(int sw, int sh, Hud hud) {
+            // styl "Pill": na środku na dole, nad paskiem zdrowia/pancerza; starsze wjeżdżają wyżej
+            if (Notifications.pill()) return new float[]{sw / 2f - w / 2f, sh - 54 - Notifications.PH};
+            return new float[]{sw - w - 8, sh - h - 8};
+        }
 
         @Override public void render(DrawContext ctx, float x, float y, boolean preview) {
-            w = Notifications.W; h = Notifications.H;
             MinecraftClient mc = mc();
             int sw = mc.getWindow().getScaledWidth(), sh = mc.getWindow().getScaledHeight();
+            if (Notifications.pill()) {
+                w = Notifications.PW; h = Notifications.PH;
+                VescClient.get().notifications.renderPills(ctx, x, y, w, sw, sh, preview);
+                return;
+            }
+            w = Notifications.W; h = Notifications.H;
             VescClient.get().notifications.render(ctx, x, y, y + h / 2f > sh / 2f, x + w / 2f > sw / 2f, preview);
         }
     }

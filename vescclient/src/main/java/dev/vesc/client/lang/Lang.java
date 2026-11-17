@@ -130,7 +130,9 @@ public final class Lang {
         put("layout.title", "Układ GUI", "GUI layout");
         put("layout.desc", "Pływające panele kategorii albo jedno okno", "Floating category panels or a single window");
         put("hudstyle.title", "Styl HUD", "HUD style");
-        put("hudstyle.desc", "Szkło, neon albo minimalistyczny", "Glass, neon or minimal");
+        put("hudstyle.desc", "Vesc, szkło, neon albo minimalistyczny", "Vesc, glass, neon or minimal");
+        put("notifstyle.title", "Powiadomienia", "Notifications");
+        put("notifstyle.desc", "Pigułki na dole ekranu albo karty w rogu", "Pills at the bottom or cards in the corner");
         put("hud.el.keystrokes", "Keystrokes", "Keystrokes");
         put("hud.el.keystrokes.desc", "WASD, spacja i myszka z licznikiem CPS", "WASD, space and mouse with CPS");
         put("hud.el.compass", "Kompas", "Compass");

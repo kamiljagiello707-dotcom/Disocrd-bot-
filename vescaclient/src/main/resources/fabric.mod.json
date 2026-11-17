@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "id": "vescaclient",
+  "version": "${version}",
+  "name": "VescaClient",
+  "description": "VescaClient – biało-czarne menu główne, własne ekrany wyboru serwera i świata oraz ekran wczytywania.",
+  "authors": ["VescaClient"],
+  "license": "All-Rights-Reserved",
+  "icon": "assets/vescaclient/textures/icons/mod_icon.png",
+  "environment": "client",
+  "entrypoints": { "client": ["dev.vesca.client.VescaClient"] },
+  "depends": {
+    "fabricloader": ">=0.16.0",
+    "fabric-api": "*",
+    "minecraft": "~1.21.1",
+    "java": ">=21"
+  },
+  "mixins": ["vescaclient.mixins.json"]
+}

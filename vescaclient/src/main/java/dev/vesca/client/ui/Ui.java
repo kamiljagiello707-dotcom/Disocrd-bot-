@@ -1,0 +1,89 @@
+package dev.vesca.client.ui;
+
+import dev.vesca.client.render.Fonts;
+import dev.vesca.client.render.Fonts.Font;
+import dev.vesca.client.render.R2D;
+import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.gui.DrawContext;
+
+/** Biało-czarna paleta VescaClient i wspólne elementy (logo, napis, przyciski, klawisze). */
+public final class Ui {
+    private Ui() {}
+
+    public static final int WHITE = 0xFFF5F5F6, TEXT = 0xFFF4F4F5, DIM = 0xFFA1A1AA, FAINT = 0xFF5E5E68, BLACK = 0xFF09090B, INK = 0xFF52525B;
+
+    public static boolean pl() {
+        MinecraftClient mc = MinecraftClient.getInstance();
+        return mc != null && mc.options != null && mc.options.language.startsWith("pl");
+    }
+
+    public static String t(String pl, String en) { return pl() ? pl : en; }
+
+    /** logo: biały zaokrąglony kwadrat z czarnym "V" i miękką poświatą */
+    public static void logo(DrawContext ctx, float x, float y, float s, float glow) {
+        if (glow > 0) R2D.glow(ctx, x - s * 0.5f, y - s * 0.5f, s * 2f, s * 2f, R2D.withAlpha(0xFFFFFFFF, 0.2f * glow));
+        R2D.shadow(ctx, x, y + 2, s, s, s * 0.35f, 0x88000000);
+        R2D.roundRectV(ctx, x, y, s, s, s * 0.3f, 0xFFFFFFFF, 0xFFD4D4D8);
+        R2D.icon(ctx, "logo_v", x + s * 0.22f, y + s * 0.22f, s * 0.56f, BLACK);
+    }
+
+    /** tekst z rozstrzelonymi literami; zwraca szerokość */
+    public static float spaced(DrawContext ctx, String s, float x, float y, int color, Font f, float scale, float spacing) {
+        float x0 = x;
+        for (char ch : s.toCharArray()) {
+            String c = String.valueOf(ch);
+            if (ctx != null) Fonts.draw(ctx, c, x, y, color, f, scale);
+            x += Fonts.width(c, f, scale) + spacing;
+        }
+        return x - x0 - spacing;
+    }
+
+    public static float spacedWidth(String s, Font f, float scale, float spacing) { return spaced(null, s, 0, 0, 0, f, scale, spacing); }
+
+    /** duży napis wyrównany do lewej; górna krawędź wielkich liter = topY */
+    public static void display(DrawContext ctx, String s, float x, float topY, int color, float scale) {
+        Fonts.drawDisplay(ctx, s, x + Fonts.width(s, Font.DISPLAY, scale) / 2f, topY, color, scale);
+    }
+
+    /** klawisz (np. ↑ ↓ Enter); zwraca szerokość */
+    public static float keyCap(DrawContext ctx, String k, float x, float y) {
+        float w = Math.max(12, Fonts.width(k, Font.BOLD, 0.52f) + 8);
+        R2D.roundRect(ctx, x, y, w, 12, 3.5f, 0x1AFFFFFF);
+        R2D.roundOutline(ctx, x, y, w, 12, 3.5f, 0.5f, 0x26FFFFFF);
+        Fonts.drawV(ctx, k, x + (w - Fonts.width(k, Font.BOLD, 0.52f)) / 2f, y + 6.5f, DIM, Font.BOLD, 0.52f);
+        return w;
+    }
+
+    /**
+     * Pigułka-przycisk. primary = biała z czarnym tekstem, zwykła = ciemna z obwódką.
+     * hover 0..1, enabled = false → przygaszony.
+     */
+    public static void button(DrawContext ctx, float x, float y, float w, float h, String icon, String label, boolean primary, float hover, boolean enabled) {
+        float prev = R2D.alpha;
+        if (!enabled) R2D.alpha = prev * 0.4f;
+        float r = h / 2f;
+        if (primary) {
+            R2D.glow(ctx, x - 8, y - 6, w + 16, h + 12, R2D.withAlpha(0xFFFFFFFF, 0.10f + 0.12f * hover));
+            R2D.roundRectV(ctx, x, y, w, h, r, R2D.blend(0xFFF4F4F5, 0xFFFFFFFF, hover), R2D.blend(0xFFDADADF, 0xFFF0F0F2, hover));
+        } else {
+            R2D.roundRect(ctx, x, y, w, h, r, R2D.blend(0x14FFFFFF, 0x2BFFFFFF, hover));
+            R2D.roundOutline(ctx, x, y, w, h, r, 0.6f, R2D.blend(0x22FFFFFF, 0x66FFFFFF, hover));
+        }
+        int fg = primary ? BLACK : R2D.blend(0xFFD4D4D8, 0xFFFFFFFF, hover);
+        boolean hasLabel = label != null && !label.isEmpty();
+        float tw = hasLabel ? Fonts.width(label, Font.BOLD, 0.7f) : 0;
+        float iw = icon != null ? 9 : 0, gap = icon != null && hasLabel ? 5 : 0;
+        float cx = x + (w - tw - iw - gap) / 2f;
+        if (icon != null) { R2D.icon(ctx, icon, cx, y + h / 2f - 4.5f, 9, fg); cx += iw + gap; }
+        if (hasLabel) Fonts.drawV(ctx, label, cx, y + h / 2f + 0.5f, fg, Font.BOLD, 0.7f);
+        R2D.alpha = prev;
+    }
+
+    /** kafelek z pierwszą literą nazwy (gdy serwer/świat nie ma ikony) */
+    public static void monogram(DrawContext ctx, float x, float y, float s, String name) {
+        R2D.roundRectV(ctx, x, y, s, s, s * 0.26f, 0xFF26262B, 0xFF18181B);
+        R2D.roundOutline(ctx, x, y, s, s, s * 0.26f, 0.6f, 0x2AFFFFFF);
+        String ch = name == null || name.isBlank() ? "?" : name.trim().substring(0, 1).toUpperCase();
+        Fonts.drawCentered(ctx, ch, x + s / 2f, y + s / 2f - Fonts.height(1.05f) / 2f + 0.5f, TEXT, Font.BOLD, 1.05f);
+    }
+}

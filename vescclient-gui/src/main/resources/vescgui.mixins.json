@@ -1,7 +1,0 @@
-{
-  "required": true,
-  "package": "dev.vesc.gui.mixin",
-  "compatibilityLevel": "JAVA_21",
-  "client": ["MinecraftClientMixin", "TextRenderLayerSetMixin"],
-  "injectors": { "defaultRequire": 1 }
-}

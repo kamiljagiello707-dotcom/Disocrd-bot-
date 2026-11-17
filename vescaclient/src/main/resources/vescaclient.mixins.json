@@ -1,0 +1,7 @@
+{
+  "required": true,
+  "package": "dev.vesca.client.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "client": ["MinecraftClientMixin", "TextRenderLayerSetMixin", "ScreenMixin", "ConnectScreenAccessor", "LevelLoadingScreenAccessor", "ProgressScreenAccessor", "DisconnectedScreenAccessor"],
+  "injectors": { "defaultRequire": 1 }
+}

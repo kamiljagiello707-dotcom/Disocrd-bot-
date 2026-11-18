@@ -201,8 +201,8 @@ public class ClickGui extends Screen {
 
         // ---- geometria
         float s = Theme.scale;
-        W = Math.min(760, width / s - 32);
-        H = Math.min(430, height / s - 44);
+        W = Math.min(640, width / s - 32);
+        H = Math.min(380, height / s - 44);
         x0 = (width - W) / 2f;
         y0 = (height - H) / 2f - 6;
         sc = s * (0.95f + 0.05f * a);
@@ -255,12 +255,12 @@ public class ClickGui extends Screen {
     private void drawPanel(DrawContext ctx) {
         if (Theme.shadow) R2D.shadow(ctx, x0, y0 + 6, W, H, 30, 0xCC000000);
         R2D.glow(ctx, x0 - 40, y0 - 40, W + 80, H + 80, 0x0DFFFFFF);
-        R2D.roundRectV(ctx, x0, y0, W, H, 18, 0xF4121215, 0xF809090B);
-        R2D.roundOutlineGrad(ctx, x0, y0, W, H, 18, 0.7f, 0x48FFFFFF, 0x10FFFFFF);
+        R2D.roundRectV(ctx, x0, y0, W, H, 14, 0xF5111114, 0xF80A0A0C);
+        R2D.roundOutline(ctx, x0, y0, W, H, 14, 0.8f, 0x3CFFFFFF);
         R2D.gradientH(ctx, x0 + 20, y0 + 0.6f, (W - 40) / 2f, 0.6f, 0x00FFFFFF, 0x55FFFFFF);
         R2D.gradientH(ctx, x0 + W / 2f, y0 + 0.6f, (W - 40) / 2f, 0.6f, 0x55FFFFFF, 0x00FFFFFF);
 
-        float rail = 52, full = Math.min(176, W * 0.32f);
+        float rail = 44, full = Math.max(112, Math.min(134, W * 0.22f));
         boolean pinned = Theme.sidebar.equals("Expanded"), never = Theme.sidebar.equals("Collapsed");
         // wysuwanie paska po najechaniu
         float cur = rail + (full - rail) * side.raw();
@@ -308,88 +308,85 @@ public class ClickGui extends Screen {
     private void drawSidebar(DrawContext ctx, float rail, float full, float e, boolean pinned) {
         float sw = rail + (full - rail) * e;
         sideRight = x0 + sw;
-        float bx = x0 + 6, by = y0 + 6, bw = sw - 6, bh = H - 12;
-        if (!pinned && e > 0.01f) R2D.shadow(ctx, bx, by, bw, bh, 18, R2D.withAlpha(0xFF000000, 0.6f * e));
-        R2D.roundRect(ctx, bx, by, bw, bh, 13, R2D.blend(0xFF151518, 0xFF18181C, e));
-        R2D.roundOutline(ctx, bx, by, bw, bh, 13, 0.5f, R2D.blend(0x12FFFFFF, 0x24FFFFFF, e));
-        hit(bx, by, bw, bh, b -> {});
-        float rc = x0 + 6 + (rail - 6) / 2f; // środek kolumny ikon
         float prev = R2D.alpha;
+        // tło paska: przy wysuwaniu nad treścią – pełne, z cieniem; przypięty – lekko jaśniejszy pas z linią
+        if (!pinned && e > 0.01f) {
+            R2D.shadow(ctx, x0, y0, sw, H, 18, R2D.withAlpha(0xFF000000, 0.6f * e));
+            R2D.roundRect(ctx, x0, y0, sw + 14, H, 14, 0xFF111114);
+        }
+        R2D.scissor(ctx, x0, y0, sw, H);
+        R2D.roundRect(ctx, x0, y0, sw + 14, H, 14, 0x07FFFFFF);
+        R2D.endScissor(ctx);
+        R2D.rect(ctx, x0 + sw, y0 + 12, 0.5f, H - 24, 0x14FFFFFF);
+        hit(x0, y0, sw, H, b -> {});
 
-        // logo + napis
-        logo(ctx, rc - 12, y0 + 16, 24, 0.4f);
+        // logo + nazwa + wersja
+        float lx = x0 + 13, ly = y0 + 13;
+        if (e < 0.5f) { lx = x0 + sw / 2f - 10; }
+        R2D.glow(ctx, lx - 8, ly - 8, 36, 36, R2D.withAlpha(Theme.accent(), 0.18f));
+        R2D.icon(ctx, "vesca_logo", lx, ly, 20, 0xFFFFFFFF);
         if (e > 0.01f) {
             R2D.alpha = prev * e;
-            Fonts.draw(ctx, "VESCA", rc + 18 + (1 - e) * -6, y0 + 18, TEXT, Font.BOLD, 0.98f);
-            spaced(ctx, "CLIENT", rc + 18 + (1 - e) * -6, y0 + 30, FAINT, Font.BOLD, 0.5f, 2f);
+            Fonts.draw(ctx, "VescaClient", lx + 26 + (1 - e) * -6, ly + 1, TEXT, Font.BOLD, 0.8f);
+            Fonts.draw(ctx, t("Wersja ", "Version ") + VescaClient.VERSION, lx + 26 + (1 - e) * -6, ly + 12, FAINT, Font.REGULAR, 0.55f);
             R2D.alpha = prev;
         }
 
-        // pozycje
         Category[] cats = Category.values();
-        String[] icons = new String[cats.length + 4];
-        String[] names = new String[cats.length + 4];
+        int n = cats.length + 4;
+        String[] icons = new String[n], names = new String[n];
         for (int i = 0; i < cats.length; i++) { icons[i] = cats[i].icon; names[i] = cats[i].title(); }
         icons[cats.length] = "g_star"; names[cats.length] = t("Ulubione", "Favorites");
-        icons[cats.length + 1] = "g_configs"; names[cats.length + 1] = t("Konfiguracje", "Configs");
-        icons[cats.length + 2] = "g_friends"; names[cats.length + 2] = t("Znajomi", "Friends");
+        icons[cats.length + 1] = "g_friends"; names[cats.length + 1] = t("Znajomi", "Friends");
+        icons[cats.length + 2] = "g_configs"; names[cats.length + 2] = t("Konfiguracje", "Configs");
         icons[cats.length + 3] = "g_theme"; names[cats.length + 3] = t("Motyw", "Theme");
-        int n = icons.length;
-        float top = y0 + 50, bottom = y0 + H - 6 - 40;
+        float top = y0 + 46, profileH = 30;
         float headH = 13;
-        float rh = Math.max(15, Math.min(24, (bottom - top - headH * 2 - 6) / n));
-        boolean showProfile = true;
-        if (rh <= 15) { showProfile = false; rh = Math.max(14, Math.min(24, (y0 + H - 12 - top - headH * 2) / n)); }
+        float rh = Math.max(14, Math.min(20, (y0 + H - 8 - profileH - top - headH * 2 - 6) / n));
+        boolean showProfile = rh > 14 || (y0 + H - 8 - profileH - top - headH * 2 - 6) / n >= 14;
         float[] ys = new float[n];
         float y = top;
         for (int i = 0; i < n; i++) {
-            if (i == 0) { section(ctx, t("MODUŁY", "MODULES"), rc, y, e); y += headH; }
-            if (i == cats.length + 1) { section(ctx, t("USTAWIENIA", "SETTINGS"), rc, y + 3, e); y += headH + 3; }
+            if (i == 0) { section(ctx, t("FUNKCJE", "FEATURES"), x0, sw, y, e); y += headH; }
+            if (i == cats.length) { section(ctx, t("INNE", "OTHER"), x0, sw, y + 4, e); y += headH + 4; }
             ys[i] = y;
             y += rh;
         }
         int active = switch (page) {
             case MODULES -> !query.isEmpty() ? -1 : favorites ? cats.length : category.ordinal();
-            case CONFIGS -> cats.length + 1;
-            case FRIENDS -> cats.length + 2;
+            case FRIENDS -> cats.length + 1;
+            case CONFIGS -> cats.length + 2;
             case THEME -> cats.length + 3;
         };
         if (active >= 0 && catY.raw() < 0) catY.snap(ys[active]);
         float py = catY.animate(active >= 0 ? ys[active] : catY.target());
         float pa = anim("catPill").animate(active >= 0 ? 1 : 0);
-        float px = x0 + 11, pw = sw - 16;
+        float px = x0 + 8, pw = sw - 16;
         if (pa > 0.01f) {
             R2D.alpha = prev * pa;
-            R2D.glow(ctx, px - 10, py - 8, pw + 20, rh + 12, R2D.withAlpha(Theme.accent(), 0.12f));
-            R2D.roundRectV(ctx, px, py + 1, pw, rh - 2, Math.min(9 + 3 * e, (rh - 2) / 2f), Theme.accentTop(), Theme.accentBottom());
+            R2D.glow(ctx, px - 8, py - 6, pw + 16, rh + 10, R2D.withAlpha(Theme.accent(), 0.16f));
+            R2D.roundRectV(ctx, px, py + 1, pw, rh - 2, 6, Theme.accentTop(), Theme.accentBottom());
             R2D.alpha = prev;
         }
+        float ic = e < 0.5f ? x0 + sw / 2f : x0 + 18;
         for (int i = 0; i < n; i++) {
             float ry = ys[i];
             float near = pa * Anim.clamp01(1 - Math.abs(py - ry) / rh);
             float hv = anim("side" + i).animate(over(px, ry, pw, rh) && i != active ? 1 : 0);
-            if (hv > 0.01f) R2D.roundRect(ctx, px, ry + 1, pw, rh - 2, Math.min(9 + 3 * e, (rh - 2) / 2f), R2D.withAlpha(0xFFFFFFFF, 0.06f * hv));
-            int fg = R2D.blend(R2D.blend(DIM, TEXT, hv), Theme.onAccent(), near);
-            float is = Math.min(10.5f, rh - 6);
-            R2D.icon(ctx, icons[i], rc - is / 2f, ry + rh / 2f - is / 2f, is, fg);
-            long cnt = i < cats.length ? Modules.enabledIn(cats[i]) : i == cats.length ? Modules.all().stream().filter(m -> m.favorite).count() : 0;
-            if (e < 0.99f && cnt > 0 && i < cats.length) {
-                R2D.alpha = prev * (1 - e);
-                R2D.circle(ctx, rc + 7, ry + rh / 2f - 5, 2f, R2D.blend(TEXT, Theme.onAccent(), near));
-                R2D.alpha = prev;
-            }
+            if (hv > 0.01f) R2D.roundRect(ctx, px, ry + 1, pw, rh - 2, 6, R2D.withAlpha(0xFFFFFFFF, 0.06f * hv));
+            int fg = R2D.blend(R2D.blend(0xFFB4B4BC, TEXT, hv), Theme.onAccent(), near);
+            float is = Math.min(9.5f, rh - 6);
+            R2D.icon(ctx, icons[i], ic - is / 2f + (e < 0.5f ? 0 : is / 2f), ry + rh / 2f - is / 2f, is, fg);
+            long cnt = i < cats.length ? Modules.enabledIn(cats[i]) : 0;
             if (e > 0.01f) {
                 R2D.alpha = prev * e;
-                float lx = rc + 13 + (1 - e) * -8;
-                Fonts.drawV(ctx, Fonts.trim(names[i], Font.SEMIBOLD, 0.72f, sw - 70), lx, ry + rh / 2f + 0.5f, fg, near > 0.5f ? Font.BOLD : Font.SEMIBOLD, 0.72f);
+                Fonts.drawV(ctx, Fonts.trim(names[i], Font.SEMIBOLD, 0.68f, sw - 54), x0 + 33 + (1 - e) * -6, ry + rh / 2f + 0.5f, fg, near > 0.5f ? Font.BOLD : Font.SEMIBOLD, 0.68f);
                 if (cnt > 0) {
                     String c = String.valueOf(cnt);
-                    float cw = Math.max(13, Fonts.width(c, Font.BOLD, 0.52f) + 8);
-                    R2D.roundRect(ctx, px + pw - 7 - cw, ry + rh / 2f - 5.5f, cw, 11, 5.5f, R2D.blend(0x1FFFFFFF, R2D.withAlpha(Theme.onAccent(), 0.15f), near));
-                    Fonts.drawV(ctx, c, px + pw - 7 - cw + (cw - Fonts.width(c, Font.BOLD, 0.52f)) / 2f, ry + rh / 2f + 0.5f, R2D.blend(TEXT, Theme.onAccent(), near), Font.BOLD, 0.52f);
+                    Fonts.drawV(ctx, c, px + pw - 7 - Fonts.width(c, Font.BOLD, 0.52f), ry + rh / 2f + 0.5f, R2D.blend(FAINT, Theme.onAccent(), near), Font.BOLD, 0.52f);
                 }
                 R2D.alpha = prev;
-            }
+            } else if (cnt > 0) R2D.circle(ctx, ic + 6, ry + rh / 2f - 4, 1.8f, R2D.blend(TEXT, Theme.onAccent(), near));
             final int fi = i;
             hit(px, ry, pw, rh, b -> {
                 if (b != 0) return;
@@ -397,7 +394,7 @@ public class ClickGui extends Screen {
                 query = ""; focus = 0;
                 if (fi < cats.length) { page = Page.MODULES; favorites = false; category = cats[fi]; }
                 else if (fi == cats.length) { page = Page.MODULES; favorites = true; }
-                else { page = Page.values()[fi - cats.length]; inspected = null; }
+                else { page = new Page[]{Page.FRIENDS, Page.CONFIGS, Page.THEME}[fi - cats.length - 1]; inspected = null; }
                 scroll = scrollTarget = 0; pScroll = pScrollTarget = 0;
                 listTime = System.currentTimeMillis();
             });
@@ -405,34 +402,39 @@ public class ClickGui extends Screen {
 
         // profil
         if (!showProfile) return;
-        float pby = y0 + H - 6 - 40;
-        R2D.rect(ctx, x0 + 14, pby, sw - 22, 0.5f, 0x14FFFFFF);
-        head(ctx, rc - 10, pby + 11, 20);
+        float pby = y0 + H - 8 - profileH;
+        R2D.rect(ctx, x0 + 10, pby, sw - 20, 0.5f, 0x12FFFFFF);
+        head(ctx, e < 0.5f ? x0 + sw / 2f - 8 : x0 + 12, pby + 8, 16);
         if (e > 0.01f) {
             R2D.alpha = prev * e;
             String nick = client != null ? client.getSession().getUsername() : "Player";
-            Fonts.draw(ctx, Fonts.trim(nick, Font.BOLD, 0.72f, sw - 60), rc + 17, pby + 12, TEXT, Font.BOLD, 0.72f);
-            long on = Modules.all().stream().filter(Module::isEnabled).count();
-            Fonts.draw(ctx, Fonts.trim(t(on + " włączonych", on + " enabled") + "  •  v" + VescaClient.VERSION, Font.REGULAR, 0.56f, sw - 60), rc + 17, pby + 23, FAINT, Font.REGULAR, 0.56f);
+            Fonts.drawV(ctx, Fonts.trim(nick, Font.SEMIBOLD, 0.66f, sw - 44), x0 + 33, pby + 16.5f, DIM, Font.SEMIBOLD, 0.66f);
             R2D.alpha = prev;
         }
     }
 
-    private void section(DrawContext ctx, String label, float rc, float y, float e) {
+    private void section(DrawContext ctx, String label, float x, float sw, float y, float e) {
         float prev = R2D.alpha;
         R2D.alpha = prev * (1 - e);
-        R2D.rect(ctx, rc - 8, y + 5, 16, 0.5f, 0x22FFFFFF);
+        R2D.rect(ctx, x + sw / 2f - 8, y + 5, 16, 0.5f, 0x22FFFFFF);
         R2D.alpha = prev * e;
-        if (e > 0.01f) spaced(ctx, label, rc - 13, y + 2, FAINT, Font.BOLD, 0.48f, 1.6f);
+        if (e > 0.01f) spaced(ctx, label, x + 13, y + 2, FAINT, Font.BOLD, 0.46f, 1.4f);
         R2D.alpha = prev;
     }
 
     // ------------------------------------------------------------------ wspólne elementy stron
 
-    private void header(DrawContext ctx, float x, float w, String title, String sub) {
-        Fonts.draw(ctx, title, x, y0 + 17, TEXT, Font.BOLD, 1.2f);
-        Fonts.draw(ctx, Fonts.trim(sub, Font.REGULAR, 0.62f, w - 180), x, y0 + 33, DIM, Font.REGULAR, 0.62f);
-        R2D.rect(ctx, x, y0 + 50, w, 0.5f, 0x14FFFFFF);
+    /** nagłówek strony: ikona + tytuł • opis, cienka linia pod spodem */
+    private void header(DrawContext ctx, float x, float w, String icon, String title, String sub) {
+        float y = y0 + 13;
+        R2D.icon(ctx, icon, x, y + 2, 10, TEXT);
+        Fonts.draw(ctx, title, x + 16, y + 1, TEXT, Font.BOLD, 0.92f);
+        float tw = Fonts.width(title, Font.BOLD, 0.92f);
+        if (sub != null && !sub.isEmpty()) {
+            Fonts.draw(ctx, "•", x + 16 + tw + 6, y + 3, FAINT, Font.BOLD, 0.6f);
+            Fonts.draw(ctx, Fonts.trim(sub, Font.REGULAR, 0.6f, w - tw - 70), x + 16 + tw + 14, y + 3.5f, FAINT, Font.REGULAR, 0.6f);
+        }
+        R2D.rect(ctx, x, y0 + 36, w, 0.5f, 0x12FFFFFF);
     }
 
     /** pole tekstowe; which = numer pola (focus) */
@@ -501,86 +503,101 @@ public class ClickGui extends Screen {
 
     // ------------------------------------------------------------------ strona: moduły
 
+    private Module hoveredModule;
+
     private void drawModules(DrawContext ctx, float x, float w) {
         float mx0 = x + 14, mw = w - 28;
         List<Module> list = shown();
         String title = !query.isEmpty() ? t("Szukaj", "Search") : favorites ? t("Ulubione", "Favorites") : category.title();
-        long on = list.stream().filter(Module::isEnabled).count();
-        String sub = !query.isEmpty() ? t("Wyniki dla „" + query + "”: " + list.size(), "Results for \"" + query + "\": " + list.size())
-                : t(list.size() + " modułów  •  " + on + " włączonych", list.size() + " modules  •  " + on + " enabled");
-        header(ctx, mx0, mw, title, sub);
-        float sw = Math.min(160, mw * 0.4f);
-        field(ctx, 1, mx0 + mw - sw, y0 + 18, sw, 20, query, t("Szukaj modułu…", "Search modules…"), "g_search");
-        if (!query.isEmpty()) {
-            float bx = mx0 + mw - 16;
-            R2D.icon(ctx, "g_close", bx, y0 + 28 - 3.5f, 7, over(bx - 3, y0 + 18, 14, 20) ? TEXT : FAINT);
-            hit(bx - 3, y0 + 18, 14, 20, b -> { query = ""; listTime = System.currentTimeMillis(); });
+        String icon = !query.isEmpty() ? "g_search" : favorites ? "g_star" : category.icon;
+        String sub = hoveredModule != null ? hoveredModule.description()
+                : !query.isEmpty() ? t("Wyniki: " + list.size(), "Results: " + list.size())
+                : t(list.size() + " modułów, " + list.stream().filter(Module::isEnabled).count() + " włączonych", list.size() + " modules, " + list.stream().filter(Module::isEnabled).count() + " enabled");
+        header(ctx, mx0, mw, icon, title, sub);
+        // wyszukiwarka: ikonka, po kliknięciu rozwija się w pole
+        boolean open = focus == 1 || !query.isEmpty();
+        float sw = 20 + 140 * anim("searchOpen", 14).animate(open ? 1 : 0);
+        float sx = mx0 + mw - sw, sy = y0 + 9;
+        if (sw > 24) {
+            field(ctx, 1, sx, sy, sw, 20, query, t("Szukaj…", "Search…"), "g_search");
+            if (!query.isEmpty()) {
+                float bx = sx + sw - 16;
+                R2D.icon(ctx, "g_close", bx, sy + 6.5f, 7, over(bx - 3, sy, 14, 20) ? TEXT : FAINT);
+                hit(bx - 3, sy, 14, 20, b -> { query = ""; listTime = System.currentTimeMillis(); });
+            }
+        } else {
+            float hv = hover("searchBtn", sx, sy, 20, 20);
+            R2D.roundRect(ctx, sx, sy, 20, 20, 10, R2D.withAlpha(0xFFFFFFFF, 0.04f + 0.08f * hv));
+            R2D.icon(ctx, "g_search", sx + 6, sy + 6, 8, R2D.blend(DIM, TEXT, hv));
+            hit(sx, sy, 20, 20, b -> focus = 1);
         }
 
-        gx = mx0; gy = y0 + 58; gw = mw; gh = H - 58 - 12;
-        int cols = gw >= 610 ? 3 : gw >= 380 ? 2 : 1;
-        float gap = 8, ch = 46, cw = (gw - gap * (cols - 1)) / cols;
+        gx = mx0; gy = y0 + 44; gw = mw; gh = H - 44 - 10;
+        int cols = gw >= 560 ? 3 : gw >= 300 ? 2 : 1;
+        float gap = 4, colGap = 10, ch = 27, cw = (gw - colGap * (cols - 1)) / cols;
         int rows = (list.size() + cols - 1) / cols;
         float contentH = rows * (ch + gap) - gap;
         maxScroll = Math.max(0, contentH - gh);
         scrollTarget = Math.max(0, Math.min(maxScroll, scrollTarget));
         scroll += (scrollTarget - scroll) * 0.3f;
+        hoveredModule = null;
         R2D.scissor(ctx, gx - 4, gy - 2, gw + 8, gh + 4);
         long now = System.currentTimeMillis();
         for (int i = 0; i < list.size(); i++) {
-            float cx = gx + (i % cols) * (cw + gap), cy = gy + (i / cols) * (ch + gap) - scroll;
+            // kolejność jak w referencji: najpierw w dół pierwszej kolumny, potem druga
+            int col = i / rows, row = i % rows;
+            float cx = gx + col * (cw + colGap), cy = gy + row * (ch + gap) - scroll;
             if (cy + ch < gy - 2 || cy > gy + gh + 2) continue;
-            float e = Anim.easeOutCubic((now - listTime - i * 22) / (300f / Theme.motionSpeed()));
+            float e = Anim.easeOutCubic((now - listTime - i * 18) / (280f / Theme.motionSpeed()));
             float prev = R2D.alpha;
             R2D.alpha = prev * e;
-            drawCard(ctx, list.get(i), cx, cy + (1 - e) * 8, cw, ch);
+            drawCard(ctx, list.get(i), cx + (1 - e) * 6, cy, cw, ch);
             R2D.alpha = prev;
         }
         R2D.endScissor(ctx);
         if (list.isEmpty()) {
             float cy = gy + gh / 2f;
-            R2D.icon(ctx, favorites && query.isEmpty() ? "g_star" : "g_search", gx + gw / 2f - 11, cy - 26, 22, FAINT);
+            R2D.icon(ctx, favorites && query.isEmpty() ? "g_star" : "g_search", gx + gw / 2f - 10, cy - 24, 20, FAINT);
             Fonts.drawCentered(ctx, favorites && query.isEmpty() ? t("Brak ulubionych – dodaj gwiazdką w ustawieniach modułu", "No favorites – star a module in its settings")
-                    : t("Nic nie znaleziono", "Nothing found"), gx + gw / 2f, cy + 4, DIM, Font.SEMIBOLD, 0.74f);
+                    : t("Nic nie znaleziono", "Nothing found"), gx + gw / 2f, cy + 2, DIM, Font.SEMIBOLD, 0.7f);
         }
         if (maxScroll > 0) {
             float th = Math.max(20, gh * gh / (contentH + 0.01f));
             float ty = gy + (gh - th) * (scroll / maxScroll);
-            R2D.roundRect(ctx, gx + gw + 5, ty, 2.5f, th, 1.25f, 0x66FFFFFF);
+            R2D.roundRect(ctx, gx + gw + 5, ty, 2, th, 1, 0x55FFFFFF);
         }
     }
 
+    /** wiersz modułu: nazwa + opis; włączony – akcent po lewej, jaśniejsza nazwa i kropka stanu */
     private void drawCard(DrawContext ctx, Module m, float x, float y, float w, float h) {
         boolean inGrid = my >= gy && my < gy + gh && mx >= sideRight;
-        float hv = anim("hv" + m.name).animate(inGrid && over(x, y, w, h) && drawer.raw() < 0.5f || inspected == m ? 1 : 0);
+        boolean ov = inGrid && over(x, y, w, h) && drawer.raw() < 0.5f;
+        if (ov) hoveredModule = m;
+        float hv = anim("hv" + m.name).animate(ov || inspected == m ? 1 : 0);
         float on = state("on" + m.name, 18, m.isEnabled() ? 1 : 0);
-        float sel = anim("sel" + m.name).animate(inspected == m ? 1 : 0);
         int acc = Theme.accent();
-        R2D.roundRect(ctx, x, y, w, h, 11, R2D.blend(R2D.blend(0x0AFFFFFF, 0x15FFFFFF, hv), R2D.withAlpha(R2D.blend(acc, 0xFFFFFFFF, 0.5f), 0.11f), on * 0.8f));
-        R2D.roundOutline(ctx, x, y, w, h, 11, 0.6f, R2D.blend(R2D.blend(0x12FFFFFF, 0x2AFFFFFF, hv), R2D.withAlpha(acc, 0.6f), Math.max(on * 0.6f, sel)));
-        float ts = 30, tx = x + 8, ty = y + (h - ts) / 2f;
-        if (on > 0.01f) R2D.glow(ctx, tx - 10, ty - 10, ts + 20, ts + 20, R2D.withAlpha(acc, 0.2f * on));
-        R2D.roundRectV(ctx, tx, ty, ts, ts, 9, R2D.blend(0xFF202024, Theme.accentTop(), on), R2D.blend(0xFF18181B, Theme.accentBottom(), on));
-        R2D.roundOutline(ctx, tx, ty, ts, ts, 9, 0.5f, R2D.withAlpha(0xFFFFFFFF, 0.11f * (1 - on)));
-        R2D.icon(ctx, m.icon, tx + ts / 2f - 6.5f, ty + ts / 2f - 6.5f, 13, R2D.blend(0xFFD4D4D8, Theme.onAccent(), on));
-        float lx = tx + ts + 10;
-        float right = 40;
+        R2D.roundRect(ctx, x, y, w, h, 6, R2D.blend(R2D.blend(0x05FFFFFF, 0x0FFFFFFF, hv), R2D.withAlpha(acc, 0.09f + 0.04f * hv), on));
+        if (on > 0.01f) R2D.roundRect(ctx, x + 1.5f, y + 6, 2, h - 12, 1, R2D.withAlpha(acc, on));
+        float tx = x + 9 + 3 * on;
         boolean binding = this.binding == m;
         String kn = binding ? "…" : keyName(m.key);
-        float kw = kn.isEmpty() ? 0 : Math.max(14, Fonts.width(kn, Font.BOLD, 0.52f) + 8);
-        if (kw > 0) right += kw + 6;
-        Fonts.draw(ctx, Fonts.trim(m.name, Font.BOLD, 0.82f, w - (lx - x) - right + 10), lx, y + h / 2f - 9.5f, R2D.blend(0xFFE4E4E7, 0xFFFFFFFF, on), Font.BOLD, 0.82f);
-        if (m.favorite) R2D.icon(ctx, "g_star", lx + Fonts.width(m.name, Font.BOLD, 0.82f) + 4, y + h / 2f - 8.5f, 6.5f, DIM);
-        Fonts.draw(ctx, Fonts.trim(m.description(), Font.REGULAR, 0.6f, w - (lx - x) - right), lx, y + h / 2f + 2.5f, DIM, Font.REGULAR, 0.6f);
-        float sx = x + w - 32;
+        float kw = kn.isEmpty() ? 0 : Math.max(13, Fonts.width(kn, Font.BOLD, 0.48f) + 7);
+        float right = 16 + (kw > 0 ? kw + 5 : 0);
+        int nameCol = R2D.blend(R2D.blend(0xFFBDBDC6, 0xFFFFFFFF, hv), 0xFFFFFFFF, on);
+        String name = Fonts.trim(m.name, Font.BOLD, 0.7f, w - (tx - x) - right);
+        Fonts.draw(ctx, name, tx, y + 5, nameCol, Font.BOLD, 0.7f);
+        if (m.favorite) R2D.icon(ctx, "g_star", tx + Fonts.width(name, Font.BOLD, 0.7f) + 3, y + 5.5f, 5.5f, DIM);
+        Fonts.draw(ctx, Fonts.trim(m.description(), Font.REGULAR, 0.54f, w - (tx - x) - right), tx, y + 15.5f, R2D.blend(FAINT, 0xFF8A8A96, hv), Font.REGULAR, 0.54f);
+        // kropka stanu
+        float dx = x + w - 10, dy = y + h / 2f;
+        if (on > 0.01f) R2D.glow(ctx, dx - 7, dy - 7, 14, 14, R2D.withAlpha(acc, 0.5f * on));
+        R2D.circle(ctx, dx, dy, 2.6f, R2D.blend(0x26FFFFFF, acc, on));
         if (kw > 0) {
-            float kx = sx - 6 - kw, ky = y + h / 2f - 6;
-            int bg = binding ? R2D.withAlpha(acc, 0.35f + 0.25f * (float) Math.sin(System.currentTimeMillis() / 150.0)) : 0x1CFFFFFF;
-            R2D.roundRect(ctx, kx, ky, kw, 12, 4, bg);
-            R2D.roundOutline(ctx, kx, ky, kw, 12, 4, 0.5f, 0x26FFFFFF);
-            Fonts.drawV(ctx, kn, kx + (kw - Fonts.width(kn, Font.BOLD, 0.52f)) / 2f, ky + 6.5f, TEXT, Font.BOLD, 0.52f);
+            float kx = dx - 7 - kw, ky = y + h / 2f - 5.5f;
+            int bg = binding ? R2D.withAlpha(acc, 0.35f + 0.25f * (float) Math.sin(System.currentTimeMillis() / 150.0)) : 0x16FFFFFF;
+            R2D.roundRect(ctx, kx, ky, kw, 11, 3.5f, bg);
+            Fonts.drawV(ctx, kn, kx + (kw - Fonts.width(kn, Font.BOLD, 0.48f)) / 2f, ky + 6, DIM, Font.BOLD, 0.48f);
         }
-        toggleAt(ctx, sx, y + h / 2f - 5.5f, on, hv);
         hit(x, Math.max(y, gy), w, Math.min(y + h, gy + gh) - Math.max(y, gy), b -> {
             if (my < gy || my >= gy + gh) return;
             if (b == 0) { m.toggle(); click(); Modules.save(); }
@@ -698,8 +715,8 @@ public class ClickGui extends Screen {
 
     private void drawTheme(DrawContext ctx, float x, float w) {
         float mx0 = x + 14, mw = w - 28;
-        header(ctx, mx0, mw, t("Motyw", "Theme"), t("Wygląd i zachowanie ClickGUI", "How the ClickGUI looks and behaves"));
-        float top = y0 + 58, areaH = H - 58 - 12;
+        header(ctx, mx0, mw, "g_theme", t("Motyw", "Theme"), t("Wygląd i zachowanie ClickGUI", "How the ClickGUI looks and behaves"));
+        float top = y0 + 46, areaH = H - 46 - 10;
         int cols = mw >= 420 ? 2 : 1;
         float gap = 10, cw = (mw - gap * (cols - 1)) / cols;
         float[] colY = new float[cols];
@@ -748,7 +765,7 @@ public class ClickGui extends Screen {
                             f -> { Theme.dim = Math.round(0.8f * f * 20) / 20f; Theme.save(); });
                     return yy - cy;
                 }},
-                {"g_m_3dgui", "3D GUI", t("Pochylony panel w przestrzeni (też w Wygląd → 3D GUI)", "Tilted panel in space (also in Render → 3D GUI)"), (CardBody) (cx, cy, w2) -> {
+                {"g_m_3dgui", "3D GUI", t("Pochylony panel w przestrzeni (też w Wizualne → 3D GUI)", "Tilted panel in space (also in Visuals → 3D GUI)"), (CardBody) (cx, cy, w2) -> {
                     float yy = themeToggle(ctx, "3d", cx, cy, w2, t("Tryb 3D", "3D mode"), m3.isEnabled(), () -> { m3.toggle(); Modules.save(); });
                     if (m3.isEnabled()) {
                         Setting.Num tilt = (Setting.Num) m3.settings.get(0);
@@ -804,8 +821,8 @@ public class ClickGui extends Screen {
     private void drawConfigs(DrawContext ctx, float x, float w) {
         float mx0 = x + 14, mw = w - 28;
         List<Modules.Config> list = Modules.configs();
-        header(ctx, mx0, mw, t("Konfiguracje", "Configs"), t(list.size() + " zapisanych  •  aktywna: " + Theme.config, list.size() + " saved  •  active: " + Theme.config));
-        float bw = 116, bx = mx0 + mw - bw, by = y0 + 18;
+        header(ctx, mx0, mw, "g_configs", t("Konfiguracje", "Configs"), t(list.size() + " zapisanych, aktywna: " + Theme.config, list.size() + " saved, active: " + Theme.config));
+        float bw = 108, bx = mx0 + mw - bw, by = y0 + 9;
         button(ctx, bx, by, bw, 20, "g_save", t("Zapisz nową", "Save new"), true, hover("cfgNew", bx, by, bw, 20), true);
         hit(bx, by, bw, 20, b -> {
             if (b != 0) return;
@@ -814,7 +831,7 @@ public class ClickGui extends Screen {
             Theme.config = n; Theme.save();
             click();
         });
-        float top = y0 + 58, areaH = H - 58 - 12, rh = 40, gap = 6;
+        float top = y0 + 46, areaH = H - 46 - 10, rh = 36, gap = 5;
         R2D.scissor(ctx, mx0 - 4, top - 2, mw + 8, areaH + 4);
         float y = top - pScroll;
         DateTimeFormatter fmt = DateTimeFormatter.ofPattern(pl() ? "d MMM yyyy, HH:mm" : "MMM d, yyyy, HH:mm", pl() ? Locale.forLanguageTag("pl-PL") : Locale.ENGLISH);
@@ -824,39 +841,39 @@ public class ClickGui extends Screen {
             R2D.roundRect(ctx, mx0, y, mw, rh, 11, R2D.blend(0x0AFFFFFF, 0x14FFFFFF, hv));
             R2D.roundOutline(ctx, mx0, y, mw, rh, 11, 0.6f, active ? R2D.withAlpha(Theme.accent(), 0.6f) : R2D.blend(0x12FFFFFF, 0x24FFFFFF, hv));
             R2D.roundRectV(ctx, mx0 + 8, y + 7, 26, 26, 8, active ? Theme.accentTop() : 0xFF202024, active ? Theme.accentBottom() : 0xFF18181B);
-            R2D.icon(ctx, "g_configs", mx0 + 15, y + 14, 12, active ? Theme.onAccent() : 0xFFD4D4D8);
-            Fonts.draw(ctx, c.name(), mx0 + 44, y + 9, TEXT, Font.BOLD, 0.8f);
+            R2D.icon(ctx, "g_configs", mx0 + 15, y + 12, 12, active ? Theme.onAccent() : 0xFFD4D4D8);
+            Fonts.draw(ctx, c.name(), mx0 + 44, y + 7, TEXT, Font.BOLD, 0.8f);
             float nw = Fonts.width(c.name(), Font.BOLD, 0.8f);
             if (active) {
                 String tag = t("AKTYWNA", "ACTIVE");
                 float tw = Fonts.width(tag, Font.BOLD, 0.48f) + 10;
-                R2D.roundRect(ctx, mx0 + 44 + nw + 6, y + 9, tw, 10, 5, Theme.accent());
-                Fonts.drawV(ctx, tag, mx0 + 44 + nw + 11, y + 14, Theme.onAccent(), Font.BOLD, 0.48f);
+                R2D.roundRect(ctx, mx0 + 44 + nw + 6, y + 7, tw, 10, 5, Theme.accent());
+                Fonts.drawV(ctx, tag, mx0 + 44 + nw + 11, y + 12, Theme.onAccent(), Font.BOLD, 0.48f);
             }
-            Fonts.draw(ctx, t("Zapisano ", "Saved ") + fmt.format(Instant.ofEpochMilli(c.modified()).atZone(ZoneId.systemDefault())), mx0 + 44, y + 22, FAINT, Font.REGULAR, 0.58f);
+            Fonts.draw(ctx, t("Zapisano ", "Saved ") + fmt.format(Instant.ofEpochMilli(c.modified()).atZone(ZoneId.systemDefault())), mx0 + 44, y + 20, FAINT, Font.REGULAR, 0.58f);
             // przyciski
             float rx = mx0 + mw - 8;
             boolean armed = c.name().equals(deleteName) && System.currentTimeMillis() - deleteArm < 3000;
             float dw = armed ? Fonts.width(t("Na pewno?", "Sure?"), Font.BOLD, 0.6f) + 20 : 24;
             rx -= dw;
-            float dh = hover("cfgDel" + c.name(), rx, y + 9, dw, 22);
+            float dh = hover("cfgDel" + c.name(), rx, y + 7, dw, 22);
             if (armed) {
-                R2D.roundRect(ctx, rx, y + 9, dw, 22, 11, R2D.blend(0xFFDC2626, 0xFFEF4444, dh));
-                Fonts.drawV(ctx, t("Na pewno?", "Sure?"), rx + 10, y + 20.5f, 0xFFFFFFFF, Font.BOLD, 0.6f);
-            } else button(ctx, rx, y + 9, dw, 22, "g_trash", null, false, dh, true);
-            hit(rx, y + 9, dw, 22, b -> {
+                R2D.roundRect(ctx, rx, y + 7, dw, 22, 11, R2D.blend(0xFFDC2626, 0xFFEF4444, dh));
+                Fonts.drawV(ctx, t("Na pewno?", "Sure?"), rx + 10, y + 18.5f, 0xFFFFFFFF, Font.BOLD, 0.6f);
+            } else button(ctx, rx, y + 7, dw, 22, "g_trash", null, false, dh, true);
+            hit(rx, y + 7, dw, 22, b -> {
                 if (b != 0) return;
                 if (armed) { Modules.deleteConfig(c.name()); deleteName = null; if (Theme.config.equals(c.name())) { Theme.config = "default"; Theme.save(); } }
                 else { deleteName = c.name(); deleteArm = System.currentTimeMillis(); }
                 click();
             });
             rx -= 30;
-            button(ctx, rx, y + 9, 24, 22, "g_save", null, false, hover("cfgSave" + c.name(), rx, y + 9, 24, 22), true);
-            hit(rx, y + 9, 24, 22, b -> { if (b == 0) { Modules.saveConfig(c.name()); Theme.config = c.name(); Theme.save(); click(); } });
+            button(ctx, rx, y + 7, 24, 22, "g_save", null, false, hover("cfgSave" + c.name(), rx, y + 7, 24, 22), true);
+            hit(rx, y + 7, 24, 22, b -> { if (b == 0) { Modules.saveConfig(c.name()); Theme.config = c.name(); Theme.save(); click(); } });
             float lw = Fonts.width(t("Wczytaj", "Load"), Font.BOLD, 0.7f) + 34;
             rx -= lw + 6;
-            button(ctx, rx, y + 9, lw, 22, "g_load", t("Wczytaj", "Load"), !active, hover("cfgLoad" + c.name(), rx, y + 9, lw, 22), true);
-            hit(rx, y + 9, lw, 22, b -> { if (b == 0) { Modules.loadConfig(c.name()); Theme.config = c.name(); Theme.save(); click(); } });
+            button(ctx, rx, y + 7, lw, 22, "g_load", t("Wczytaj", "Load"), !active, hover("cfgLoad" + c.name(), rx, y + 7, lw, 22), true);
+            hit(rx, y + 7, lw, 22, b -> { if (b == 0) { Modules.loadConfig(c.name()); Theme.config = c.name(); Theme.save(); click(); } });
             y += rh + gap;
         }
         if (list.isEmpty()) {
@@ -875,8 +892,8 @@ public class ClickGui extends Screen {
     private void drawFriends(DrawContext ctx, float x, float w) {
         float mx0 = x + 14, mw = w - 28;
         List<String> list = Friends.all();
-        header(ctx, mx0, mw, t("Znajomi", "Friends"), t(list.size() + (list.size() == 1 ? " znajomy" : " znajomych"), list.size() + (list.size() == 1 ? " friend" : " friends")));
-        float top = y0 + 58;
+        header(ctx, mx0, mw, "g_friends", t("Znajomi", "Friends"), t(list.size() + (list.size() == 1 ? " znajomy" : " znajomych"), list.size() + (list.size() == 1 ? " friend" : " friends")));
+        float top = y0 + 46;
         float bw = 90, fw = mw - bw - 8;
         field(ctx, 2, mx0, top, fw, 22, friendInput, t("Wpisz nick gracza…", "Type a player name…"), "g_userplus");
         button(ctx, mx0 + fw + 8, top, bw, 22, "g_userplus", t("Dodaj", "Add"), true, hover("frAdd", mx0 + fw + 8, top, bw, 22), !friendInput.isBlank());

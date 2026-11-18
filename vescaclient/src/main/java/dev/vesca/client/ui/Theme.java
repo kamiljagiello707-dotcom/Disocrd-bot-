@@ -26,7 +26,7 @@ public final class Theme {
     public static int accentIndex = 0;
     public static String motion = "Normal";
     public static float scale = 1f;
-    public static String sidebar = "Auto";
+    public static String sidebar = "Expanded";
     public static boolean blur = true, sounds = true, shadow = true;
     public static float dim = 0.45f;
     public static String config = "default";
@@ -64,6 +64,8 @@ public final class Theme {
                 if (o.has("shadow")) shadow = o.get("shadow").getAsBoolean();
                 if (o.has("dim")) dim = o.get("dim").getAsFloat();
                 if (o.has("config")) config = o.get("config").getAsString();
+                // 1.5: domyślnie stały pasek boczny (jak w nowym wyglądzie)
+                if (!o.has("v") || o.get("v").getAsInt() < 2) sidebar = "Expanded";
             }
         } catch (Exception ignored) {}
         apply();
@@ -80,6 +82,7 @@ public final class Theme {
         o.addProperty("shadow", shadow);
         o.addProperty("dim", dim);
         o.addProperty("config", config);
+        o.addProperty("v", 2);
         try {
             Files.createDirectories(FILE.getParent());
             Files.writeString(FILE, GSON.toJson(o), StandardCharsets.UTF_8);

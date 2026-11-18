@@ -26,7 +26,7 @@ public final class Ui {
         if (glow > 0) R2D.glow(ctx, x - s * 0.5f, y - s * 0.5f, s * 2f, s * 2f, R2D.withAlpha(0xFFFFFFFF, 0.2f * glow));
         R2D.shadow(ctx, x, y + 2, s, s, s * 0.35f, 0x88000000);
         R2D.roundRectV(ctx, x, y, s, s, s * 0.3f, 0xFFFFFFFF, 0xFFD4D4D8);
-        R2D.icon(ctx, "logo_v", x + s * 0.22f, y + s * 0.22f, s * 0.56f, BLACK);
+        R2D.icon(ctx, "vesca_logo", x + s * 0.19f, y + s * 0.19f, s * 0.62f, BLACK);
     }
 
     /** tekst z rozstrzelonymi literami; zwraca szerokość */

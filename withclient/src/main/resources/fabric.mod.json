@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "id": "withclient",
+  "version": "${version}",
+  "name": "WithClient",
+  "description": "WithClient – rozbudowany klient z dopracowanym interfejsem i wieloma opcjami.",
+  "authors": ["WithClient"],
+  "license": "All-Rights-Reserved",
+  "icon": "assets/withclient/textures/icons/mod_icon.png",
+  "environment": "client",
+  "entrypoints": { "client": ["dev.with.client.WithClient"] },
+  "depends": { "fabricloader": ">=0.16.0", "fabric-api": "*", "minecraft": "~1.21.1", "java": ">=21" },
+  "mixins": ["withclient.mixins.json"]
+}

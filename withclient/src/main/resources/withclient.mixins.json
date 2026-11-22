@@ -1,0 +1,7 @@
+{
+  "required": true,
+  "package": "dev.with.client.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "client": ["TextRenderLayerSetMixin"],
+  "injectors": { "defaultRequire": 1 }
+}

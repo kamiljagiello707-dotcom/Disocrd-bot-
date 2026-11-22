@@ -1,0 +1,1 @@
+{ "providers": [ { "type": "ttf", "file": "withclient:inter-medium.ttf", "size": 9, "oversample": 4.0, "shift": [0, 0.5] } ] }

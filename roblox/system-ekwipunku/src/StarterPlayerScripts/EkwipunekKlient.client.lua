@@ -47,12 +47,13 @@ local function czcionka(waga)
 	return Font.new(CZCIONKA, waga or Enum.FontWeight.Regular)
 end
 
-local SZEROKOSC, WYSOKOSC = 724, 470
+local SZEROKOSC, WYSOKOSC = 724, 500
 local MARGINES = 22
 local KOMORKA = 78
 local ODSTEP = 8
 local SZEROKOSC_SIATKI = 436
 local SZEROKOSC_SZCZEGOLOW = SZEROKOSC - MARGINES * 2 - SZEROKOSC_SIATKI - 18
+local GORA_SIATKI, WYSOKOSC_SIATKI = 140, 290
 local POLE_WIDZENIA = 30
 
 local SZYBKO = TweenInfo.new(0.12, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
@@ -455,7 +456,7 @@ local szukaj = nowy("TextBox", {
 })
 local licznik = napis({
 	Position = UDim2.fromOffset(MARGINES + 252, 58),
-	Size = UDim2.fromOffset(SZEROKOSC_SIATKI - 252, 32),
+	Size = UDim2.fromOffset(SZEROKOSC - MARGINES * 2 - 252, 32),
 	TextXAlignment = Enum.TextXAlignment.Right,
 	TextColor3 = KOLOR.TekstSlaby,
 	TextSize = 12,
@@ -467,7 +468,7 @@ local zakladki = nowy("ScrollingFrame", {
 	BackgroundTransparency = 1,
 	BorderSizePixel = 0,
 	Position = UDim2.fromOffset(MARGINES, 100),
-	Size = UDim2.fromOffset(SZEROKOSC_SIATKI, 28),
+	Size = UDim2.fromOffset(SZEROKOSC - MARGINES * 2, 28),
 	CanvasSize = UDim2.new(),
 	AutomaticCanvasSize = Enum.AutomaticSize.X,
 	ScrollingDirection = Enum.ScrollingDirection.X,
@@ -485,8 +486,8 @@ nowy("UIListLayout", {
 local siatka = nowy("ScrollingFrame", {
 	BackgroundTransparency = 1,
 	BorderSizePixel = 0,
-	Position = UDim2.fromOffset(MARGINES, 140),
-	Size = UDim2.fromOffset(SZEROKOSC_SIATKI, 260),
+	Position = UDim2.fromOffset(MARGINES, GORA_SIATKI),
+	Size = UDim2.fromOffset(SZEROKOSC_SIATKI, WYSOKOSC_SIATKI),
 	CanvasSize = UDim2.new(),
 	AutomaticCanvasSize = Enum.AutomaticSize.Y,
 	ScrollingDirection = Enum.ScrollingDirection.Y,
@@ -512,8 +513,8 @@ nowy("UIGridLayout", {
 
 local pusto = nowy("Frame", {
 	BackgroundTransparency = 1,
-	Position = UDim2.fromOffset(MARGINES, 140),
-	Size = UDim2.fromOffset(SZEROKOSC_SIATKI, 260),
+	Position = UDim2.fromOffset(MARGINES, GORA_SIATKI),
+	Size = UDim2.fromOffset(SZEROKOSC_SIATKI, WYSOKOSC_SIATKI),
 	Visible = false,
 	Parent = okno,
 })
@@ -540,8 +541,8 @@ local pustoOpis = napis({
 
 -- Panel szczegółów
 local szczegoly = nowy("Frame", {
-	Position = UDim2.fromOffset(SZEROKOSC - MARGINES - SZEROKOSC_SZCZEGOLOW, 58),
-	Size = UDim2.fromOffset(SZEROKOSC_SZCZEGOLOW, 342),
+	Position = UDim2.fromOffset(SZEROKOSC - MARGINES - SZEROKOSC_SZCZEGOLOW, GORA_SIATKI),
+	Size = UDim2.fromOffset(SZEROKOSC_SZCZEGOLOW, WYSOKOSC_SIATKI),
 	BackgroundColor3 = KOLOR.Panel,
 	BackgroundTransparency = 0.15,
 	Parent = okno,
@@ -568,42 +569,42 @@ local ikonaDuza = nowy("Frame", {
 	BackgroundTransparency = 1,
 	AnchorPoint = Vector2.new(0.5, 0),
 	Position = UDim2.new(0.5, 0, 0, 12),
-	Size = UDim2.fromOffset(100, 96),
+	Size = UDim2.fromOffset(100, 76),
 	Parent = trescSzczegolow,
 })
 local nazwaSz = napis({
 	FontFace = czcionka(Enum.FontWeight.Bold),
 	TextScaled = true,
 	TextXAlignment = Enum.TextXAlignment.Center,
-	Position = UDim2.fromOffset(12, 116),
-	Size = UDim2.new(1, -24, 0, 22),
+	Position = UDim2.fromOffset(12, 92),
+	Size = UDim2.new(1, -24, 0, 20),
 	Parent = trescSzczegolow,
 })
-nowy("UITextSizeConstraint", { MaxTextSize = 17, MinTextSize = 10, Parent = nazwaSz })
+nowy("UITextSizeConstraint", { MaxTextSize = 16, MinTextSize = 10, Parent = nazwaSz })
 local rzadkoscSz = napis({
 	FontFace = czcionka(Enum.FontWeight.Bold),
 	TextSize = 11,
 	TextXAlignment = Enum.TextXAlignment.Center,
-	Position = UDim2.fromOffset(12, 141),
-	Size = UDim2.new(1, -24, 0, 14),
+	Position = UDim2.fromOffset(12, 114),
+	Size = UDim2.new(1, -24, 0, 13),
 	Parent = trescSzczegolow,
 })
 local opisSz = napis({
 	TextColor3 = KOLOR.TekstSlaby,
-	TextSize = 12,
+	TextScaled = true,
 	TextWrapped = true,
 	TextXAlignment = Enum.TextXAlignment.Center,
-	TextYAlignment = Enum.TextYAlignment.Top,
-	Position = UDim2.fromOffset(14, 164),
-	Size = UDim2.new(1, -28, 0, 46),
+	Position = UDim2.fromOffset(14, 131),
+	Size = UDim2.new(1, -28, 0, 38),
 	Parent = trescSzczegolow,
 })
+nowy("UITextSizeConstraint", { MaxTextSize = 12, MinTextSize = 9, Parent = opisSz })
 local infoSz = napis({
 	TextColor3 = KOLOR.TekstSlaby,
 	TextSize = 11,
 	TextXAlignment = Enum.TextXAlignment.Center,
-	Position = UDim2.fromOffset(12, 214),
-	Size = UDim2.new(1, -24, 0, 14),
+	Position = UDim2.fromOffset(12, 172),
+	Size = UDim2.new(1, -24, 0, 13),
 	Parent = trescSzczegolow,
 })
 local kategoriaSz = napis({
@@ -611,8 +612,8 @@ local kategoriaSz = napis({
 	TextSize = 11,
 	RichText = true,
 	TextXAlignment = Enum.TextXAlignment.Center,
-	Position = UDim2.fromOffset(12, 230),
-	Size = UDim2.new(1, -24, 0, 14),
+	Position = UDim2.fromOffset(12, 187),
+	Size = UDim2.new(1, -24, 0, 13),
 	Parent = trescSzczegolow,
 })
 
@@ -620,8 +621,8 @@ local przyciskGlowny = przycisk({
 	Text = "Weź do ręki",
 	TextColor3 = KOLOR.TekstCiemny,
 	BackgroundColor3 = KOLOR.Bialy,
-	Position = UDim2.fromOffset(12, 254),
-	Size = UDim2.new(1, -24, 0, 34),
+	Position = UDim2.fromOffset(12, 206),
+	Size = UDim2.new(1, -24, 0, 32),
 	Parent = trescSzczegolow,
 })
 zaokraglij(przyciskGlowny, 8)
@@ -630,8 +631,8 @@ local przyciskWyrzuc = przycisk({
 	Text = "Wyrzuć",
 	TextColor3 = KOLOR.Tekst,
 	BackgroundColor3 = KOLOR.SlotNajechany,
-	Position = UDim2.fromOffset(12, 296),
-	Size = UDim2.new(1, -24, 0, 34),
+	Position = UDim2.fromOffset(12, 246),
+	Size = UDim2.new(1, -24, 0, 32),
 	Parent = trescSzczegolow,
 })
 zaokraglij(przyciskWyrzuc, 8)
@@ -639,7 +640,7 @@ obrysuj(przyciskWyrzuc, 0.92)
 
 -- Dół: pasek wagi i podpowiedź
 local torWagi = nowy("Frame", {
-	Position = UDim2.fromOffset(MARGINES, 418),
+	Position = UDim2.fromOffset(MARGINES, 448),
 	Size = UDim2.fromOffset(SZEROKOSC_SIATKI, 6),
 	BackgroundColor3 = KOLOR.Slot,
 	BorderSizePixel = 0,
@@ -654,7 +655,7 @@ local paskWagi = nowy("Frame", {
 })
 zaokraglij(paskWagi, 3)
 local napisWagi = napis({
-	Position = UDim2.fromOffset(MARGINES, 430),
+	Position = UDim2.fromOffset(MARGINES, 460),
 	Size = UDim2.fromOffset(SZEROKOSC_SIATKI, 16),
 	TextColor3 = KOLOR.TekstSlaby,
 	TextSize = 12,
@@ -663,7 +664,7 @@ local napisWagi = napis({
 napis({
 	Text = ("[%s] zamknij"):format(Konfiguracja.Klawisz.Name),
 	AnchorPoint = Vector2.new(1, 0),
-	Position = UDim2.new(1, -MARGINES, 0, 430),
+	Position = UDim2.new(1, -MARGINES, 0, 460),
 	Size = UDim2.fromOffset(200, 16),
 	TextColor3 = KOLOR.TekstSlaby,
 	TextSize = 12,
@@ -842,8 +843,8 @@ local function utworzSlot(grupa)
 	slot.Ikona = nowy("Frame", {
 		BackgroundTransparency = 1,
 		AnchorPoint = Vector2.new(0.5, 0),
-		Position = UDim2.new(0.5, 0, 0, 9),
-		Size = UDim2.fromOffset(46, 40),
+		Position = UDim2.new(0.5, 0, 0, 7),
+		Size = UDim2.fromOffset(46, 36),
 		Parent = slot.Przycisk,
 	})
 	slot.Ilosc = napis({
@@ -856,16 +857,17 @@ local function utworzSlot(grupa)
 		Parent = slot.Przycisk,
 	})
 	slot.Nazwa = napis({
-		TextSize = 11,
-		TextTruncate = Enum.TextTruncate.AtEnd,
+		TextScaled = true,
+		TextWrapped = true,
 		TextXAlignment = Enum.TextXAlignment.Center,
-		Position = UDim2.fromOffset(4, 52),
-		Size = UDim2.new(1, -8, 0, 13),
+		Position = UDim2.fromOffset(4, 45),
+		Size = UDim2.new(1, -8, 0, 22),
 		Parent = slot.Przycisk,
 	})
+	nowy("UITextSizeConstraint", { MaxTextSize = 11, MinTextSize = 7, Parent = slot.Nazwa })
 	slot.Pasek = nowy("Frame", {
 		AnchorPoint = Vector2.new(0.5, 0),
-		Position = UDim2.new(0.5, 0, 0, 69),
+		Position = UDim2.new(0.5, 0, 0, 70),
 		Size = UDim2.new(1, -22, 0, 3),
 		BorderSizePixel = 0,
 		Parent = slot.Przycisk,

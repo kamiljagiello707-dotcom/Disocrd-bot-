@@ -807,7 +807,18 @@ local function pokazPowiadomienie(tresc, rodzaj)
 	end)
 end
 
-remotePowiadomienie.OnClientEvent:Connect(pokazPowiadomienie)
+-- Gdy w grze jest ekran wczytywania, powiadomienia czekają, aż zniknie
+local function czekajNaWczytanie()
+	local poczatek = os.clock()
+	while gracz:GetAttribute("EkranWczytywania") == true and os.clock() - poczatek < 90 do
+		task.wait(0.25)
+	end
+end
+
+remotePowiadomienie.OnClientEvent:Connect(function(tresc, rodzaj)
+	czekajNaWczytanie()
+	pokazPowiadomienie(tresc, rodzaj)
+end)
 
 -- ============================================================
 --  Sloty
@@ -1207,6 +1218,9 @@ local function zamknij()
 end
 
 local function przelacz()
+	if gracz:GetAttribute("EkranWczytywania") == true then
+		return
+	end
 	if stan.otwarte then
 		zamknij()
 	else
@@ -1379,5 +1393,7 @@ aktualizujRange()
 podlaczGracza()
 
 task.delay(3, function()
+	czekajNaWczytanie()
+	task.wait(1)
 	pokazPowiadomienie(("Naciśnij %s, aby otworzyć ekwipunek."):format(Konfiguracja.Klawisz.Name), "info")
 end)

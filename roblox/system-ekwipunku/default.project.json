@@ -29,6 +29,11 @@
           "$path": "przedmioty/OSP.rbxm"
         }
       }
+    },
+    "ReplicatedFirst": {
+      "EkranWczytywania": {
+        "$path": "src/ReplicatedFirst/EkranWczytywania"
+      }
     }
   }
 }

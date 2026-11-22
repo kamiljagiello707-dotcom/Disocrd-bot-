@@ -7,7 +7,8 @@ Ekwipunek otwierany klawiszem **X**, z rangami. Każdy gracz startuje jako **Oby
 | Plik | Do czego |
 |---|---|
 | `build/SystemEkwipunku.rbxm` | Paczka do wstawienia do gry klienta |
-| `build/TestEkwipunku.rbxl` | Gotowe miejsce testowe: otwórz i kliknij Play |
+| `build/EkranWczytywania.rbxm` | Ekran wczytywania (LocalScript do ReplicatedFirst) |
+| `build/TestEkwipunku.rbxl` | Gotowe miejsce testowe z EQ i ekranem wczytywania: otwórz i kliknij Play |
 | `przedmioty/OSP.rbxm` | Przedmioty OSP klienta (oczyszczone) |
 | `src/` | Kod źródłowy (Luau) |
 
@@ -69,6 +70,18 @@ Przedmioty, które potrzebują systemów spoza paczki:
 - **Radio**: `ReplicatedStorage.Pegasus.RadioGui` (system radia Pegasus)
 - **Dron**: system „Reaper Drone System”
 - **MRE**: wartości `HungerVal` i `ThirstVal` w graczu (system głodu)
+
+## Ekran wczytywania
+
+Wstaw `EkranWczytywania.rbxm` i przeciągnij `EkranWczytywania` do **ReplicatedFirst**. Działa też bez ekwipunku.
+
+- nazwa gry, podtytuł, wersja, logo, obraz tła, muzyka, kolor akcentu i porady są w module `Ustawienia` w środku skryptu
+- wczytuje obrazki, dźwięki i modele z mapy (pasek z liczbą zasobów), czeka na postać
+- trwa co najmniej `MinimalnyCzas` (4 s), najwyżej `MaksymalnyCzas` (30 s); po 8 s pojawia się **Pomiń**
+- na końcu przycisk **GRAJ** (albo Enter / spacja); `PrzyciskGraj = false`, żeby ekran znikał sam
+- na czas wczytywania chowa listę graczy, czat, zdrowie i emotki (lista w `UkryjInterfejs`)
+- błąd w trakcie wczytywania nigdy nie zablokuje gracza: ekran i tak zniknie
+- EQ nie otwiera się pod ekranem wczytywania, a jego powiadomienia czekają, aż ekran zniknie
 
 ## Budowanie ze źródeł
 

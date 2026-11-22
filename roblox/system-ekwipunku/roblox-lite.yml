@@ -40,3 +40,11 @@ globals:
     any: true
   shared:
     any: true
+  ColorSequence:
+    any: true
+  NumberSequence:
+    any: true
+  NumberSequenceKeypoint:
+    any: true
+  ColorSequenceKeypoint:
+    any: true

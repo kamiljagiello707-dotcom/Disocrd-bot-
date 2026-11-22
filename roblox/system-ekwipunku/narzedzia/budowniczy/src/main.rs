@@ -1,7 +1,8 @@
 //! Składa System Ekwipunku w pliki dla Roblox Studio.
 //!
 //!   budowniczy zbuduj <Items.rbxm> <katalog projektu>
-//!       -> przedmioty/OSP.rbxm, build/SystemEkwipunku.rbxm, build/TestEkwipunku.rbxl
+//!       -> przedmioty/OSP.rbxm, build/SystemEkwipunku.rbxm,
+//!          build/EkranWczytywania.rbxm, build/TestEkwipunku.rbxl
 //!   budowniczy czytaj <plik.rbxm|.rbxl>     (wypisuje drzewo, do sprawdzania)
 //!   budowniczy sprawdz <Klasa>...           (klasy bazowe i właściwości z bazy API)
 
@@ -178,6 +179,12 @@ impl Zrodla<'_> {
         )
     }
 
+    fn ekran_wczytywania(&self) -> Wynik<InstanceBuilder> {
+        let k = self.src.join("ReplicatedFirst/EkranWczytywania");
+        Ok(skrypt("LocalScript", "EkranWczytywania", &k.join("init.client.lua"))?
+            .with_child(skrypt("ModuleScript", "Ustawienia", &k.join("Ustawienia.lua"))?))
+    }
+
     fn stanowisko(&self) -> Wynik<InstanceBuilder> {
         let napis = InstanceBuilder::new("TextLabel")
             .with_name("Napis")
@@ -265,7 +272,12 @@ fn zbuduj(plik_przedmiotow: &Path, projekt: &Path) -> Wynik<()> {
     paczka.insert(glowny, folder("Do Workspace (przyklad)").with_child(zrodla.stanowisko()?));
     zapisz(&build.join("SystemEkwipunku.rbxm"), &paczka, &[glowny])?;
 
-    // 3. Gotowe miejsce testowe: wszystko na swoich miejscach
+    // 3. Ekran wczytywania: jeden LocalScript do wrzucenia do ReplicatedFirst
+    let mut ekran = WeakDom::new(folder("Korzen"));
+    let ekran_ref = ekran.insert(ekran.root_ref(), zrodla.ekran_wczytywania()?);
+    zapisz(&build.join("EkranWczytywania.rbxm"), &ekran, &[ekran_ref])?;
+
+    // 4. Gotowe miejsce testowe: wszystko na swoich miejscach
     let mut miejsce = WeakDom::new(InstanceBuilder::new("DataModel"));
     let dm = miejsce.root_ref();
     let workspace = miejsce.insert(
@@ -294,6 +306,12 @@ fn zbuduj(plik_przedmiotow: &Path, projekt: &Path) -> Wynik<()> {
     );
     let _ = workspace;
     miejsce.insert(dm, InstanceBuilder::new("Lighting").with_name("Lighting"));
+    miejsce.insert(
+        dm,
+        InstanceBuilder::new("ReplicatedFirst")
+            .with_name("ReplicatedFirst")
+            .with_child(zrodla.ekran_wczytywania()?),
+    );
     miejsce.insert(
         dm,
         InstanceBuilder::new("ReplicatedStorage")

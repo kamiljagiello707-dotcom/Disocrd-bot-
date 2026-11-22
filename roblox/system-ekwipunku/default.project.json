@@ -1,0 +1,34 @@
+{
+  "name": "SystemEkwipunku",
+  "tree": {
+    "$className": "DataModel",
+    "ReplicatedStorage": {
+      "Ekwipunek": {
+        "$path": "src/ReplicatedStorage/Ekwipunek"
+      }
+    },
+    "ServerScriptService": {
+      "EkwipunekSerwer": {
+        "$path": "src/ServerScriptService/EkwipunekSerwer"
+      }
+    },
+    "StarterPlayer": {
+      "StarterPlayerScripts": {
+        "EkwipunekKlient": {
+          "$path": "src/StarterPlayerScripts/EkwipunekKlient.client.lua"
+        }
+      }
+    },
+    "ServerStorage": {
+      "EkwipunekPrzedmioty": {
+        "$className": "Folder",
+        "Obywatel": {
+          "$className": "Folder"
+        },
+        "OSP": {
+          "$path": "przedmioty/OSP.rbxm"
+        }
+      }
+    }
+  }
+}

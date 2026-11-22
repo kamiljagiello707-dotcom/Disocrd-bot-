@@ -124,7 +124,7 @@ public final class Modules {
         for (Module m : ALL) {
             if (m.key < 0) continue;
             boolean down = InputUtil.isKeyPressed(win, m.key);
-            if (down && held.add(m.key)) { m.toggle(); save(); }
+            if (down && held.add(m.key)) { m.toggle(); dev.vesca.client.ui.Hud.onToggle(m); save(); }
             else if (!down) held.remove(m.key);
         }
     }

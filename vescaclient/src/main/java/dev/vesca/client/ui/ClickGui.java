@@ -42,7 +42,7 @@ import static dev.vesca.client.ui.Ui.*;
  * LPM – włącz/wyłącz, PPM – ustawienia, środkowy – przypisz klawisz, pisanie – szukaj, Esc – zamknij.
  */
 public class ClickGui extends Screen {
-    private enum Page { MODULES, CONFIGS, FRIENDS, THEME }
+    private enum Page { MODULES, CONFIGS, FRIENDS, THEME, HUD }
 
     // zapamiętane między otwarciami
     private static Page page = Page.MODULES;
@@ -76,6 +76,7 @@ public class ClickGui extends Screen {
 
     // geometria bieżącej klatki (do mapowania myszy)
     private float x0, y0, W, H, sc = 1;
+    private float drawerW, drawerGap = 10, dOpen, rightExtent;
     private boolean td;
     private float yaw, pitch, D, push;
     private SimpleFramebuffer fb;
@@ -152,7 +153,7 @@ public class ClickGui extends Screen {
 
     private void composite(DrawContext ctx, float a) {
         float cx = width / 2f, cy = height / 2f;
-        float fx0 = cx + (x0 - 40 - cx) * sc, fx1 = cx + (x0 + W + 40 - cx) * sc;
+        float fx0 = cx + (x0 - 40 - cx) * sc, fx1 = cx + (x0 + W + 40 + rightExtent - cx) * sc;
         float fy0 = cy + (y0 - 34 - cy) * sc, fy1 = cy + (y0 + H + 34 - cy) * sc;
         Matrix4f m = ctx.getMatrices().peek().getPositionMatrix();
         RenderSystem.enableBlend();
@@ -203,7 +204,10 @@ public class ClickGui extends Screen {
         float s = Theme.scale;
         W = Math.min(640, width / s - 32);
         H = Math.min(380, height / s - 44);
-        x0 = (width - W) / 2f;
+        drawerW = Math.min(224, W * 0.46f);
+        dOpen = Anim.easeOutCubic(drawer.animate(inspected != null && page == Page.MODULES ? 1 : 0));
+        rightExtent = (drawerGap + drawerW) * dOpen;
+        x0 = (width - W - rightExtent) / 2f;
         y0 = (height - H) / 2f - 6;
         sc = s * (0.95f + 0.05f * a);
         td = threeD();
@@ -277,6 +281,7 @@ public class ClickGui extends Screen {
             case CONFIGS -> drawConfigs(ctx, contentX, W - (contentX - x0));
             case FRIENDS -> drawFriends(ctx, contentX, W - (contentX - x0));
             case THEME -> drawTheme(ctx, contentX, W - (contentX - x0));
+            case HUD -> drawHud(ctx, contentX, W - (contentX - x0));
         }
         // przyciemnienie treści pod wysuniętym paskiem
         if (!pinned && e > 0.01f) {
@@ -333,13 +338,14 @@ public class ClickGui extends Screen {
         }
 
         Category[] cats = Category.values();
-        int n = cats.length + 4;
+        int n = cats.length + 5;
         String[] icons = new String[n], names = new String[n];
         for (int i = 0; i < cats.length; i++) { icons[i] = cats[i].icon; names[i] = cats[i].title(); }
         icons[cats.length] = "g_star"; names[cats.length] = t("Ulubione", "Favorites");
-        icons[cats.length + 1] = "g_friends"; names[cats.length + 1] = t("Znajomi", "Friends");
-        icons[cats.length + 2] = "g_configs"; names[cats.length + 2] = t("Konfiguracje", "Configs");
-        icons[cats.length + 3] = "g_theme"; names[cats.length + 3] = t("Motyw", "Theme");
+        icons[cats.length + 1] = "g_hud"; names[cats.length + 1] = "HUD";
+        icons[cats.length + 2] = "g_friends"; names[cats.length + 2] = t("Znajomi", "Friends");
+        icons[cats.length + 3] = "g_configs"; names[cats.length + 3] = t("Konfiguracje", "Configs");
+        icons[cats.length + 4] = "g_theme"; names[cats.length + 4] = t("Motyw", "Theme");
         float top = y0 + 46, profileH = 30;
         float headH = 13;
         float rh = Math.max(14, Math.min(20, (y0 + H - 8 - profileH - top - headH * 2 - 6) / n));
@@ -354,9 +360,10 @@ public class ClickGui extends Screen {
         }
         int active = switch (page) {
             case MODULES -> !query.isEmpty() ? -1 : favorites ? cats.length : category.ordinal();
-            case FRIENDS -> cats.length + 1;
-            case CONFIGS -> cats.length + 2;
-            case THEME -> cats.length + 3;
+            case HUD -> cats.length + 1;
+            case FRIENDS -> cats.length + 2;
+            case CONFIGS -> cats.length + 3;
+            case THEME -> cats.length + 4;
         };
         if (active >= 0 && catY.raw() < 0) catY.snap(ys[active]);
         float py = catY.animate(active >= 0 ? ys[active] : catY.target());
@@ -394,7 +401,7 @@ public class ClickGui extends Screen {
                 query = ""; focus = 0;
                 if (fi < cats.length) { page = Page.MODULES; favorites = false; category = cats[fi]; }
                 else if (fi == cats.length) { page = Page.MODULES; favorites = true; }
-                else { page = new Page[]{Page.FRIENDS, Page.CONFIGS, Page.THEME}[fi - cats.length - 1]; inspected = null; }
+                else { page = new Page[]{Page.HUD, Page.FRIENDS, Page.CONFIGS, Page.THEME}[fi - cats.length - 1]; inspected = null; }
                 scroll = scrollTarget = 0; pScroll = pScrollTarget = 0;
                 listTime = System.currentTimeMillis();
             });
@@ -600,7 +607,7 @@ public class ClickGui extends Screen {
         }
         hit(x, Math.max(y, gy), w, Math.min(y + h, gy + gh) - Math.max(y, gy), b -> {
             if (my < gy || my >= gy + gh) return;
-            if (b == 0) { m.toggle(); click(); Modules.save(); }
+            if (b == 0) { m.toggle(); Hud.onToggle(m); click(); Modules.save(); }
             else if (b == 1) openDrawer(m);
             else if (b == 2) { this.binding = m; click(); }
         });
@@ -616,18 +623,20 @@ public class ClickGui extends Screen {
     // ------------------------------------------------------------------ panel ustawień modułu
 
     private void drawDrawer(DrawContext ctx) {
-        float da = drawer.animate(inspected != null && page == Page.MODULES ? 1 : 0);
+        float da = dOpen;
         Module m = inspected != null ? inspected : lastInspected;
         if (da < 0.01f || m == null) return;
-        float dw = Math.min(250, W * 0.42f);
-        dx = x0 + W - dw * Anim.easeOutCubic(da);
+        float dw = drawerW;
+        dx = x0 + W + drawerGap;
         float dy = y0, dh = H;
         float prev = R2D.alpha;
-        R2D.rect(ctx, x0 + 1, y0 + 1, W - dw * da - 1, H - 2, R2D.withAlpha(0xFF000000, 0.35f * da));
-        hit(x0, y0, W - dw * da, H, b -> inspected = null);
-        R2D.shadow(ctx, dx - 4, dy, dw, dh, 20, R2D.withAlpha(0xFF000000, 0.7f * da));
-        R2D.roundRect(ctx, dx, dy, dw, dh, 18, 0xFC0C0C0E);
-        R2D.roundOutline(ctx, dx, dy, dw, dh, 18, 0.6f, 0x2AFFFFFF);
+        R2D.alpha = prev * da;
+        R2D.shadow(ctx, dx, dy + 5, dw, dh, 24, R2D.withAlpha(0xFF000000, 0.7f));
+        R2D.glow(ctx, dx - 20, dy - 20, dw + 40, dh + 40, R2D.withAlpha(Theme.accent(), 0.05f));
+        R2D.roundRectV(ctx, dx, dy, dw, dh, 14, 0xF5121215, 0xF80A0A0C);
+        R2D.roundOutline(ctx, dx, dy, dw, dh, 14, 0.7f, 0x3CFFFFFF);
+        R2D.gradientH(ctx, dx + 16, dy + 0.6f, (dw - 32) / 2f, 0.6f, 0x00FFFFFF, 0x50FFFFFF);
+        R2D.gradientH(ctx, dx + dw / 2f, dy + 0.6f, (dw - 32) / 2f, 0.6f, 0x50FFFFFF, 0x00FFFFFF);
         hit(dx, dy, dw, dh, b -> {});
 
         float px = dx + 14, pw = dw - 28, y = dy + 16;
@@ -653,7 +662,7 @@ public class ClickGui extends Screen {
         float cy = top - dScroll;
         cy = row(ctx, px, cy, pw, t("Włączony", "Enabled"));
         toggleAt(ctx, px + pw - 20, cy - 16, on, hover("rowOn", px, cy - 22, pw, 22));
-        hit(px, cy - 22, pw, 22, b -> { if (b == 0) { m.toggle(); click(); Modules.save(); } });
+        hit(px, cy - 22, pw, 22, b -> { if (b == 0) { m.toggle(); Hud.onToggle(m); click(); Modules.save(); } });
         cy = row(ctx, px, cy, pw, t("Klawisz", "Keybind"));
         String kn = binding == m ? t("Naciśnij klawisz…", "Press a key…") : m.key < 0 ? t("Brak", "None") : keyName(m.key);
         float kw = Fonts.width(kn, Font.BOLD, 0.6f) + 14, kx = px + pw - kw, ky = cy - 17;
@@ -814,6 +823,58 @@ public class ClickGui extends Screen {
         toggleAt(ctx, x + w - 20, y + 5.5f, on, hv);
         hit(x, y, w, 22, b -> { if (b == 0) { flip.run(); Theme.save(); click(); } });
         return y + 24;
+    }
+
+    // ------------------------------------------------------------------ strona: HUD
+
+    private void drawHud(DrawContext ctx, float x, float w) {
+        float mx0 = x + 14, mw = w - 28;
+        long on = Hud.ELEMENTS.stream().filter(e -> e.on).count();
+        header(ctx, mx0, mw, "g_hud", "HUD", t(on + " z " + Hud.ELEMENTS.size() + " elementów włączonych", on + " of " + Hud.ELEMENTS.size() + " elements on"));
+        float top = y0 + 46, areaH = H - 46 - 10;
+        int cols = mw >= 420 ? 2 : 1;
+        float gap = 8, cw = (mw - gap * (cols - 1)) / cols, ch = 52;
+        R2D.scissor(ctx, mx0 - 4, top - 2, mw + 8, areaH + 4);
+        for (int i = 0; i < Hud.ELEMENTS.size(); i++) {
+            Hud.El e = Hud.ELEMENTS.get(i);
+            float cx = mx0 + (i % cols) * (cw + gap), cy = top + (i / cols) * (ch + gap) - pScroll;
+            if (cy + ch < top - 2 || cy > top + areaH + 2) continue;
+            drawHudCard(ctx, e, cx, cy, cw, ch);
+        }
+        R2D.endScissor(ctx);
+        int rows = (Hud.ELEMENTS.size() + cols - 1) / cols;
+        pMax = Math.max(0, rows * (ch + gap) - gap - areaH);
+        pScrollTarget = Math.max(0, Math.min(pMax, pScrollTarget));
+        pScroll += (pScrollTarget - pScroll) * 0.3f;
+    }
+
+    private void drawHudCard(DrawContext ctx, Hud.El e, float x, float y, float w, float h) {
+        float hv = hover("hud" + e.id, x, y, w, h);
+        float on = state("hudon" + e.id, 18, e.on ? 1 : 0);
+        int acc = Theme.accent();
+        R2D.roundRect(ctx, x, y, w, h, 11, R2D.blend(R2D.blend(0x08FFFFFF, 0x12FFFFFF, hv), R2D.withAlpha(acc, 0.08f), on * 0.7f));
+        R2D.roundOutline(ctx, x, y, w, h, 11, 0.6f, R2D.blend(0x14FFFFFF, R2D.withAlpha(acc, 0.5f), on * 0.6f));
+        // ikona
+        R2D.roundRectV(ctx, x + 10, y + 10, 26, 26, 8, R2D.blend(0xFF202024, Theme.accentTop(), on), R2D.blend(0xFF18181B, Theme.accentBottom(), on));
+        R2D.icon(ctx, e.icon, x + 17, y + 17, 12, R2D.blend(0xFFD4D4D8, Theme.onAccent(), on));
+        // nazwa + opis
+        Fonts.draw(ctx, e.name(), x + 44, y + 11, TEXT, Font.BOLD, 0.78f);
+        for (int li = 0; li < Math.min(2, Fonts.wrap(e.desc(), Font.REGULAR, 0.58f, w - 150).size()); li++)
+            Fonts.draw(ctx, Fonts.wrap(e.desc(), Font.REGULAR, 0.58f, w - 150).get(li), x + 44, y + 22 + li * 9, FAINT, Font.REGULAR, 0.58f);
+        // przełącznik
+        toggleAt(ctx, x + w - 30, y + 11, on, hv);
+        hit(x + w - 36, y + 7, 30, 18, b -> { if (b == 0) { e.on = !e.on; Hud.save(); click(); } });
+        // mini siatka 3x3 wyboru rogu
+        float gs = 7, gg = 2, gx0 = x + w - 10 - (gs * 3 + gg * 2), gy0 = y + h - 10 - (gs * 3 + gg * 2);
+        for (int a = 0; a < 9; a++) {
+            float cxx = gx0 + (a % 3) * (gs + gg), cyy = gy0 + (a / 3) * (gs + gg);
+            boolean sel = e.anchor == a;
+            float gh = hover("ha" + e.id + a, cxx, cyy, gs, gs);
+            R2D.roundRect(ctx, cxx, cyy, gs, gs, 2, sel ? acc : R2D.blend(0x1AFFFFFF, 0x33FFFFFF, gh));
+            final int fa = a;
+            hit(cxx, cyy, gs, gs, b -> { if (b == 0) { e.anchor = fa; Hud.save(); click(); } });
+        }
+        Fonts.drawV(ctx, t("Pozycja", "Position"), gx0 - 6 - Fonts.width(t("Pozycja", "Position"), Font.SEMIBOLD, 0.56f), gy0 + (gs * 3 + gg * 2) / 2f, FAINT, Font.SEMIBOLD, 0.56f);
     }
 
     // ------------------------------------------------------------------ strona: konfiguracje

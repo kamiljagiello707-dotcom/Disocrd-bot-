@@ -13,7 +13,7 @@ import org.lwjgl.glfw.GLFW;
 
 /** WithClient – punkt startowy. */
 public class WithClient implements ClientModInitializer {
-    public static final String VERSION = "1.1.0";
+    public static final String VERSION = "1.2.0";
     public static KeyBinding OPEN_GUI;
 
     @Override
@@ -21,6 +21,7 @@ public class WithClient implements ClientModInitializer {
         R2D.initShaders();
         Theme.load();
         Modules.init();
+        dev.with.client.hud.Hud.init();
         OPEN_GUI = KeyBindingHelper.registerKeyBinding(new KeyBinding("key.withclient.clickgui", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_RIGHT_SHIFT, "category.withclient"));
         ClientTickEvents.END_CLIENT_TICK.register(mc -> {
             while (OPEN_GUI.wasPressed()) if (mc.currentScreen == null && mc.player != null) mc.setScreen(new ClickGui());

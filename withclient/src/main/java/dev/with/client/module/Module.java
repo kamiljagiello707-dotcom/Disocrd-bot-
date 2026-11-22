@@ -30,6 +30,14 @@ public class Module {
 
     public Module add(Setting<?>... s) { settings.addAll(List.of(s)); return this; }
 
+    /** domyślnie włączony (gdy nie ma jeszcze zapisu) */
+    public Module on() { enabled = true; return this; }
+
+    public Setting<?> setting(String n) {
+        for (Setting<?> s : settings) if (s.name.equals(n)) return s;
+        return null;
+    }
+
     public void reset() {
         for (Setting<?> s : settings) s.reset();
         key = -1;

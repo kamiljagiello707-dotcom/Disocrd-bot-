@@ -157,12 +157,17 @@ public class ClickGui extends Screen {
     }
 
     private void toggleModule(Module m) {
+        if (m.name.equals("HUDEditor")) { openHudEditor(); return; }
         m.toggle();
         Modules.save();
         if (Theme.toasts) {
             TOASTS.add(new Toast(m.icon, m.name, m.isEnabled(), System.currentTimeMillis()));
             while (TOASTS.size() > 4) TOASTS.remove(0);
         }
+    }
+
+    private void openHudEditor() {
+        if (client != null && client.player != null) { Modules.save(); client.setScreen(new dev.with.client.hud.HudEditor(this)); }
     }
 
     private void goPage(Page p) {
@@ -454,6 +459,12 @@ public class ClickGui extends Screen {
         float sOpen = anim("searchW").animate(focus == 1 || !query.isEmpty() ? 1 : 0);
         float sw = Anim.lerp(104, 150, sOpen), sx = fx - 10 - sw;
         field(ctx, 1, sx, fy - 1, sw, 18, query, t("Szukaj…", "Search…"), "l_search");
+        if (category == Category.HUD && query.isEmpty()) {
+            String el = t("Edytuj HUD", "Edit HUD");
+            float ebw = Fonts.width(el, Font.BOLD, 0.6f) + 26, ebx = sx - 8 - ebw;
+            button(ctx, ebx, fy - 1, ebw, 18, "l_move", el, true, hover("hudEdit", ebx, fy - 1, ebw, 18), true);
+            hit(ebx, fy - 1, ebw, 18, b -> { if (b == 0) { click(); openHudEditor(); } });
+        }
         if (!query.isEmpty()) {
             float bx = sx + sw - 15;
             R2D.icon(ctx, "l_x", bx, fy + 4.5f, 8, over(bx - 3, fy - 1, 15, 18) ? TEXT : FAINT);

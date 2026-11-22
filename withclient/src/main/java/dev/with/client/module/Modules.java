@@ -172,22 +172,32 @@ public final class Modules {
         m("LiquidInteract", WORLD, "droplets", "Klikanie w ciecze", "Interact with liquids", b("Woda", true), b("Lawa", true));
         m("ChestESP", WORLD, "package-open", "Podświetla skrzynie", "Highlights chests", mu("Bloki", a("Skrzynie", "Ender", "Shulkery", "Beczki", "Spawnery"), "Skrzynie", "Ender", "Shulkery"), cl("Kolor", WHITE), n("Zasięg", 32, 8, 96, 4, "bl"));
         // ================= HUD =================
-        m("Watermark", HUD, "badge", "Logo i statystyki", "Logo and stats", o("Styl", "Bar", "Pill", "Logo", "Text"), mu("Info", a("FPS", "Ping", "Serwer", "Czas", "Nick"), "FPS", "Ping", "Serwer"), tx("Tekst", "WithClient", 20), b("Tło", true));
-        m("ArrayList", HUD, "list", "Lista włączonych modułów", "Enabled module list", o("Sortowanie", "Length", "Alphabet"), o("Animacja", "Slide", "Fade", "None"), b("Tło", true), b("Pasek boczny", true), b("Ukryj wizualne", false), cl("Kolor", WHITE));
-        m("Keybinds", HUD, "keyboard", "Lista przypisanych klawiszy", "Bound keys list", b("Tylko włączone", false), b("Nagłówek", true), n("Max", 10, 3, 20, 1, ""));
+        m("Watermark", HUD, "badge", "Logo klienta i statystyki", "Client logo and stats", o("Styl", "Bar", "Pill", "Logo", "Text"),
+                mu("Info", a("FPS", "Ping", "Serwer", "Czas", "Nick"), "FPS", "Ping", "Serwer"), tx("Tekst", "WithClient", 20), b("Tło", true)).on();
+        m("ArrayList", HUD, "list", "Lista włączonych modułów", "Enabled module list", o("Sortowanie", "Length", "Alphabet"), o("Animacja", "Slide", "Fade", "None"),
+                b("Sufiks trybu", true), b("Tło", true), b("Pasek boczny", true), b("Ukryj wizualne", false), cl("Kolor", WHITE)).on();
+        m("Keybinds", HUD, "keyboard", "Lista przypisanych klawiszy", "Bound keys list", b("Tylko włączone", false), b("Nagłówek", true), n("Max", 10, 3, 20, 1, "")).on();
+        m("TargetHUD", HUD, "contact", "Info o przeciwniku, którego bijesz", "Info about the enemy you hit", o("Styl", "Modern", "Compact", "Minimal"),
+                b("Głowa", true), b("Zbroja", true), b("Animacja zdrowia", true), n("Zasięg", 8, 3, 20, 1, "m")).on();
         m("Coordinates", HUD, "map-pin", "Współrzędne", "Coordinates", b("Nether", true), b("Kierunek", true), b("Biom", false));
         m("FPS", HUD, "activity", "Licznik FPS", "FPS counter", b("Wykres", false), b("Min/max", false));
-        m("Ping", HUD, "signal", "Opóźnienie do serwera", "Server latency", b("Paski", true), b("Kolor wg wartości", true));
-        m("TPS", HUD, "hourglass", "Wydajność serwera", "Server TPS", b("Wykres", false));
-        m("ArmorHUD", HUD, "shield-half", "Stan zbroi", "Armor status", o("Układ", "Horizontal", "Vertical"), b("Procenty", true), b("Przedmiot w ręce", true));
+        m("Ping", HUD, "signal", "Opóźnienie do serwera", "Server latency", b("Paski", true), b("Kolor wg wartości", false));
+        m("TPS", HUD, "hourglass", "Wydajność serwera (szacowana)", "Server TPS (estimated)", b("Wykres", false));
+        m("ArmorHUD", HUD, "shield-half", "Stan zbroi i przedmiotu w ręce", "Armor and held item status", o("Układ", "Horizontal", "Vertical"), b("Procenty", true), b("Przedmiot w ręce", true));
         m("Potions", HUD, "flask-round", "Aktywne efekty", "Active effects", b("Ikony", true), b("Pasek czasu", true), o("Sortowanie", "Time", "Name"));
-        m("TargetHUD", HUD, "contact", "Info o celu", "Target info", o("Styl", "Modern", "Compact", "Minimal"), b("Głowa", true), b("Zbroja", true), b("Animacja zdrowia", true));
-        m("InventoryHUD", HUD, "grid-3x3", "Podgląd ekwipunku", "Inventory preview", b("Tło", true), n("Skala", 1, 0.5, 2, 0.1, "×"));
-        m("Notifications", HUD, "bell", "Powiadomienia", "Notifications", n("Czas", 2, 1, 6, 0.5, "s"), o("Pozycja", "Bottom right", "Top right", "Bottom"), b("Przełączanie modułów", true), b("Dźwięk", false));
+        m("InventoryHUD", HUD, "grid-3x3", "Podgląd ekwipunku", "Inventory preview", b("Tło", true));
+        m("Notifications", HUD, "bell", "Powiadomienia o przełączeniu modułów", "Module toggle notifications", n("Czas", 2, 1, 6, 0.5, "s"),
+                o("Pozycja", "Bottom right", "Top right", "Bottom"), b("Przełączanie modułów", true), b("Dźwięk", false)).on();
         m("Speedometer", HUD, "circle-gauge", "Prędkość gracza", "Player speed", o("Jednostka", "bps", "km/h"), b("Wykres", false));
         m("Clock", HUD, "clock", "Zegar", "Clock", o("Format", "24h", "12h"), b("Sekundy", false), b("Data", false));
-        m("ServerInfo", HUD, "server", "Info o serwerze", "Server info", b("Gracze online", true), b("Adres", true));
-        m("Compass", HUD, "compass", "Kompas", "Compass", o("Styl", "Bar", "Circle"), b("Waypointy", true));
+        m("ServerInfo", HUD, "server", "Adres serwera i gracze online", "Server address and players online", b("Gracze online", true));
+        m("CPS", HUD, "mouse-pointer-click", "Kliknięcia na sekundę", "Clicks per second");
+        m("Keystrokes", HUD, "keyboard-music", "Podgląd wciskanych klawiszy", "Pressed keys overlay", n("Rozmiar", 18, 12, 28, 1, "px"), b("Mysz", true), b("Spacja", true), b("CPS", true));
+        m("HealthBar", HUD, "heart", "Pasek zdrowia nad paskiem przedmiotów", "Health bar above the hotbar", o("Styl", "Bar", "Minimal"), b("Tekst", true), b("Absorpcja", true), b("Głód", false));
+        m("Session", HUD, "timer", "Czas gry, dystans, śmierci", "Playtime, distance, deaths", b("Czas gry", true), b("Dystans", true), b("Śmierci", true));
+        m("Memory", HUD, "memory-stick", "Użycie pamięci RAM", "RAM usage");
+        m("TotemCounter", HUD, "shield-plus", "Liczba totemów", "Totem count", b("Ukryj przy 0", false));
+        m("Compass", HUD, "compass", "Kompas", "Compass", o("Styl", "Bar", "Circle"), b("Stopnie", true));
         // ================= Kosmetyki =================
         m("Cape", COSMETICS, "flag", "Własna peleryna", "Custom cape", o("Peleryna", "WithClient", "Mono", "Stripes", "Minimal"), b("Fizyka", true), b("Widoczna dla innych", true));
         m("Wings", COSMETICS, "bird", "Skrzydła", "Wings", o("Styl", "Dragon", "Angel", "Mono"), cl("Kolor", WHITE), n("Skala", 1, 0.5, 1.5, 0.05, "×"), b("Animacja", true));
@@ -226,7 +236,10 @@ public final class Modules {
         m("Phase", EXPLOITS, "scan-line", "Przechodzenie przez bloki", "Walk through blocks", o("Tryb", "Vanilla", "Clip", "Packet"), n("Odległość", 1, 0.1, 3, 0.1, "bl"));
         // ================= Klient =================
         m("ClickGUI", CLIENT, "app-window", "Interfejs klienta", "Client interface", b("Rozmycie tła", true), b("Dźwięki", true), b("Pamiętaj stronę", true));
-        m("HUDEditor", CLIENT, "layout-template", "Edytor HUD", "HUD editor", b("Siatka", true), b("Przyciąganie", true), n("Rozmiar siatki", 8, 2, 32, 1, "px"));
+        m("HUDEditor", CLIENT, "layout-template", "Edytor i wygląd HUD (kliknij, żeby edytować)", "HUD editor and style (click to edit)",
+                g("Wygląd"), o("Tło", "Dark", "Glass", "Clear"), n("Skala", 1, 0.5, 2, 0.05, "×"), n("Przezroczystość", 90, 20, 100, 5, "%"),
+                n("Zaokrąglenie", 6, 0, 12, 1, "px"), b("Obrys", true), b("Cień", true), b("Ikony", true), cl("Akcent", WHITE),
+                g("Edytor"), b("Siatka", true), b("Przyciąganie", true), n("Rozmiar siatki", 8, 2, 32, 1, "px"));
         m("DiscordRPC", CLIENT, "gamepad-2", "Status w Discordzie", "Discord presence", b("Pokaż serwer", true), b("Pokaż czas", true), b("Pokaż moduły", false), tx("Opis", "Gram z WithClient", 40));
         m("Sounds", CLIENT, "volume-2", "Dźwięki klienta", "Client sounds", n("Głośność", 60, 0, 100, 5, "%"), o("Paczka", "Soft", "Click", "Pop"), b("Przełączanie modułów", true));
         m("Performance", CLIENT, "cpu", "Optymalizacje", "Optimizations", b("Ogranicz FPS w menu", true), b("Szybkie czcionki", false), n("Limit FPS w tle", 30, 5, 120, 5, ""));
@@ -244,7 +257,11 @@ public final class Modules {
         for (Module m : ALL) {
             if (m.key < 0) continue;
             boolean down = InputUtil.isKeyPressed(win, m.key);
-            if (down && held.add(m.key)) { m.toggle(); save(); }
+            if (down && held.add(m.key)) {
+                if (m.name.equals("HUDEditor")) { mc.setScreen(new dev.with.client.hud.HudEditor(null)); continue; }
+                m.toggle(); save();
+                dev.with.client.hud.Hud.notify(m);
+            }
             else if (!down) held.remove(m.key);
         }
     }

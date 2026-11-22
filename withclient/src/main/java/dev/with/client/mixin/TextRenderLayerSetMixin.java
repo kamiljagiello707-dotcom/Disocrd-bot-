@@ -8,7 +8,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-/** Czcionki VescaClient dostają wygładzone (liniowe) warstwy tekstu. */
+/** Czcionki WithClient dostają wygładzone (liniowe) warstwy tekstu. */
 @Mixin(TextRenderLayerSet.class)
 public class TextRenderLayerSetMixin {
     @Inject(method = "ofIntensity", at = @At("HEAD"), cancellable = true)

@@ -25,6 +25,7 @@ public final class Modules {
     private static final Path FILE = FabricLoader.getInstance().getConfigDir().resolve("withclient").resolve("modules.json");
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
     private static final Set<Integer> held = new HashSet<>();
+    private static final int CONFIG_VERSION = 4;
 
     public static List<Module> all() { return ALL; }
     public static Module get(String name) { for (Module m : ALL) if (m.name.equals(name)) return m; return null; }
@@ -136,6 +137,12 @@ public final class Modules {
                 g("Info"), b("Zdrowie", true), b("Zbroja", true), b("Ping", false), b("Odległość", false), b("Przedmiot w ręce", true),
                 g("Styl"), n("Skala", 1, 0.5, 2, 0.1, "×"), b("Skaluj z odległością", true), cl("Tło", 0xAA000000), cl("Tekst", WHITE), b("Obrys", false));
         m("Tracers", VISUALS, "route", "Linie do bytów", "Tracers to entities", targets("Gracze"), o("Start", "Crosshair", "Feet", "Bottom"), n("Grubość", 1.5, 0.5, 4, 0.5, "px"), cl("Kolor", SILVER), b("Zanikanie", true));
+        Mode teCol = o("Kolor tryb", "Static", "Rainbow");
+        m("TargetESP", VISUALS, "crosshair", "Świecący znacznik na przeciwniku, którego bijesz", "Glowing marker on the enemy you hit",
+                g("Wygląd"), o("Styl", "Diamond", "Triad", "Shuriken", "Brackets", "Bold", "Soft", "Thin"), n("Rozmiar", 1, 0.5, 2.5, 0.05, "×"),
+                n("Prędkość obrotu", 1, 0, 4, 0.1, "×"), n("Jasność", 80, 20, 100, 5, "%"), b("Pulsowanie", true), b("Poświata", true), b("Obrót ramki", true),
+                g("Kolor"), teCol, cl("Kolor", WHITE).vis(() -> teCol.is("Static")), b("Czerwony przy trafieniu", true),
+                g("Cel"), b("Też celowany", false), b("Tylko gracze", false), n("Zasięg", 12, 4, 32, 1, "m")).on();
         m("Chams", VISUALS, "ghost", "Prześwitujące modele", "See-through models", o("Styl", "Flat", "Shiny", "Texture", "Wireframe"), cl("Widoczne", WHITE), cl("Za ścianą", 0x88FFFFFF), b("Ręce", false));
         m("Zoom", VISUALS, "zoom-in", "Przybliżenie", "Zoom", n("Siła", 4, 2, 10, 0.5, "×"), b("Płynnie", true), b("Scroll", true), b("Kinowa kamera", false), b("Ukryj rękę", true));
         m("NoHurtCam", VISUALS, "vibrate-off", "Brak trzęsienia", "No hurt cam", n("Siła", 0, 0, 100, 5, "%"));
@@ -172,21 +179,21 @@ public final class Modules {
         m("LiquidInteract", WORLD, "droplets", "Klikanie w ciecze", "Interact with liquids", b("Woda", true), b("Lawa", true));
         m("ChestESP", WORLD, "package-open", "Podświetla skrzynie", "Highlights chests", mu("Bloki", a("Skrzynie", "Ender", "Shulkery", "Beczki", "Spawnery"), "Skrzynie", "Ender", "Shulkery"), cl("Kolor", WHITE), n("Zasięg", 32, 8, 96, 4, "bl"));
         // ================= HUD =================
-        m("Watermark", HUD, "badge", "Logo klienta i statystyki", "Client logo and stats", o("Styl", "Bar", "Pill", "Logo", "Text"),
-                mu("Info", a("FPS", "Ping", "Serwer", "Czas", "Nick"), "FPS", "Ping", "Serwer"), tx("Tekst", "WithClient", 20), b("Tło", true)).on();
-        m("ArrayList", HUD, "list", "Lista włączonych modułów", "Enabled module list", o("Sortowanie", "Length", "Alphabet"), o("Animacja", "Slide", "Fade", "None"),
-                b("Sufiks trybu", true), b("Tło", true), b("Pasek boczny", true), b("Ukryj wizualne", false), cl("Kolor", WHITE)).on();
-        m("Keybinds", HUD, "keyboard", "Lista przypisanych klawiszy", "Bound keys list", b("Tylko włączone", false), b("Nagłówek", true), n("Max", 10, 3, 20, 1, "")).on();
-        m("TargetHUD", HUD, "contact", "Info o przeciwniku, którego bijesz", "Info about the enemy you hit", o("Styl", "Modern", "Compact", "Minimal"),
-                b("Głowa", true), b("Zbroja", true), b("Animacja zdrowia", true), n("Zasięg", 8, 3, 20, 1, "m")).on();
-        m("Coordinates", HUD, "map-pin", "Współrzędne", "Coordinates", b("Nether", true), b("Kierunek", true), b("Biom", false));
+        m("Watermark", HUD, "badge", "Pasek ze statystykami (FPS, ping, serwer, TPS, nick)", "Stats bar (FPS, ping, server, TPS, name)", o("Styl", "Stats", "Bar", "Pill", "Logo", "Text"),
+                mu("Info", a("FPS", "Ping", "Serwer", "TPS", "Nick", "Czas"), "FPS", "Ping", "Serwer", "TPS", "Nick"), b("Logo", false), tx("Tekst", "WithClient", 20), b("Tło", true)).on();
+        m("ArrayList", HUD, "list", "Lista włączonych modułów", "Enabled module list", o("Styl", "Pills", "Classic", "Text"), o("Sortowanie", "Length", "Alphabet"),
+                o("Animacja", "Slide", "Fade", "None"), b("Ikony", true), b("Sufiks trybu", true), b("Tło", true), b("Pasek boczny", true), b("Ukryj wizualne", false), cl("Kolor", WHITE)).on();
+        m("Keybinds", HUD, "keyboard", "Lista przypisanych klawiszy", "Bound keys list", o("Styl", "Pills", "Panel"), b("Tylko włączone", false), b("Nagłówek", true), n("Max", 10, 3, 20, 1, "")).on();
+        m("TargetHUD", HUD, "contact", "Info o przeciwniku, którego bijesz", "Info about the enemy you hit", o("Styl", "Modern", "Model", "Compact", "Minimal"),
+                b("Głowa", true), b("Zbroja", true), b("Animacja zdrowia", true), b("Cząsteczki", true), n("Zasięg", 8, 3, 20, 1, "m")).on();
+        m("Coordinates", HUD, "map-pin", "Współrzędne", "Coordinates", o("Styl", "Pill", "Panel"), b("Nether", false), b("Kierunek", true), b("Biom", false));
         m("FPS", HUD, "activity", "Licznik FPS", "FPS counter", b("Wykres", false), b("Min/max", false));
         m("Ping", HUD, "signal", "Opóźnienie do serwera", "Server latency", b("Paski", true), b("Kolor wg wartości", false));
         m("TPS", HUD, "hourglass", "Wydajność serwera (szacowana)", "Server TPS (estimated)", b("Wykres", false));
         m("ArmorHUD", HUD, "shield-half", "Stan zbroi i przedmiotu w ręce", "Armor and held item status", o("Układ", "Horizontal", "Vertical"), b("Procenty", true), b("Przedmiot w ręce", true));
         m("Potions", HUD, "flask-round", "Aktywne efekty", "Active effects", b("Ikony", true), b("Pasek czasu", true), o("Sortowanie", "Time", "Name"));
         m("InventoryHUD", HUD, "grid-3x3", "Podgląd ekwipunku", "Inventory preview", b("Tło", true));
-        m("Notifications", HUD, "bell", "Powiadomienia o przełączeniu modułów", "Module toggle notifications", n("Czas", 2, 1, 6, 0.5, "s"),
+        m("Notifications", HUD, "bell", "Powiadomienia o przełączeniu modułów", "Module toggle notifications", o("Styl", "Pill", "Card"), n("Czas", 2, 1, 6, 0.5, "s"),
                 o("Pozycja", "Bottom right", "Top right", "Bottom"), b("Przełączanie modułów", true), b("Dźwięk", false)).on();
         m("Speedometer", HUD, "circle-gauge", "Prędkość gracza", "Player speed", o("Jednostka", "bps", "km/h"), b("Wykres", false));
         m("Clock", HUD, "clock", "Zegar", "Clock", o("Format", "24h", "12h"), b("Sekundy", false), b("Data", false));
@@ -197,6 +204,9 @@ public final class Modules {
         m("Session", HUD, "timer", "Czas gry, dystans, śmierci", "Playtime, distance, deaths", b("Czas gry", true), b("Dystans", true), b("Śmierci", true));
         m("Memory", HUD, "memory-stick", "Użycie pamięci RAM", "RAM usage");
         m("TotemCounter", HUD, "shield-plus", "Liczba totemów", "Totem count", b("Ukryj przy 0", false));
+        m("Spotify", HUD, "music", "Co teraz gra: okładka, tytuł, sterowanie, tekst (przyciski działają przy otwartym czacie)", "Now playing: cover, title, controls, lyrics (buttons work with chat open)",
+                o("Styl", "Card", "Compact"), b("Okładka", true), b("Przyciski", true), b("Pasek postępu", true), b("Tekst piosenki", true), b("Ukryj gdy nic nie gra", true));
+        m("Hotbar", HUD, "panel-bottom", "Własny pasek przedmiotów", "Custom hotbar", o("Styl", "Clean", "Panel"), b("Animacja", true), b("Numery slotów", false));
         m("Compass", HUD, "compass", "Kompas", "Compass", o("Styl", "Bar", "Circle"), b("Stopnie", true));
         // ================= Kosmetyki =================
         m("Cape", COSMETICS, "flag", "Własna peleryna", "Custom cape", o("Peleryna", "WithClient", "Mono", "Stripes", "Minimal"), b("Fizyka", true), b("Widoczna dla innych", true));
@@ -204,7 +214,12 @@ public final class Modules {
         m("Halo", COSMETICS, "circle-dashed", "Aureola", "Halo", cl("Kolor", WHITE), n("Wysokość", 0.3, 0, 1, 0.05, "bl"), b("Poświata", true));
         m("Hat", COSMETICS, "crown", "Czapka", "Hat", o("Styl", "Crown", "China hat", "Top hat"), cl("Kolor", WHITE), b("Obrót", true));
         m("Trails", COSMETICS, "sparkles", "Ślad cząsteczek", "Particle trail", o("Cząsteczki", "Sparkle", "Snow", "Hearts", "Dust"), n("Ilość", 3, 1, 10, 1, ""), cl("Kolor", WHITE));
-        m("JumpCircles", COSMETICS, "orbit", "Okręgi przy skoku", "Circles on jump", n("Rozmiar", 1, 0.5, 2, 0.1, "×"), n("Czas", 1, 0.3, 3, 0.1, "s"), cl("Kolor", WHITE));
+        Mode jcCol = o("Kolor tryb", "Static", "Rainbow");
+        m("JumpCircles", COSMETICS, "orbit", "Kręgi pod nogami przy skoku", "Circles under your feet when jumping", o("Styl", "Ring", "Glow", "Soft", "Swirl"),
+                n("Rozmiar", 1, 0.5, 2.5, 0.05, "×"), n("Czas", 1, 0.4, 3, 0.1, "s"), jcCol, cl("Kolor", WHITE).vis(() -> jcCol.is("Static")), b("Obrót", false)).on();
+        Mode swMode = o("Tryb", "Static", "Gradient", "Rainbow");
+        m("SwordColor", COSMETICS, "paintbrush", "Własny kolor mieczy", "Custom sword color", swMode, cl("Kolor", 0xFF7DA7FF).vis(() -> !swMode.is("Rainbow")),
+                cl("Kolor 2", WHITE).vis(() -> swMode.is("Gradient")), b("W ręce", true), b("Na pasku", true), b("Upuszczone", true), b("Topory", false));
         m("HitParticles", COSMETICS, "party-popper", "Cząsteczki przy uderzeniu", "Particles on hit", o("Typ", "Stars", "Hearts", "Crits", "Blood"), n("Ilość", 6, 1, 30, 1, ""), b("Fizyka", true));
         m("CustomSky", COSMETICS, "moon-star", "Własne niebo", "Custom sky", o("Niebo", "Night", "Aurora", "Galaxy", "Mono"), b("Animacja", true));
         m("SwingAnimation", COSMETICS, "sword", "Animacja miecza", "Sword animation", o("Styl", "1.7", "Smooth", "Spin", "Slide", "Push"), n("Prędkość", 1, 0.2, 3, 0.1, "×"), b("Zawsze", false));
@@ -240,7 +255,8 @@ public final class Modules {
                 g("Wygląd"), o("Tło", "Dark", "Glass", "Clear"), n("Skala", 1, 0.5, 2, 0.05, "×"), n("Przezroczystość", 90, 20, 100, 5, "%"),
                 n("Zaokrąglenie", 6, 0, 12, 1, "px"), b("Obrys", true), b("Cień", true), b("Ikony", true), cl("Akcent", WHITE),
                 g("Edytor"), b("Siatka", true), b("Przyciąganie", true), n("Rozmiar siatki", 8, 2, 32, 1, "px"));
-        m("DiscordRPC", CLIENT, "gamepad-2", "Status w Discordzie", "Discord presence", b("Pokaż serwer", true), b("Pokaż czas", true), b("Pokaż moduły", false), tx("Opis", "Gram z WithClient", 40));
+        m("DiscordRPC", CLIENT, "gamepad-2", "Status w Discordzie: WithClient z logo, wersją i serwerem", "Discord status: WithClient with logo, version and server",
+                tx("ID aplikacji", "", 24), o("Duży obraz", "Logo", "Skin"), b("Pokaż serwer", true), b("Pokaż nick", false), b("Pokaż czas", true), tx("Opis", "", 40)).on();
         m("Sounds", CLIENT, "volume-2", "Dźwięki klienta", "Client sounds", n("Głośność", 60, 0, 100, 5, "%"), o("Paczka", "Soft", "Click", "Pop"), b("Przełączanie modułów", true));
         m("Performance", CLIENT, "cpu", "Optymalizacje", "Optimizations", b("Ogranicz FPS w menu", true), b("Szybkie czcionki", false), n("Limit FPS w tle", 30, 5, 120, 5, ""));
         m("Panic", CLIENT, "octagon-x", "Wyłącza wszystko", "Disables everything", b("Ukryj HUD", true), b("Wyczyść czat", false));
@@ -272,6 +288,9 @@ public final class Modules {
 
     private static void saveTo(Path file) {
         JsonObject root = new JsonObject();
+        JsonObject meta = new JsonObject();
+        meta.addProperty("v", CONFIG_VERSION);
+        root.add("_meta", meta);
         for (Module m : ALL) {
             JsonObject o = new JsonObject();
             o.addProperty("enabled", m.isEnabled());
@@ -294,6 +313,7 @@ public final class Modules {
         if (!Files.exists(file)) return false;
         try {
             JsonObject root = JsonParser.parseString(Files.readString(file, StandardCharsets.UTF_8)).getAsJsonObject();
+            int v = root.has("_meta") ? root.getAsJsonObject("_meta").get("v").getAsInt() : 1;
             for (Module m : ALL) {
                 if (!root.has(m.name)) continue;
                 JsonObject o = root.getAsJsonObject(m.name);
@@ -304,6 +324,21 @@ public final class Modules {
                     JsonObject s = o.getAsJsonObject("settings");
                     for (Setting<?> st : m.settings) if (s != null && s.has(st.name)) st.load(s.get(st.name));
                 } catch (Exception ignored) {}
+            }
+            // 1.3: nowy wygląd HUD (Stats, pigułki) także dla starych ustawień
+            if (v < 3) {
+                for (String n : new String[]{"Watermark", "ArrayList", "Keybinds", "Coordinates", "Notifications", "TargetHUD"}) {
+                    Module m = get(n);
+                    if (m != null && m.setting("Styl") != null) m.setting("Styl").reset();
+                }
+                Module w = get("Watermark");
+                if (w != null && w.setting("Info") != null) w.setting("Info").reset();
+            }
+            // 1.3: stary domyślny opis zasłaniał miejsce gry w statusie Discorda
+            if (v < 4) {
+                Module d = get("DiscordRPC");
+                if (d != null && d.setting("Opis") != null) d.setting("Opis").reset();
+                if (d != null) d.setEnabled(true); // w 1.2 był tylko atrapą; bez ID aplikacji i tak nic nie wysyła
             }
             return true;
         } catch (Exception ignored) { return false; }

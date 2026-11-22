@@ -475,8 +475,7 @@ public final class R2D {
                                     float u0, float v0, float u1, float v1, int color) {
         int c = col(color);
         if ((c >>> 24) == 0) return;
-        if (tex(ctx, tex, x, y, w, h, 0, u0, v0, u1, v1, c, false)) return;
-        r = Math.max(0, Math.min(r, Math.min(w, h) / 2f));
+        r = Math.max(0, Math.min(r * radiusMul, Math.min(w, h) / 2f));
         if (tex(ctx, tex, x, y, w, h, Math.max(r, 0.001f), u0, v0, u1, v1, c, false)) return;
         Matrix4f m = ctx.getMatrices().peek().getPositionMatrix();
         RenderSystem.enableBlend();

@@ -2,6 +2,6 @@
   "required": true,
   "package": "dev.with.client.mixin",
   "compatibilityLevel": "JAVA_21",
-  "client": ["TextRenderLayerSetMixin", "MouseMixin", "WorldTimeMixin", "StatusEffectOverlayMixin"],
+  "client": ["TextRenderLayerSetMixin", "MouseMixin", "WorldTimeMixin", "InGameHudMixin", "ChatScreenMixin", "ItemRendererMixin", "MinecraftClientMixin", "ScreenMixin", "ScreenAccessor", "ConnectScreenAccessor", "DisconnectedScreenAccessor", "LevelLoadingScreenAccessor", "ProgressScreenAccessor"],
   "injectors": { "defaultRequire": 1 }
 }

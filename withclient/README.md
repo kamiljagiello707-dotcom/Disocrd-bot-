@@ -10,6 +10,53 @@ a dookoła biegnie cienka orbita, która nawiązuje do pierwszego logo.
 - `with_mark.png` – znak z orbitą,
 - `with_app.png` / `mod_icon.png` – ikona aplikacji (ciemny kafelek), widoczna m.in. na liście modów.
 
+## Menu, listy i wczytywanie
+
+WithClient zastępuje ekrany Minecrafta własnymi:
+- **Menu główne**:
+  - tło: obracająca się panorama Minecrafta z przyciemnieniem, płynącymi światłami i cząsteczkami,
+    które łączą się liniami z kursorem,
+  - duże logo VV i napis WithClient,
+  - lista z białą pigułką (mysz albo ↑ ↓ Enter),
+  - karta z profilem, zegarem i datą,
+  - **Szybki start**: jednym kliknięciem wchodzisz na ostatni serwer albo ostatni świat,
+  - nowości, stan Discorda, przyciski języka i dostępności.
+- **Tryb jednoosobowy**: lista światów z ikonami, trybem gry, datą i wersją. Przyciski Graj, Nowy świat,
+  Edytuj, Usuń (z potwierdzeniem) i Odśwież. Działa wyszukiwanie i dwuklik.
+- **Tryb wieloosobowy**: serwery z ikoną, MOTD, graczami i paskami pingu. Przyciski Dołącz, Bezpośrednio,
+  Dodaj, Edytuj, Usuń i Odśwież.
+- **Wczytywanie**: przy łączeniu z serwerem, pobieraniu terenu, tworzeniu świata i zapisywaniu.
+  Pokazuje logo w wirującym pierścieniu, napis „Wczytywanie…”, status z nazwą serwera albo świata,
+  pasek postępu (z procentami przy tworzeniu świata) i wskazówkę. Błąd połączenia też ma własny ekran.
+
+## Status w Discordzie (DiscordRPC)
+
+Gdy grasz, Discord pokazuje **„Gra w WithClient”** z logo. Niżej widać
+„WithClient 1.3.0 · Minecraft 1.21.1”, miejsce gry (menu, tryb jednoosobowy, adres serwera) i czas gry.
+
+Discord pokazuje nazwę i logo z **aplikacji Discord**, więc trzeba ją raz założyć (2 minuty):
+1. Wejdź na https://discord.com/developers/applications → **New Application**, nazwij ją `WithClient`.
+2. Skopiuj **Application ID** (General Information).
+3. W **Rich Presence → Art Assets** wgraj `branding/discord_logo.png` pod nazwą **`logo`**.
+4. W grze: ClickGUI → Klient → **DiscordRPC** → pole „ID aplikacji” → wklej ID.
+
+Stan połączenia widać w prawym górnym rogu menu głównego. Opcje modułu: duży obraz (logo albo Twój skin),
+pokazywanie serwera, nicku i czasu oraz własny opis.
+
+## Efekty w świecie (kosmetyka)
+
+- **TargetESP** (Wizualne): świecący znacznik na przeciwniku, którego bijesz.
+  - 7 stylów z dostarczonych tekstur: Diamond, Triad, Shuriken, Brackets, Bold, Soft, Thin.
+  - Animacja „namierzania” przy wyborze celu, obrót, pulsowanie i poświata.
+  - Kolor stały albo tęcza, czerwony błysk przy trafieniu.
+  - Rysowany z testem głębi, więc nie widać go przez ściany.
+- **JumpCircles** (Kosmetyki): przy skoku pod nogami rozchodzi się krąg.
+  - 4 style: Ring, Glow, Soft, Swirl.
+  - Możesz ustawić rozmiar, czas, kolor (albo tęczę) i obrót.
+- **SwordColor** (Kosmetyki): własny kolor mieczy (opcjonalnie też toporów).
+  - Tryby: stały kolor, gradient między dwoma kolorami albo tęcza.
+  - Osobno w ręce, na pasku i na ziemi.
+
 ## ClickGUI (w grze, **prawy Shift**)
 
 Okno ma stałą wielkość na ekranie, niezależnie od skali GUI Minecrafta (zmienisz ją w Wygląd → Skala okna).
@@ -69,22 +116,27 @@ a jego opcje zmieniają wygląd. Wszystko jest w stylu biało-czarnym.
 
 | Element | Co pokazuje | Opcje |
 |---|---|---|
-| **Watermark** | logo WithClient + FPS, ping, serwer, czas, nick | styl Bar / Pill / Logo / Text, własny tekst, tło |
-| **ArrayList** | włączone moduły z trybem (np. „KillAura Single”), wjeżdżają i wyjeżdżają | sortowanie, animacja Slide / Fade / None, tło, pasek, kolor, ukrywanie wizualnych |
-| **Keybinds** | moduły z przypisanym klawiszem, kropka stanu i klawisz | tylko włączone, nagłówek, limit |
-| **TargetHUD** | przeciwnik, którego bijesz albo w którego celujesz: głowa / ikona moba, HP z animowanym paskiem, odległość, zbroja, PRZEWAGA / SŁABIEJ | styl Modern / Compact / Minimal, zasięg |
-| **Coordinates** | X Y Z, przeliczenie Nether ↔ świat, kierunek, biom | |
+| **Watermark** | pasek: ikona + FPS, ping, serwer, TPS, nick (opcjonalnie logo i czas) | styl Stats / Bar / Pill / Logo / Text, własny tekst, tło |
+| **ArrayList** | włączone moduły jako pigułki z ikoną i trybem (np. „KillAura Single”), wjeżdżają i wyjeżdżają | styl Pills / Classic / Text, sortowanie, animacja Slide / Fade / None, ikony, kolor, ukrywanie wizualnych |
+| **Keybinds** | nagłówek „Keybinds” i pigułki: moduł + klawisz (włączone jaśniejsze) | styl Pills / Panel, tylko włączone, limit |
+| **TargetHUD** | przeciwnik, którego bijesz: zaokrąglona głowa (albo **obracający się model 3D**), przedmiot w ręce, HP z sercem, pasek z podziałką, śladem obrażeń i absorpcją, odległość, PRZEWAGA / SŁABIEJ, zbroja, trzęsienie i czerwony błysk przy trafieniu, cząsteczki | styl Modern / Model / Compact / Minimal, zasięg |
+| **Coordinates** | pigułka z pinezką: „1632, 68, 934” + kierunek; opcjonalnie Nether ↔ świat i biom | styl Pill / Panel |
 | **Potions** | efekty z ikoną, poziomem, czasem i paskiem (chowa ikony z Minecrafta) | sortowanie |
 | **ArmorHUD** | zbroja + przedmiot w ręce z paskiem wytrzymałości | poziomo / pionowo, procenty |
 | **HealthBar** | pasek zdrowia nad paskiem przedmiotów (absorpcja, głód) | Bar / Minimal |
 | **Keystrokes** | W A S D, LPM / PPM z CPS, spacja – podświetlają się po wciśnięciu | rozmiar |
 | **Compass** | kompas paskowy albo okrągły ze stopniami | |
-| **Notifications** | powiadomienie przy przełączeniu modułu klawiszem | czas, pozycja, dźwięk |
+| **Notifications** | pigułka „Włączono KillAura” z małym przełącznikiem i licznikiem czasu w kółku | styl Pill / Card, czas, pozycja, dźwięk |
+| **Spotify** | co teraz gra: okładka, tytuł, wykonawca, poprzedni / pauza / następny, pasek postępu i zsynchronizowany tekst piosenki | styl Card / Compact; przyciski klikasz przy otwartym czacie |
+| **Hotbar** | własny pasek przedmiotów z przesuwanym podświetleniem slotu i drugą ręką | styl Clean / Panel, animacja, numery |
 | **Session** | czas gry, przebyty dystans, śmierci | |
 
 Mniejsze elementy: **FPS** (z wykresem i min/max), **Ping** (paski sygnału), **TPS** (liczone z pakietów
 czasu serwera), **Speedometer** (bps / km/h), **CPS**, **Clock**, **ServerInfo**, **Memory**,
 **TotemCounter**, **InventoryHUD**.
+
+**Spotify**: Windows czyta systemową sesję multimediów (Spotify, przeglądarka i inne), macOS czyta
+Spotify przez AppleScript, a Linux używa `playerctl`. Tekst piosenki pobiera z lrclib.net (można wyłączyć).
 
 Domyślnie elementy same układają się w stosy przy krawędziach ekranu i omijają się nawzajem.
 Unikają też miejsc Minecrafta: czatu, paska przedmiotów i ikon efektów.
@@ -102,11 +154,12 @@ zaokrąglenie, obrys, cień, ikony i kolor akcentu. Pozycje zapisują się w `co
 
 ## Moduły
 
-141 modułów w 10 kategoriach: Walka, Ruch, Gracz, Wizualne, Świat, HUD, Kosmetyki, Narzędzia,
+145 modułów w 10 kategoriach: Walka, Ruch, Gracz, Wizualne, Świat, HUD, Kosmetyki, Narzędzia,
 Exploity i Klient. Każdy ma własną ikonę i zestaw opcji. Stan modułów zapisuje się w
 `config/withclient/modules.json`, a wygląd w `gui.json`.
 
-> Moduły HUD działają w grze. Pozostałe moduły to na razie przełączniki z ustawieniami w GUI, bez działania w grze.
+> Działają: HUD, TargetESP, JumpCircles, SwordColor, DiscordRPC i menu. Pozostałe moduły to na razie
+> przełączniki z ustawieniami w GUI, bez działania w grze.
 
 ## Budowanie
 
@@ -114,7 +167,7 @@ Exploity i Klient. Każdy ma własną ikonę i zestaw opcji. Stan modułów zapi
 ./gradlew build
 ```
 
-Gotowy plik: `build/libs/withclient-1.2.0.jar`. Wrzuć go do `.minecraft/mods` razem z Fabric API.
+Gotowy plik: `build/libs/withclient-1.3.0.jar`. Wrzuć go do `.minecraft/mods` razem z Fabric API.
 Klawisz otwierania zmienisz w Opcje → Sterowanie → WithClient.
 
 ## Struktura
@@ -129,14 +182,24 @@ src/main/java/dev/with/client/
   ui/Friends.java
   hud/Hud.java               – elementy HUD, układ (stosy, kotwice, omijanie), powiadomienia
   hud/HudEditor.java         – edytor HUD (przeciąganie, przyciąganie, skala, panel)
+  hud/Media.java             – co teraz gra (Windows / macOS / Linux), okładka, tekst piosenki
+  render/WorldFx.java        – Target ESP i Jump Circles
+  discord/DiscordRpc.java    – status w Discordzie przez IPC
+  ui/WithMenu.java, MenuBg.java, ListScreen.java, WorldsScreen.java, ServersScreen.java, Loading.java, Recent.java
+                             – menu główne, tło, listy światów i serwerów, wczytywanie, szybki start
   module/Category/Module/Modules.java – kategorie, moduły, zapis
   module/Setting.java        – Bool, Num, Range, Mode, Multi, Color, Text, Group (+ warunki widoczności)
   render/R2D.java, Fonts.java, SmoothTextLayer.java – silnik rysowania
   mixin/TextRenderLayerSetMixin.java
   mixin/MouseMixin.java      – CPS (kliknięcia)
   mixin/WorldTimeMixin.java  – TPS (czas świata z serwera)
-  mixin/StatusEffectOverlayMixin.java – chowa ikony efektów, gdy włączone Potions
+  mixin/InGameHudMixin.java  – własny hotbar, chowanie ikon efektów
+  mixin/ItemRendererMixin.java – kolor mieczy
+  mixin/ChatScreenMixin.java – klikanie w HUD przy otwartym czacie
+  mixin/MinecraftClientMixin, ScreenMixin, *Accessor – podmiana menu i ekranów wczytywania
 src/main/resources/assets/withclient/
   font/, shaders/
   textures/icons/            – logo WithClient + ikony Lucide (l_*, licencja ISC)
+  textures/fx/               – tekstury Target ESP i Jump Circles
+branding/                    – logo do aplikacji Discord (1024 px) i znak WithClient
 ```

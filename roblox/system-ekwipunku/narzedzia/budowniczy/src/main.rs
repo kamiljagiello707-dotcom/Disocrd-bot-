@@ -2,7 +2,8 @@
 //!
 //!   budowniczy zbuduj <Items.rbxm> <katalog projektu>
 //!       -> przedmioty/OSP.rbxm, build/SystemEkwipunku.rbxm,
-//!          build/EkranWczytywania.rbxm, build/TestEkwipunku.rbxl
+//!          build/EkranWczytywania.rbxm, build/SystemAlarmowyOSP.rbxm,
+//!          build/TestEkwipunku.rbxl
 //!   budowniczy czytaj <plik.rbxm|.rbxl>     (wypisuje drzewo, do sprawdzania)
 //!   budowniczy sprawdz <Klasa>...           (klasy bazowe i właściwości z bazy API)
 
@@ -11,7 +12,8 @@ use std::io::{BufReader, BufWriter};
 use std::path::Path;
 
 use rbx_dom_weak::types::{
-    BrickColor, CFrame, Color3, Color3uint8, Enum, Matrix3, Ref, UDim, UDim2, Variant, Vector3,
+    BrickColor, CFrame, Color3, Color3uint8, Enum, Matrix3, Ref, Tags, UDim, UDim2, Variant,
+    Vector3,
 };
 use rbx_dom_weak::{ustr, InstanceBuilder, WeakDom};
 
@@ -88,6 +90,15 @@ fn czesc(nazwa: &str, rozmiar: Vector3, cf: Variant, k: Variant) -> InstanceBuil
         .with_property("Anchored", true)
         .with_property("TopSurface", Enum::from_u32(0))
         .with_property("BottomSurface", Enum::from_u32(0))
+}
+
+fn z_tagiem(budowa: InstanceBuilder, tag: &str) -> InstanceBuilder {
+    budowa.with_property("Tags", Tags::from(vec![tag.to_string()]))
+}
+
+fn material(numer: u32) -> Enum {
+    // Enum.Material: Plastic 256, SmoothPlastic 272, Wood 512, Metal 1088, Neon 288
+    Enum::from_u32(numer)
 }
 
 fn znajdz_po_nazwie(dom: &WeakDom, nazwa: &str) -> Vec<Ref> {
@@ -185,6 +196,100 @@ impl Zrodla<'_> {
             .with_child(skrypt("ModuleScript", "Ustawienia", &k.join("Ustawienia.lua"))?))
     }
 
+    fn alarm_wspolne(&self) -> Wynik<InstanceBuilder> {
+        let k = self.src.join("ReplicatedStorage/AlarmOSP");
+        Ok(folder("AlarmOSP").with_child(skrypt("ModuleScript", "Ustawienia", &k.join("Ustawienia.lua"))?))
+    }
+
+    fn alarm_serwer(&self) -> Wynik<InstanceBuilder> {
+        let k = self.src.join("ServerScriptService/AlarmSerwer");
+        Ok(skrypt("Script", "AlarmSerwer", &k.join("init.server.lua"))?
+            .with_child(skrypt("ModuleScript", "Alarmy", &k.join("Alarmy.lua"))?))
+    }
+
+    fn alarm_klient(&self) -> Wynik<InstanceBuilder> {
+        let k = self.src.join("StarterPlayerScripts/AlarmKlient");
+        Ok(skrypt("LocalScript", "AlarmKlient", &k.join("init.client.lua"))?
+            .with_child(skrypt("ModuleScript", "Wyglad", &k.join("Wyglad.lua"))?)
+            .with_child(skrypt("ModuleScript", "Panel", &k.join("Panel.lua"))?)
+            .with_child(skrypt("ModuleScript", "Pager", &k.join("Pager.lua"))?))
+    }
+
+    /// Przykładowa remiza: komputer, syrena na maszcie i dwie lampy alarmowe
+    fn remiza(&self, ox: f32, oz: f32) -> InstanceBuilder {
+        let ciemny = || kolor(30, 30, 34);
+        let metal = || kolor(150, 150, 155);
+        let lampa = |nazwa: &str, x: f32| {
+            z_tagiem(
+                czesc(nazwa, Vector3::new(1.4, 0.8, 1.4), pozycja(x, 6.4, oz), kolor(220, 40, 35))
+                    .with_property("Material", material(272))
+                    .with_child(
+                        InstanceBuilder::new("PointLight")
+                            .with_name("Swiatlo")
+                            .with_property("Color", Color3::new(1.0, 0.2, 0.15))
+                            .with_property("Range", 18.0f32)
+                            .with_property("Brightness", 4.0f32)
+                            .with_property("Enabled", false),
+                    ),
+                "AlarmSwiatlo",
+            )
+        };
+        let napis_monitora = InstanceBuilder::new("SurfaceGui")
+            .with_name("Ekran")
+            .with_property("Face", Enum::from_u32(5))
+            .with_property("SizingMode", Enum::from_u32(1))
+            .with_property("PixelsPerStud", 60.0f32)
+            .with_child(
+                InstanceBuilder::new("TextLabel")
+                    .with_name("Napis")
+                    .with_property("Size", UDim2::new(UDim::new(1.0, 0), UDim::new(1.0, 0)))
+                    .with_property("BackgroundColor3", Color3::new(0.09, 0.09, 0.1))
+                    .with_property("Text", "ALARM OSP")
+                    .with_property("TextScaled", true)
+                    .with_property("TextColor3", Color3::new(0.94, 0.31, 0.25)),
+            );
+        InstanceBuilder::new("Model")
+            .with_name("RemizaAlarm")
+            .with_child(
+                czesc("Biurko", Vector3::new(6.0, 3.0, 3.0), pozycja(ox, 1.5, oz), kolor(105, 70, 45))
+                    .with_property("Material", material(512)),
+            )
+            .with_child(z_tagiem(
+                czesc("Monitor", Vector3::new(3.0, 2.0, 0.3), pozycja(ox, 4.0, oz), ciemny())
+                    .with_child(napis_monitora),
+                "AlarmKomputer",
+            ))
+            .with_child(
+                czesc("Maszt", Vector3::new(0.6, 14.0, 0.6), pozycja(ox + 12.0, 7.0, oz), metal())
+                    .with_property("Material", material(1088)),
+            )
+            .with_child(z_tagiem(
+                czesc("Syrena", Vector3::new(2.4, 2.0, 2.4), pozycja(ox + 12.0, 15.0, oz), metal())
+                    .with_property("Material", material(1088)),
+                "AlarmSyrena",
+            ))
+            .with_child(czesc("SlupekLewy", Vector3::new(0.4, 6.0, 0.4), pozycja(ox - 6.0, 3.0, oz), metal()))
+            .with_child(czesc("SlupekPrawy", Vector3::new(0.4, 6.0, 0.4), pozycja(ox + 6.0, 3.0, oz), metal()))
+            .with_child(lampa("LampaLewa", ox - 6.0))
+            .with_child(lampa("LampaPrawa", ox + 6.0))
+    }
+
+    /// Punkty do wyboru w panelu (nazwa części = adres)
+    fn miejsca_zdarzen(&self, widoczne: bool) -> InstanceBuilder {
+        let punkt = |nazwa: &str, x: f32, z: f32| {
+            z_tagiem(
+                czesc(nazwa, Vector3::new(6.0, 0.4, 6.0), pozycja(x, 0.2, z), kolor(245, 165, 70))
+                    .with_property("CanCollide", false)
+                    .with_property("Transparency", if widoczne { 0.5f32 } else { 1.0f32 }),
+                "MiejsceZdarzenia",
+            )
+        };
+        folder("MiejscaZdarzen")
+            .with_child(punkt("ul. Leśna 12", -120.0, -150.0))
+            .with_child(punkt("Las przy jeziorze", 180.0, 120.0))
+            .with_child(punkt("Skrzyżowanie DK7", -60.0, 200.0))
+    }
+
     fn stanowisko(&self) -> Wynik<InstanceBuilder> {
         let napis = InstanceBuilder::new("TextLabel")
             .with_name("Napis")
@@ -220,6 +325,20 @@ impl Zrodla<'_> {
         )?);
         Ok(tablica)
     }
+}
+
+fn instrukcja_alarmu() -> InstanceBuilder {
+    let tekst = "SYSTEM ALARMOWANIA OSP - INSTALACJA\n\
+        Przeciągnij ZAWARTOŚĆ każdego folderu do usługi o tej samej nazwie:\n\
+        - Do ReplicatedStorage  -> AlarmOSP  do  ReplicatedStorage\n\
+        - Do ServerScriptService -> AlarmSerwer  do  ServerScriptService\n\
+        - Do StarterPlayerScripts -> AlarmKlient  do  StarterPlayer > StarterPlayerScripts\n\
+        - Do Workspace (przyklad) -> RemizaAlarm i MiejscaZdarzen  do  Workspace\n\
+        Obiekty na mapie mają Tagi: AlarmKomputer, AlarmSyrena, AlarmSwiatlo, MiejsceZdarzenia.\n\
+        Ustawienia (jednostki, rodzaje, dźwięk syreny): ReplicatedStorage > AlarmOSP > Ustawienia.";
+    InstanceBuilder::new("StringValue")
+        .with_name("CZYTAJ_MNIE")
+        .with_property("Value", tekst)
 }
 
 fn instrukcja() -> InstanceBuilder {
@@ -277,6 +396,23 @@ fn zbuduj(plik_przedmiotow: &Path, projekt: &Path) -> Wynik<()> {
     let ekran_ref = ekran.insert(ekran.root_ref(), zrodla.ekran_wczytywania()?);
     zapisz(&build.join("EkranWczytywania.rbxm"), &ekran, &[ekran_ref])?;
 
+    // 3b. System alarmowania OSP
+    let mut alarm = WeakDom::new(folder("Korzen"));
+    let alarm_ref = alarm.insert(
+        alarm.root_ref(),
+        folder("SystemAlarmowyOSP")
+            .with_child(instrukcja_alarmu())
+            .with_child(folder("Do ReplicatedStorage").with_child(zrodla.alarm_wspolne()?))
+            .with_child(folder("Do ServerScriptService").with_child(zrodla.alarm_serwer()?))
+            .with_child(folder("Do StarterPlayerScripts").with_child(zrodla.alarm_klient()?))
+            .with_child(
+                folder("Do Workspace (przyklad)")
+                    .with_child(zrodla.remiza(30.0, -10.0))
+                    .with_child(zrodla.miejsca_zdarzen(false)),
+            ),
+    );
+    zapisz(&build.join("SystemAlarmowyOSP.rbxm"), &alarm, &[alarm_ref])?;
+
     // 4. Gotowe miejsce testowe: wszystko na swoich miejscach
     let mut miejsce = WeakDom::new(InstanceBuilder::new("DataModel"));
     let dm = miejsce.root_ref();
@@ -302,7 +438,9 @@ fn zbuduj(plik_przedmiotow: &Path, projekt: &Path) -> Wynik<()> {
                     .with_property("Anchored", true)
                     .with_property("Duration", 0i32),
             )
-            .with_child(zrodla.stanowisko()?),
+            .with_child(zrodla.stanowisko()?)
+            .with_child(zrodla.remiza(30.0, -10.0))
+            .with_child(zrodla.miejsca_zdarzen(true)),
     );
     let _ = workspace;
     miejsce.insert(dm, InstanceBuilder::new("Lighting").with_name("Lighting"));
@@ -316,13 +454,15 @@ fn zbuduj(plik_przedmiotow: &Path, projekt: &Path) -> Wynik<()> {
         dm,
         InstanceBuilder::new("ReplicatedStorage")
             .with_name("ReplicatedStorage")
-            .with_child(zrodla.wspolne()?),
+            .with_child(zrodla.wspolne()?)
+            .with_child(zrodla.alarm_wspolne()?),
     );
     miejsce.insert(
         dm,
         InstanceBuilder::new("ServerScriptService")
             .with_name("ServerScriptService")
-            .with_child(zrodla.serwer()?),
+            .with_child(zrodla.serwer()?)
+            .with_child(zrodla.alarm_serwer()?),
     );
     let magazyn_miejsca = miejsce.insert(
         dm,
@@ -341,7 +481,8 @@ fn zbuduj(plik_przedmiotow: &Path, projekt: &Path) -> Wynik<()> {
             .with_child(
             InstanceBuilder::new("StarterPlayerScripts")
                 .with_name("StarterPlayerScripts")
-                .with_child(zrodla.klient()?),
+                .with_child(zrodla.klient()?)
+                .with_child(zrodla.alarm_klient()?),
         ),
     );
     miejsce.insert(

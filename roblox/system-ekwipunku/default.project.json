@@ -5,17 +5,26 @@
     "ReplicatedStorage": {
       "Ekwipunek": {
         "$path": "src/ReplicatedStorage/Ekwipunek"
+      },
+      "AlarmOSP": {
+        "$path": "src/ReplicatedStorage/AlarmOSP"
       }
     },
     "ServerScriptService": {
       "EkwipunekSerwer": {
         "$path": "src/ServerScriptService/EkwipunekSerwer"
+      },
+      "AlarmSerwer": {
+        "$path": "src/ServerScriptService/AlarmSerwer"
       }
     },
     "StarterPlayer": {
       "StarterPlayerScripts": {
         "EkwipunekKlient": {
           "$path": "src/StarterPlayerScripts/EkwipunekKlient.client.lua"
+        },
+        "AlarmKlient": {
+          "$path": "src/StarterPlayerScripts/AlarmKlient"
         }
       }
     },

@@ -8,7 +8,8 @@ Ekwipunek otwierany klawiszem **X**, z rangami. Każdy gracz startuje jako **Oby
 |---|---|
 | `build/SystemEkwipunku.rbxm` | Paczka do wstawienia do gry klienta |
 | `build/EkranWczytywania.rbxm` | Ekran wczytywania (LocalScript do ReplicatedFirst) |
-| `build/TestEkwipunku.rbxl` | Gotowe miejsce testowe z EQ i ekranem wczytywania: otwórz i kliknij Play |
+| `build/SystemAlarmowyOSP.rbxm` | System alarmowania OSP z przykładową remizą |
+| `build/TestEkwipunku.rbxl` | Gotowe miejsce testowe ze wszystkim: otwórz i kliknij Play |
 | `przedmioty/OSP.rbxm` | Przedmioty OSP klienta (oczyszczone) |
 | `src/` | Kod źródłowy (Luau) |
 
@@ -82,6 +83,28 @@ Wstaw `EkranWczytywania.rbxm` i przeciągnij `EkranWczytywania` do **ReplicatedF
 - na czas wczytywania chowa listę graczy, czat, zdrowie i emotki (lista w `UkryjInterfejs`)
 - błąd w trakcie wczytywania nigdy nie zablokuje gracza: ekran i tak zniknie
 - EQ nie otwiera się pod ekranem wczytywania, a jego powiadomienia czekają, aż ekran zniknie
+
+## System alarmowania OSP
+
+Wstaw `SystemAlarmowyOSP.rbxm` i rozłóż foldery jak przy EQ (`AlarmOSP` do ReplicatedStorage, `AlarmSerwer` do ServerScriptService, `AlarmKlient` do StarterPlayerScripts). Przykładowa remiza (`RemizaAlarm`) i punkty (`MiejscaZdarzen`) są w folderze `Do Workspace (przyklad)`.
+
+- **Panel dyspozytora**: przy komputerze w remizie (przytrzymaj E) albo komendą `/alarm`. Jednostki, rodzaj zdarzenia, miejsce, opis i alarmy w toku na jednym ekranie. Alarm wysyła się **przytrzymaniem** przycisku przez 1 s.
+- **Pager strażaka**: karta alarmu z dźwiękiem i błyskiem ekranu, przyciski **JADĘ / NIE JADĘ**, odległość do miejsca na żywo.
+- **Znacznik**: po kliknięciu JADĘ nad miejscem zdarzenia pojawia się słup światła z odległością (widzi go tylko ten gracz), a znika po dojechaniu.
+- **Dyspozytor widzi**, ile osób jedzie, i może zakończyć alarm. Alarm kończy się też sam po `CzasAlarmu`.
+- **Remiza**: syrena (`AlarmSyrena`) wyje, a lampy (`AlarmSwiatlo`) migają przez `CzasSyreny`.
+- Opis wpisany przez gracza przechodzi przez filtr tekstu Roblox (wymóg Roblox dla tekstu widocznego dla innych).
+
+Obiekty na mapie oznacza się Tagami (Properties → Tags): `AlarmKomputer`, `AlarmSyrena`, `AlarmSwiatlo`, `MiejsceZdarzenia` (nazwa części = adres). Atrybut `Jednostka` na syrenie lub lampie ogranicza ją do jednej jednostki.
+
+Ustawienia (`ReplicatedStorage → AlarmOSP → Ustawienia`): jednostki (po randze z EQ albo drużynie), kto może alarmować, rodzaje zdarzeń, **ID dźwięku syreny** (domyślnie pusty), dźwięk pagera, czasy i limity.
+
+Alarm z innego skryptu:
+
+```lua
+local Alarmy = require(game.ServerScriptService.AlarmSerwer.Alarmy)
+Alarmy.Wyslij({ Jednostki = { "OSP" }, Rodzaj = "Pożar", Miejsce = workspace.Dom, Opis = "Pali się dom" })
+```
 
 ## Budowanie ze źródeł
 

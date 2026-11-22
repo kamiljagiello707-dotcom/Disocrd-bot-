@@ -369,6 +369,36 @@ public final class R2D {
         end(b);
     }
 
+    /**
+     * wiele odcinków w jednym wywołaniu: seg = [x1, y1, x2, y2] * n, colors = kolor każdego odcinka,
+     * t = grubość. Używane np. do siatki cząsteczek w tle okna.
+     */
+    public static void lines(DrawContext ctx, float[] seg, int[] colors, int n, float t) {
+        if (n <= 0) return;
+        Matrix4f m = ctx.getMatrices().peek().getPositionMatrix();
+        RenderSystem.enableBlend();
+        blend();
+        RenderSystem.disableDepthTest();
+        RenderSystem.disableCull();
+        RenderSystem.setShader(GameRenderer::getPositionColorProgram);
+        BufferBuilder b = Tessellator.getInstance().begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_COLOR);
+        int drawn = 0;
+        for (int i = 0; i < n; i++) {
+            int c = col(colors[i]);
+            if ((c >>> 24) == 0) continue;
+            float x1 = seg[i * 4], y1 = seg[i * 4 + 1], x2 = seg[i * 4 + 2], y2 = seg[i * 4 + 3];
+            float dx = x2 - x1, dy = y2 - y1, len = (float) Math.sqrt(dx * dx + dy * dy);
+            if (len < 1e-3f) continue;
+            float nx = -dy / len * t / 2f, ny = dx / len * t / 2f;
+            b.vertex(m, x1 + nx, y1 + ny, 0).color(c);
+            b.vertex(m, x1 - nx, y1 - ny, 0).color(c);
+            b.vertex(m, x2 - nx, y2 - ny, 0).color(c);
+            b.vertex(m, x2 + nx, y2 + ny, 0).color(c);
+            drawn++;
+        }
+        end(b);
+    }
+
     private static void rq(BufferBuilder b, Matrix4f m, float x1, float y1, float x2, float y2, int c) {
         if (x2 <= x1 || y2 <= y1) return;
         b.vertex(m, x1, y1, 0).color(c);

@@ -34,4 +34,17 @@ public class Module {
         for (Setting<?> s : settings) s.reset();
         key = -1;
     }
+
+    /** ile ustawień różni się od domyślnych */
+    public int changed() {
+        int n = 0;
+        for (Setting<?> s : settings) if (!(s instanceof Setting.Group) && !s.isDefault()) n++;
+        return n;
+    }
+
+    public int optionCount() {
+        int n = 0;
+        for (Setting<?> s : settings) if (!(s instanceof Setting.Group)) n++;
+        return n;
+    }
 }

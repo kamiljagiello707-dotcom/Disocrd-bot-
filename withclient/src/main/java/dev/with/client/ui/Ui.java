@@ -21,12 +21,13 @@ public final class Ui {
 
     public static String t(String pl, String en) { return pl() ? pl : en; }
 
-    /** logo: biały zaokrąglony kwadrat z czarnym "V" i miękką poświatą */
+    /** logo: ciemny kafelek z biało-szarym znakiem "VV" WithClient i miękką poświatą */
     public static void logo(DrawContext ctx, float x, float y, float s, float glow) {
-        if (glow > 0) R2D.glow(ctx, x - s * 0.5f, y - s * 0.5f, s * 2f, s * 2f, R2D.withAlpha(0xFFFFFFFF, 0.2f * glow));
-        R2D.shadow(ctx, x, y + 2, s, s, s * 0.35f, 0x88000000);
-        R2D.roundRectV(ctx, x, y, s, s, s * 0.3f, 0xFFFFFFFF, 0xFFD4D4D8);
-        R2D.icon(ctx, "with_logo", x + s * 0.19f, y + s * 0.19f, s * 0.62f, BLACK);
+        if (glow > 0) R2D.glow(ctx, x - s * 0.5f, y - s * 0.5f, s * 2f, s * 2f, R2D.withAlpha(0xFFFFFFFF, 0.12f * glow));
+        R2D.shadow(ctx, x, y + 1.5f, s, s, s * 0.4f, 0x99000000);
+        R2D.roundRectV(ctx, x, y, s, s, s * 0.28f, 0xFF232328, 0xFF0B0B0D);
+        R2D.roundOutline(ctx, x, y, s, s, s * 0.28f, 0.6f, 0x2EFFFFFF);
+        R2D.icon(ctx, "with_logo", x + s * 0.14f, y + s * 0.14f, s * 0.72f, 0xFFFFFFFF);
     }
 
     /** tekst z rozstrzelonymi literami; zwraca szerokość */
@@ -73,11 +74,12 @@ public final class Ui {
         }
         int fg = primary ? BLACK : R2D.blend(0xFFD4D4D8, 0xFFFFFFFF, hover);
         boolean hasLabel = label != null && !label.isEmpty();
-        float tw = hasLabel ? Fonts.width(label, Font.BOLD, 0.7f) : 0;
-        float iw = icon != null ? 9 : 0, gap = icon != null && hasLabel ? 5 : 0;
+        float fs = h >= 21 ? 0.68f : 0.6f, is = Math.round(h * 0.46f);
+        float tw = hasLabel ? Fonts.width(label, Font.BOLD, fs) : 0;
+        float iw = icon != null ? is : 0, gap = icon != null && hasLabel ? 4 : 0;
         float cx = x + (w - tw - iw - gap) / 2f;
-        if (icon != null) { R2D.icon(ctx, icon, cx, y + h / 2f - 4.5f, 9, fg); cx += iw + gap; }
-        if (hasLabel) Fonts.drawV(ctx, label, cx, y + h / 2f + 0.5f, fg, Font.BOLD, 0.7f);
+        if (icon != null) { R2D.icon(ctx, icon, cx, y + h / 2f - is / 2f, is, fg); cx += iw + gap; }
+        if (hasLabel) Fonts.drawV(ctx, label, cx, y + h / 2f + 0.5f, fg, Font.BOLD, fs);
         R2D.alpha = prev;
     }
 
@@ -105,11 +107,12 @@ public final class Ui {
 
     /** przełącznik (wł./wył.): on 0..1 (animowane), hover 0..1 */
     public static void toggle(DrawContext ctx, float x, float y, float on, float hover) {
-        float w = 20, h = 11;
+        float w = 18, h = 10;
         int acc = Theme.accent();
-        if (on > 0.01f && Theme.accentIndex != 0) R2D.glow(ctx, x - 6, y - 6, w + 12, h + 12, R2D.withAlpha(acc, 0.25f * on));
-        R2D.roundRect(ctx, x, y, w, h, h / 2f, R2D.blend(R2D.blend(0x26FFFFFF, 0x38FFFFFF, hover), acc, on));
+        if (on > 0.01f) R2D.glow(ctx, x - 6, y - 6, w + 12, h + 12, R2D.withAlpha(acc, (Theme.mono() ? 0.12f : 0.25f) * on));
+        R2D.roundRect(ctx, x, y, w, h, h / 2f, R2D.blend(R2D.blend(0x22FFFFFF, 0x34FFFFFF, hover), acc, on));
+        if (on < 0.99f) R2D.roundOutline(ctx, x, y, w, h, h / 2f, 0.5f, R2D.withAlpha(0x22FFFFFF, 1 - on));
         float k = x + h / 2f + (w - h) * on;
-        R2D.circle(ctx, k, y + h / 2f, 3.6f, R2D.blend(0xFFB4B4BC, Theme.onAccent(), on));
+        R2D.circle(ctx, k, y + h / 2f, 3.3f + 0.3f * hover, R2D.blend(0xFFA1A1AA, Theme.onAccent(), on));
     }
 }

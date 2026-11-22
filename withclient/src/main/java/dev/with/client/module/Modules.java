@@ -25,7 +25,7 @@ public final class Modules {
     private static final Path FILE = FabricLoader.getInstance().getConfigDir().resolve("withclient").resolve("modules.json");
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
     private static final Set<Integer> held = new HashSet<>();
-    private static final int CONFIG_VERSION = 4;
+    private static final int CONFIG_VERSION = 5;
 
     public static List<Module> all() { return ALL; }
     public static Module get(String name) { for (Module m : ALL) if (m.name.equals(name)) return m; return null; }
@@ -140,7 +140,7 @@ public final class Modules {
         Mode teCol = o("Kolor tryb", "Static", "Rainbow");
         m("TargetESP", VISUALS, "crosshair", "Świecący znacznik na przeciwniku, którego bijesz", "Glowing marker on the enemy you hit",
                 g("Wygląd"), o("Styl", "Diamond", "Triad", "Shuriken", "Brackets", "Bold", "Soft", "Thin"), n("Rozmiar", 1, 0.5, 2.5, 0.05, "×"),
-                n("Prędkość obrotu", 1, 0, 4, 0.1, "×"), n("Jasność", 80, 20, 100, 5, "%"), b("Pulsowanie", true), b("Poświata", true), b("Obrót ramki", true),
+                n("Prędkość obrotu", 1, 0, 4, 0.1, "×"), n("Jasność", 80, 20, 100, 5, "%"), b("Pulsowanie", true), b("Poświata", true), b("Kontrast", true), b("Obrót ramki", true),
                 g("Kolor"), teCol, cl("Kolor", WHITE).vis(() -> teCol.is("Static")), b("Czerwony przy trafieniu", true),
                 g("Cel"), b("Też celowany", false), b("Tylko gracze", false), n("Zasięg", 12, 4, 32, 1, "m")).on();
         m("Chams", VISUALS, "ghost", "Prześwitujące modele", "See-through models", o("Styl", "Flat", "Shiny", "Texture", "Wireframe"), cl("Widoczne", WHITE), cl("Za ścianą", 0x88FFFFFF), b("Ręce", false));
@@ -181,9 +181,9 @@ public final class Modules {
         // ================= HUD =================
         m("Watermark", HUD, "badge", "Pasek ze statystykami (FPS, ping, serwer, TPS, nick)", "Stats bar (FPS, ping, server, TPS, name)", o("Styl", "Stats", "Bar", "Pill", "Logo", "Text"),
                 mu("Info", a("FPS", "Ping", "Serwer", "TPS", "Nick", "Czas"), "FPS", "Ping", "Serwer", "TPS", "Nick"), b("Logo", false), tx("Tekst", "WithClient", 20), b("Tło", true)).on();
-        m("ArrayList", HUD, "list", "Lista włączonych modułów", "Enabled module list", o("Styl", "Pills", "Classic", "Text"), o("Sortowanie", "Length", "Alphabet"),
-                o("Animacja", "Slide", "Fade", "None"), b("Ikony", true), b("Sufiks trybu", true), b("Tło", true), b("Pasek boczny", true), b("Ukryj wizualne", false), cl("Kolor", WHITE)).on();
-        m("Keybinds", HUD, "keyboard", "Lista przypisanych klawiszy", "Bound keys list", o("Styl", "Pills", "Panel"), b("Tylko włączone", false), b("Nagłówek", true), n("Max", 10, 3, 20, 1, "")).on();
+        m("ArrayList", HUD, "list", "Lista włączonych modułów", "Enabled module list", o("Styl", "Embed", "Pills", "Classic", "Text"), o("Sortowanie", "Length", "Alphabet"),
+                o("Animacja", "Slide", "Fade", "None"), b("Grupuj kategorie", true), b("Nagłówek", true), b("Ikony", true), b("Sufiks trybu", true), b("Tło", true), b("Pasek boczny", true), b("Ukryj wizualne", false), cl("Kolor", WHITE)).on();
+        m("Keybinds", HUD, "keyboard", "Lista przypisanych klawiszy", "Bound keys list", o("Styl", "Embed", "Pills"), b("Tylko włączone", false), b("Nagłówek", true), n("Max", 10, 3, 20, 1, "")).on();
         m("TargetHUD", HUD, "contact", "Info o przeciwniku, którego bijesz", "Info about the enemy you hit", o("Styl", "Modern", "Model", "Compact", "Minimal"),
                 b("Głowa", true), b("Zbroja", true), b("Animacja zdrowia", true), b("Cząsteczki", true), n("Zasięg", 8, 3, 20, 1, "m")).on();
         m("Coordinates", HUD, "map-pin", "Współrzędne", "Coordinates", o("Styl", "Pill", "Panel"), b("Nether", false), b("Kierunek", true), b("Biom", false));
@@ -335,6 +335,13 @@ public final class Modules {
                 if (w != null && w.setting("Info") != null) w.setting("Info").reset();
             }
             // 1.3: stary domyślny opis zasłaniał miejsce gry w statusie Discorda
+            // 1.4: karty (embed) dla listy modułów i klawiszy
+            if (v < 5) {
+                for (String n : new String[]{"ArrayList", "Keybinds"}) {
+                    Module m = get(n);
+                    if (m != null && m.setting("Styl") != null) m.setting("Styl").reset();
+                }
+            }
             if (v < 4) {
                 Module d = get("DiscordRPC");
                 if (d != null && d.setting("Opis") != null) d.setting("Opis").reset();

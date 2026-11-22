@@ -240,6 +240,15 @@ public final class Hud {
 
     static float globalScale() { return gScale; }
 
+    /** HUD ma tę samą wielkość na ekranie niezależnie od skali GUI Minecrafta (na 1080p z auto-skalą jest mniejszy i czystszy) */
+    static float base() {
+        double gs = mc.getWindow().getScaleFactor();
+        return (float) Math.max(0.5, Math.min(1.5, 2.5 / gs));
+    }
+
+    /** elementy dopasowane do paska przedmiotów Minecrafta mają jego skalę */
+    private static boolean vanillaSized(String id) { return id.equals("HealthBar") || id.equals("ArmorHUD"); }
+
     static int onAccent() {
         float r = ((accent >> 16) & 0xFF) / 255f, g = ((accent >> 8) & 0xFF) / 255f, b = (accent & 0xFF) / 255f;
         return 0.2126f * r + 0.7152f * g + 0.0722f * b > 0.55f ? 0xFF09090B : 0xFFFFFFFF;
@@ -297,11 +306,12 @@ public final class Hud {
         R2D.alpha = 1; R2D.radiusMul = 1;
         float sw = ctx.getScaledWindowWidth(), sh = ctx.getScaledWindowHeight();
         record Item(String id, Module m, float[] size, float s, float w, float h) {}
+        float bs = base(), mg = Math.max(0.7f, bs), gap = 4 * mg;
         List<Item> items = new ArrayList<>();
         for (Map.Entry<String, String> en : ELEMENTS.entrySet()) {
             Module m = mod(en.getKey());
             if (m == null || !m.isEnabled()) continue;
-            float s = gScale * layout(en.getKey()).scale;
+            float s = gScale * layout(en.getKey()).scale * (vanillaSized(en.getKey()) ? 1 : bs);
             float[] size = size(en.getKey(), m);
             if (size == null) continue;
             items.add(new Item(en.getKey(), m, size, s, size[0] * s, size[1] * s));
@@ -325,9 +335,10 @@ public final class Hud {
                         Group g = GROUPS.get(gk);
                         ax = g.ax(); ay = g.ay(); dir = g.dir();
                         Float nv = next.get(gk);
-                        x = ax == 0 ? g.mx() : ax == 1 ? (sw - w) / 2f : sw - g.mx() - w;
-                        if (ay == 0) y = nv != null ? nv : g.my() + (gk.equals("TR") ? vanillaEffectsHeight() : 0);
-                        else if (ay == 2) y = (nv != null ? nv : sh - g.my()) - h;
+                        float gx = g.mx() * mg, gy = gk.equals("BC") ? g.my() : g.my() * mg;
+                        x = ax == 0 ? gx : ax == 1 ? (sw - w) / 2f : sw - gx - w;
+                        if (ay == 0) y = nv != null ? nv : gy + (gk.equals("TR") ? vanillaEffectsHeight() : 0);
+                        else if (ay == 2) y = (nv != null ? nv : sh - gy) - h;
                         else y = nv != null ? nv : sh / 2f - h / 2f;
                     }
                     // omijanie innych elementów w kierunku stosu
@@ -335,9 +346,9 @@ public final class Hud {
                         Box hitBox = null;
                         for (Box o : placed.values()) if (x < o.x() + o.w() + 2 && x + w > o.x() - 2 && y < o.y() + o.h() + 2 && y + h > o.y() - 2) { hitBox = o; break; }
                         if (hitBox == null) break;
-                        y = dir > 0 ? hitBox.y() + hitBox.h() + 4 : hitBox.y() - h - 4;
+                        y = dir > 0 ? hitBox.y() + hitBox.h() + gap : hitBox.y() - h - gap;
                     }
-                    if (GROUPS.containsKey(gk)) next.put(gk, ay == 2 ? y - 4 : y + h + 4);
+                    if (GROUPS.containsKey(gk)) next.put(gk, ay == 2 ? y - gap : y + h + gap);
                 }
                 x = Math.round(x * 2) / 2f; y = Math.round(y * 2) / 2f;
                 placed.put(it.id(), new Box(it.id(), x, y, w, h, it.s(), ax, ay));
@@ -651,6 +662,30 @@ public final class Hud {
         return x;
     }
 
+    // ================================================================== karta "embed"
+
+    /** karta w stylu embedu: tło, pasek akcentu z lewej, nagłówek z ikoną, tytułem i plakietką; zwraca y treści */
+    private static float embed(DrawContext ctx, float w, float h, String icon, String title, String badge, boolean header) {
+        panel(ctx, 0, 0, w, h, Math.min(radius + 1, 8));
+        R2D.roundRectV(ctx, 3.5f, 6, 2, h - 12, 1, R2D.withAlpha(accent, 0.95f), R2D.withAlpha(accent, 0.45f));
+        if (!header) return 6;
+        float x = 11;
+        if (icons) { R2D.icon(ctx, icon, x, 5.5f, 8, accent); x += 11.5f; }
+        Fonts.drawV(ctx, title, x, 10, TEXT, Font.BOLD, 0.64f);
+        if (badge != null) {
+            float bw = Math.max(11, Fonts.width(badge, Font.BOLD, 0.46f) + 8);
+            R2D.roundRect(ctx, w - 8 - bw, 5.5f, bw, 9, 4.5f, R2D.withAlpha(accent, 0.16f));
+            Fonts.drawV(ctx, badge, w - 8 - bw + (bw - Fonts.width(badge, Font.BOLD, 0.46f)) / 2f, 10.5f, TEXT, Font.BOLD, 0.46f);
+        }
+        R2D.gradientH(ctx, 11, 19, (w - 19) / 2f, 0.5f, 0x22FFFFFF, 0x10FFFFFF);
+        R2D.gradientH(ctx, 11 + (w - 19) / 2f, 19, (w - 19) / 2f, 0.5f, 0x10FFFFFF, 0x00FFFFFF);
+        return 22;
+    }
+
+    private static float embedHeadW(String title, String badge) {
+        return 11 + (icons ? 11.5f : 0) + Fonts.width(title, Font.BOLD, 0.64f) + 12 + (badge != null ? Math.max(11, Fonts.width(badge, Font.BOLD, 0.46f) + 8) : 0) + 8;
+    }
+
     // ================================================================== ArrayList
 
     private static String suffix(Module m) {
@@ -658,8 +693,78 @@ public final class Hud {
         return null;
     }
 
+    /** lista włączonych modułów jako karta: nagłówek "Moduły" z licznikiem, grupy kategorii, ikona, nazwa i tryb */
+    private static float[] arrayEmbed(DrawContext ctx, Module al, boolean draw) {
+        boolean hideVis = bo(al, "Ukryj wizualne"), suf = bo(al, "Sufiks trybu"), group = bo(al, "Grupuj kategorie"), head = bo(al, "Nagłówek");
+        String anim = mode(al, "Animacja", "Slide");
+        int col = color(al, "Kolor", 0xFFFFFFFF);
+        boolean alpha = mode(al, "Sortowanie", "Length").equals("Alphabet");
+        record Row(Module m, String suf, float a) {}
+        Map<Category, List<Row>> cats = new EnumMap<>(Category.class);
+        int active = 0;
+        for (Module m : Modules.all()) {
+            boolean show = m.isEnabled() && m.category != Category.HUD && m.category != Category.CLIENT
+                    && !(hideVis && (m.category == Category.VISUALS || m.category == Category.COSMETICS));
+            Anim an = AL.computeIfAbsent(m.name, k -> new Anim(show ? 1 : 0, 11));
+            float a = anim.equals("None") ? (show ? 1 : 0) : an.animate(show ? 1 : 0);
+            if (anim.equals("None")) an.snap(show ? 1 : 0);
+            if (show) active++;
+            if (a < 0.01f) continue;
+            cats.computeIfAbsent(group ? m.category : Category.COMBAT, k -> new ArrayList<>()).add(new Row(m, suf ? suffix(m) : null, a));
+        }
+        boolean empty = cats.isEmpty();
+        if (empty && !preview) return null;
+        if (empty) cats.put(Category.COMBAT, new ArrayList<>(List.of(new Row(Modules.get("KillAura"), "Single", 1), new Row(Modules.get("Sprint"), "Legit", 1))));
+        float rowH = 12, catH = 11;
+        String title = t("Moduły", "Modules"), badge = String.valueOf(active);
+        float w = head ? embedHeadW(title, badge) : 70, h = head ? 22 : 6;
+        for (Map.Entry<Category, List<Row>> e : cats.entrySet()) {
+            List<Row> rows = e.getValue();
+            if (alpha) rows.sort(Comparator.comparing(r -> r.m().name));
+            else rows.sort((p, q) -> Float.compare(Fonts.width(q.m().name, Font.SEMIBOLD, 0.58f), Fonts.width(p.m().name, Font.SEMIBOLD, 0.58f)));
+            float ca = 0;
+            for (Row r : rows) {
+                ca = Math.max(ca, r.a());
+                h += rowH * (anim.equals("Fade") ? 1 : r.a());
+                w = Math.max(w, 11 + (icons ? 11.5f : 0) + Fonts.width(r.m().name, Font.SEMIBOLD, 0.58f) + (r.suf() != null ? 10 + Fonts.width(r.suf(), Font.SEMIBOLD, 0.5f) : 0) + 9);
+            }
+            if (group) h += catH * (anim.equals("Fade") ? 1 : ca);
+        }
+        h += 4;
+        if (ctx == null || !draw) return new float[]{w, h};
+        float y = embed(ctx, w, h, "l_layers", title, badge, head);
+        for (Map.Entry<Category, List<Row>> e : cats.entrySet()) {
+            List<Row> rows = e.getValue();
+            float ca = 0;
+            for (Row r : rows) ca = Math.max(ca, r.a());
+            if (group) {
+                float hh = catH * (anim.equals("Fade") ? 1 : ca);
+                float pa = R2D.alpha; R2D.alpha = pa * ca;
+                dev.with.client.ui.Ui.spaced(ctx, e.getKey().title().toUpperCase(Locale.ROOT), 11, y + hh / 2f - 2.2f, FAINT, Font.BOLD, 0.42f, 1.1f);
+                R2D.alpha = pa;
+                y += hh;
+            }
+            for (Row r : rows) {
+                float a = r.a(), rh = rowH * (anim.equals("Fade") ? 1 : a);
+                float off = anim.equals("Slide") ? (1 - a) * 10 : 0;
+                float pa = R2D.alpha; R2D.alpha = pa * Math.min(1, a * 1.4f);
+                float x = 11 + off;
+                if (icons) { R2D.icon(ctx, r.m().icon, x, y + rh / 2f - 3.5f, 7, R2D.withAlpha(accent, 0.8f)); x += 11.5f; }
+                Fonts.drawV(ctx, r.m().name, x, y + rh / 2f + 0.5f, col, Font.SEMIBOLD, 0.58f);
+                if (r.suf() != null) {
+                    float sw2 = Fonts.width(r.suf(), Font.SEMIBOLD, 0.5f);
+                    Fonts.drawV(ctx, r.suf(), w - 9 - sw2 + off, y + rh / 2f + 0.5f, FAINT, Font.SEMIBOLD, 0.5f);
+                }
+                R2D.alpha = pa;
+                y += rh;
+            }
+        }
+        return null;
+    }
+
     private static float[] arrayList(DrawContext ctx, Module al, boolean draw) {
-        String style = mode(al, "Styl", "Pills");
+        String style = mode(al, "Styl", "Embed");
+        if (style.equals("Embed")) return arrayEmbed(ctx, al, draw);
         boolean pills = style.equals("Pills"), text = style.equals("Text");
         boolean hideVis = bo(al, "Ukryj wizualne"), suf = bo(al, "Sufiks trybu"), back = bo(al, "Tło"), bar = bo(al, "Pasek boczny") && style.equals("Classic");
         boolean ic = pills && bo(al, "Ikony") && icons;
@@ -725,12 +830,36 @@ public final class Hud {
     }
 
     private static float[] keybinds(DrawContext ctx, Module kb) {
-        boolean onlyOn = bo(kb, "Tylko włączone"), head = bo(kb, "Nagłówek"), pills = mode(kb, "Styl", "Pills").equals("Pills");
+        boolean onlyOn = bo(kb, "Tylko włączone"), head = bo(kb, "Nagłówek"), pills = mode(kb, "Styl", "Embed").equals("Pills");
         int max = (int) num(kb, "Max", 10);
         List<Module> l = new ArrayList<>();
         for (Module m : Modules.all()) if (m.key >= 0 && (!onlyOn || m.isEnabled())) l.add(m);
         l.sort(Comparator.comparing((Module m) -> !m.isEnabled()).thenComparing(m -> m.name));
         if (l.size() > max) l = l.subList(0, max);
+        if (mode(kb, "Styl", "Embed").equals("Embed")) {
+            float rowH = 13;
+            String title = "Keybinds", badge = String.valueOf(l.size());
+            float w = head ? embedHeadW(title, badge) : 80;
+            for (Module m : l) w = Math.max(w, 11 + 9 + Fonts.width(m.name, Font.SEMIBOLD, 0.58f) + 12 + Math.max(13, Fonts.width(keyName(m.key), Font.BOLD, 0.48f) + 8) + 8);
+            if (l.isEmpty()) w = Math.max(w, 22 + Fonts.width(t("Brak klawiszy", "No keybinds"), Font.SEMIBOLD, 0.56f));
+            float h = (head ? 22 : 6) + Math.max(1, l.size()) * rowH + 4;
+            if (ctx == null) return new float[]{w, h};
+            float y = embed(ctx, w, h, "l_keyboard", title, badge, head);
+            if (l.isEmpty()) Fonts.drawV(ctx, t("Brak klawiszy", "No keybinds"), 11, y + rowH / 2f, FAINT, Font.SEMIBOLD, 0.56f);
+            for (Module m : l) {
+                float on = KEYS.computeIfAbsent(m.name, k -> new Anim(m.isEnabled() ? 1 : 0, 12)).animate(m.isEnabled() ? 1 : 0);
+                float cy = y + rowH / 2f;
+                if (on > 0.01f) R2D.glow(ctx, 9, cy - 4, 8, 8, R2D.withAlpha(accent, 0.5f * on));
+                R2D.circle(ctx, 13, cy, 1.8f, R2D.blend(0x40FFFFFF, accent, on));
+                Fonts.drawV(ctx, m.name, 20, cy + 0.5f, R2D.blend(FAINT, TEXT, on), Font.SEMIBOLD, 0.58f);
+                String k = keyName(m.key);
+                float kw = Math.max(13, Fonts.width(k, Font.BOLD, 0.48f) + 8);
+                R2D.roundRect(ctx, w - 8 - kw, y + 2, kw, rowH - 4, 3, R2D.blend(0x16FFFFFF, R2D.withAlpha(accent, 0.92f), on));
+                Fonts.drawV(ctx, k, w - 8 - kw + (kw - Fonts.width(k, Font.BOLD, 0.48f)) / 2f, cy + 0.5f, R2D.blend(DIM, onAccent(), on), Font.BOLD, 0.48f);
+                y += rowH;
+            }
+            return null;
+        }
         if (pills) {
             float rowH = 13, gap = 3, headH = head ? 15 + gap : 0;
             float hw = 6 + (icons ? 11 : 0) + Fonts.width("Keybinds", Font.BOLD, 0.6f) + 7;
@@ -886,20 +1015,17 @@ public final class Hud {
                 Fonts.drawV(ctx, dist, x, ly, DIM, Font.SEMIBOLD, 0.5f);
                 if (mc.player != null && e != mc.player) {
                     float diff = mc.player.getHealth() + mc.player.getAbsorptionAmount() - health;
-                    String wl = diff >= 0 ? t("PRZEWAGA", "WINNING") : t("SŁABIEJ", "LOSING");
-                    float ww = Fonts.width(wl, Font.BOLD, 0.42f) + 7, wx = x + Fonts.width(dist, Font.SEMIBOLD, 0.5f) + 5;
-                    R2D.roundRect(ctx, wx, ly - 3.6f, ww, 7.2f, 3.6f, diff >= 0 ? R2D.withAlpha(accent, 0.92f) : 0x30FFFFFF);
-                    Fonts.drawV(ctx, wl, wx + 3.5f, ly + 0.4f, diff >= 0 ? onAccent() : DIM, Font.BOLD, 0.42f);
+                    String wl = (diff >= 0 ? "+" : "−") + String.format(Locale.ROOT, "%.1f", Math.abs(diff)) + " HP";
+                    float ww = Fonts.width(wl, Font.BOLD, 0.44f) + 8, wx = x + Fonts.width(dist, Font.SEMIBOLD, 0.5f) + 5;
+                    R2D.roundRect(ctx, wx, ly - 3.8f, ww, 7.6f, 3.8f, diff >= 0 ? R2D.withAlpha(accent, 0.92f) : 0x40FF5C7A);
+                    Fonts.drawV(ctx, wl, wx + 4, ly + 0.4f, diff >= 0 ? onAccent() : 0xFFFF9DB0, Font.BOLD, 0.44f);
                 }
                 if (bo(m, "Zbroja")) {
                     EquipmentSlot[] slots = {EquipmentSlot.HEAD, EquipmentSlot.CHEST, EquipmentSlot.LEGS, EquipmentSlot.FEET, EquipmentSlot.MAINHAND};
-                    float ix = right - slots.length * 10 + 1;
-                    for (EquipmentSlot s : slots) {
-                        ItemStack st = e.getEquippedStack(s);
-                        if (st.isEmpty()) R2D.roundRect(ctx, ix + 1, ly - 3.5f, 7, 7, 2, 0x10FFFFFF);
-                        else item(ctx, st, ix, ly - 4.5f, 9, false);
-                        ix += 10;
-                    }
+                    List<ItemStack> worn = new ArrayList<>();
+                    for (EquipmentSlot s : slots) if (!e.getEquippedStack(s).isEmpty()) worn.add(e.getEquippedStack(s));
+                    float ix = right - worn.size() * 10 + 1;
+                    for (ItemStack st : worn) { item(ctx, st, ix, ly - 4.5f, 9, false); ix += 10; }
                 }
                 float by = h - 14;
                 bar(ctx, x, by, right - x, 5, hp, trail, e, true);
@@ -1414,7 +1540,7 @@ public final class Hud {
         boolean pill = mode(n, "Styl", "Pill").equals("Pill");
         String pos = mode(n, "Pozycja", "Bottom right");
         float sw = ctx.getScaledWindowWidth(), sh = ctx.getScaledWindowHeight();
-        float s = gScale;
+        float s = gScale * base();
         boolean top = pos.equals("Top right"), center = pos.equals("Bottom");
         float y = top ? Math.max(6, trBottom > 0 ? trBottom + 2 : 6 + vanillaEffectsHeight()) : (center ? sh - 80 : (brTop > 0 ? brTop : sh - 6));
         R2D.alpha = 1; R2D.radiusMul = 1;

@@ -32,7 +32,7 @@ WithClient zastępuje ekrany Minecrafta własnymi:
 ## Status w Discordzie (DiscordRPC)
 
 Gdy grasz, Discord pokazuje **„Gra w WithClient”** z logo. Niżej widać
-„WithClient 1.3.0 · Minecraft 1.21.1”, miejsce gry (menu, tryb jednoosobowy, adres serwera) i czas gry.
+„WithClient 1.4.0 · Minecraft 1.21.1”, miejsce gry (menu, tryb jednoosobowy, adres serwera) i czas gry.
 
 Discord pokazuje nazwę i logo z **aplikacji Discord**, więc trzeba ją raz założyć (2 minuty):
 1. Wejdź na https://discord.com/developers/applications → **New Application**, nazwij ją `WithClient`.
@@ -47,7 +47,8 @@ pokazywanie serwera, nicku i czasu oraz własny opis.
 
 - **TargetESP** (Wizualne): świecący znacznik na przeciwniku, którego bijesz.
   - 7 stylów z dostarczonych tekstur: Diamond, Triad, Shuriken, Brackets, Bold, Soft, Thin.
-  - Animacja „namierzania” przy wyborze celu, obrót, pulsowanie i poświata.
+  - Animacja „namierzania” przy wyborze celu, obrót, pulsowanie, poświata i ciemny „cień” pod spodem,
+    dzięki któremu znacznik widać też w dzień.
   - Kolor stały albo tęcza, czerwony błysk przy trafieniu.
   - Rysowany z testem głębi, więc nie widać go przez ściany.
 - **JumpCircles** (Kosmetyki): przy skoku pod nogami rozchodzi się krąg.
@@ -117,8 +118,8 @@ a jego opcje zmieniają wygląd. Wszystko jest w stylu biało-czarnym.
 | Element | Co pokazuje | Opcje |
 |---|---|---|
 | **Watermark** | pasek: ikona + FPS, ping, serwer, TPS, nick (opcjonalnie logo i czas) | styl Stats / Bar / Pill / Logo / Text, własny tekst, tło |
-| **ArrayList** | włączone moduły jako pigułki z ikoną i trybem (np. „KillAura Single”), wjeżdżają i wyjeżdżają | styl Pills / Classic / Text, sortowanie, animacja Slide / Fade / None, ikony, kolor, ukrywanie wizualnych |
-| **Keybinds** | nagłówek „Keybinds” i pigułki: moduł + klawisz (włączone jaśniejsze) | styl Pills / Panel, tylko włączone, limit |
+| **ArrayList** | **karta „Moduły” (embed)**: pasek akcentu, nagłówek z liczbą aktywnych, moduły pogrupowane po kategoriach z ikoną i trybem; moduły wjeżdżają i wyjeżdżają | styl Embed / Pills / Classic / Text, grupowanie, nagłówek, sortowanie, animacja, ikony, kolor, ukrywanie wizualnych |
+| **Keybinds** | karta (embed) z nagłówkiem i licznikiem: kropka stanu, moduł i klawisz (włączone podświetlone) | styl Embed / Pills, tylko włączone, limit |
 | **TargetHUD** | przeciwnik, którego bijesz: zaokrąglona głowa (albo **obracający się model 3D**), przedmiot w ręce, HP z sercem, pasek z podziałką, śladem obrażeń i absorpcją, odległość, PRZEWAGA / SŁABIEJ, zbroja, trzęsienie i czerwony błysk przy trafieniu, cząsteczki | styl Modern / Model / Compact / Minimal, zasięg |
 | **Coordinates** | pigułka z pinezką: „1632, 68, 934” + kierunek; opcjonalnie Nether ↔ świat i biom | styl Pill / Panel |
 | **Potions** | efekty z ikoną, poziomem, czasem i paskiem (chowa ikony z Minecrafta) | sortowanie |
@@ -137,6 +138,9 @@ czasu serwera), **Speedometer** (bps / km/h), **CPS**, **Clock**, **ServerInfo**
 
 **Spotify**: Windows czyta systemową sesję multimediów (Spotify, przeglądarka i inne), macOS czyta
 Spotify przez AppleScript, a Linux używa `playerctl`. Tekst piosenki pobiera z lrclib.net (można wyłączyć).
+
+HUD ma tę samą wielkość na ekranie przy każdej skali GUI Minecrafta, więc na 1080p z automatyczną skalą
+nie zajmuje pół ekranu. Większy albo mniejszy zrobisz w *Klient → HUDEditor → Skala*.
 
 Domyślnie elementy same układają się w stosy przy krawędziach ekranu i omijają się nawzajem.
 Unikają też miejsc Minecrafta: czatu, paska przedmiotów i ikon efektów.
@@ -167,7 +171,7 @@ Exploity i Klient. Każdy ma własną ikonę i zestaw opcji. Stan modułów zapi
 ./gradlew build
 ```
 
-Gotowy plik: `build/libs/withclient-1.3.0.jar`. Wrzuć go do `.minecraft/mods` razem z Fabric API.
+Gotowy plik: `build/libs/withclient-1.4.0.jar`. Wrzuć go do `.minecraft/mods` razem z Fabric API.
 Klawisz otwierania zmienisz w Opcje → Sterowanie → WithClient.
 
 ## Struktura

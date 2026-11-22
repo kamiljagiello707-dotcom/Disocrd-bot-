@@ -85,11 +85,12 @@ public class HudEditor extends Screen {
             if (k > 0.01f) {
                 Hud.Layout L = Hud.layout(b.id());
                 String tag = b.id() + (L.scale != 1 ? "  " + Math.round(L.scale * 100) + "%" : "");
-                float tw = Fonts.width(tag, Font.BOLD, 0.5f) + 8;
-                float ty = b.y() - 12 < 2 ? b.y() + b.h() + 4 : b.y() - 12;
+                float fs = 0.5f * Math.max(0.7f, Hud.base()), th = 18 * fs;
+                float tw = Fonts.width(tag, Font.BOLD, fs) + 16 * fs;
+                float ty = b.y() - th - 3 < 2 ? b.y() + b.h() + 4 : b.y() - th - 3;
                 float pa = R2D.alpha; R2D.alpha = k;
-                R2D.roundRect(ctx, b.x() - 2, ty, tw, 9, 3, 0xF0FFFFFF);
-                Fonts.drawV(ctx, tag, b.x() + 2, ty + 5, 0xFF09090B, Font.BOLD, 0.5f);
+                R2D.roundRect(ctx, b.x() - 2, ty, tw, th, th / 3f, 0xF0FFFFFF);
+                Fonts.drawV(ctx, tag, b.x() - 2 + 8 * fs, ty + th / 2f + 0.5f, 0xFF09090B, Font.BOLD, fs);
                 R2D.alpha = pa;
             }
         }

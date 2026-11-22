@@ -155,6 +155,12 @@ public final class WorldFx {
         ms.multiply(cam.getRotation());
         if (brackets && bo(m, "Obrót ramki")) ms.multiply(RotationAxis.POSITIVE_Z.rotationDegrees(45 * (1 - lock)));
         else ms.multiply(RotationAxis.POSITIVE_Z.rotationDegrees(rot));
+        // ciemny "cień" pod spodem – znacznik widać też na jasnym niebie
+        if (bo(m, "Kontrast")) {
+            RenderSystem.blendFunc(GlStateManager.SrcFactor.ZERO, GlStateManager.DstFactor.ONE_MINUS_SRC_COLOR);
+            quad(ms, ESP.get(style), size * 1.06f, 0xFFFFFFFF, alpha * 0.55f);
+            RenderSystem.blendFunc(GlStateManager.SrcFactor.ONE, GlStateManager.DstFactor.ONE);
+        }
         quad(ms, ESP.get(style), size, col, alpha);
         // druga, większa i słabsza warstwa = poświata
         if (bo(m, "Poświata")) quad(ms, ESP.get(style), size * 1.1f, col, alpha * 0.2f);

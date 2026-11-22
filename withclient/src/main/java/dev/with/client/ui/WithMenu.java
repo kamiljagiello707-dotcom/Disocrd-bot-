@@ -252,8 +252,8 @@ public class WithMenu extends Screen {
             float vw = Fonts.width(ver, Font.BOLD, 0.5f) + 8;
             R2D.roundRect(ctx, px + iw - vw, y - 1.5f, vw, 10, 5, 0xFFF4F4F5);
             Fonts.drawV(ctx, ver, px + iw - vw + 4, y + 3.5f, BLACK, Font.BOLD, 0.5f);
-            String[] items = pl ? new String[]{"Target ESP i Jump Circles", "Spotify, własny hotbar, nowy HUD", "Nowe menu i status w Discordzie"}
-                    : new String[]{"Target ESP and Jump Circles", "Spotify, custom hotbar, new HUD", "New menus and Discord status"};
+            String[] items = pl ? new String[]{"Karta modułów i Keybinds (embed)", "Target ESP widoczny także w dzień", "HUD tej samej wielkości na każdej skali"}
+                    : new String[]{"Module and keybind cards (embed)", "Target ESP visible in daylight too", "HUD keeps its size at any GUI scale"};
             int[] dots = {0xFFFFFFFF, 0xFFB4B4BC, 0xFF6E6E78};
             for (int i = 0; i < items.length; i++) {
                 float iy = y + 14 + i * 12;

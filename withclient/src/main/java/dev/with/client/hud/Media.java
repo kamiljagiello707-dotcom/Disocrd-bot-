@@ -73,6 +73,19 @@ public final class Media {
         return cur;
     }
 
+    /** postęp bieżącej linijki 0..1 (podświetlanie dużego tekstu na ekranie) */
+    public static float lyricProgress() {
+        List<Line> l = lyrics;
+        if (l.isEmpty()) return 0;
+        double p = pos() + 0.3, start = -1, end = -1;
+        for (int i = 0; i < l.size(); i++) {
+            if (l.get(i).t() <= p) { start = l.get(i).t(); end = i + 1 < l.size() ? l.get(i + 1).t() : start + 4; }
+            else break;
+        }
+        if (start < 0) return 0;
+        return (float) Math.max(0, Math.min(1, (p - start) / Math.max(0.5, end - start)));
+    }
+
     /** uruchamia odczyt w tle (wywoływane przy rysowaniu elementu) */
     public static synchronized void ensure() {
         if (running) return;

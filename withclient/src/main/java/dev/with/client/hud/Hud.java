@@ -81,10 +81,10 @@ public final class Hud {
     static final LinkedHashMap<String, String> ELEMENTS = new LinkedHashMap<>();
     static {
         for (String[] e : new String[][]{
-                {"Watermark", "TL"}, {"Keybinds", "TL"}, {"Session", "TL"},
-                {"ArrayList", "TR"}, {"Potions", "RC"}, {"Spotify", "TC"}, {"Compass", "TC"}, {"Keystrokes", "LC"},
-                {"HealthBar", "BC"}, {"ArmorHUD", "HB"}, {"TargetHUD", "CT"},
-                {"InventoryHUD", "BR"}, {"Coordinates", "BR"}, {"TotemCounter", "BR"}, {"FPS", "BR"}, {"Ping", "BR"}, {"TPS", "BR"},
+                {"Watermark", "TC"}, {"Spotify", "TC"}, {"Compass", "TC"}, {"Session", "TL"},
+                {"ArrayList", "TR"}, {"Potions", "RC"}, {"Keybinds", "LC"}, {"Keystrokes", "LC"},
+                {"HealthBar", "BC"}, {"ArmorHUD", "HB"}, {"TargetHUD", "CT"}, {"InventoryHUD", "BL"},
+                {"Coordinates", "BR"}, {"TotemCounter", "BR"}, {"FPS", "BR"}, {"Ping", "BR"}, {"TPS", "BR"},
                 {"Speedometer", "BR"}, {"CPS", "BR"}, {"Memory", "BR"}, {"Clock", "BR"}, {"ServerInfo", "BR"}}) ELEMENTS.put(e[0], e[1]);
     }
     static final Map<String, Layout> LAYOUT = new HashMap<>();
@@ -118,7 +118,7 @@ public final class Hud {
     private static final Map<String, Anim> KEYS = new HashMap<>();
 
     // kolejka przedmiotów (rysowane na końcu z czystym buforem głębi)
-    private record QItem(Matrix4f m, ItemStack st, int x, int y, boolean overlay) {}
+    private record QItem(Matrix4f m, ItemStack st, int x, int y, boolean overlay, boolean clean) {}
     private static final List<QItem> ITEMS = new ArrayList<>();
 
     // ================================================================== start
@@ -128,6 +128,7 @@ public final class Hud {
         HudRenderCallback.EVENT.register((ctx, tc) -> {
             if (mc.options.hudHidden || mc.player == null || mc.currentScreen instanceof HudEditor) return;
             renderAll(ctx, false);
+            drawKaraoke(ctx);
             drawNotifications(ctx);
         });
         ClientTickEvents.END_CLIENT_TICK.register(Hud::tick);
@@ -243,7 +244,7 @@ public final class Hud {
     /** HUD ma tę samą wielkość na ekranie niezależnie od skali GUI Minecrafta (na 1080p z auto-skalą jest mniejszy i czystszy) */
     static float base() {
         double gs = mc.getWindow().getScaleFactor();
-        return (float) Math.max(0.5, Math.min(1.5, 2.5 / gs));
+        return (float) Math.max(0.55, Math.min(1.6, 3.0 / gs));
     }
 
     /** elementy dopasowane do paska przedmiotów Minecrafta mają jego skalę */
@@ -256,6 +257,24 @@ public final class Hud {
 
     static void panel(DrawContext ctx, float x, float y, float w, float h) { panel(ctx, x, y, w, h, Math.min(radius, h / 2f)); }
 
+    /** czarna kapsuła (wygląd z nagrania): mocne ciemne tło, prawie bez obrysu, miękki cień */
+    static void capsule(DrawContext ctx, float x, float y, float w, float h, float r) {
+        if (bg.equals("Clear")) return;
+        boolean glass = bg.equals("Glass");
+        if (shadow) R2D.shadow(ctx, x, y + 1, w, h, 6, R2D.withAlpha(0xFF000000, 0.4f * opacity));
+        R2D.roundRect(ctx, x, y, w, h, r, R2D.withAlpha(glass ? 0xFF16161B : 0xFF060608, (glass ? 0.62f : 0.88f) * opacity));
+        if (outline) R2D.roundOutline(ctx, x, y, w, h, r, 0.5f, R2D.withAlpha(0xFFFFFFFF, 0.06f));
+    }
+
+    /** cienka kreska wytrzymałości pod przedmiotem */
+    static void durability(DrawContext ctx, ItemStack s, float x, float y, float w) {
+        if (s == null || !s.isDamageable() || s.getDamage() <= 0) return;
+        float f = 1 - (float) s.getDamage() / Math.max(1, s.getMaxDamage());
+        int c = f > 0.5f ? accent : f > 0.2f ? 0xFFF2C94C : 0xFFFF5C7A;
+        R2D.roundRect(ctx, x, y, w, 1.6f, 0.8f, 0x30FFFFFF);
+        R2D.roundRect(ctx, x, y, Math.max(1.6f, w * f), 1.6f, 0.8f, c);
+    }
+
     static void panel(DrawContext ctx, float x, float y, float w, float h, float r) {
         if (bg.equals("Clear")) return;
         if (shadow) R2D.shadow(ctx, x, y + 1.5f, w, h, 7, R2D.withAlpha(0xFF000000, 0.5f * opacity));
@@ -267,12 +286,15 @@ public final class Hud {
     }
 
     /** przedmiot do narysowania na końcu (scale = rozmiar w px / 16) */
-    static void item(DrawContext ctx, ItemStack st, float x, float y, float size, boolean overlay) {
+    static void item(DrawContext ctx, ItemStack st, float x, float y, float size, boolean overlay) { item(ctx, st, x, y, size, overlay, false); }
+
+    /** clean = bez paska wytrzymałości Minecrafta (zostaje liczba sztuk) */
+    static void item(DrawContext ctx, ItemStack st, float x, float y, float size, boolean overlay, boolean clean) {
         if (st == null || st.isEmpty()) return;
         ctx.getMatrices().push();
         ctx.getMatrices().translate(x, y, 0);
         ctx.getMatrices().scale(size / 16f, size / 16f, 1);
-        ITEMS.add(new QItem(new Matrix4f(ctx.getMatrices().peek().getPositionMatrix()), st.copy(), 0, 0, overlay));
+        ITEMS.add(new QItem(new Matrix4f(ctx.getMatrices().peek().getPositionMatrix()), st.copy(), 0, 0, overlay, clean));
         ctx.getMatrices().pop();
     }
 
@@ -287,7 +309,11 @@ public final class Hud {
             ctx.getMatrices().push();
             ctx.getMatrices().peek().getPositionMatrix().set(q.m());
             ctx.drawItem(q.st(), q.x(), q.y());
-            if (q.overlay()) ctx.drawItemInSlot(mc.textRenderer, q.st(), q.x(), q.y());
+            if (q.overlay()) {
+                ItemStack ov = q.st();
+                if (q.clean() && ov.isDamageable()) { ov = ov.copy(); ov.setDamage(0); }
+                ctx.drawItemInSlot(mc.textRenderer, ov, q.x(), q.y());
+            }
             ctx.getMatrices().pop();
         }
         ctx.draw();
@@ -329,13 +355,13 @@ public final class Hud {
                     y = ay == 0 ? L.dy : ay == 1 ? sh / 2f + L.dy - h / 2f : sh - L.dy - h;
                 } else {
                     String gk = ELEMENTS.get(it.id());
-                    if (gk.equals("HB")) { ax = 1; ay = 2; x = sw / 2f + 96; y = sh - h - 3; dir = -1; }
+                    if (gk.equals("HB")) { ax = 1; ay = 2; x = sw / 2f + 96 + (hotbarEnabled() ? 4 : 0); y = sh - h - (hotbarEnabled() ? 0 : 3); dir = -1; }
                     else if (gk.equals("CT")) { ax = 1; ay = 1; x = sw / 2f + 22; y = sh / 2f + 18; }
                     else {
                         Group g = GROUPS.get(gk);
                         ax = g.ax(); ay = g.ay(); dir = g.dir();
                         Float nv = next.get(gk);
-                        float gx = g.mx() * mg, gy = gk.equals("BC") ? g.my() : g.my() * mg;
+                        float gx = g.mx() * mg, gy = gk.equals("BC") ? (hideStatusBars() ? 31 : g.my()) : g.my() * mg;
                         x = ax == 0 ? gx : ax == 1 ? (sw - w) / 2f : sw - gx - w;
                         if (ay == 0) y = nv != null ? nv : gy + (gk.equals("TR") ? vanillaEffectsHeight() : 0);
                         else if (ay == 2) y = (nv != null ? nv : sh - gy) - h;
@@ -398,7 +424,7 @@ public final class Hud {
             case "InventoryHUD" -> new float[]{9 * 17 + 8, 3 * 17 + 8};
             case "Compass" -> mode(m, "Styl", "Bar").equals("Circle") ? new float[]{44, bo(m, "Stopnie") ? 54 : 44} : new float[]{150, bo(m, "Stopnie") ? 26 : 18};
             case "Keystrokes" -> keystrokes(null, m);
-            case "HealthBar" -> new float[]{182, mode(m, "Styl", "Bar").equals("Minimal") ? 10 : (bo(m, "Głód") ? 18 : 14)};
+            case "HealthBar" -> new float[]{182, switch (mode(m, "Styl", "Split")) { case "Split" -> 8f; case "Minimal" -> 10f; default -> bo(m, "Głód") ? 18f : 14f; }};
             case "Session" -> session(null, m);
             case "Spotify" -> spotify(null, m);
             default -> null;
@@ -567,6 +593,10 @@ public final class Hud {
         } else Fonts.drawV(ctx, name, x, cy, TEXT, Font.BOLD, sc);
     }
 
+    private static float capInfoW(Info i) {
+        return (icons ? 12.5f : 0) + Fonts.width(i.value(), Font.BOLD, 0.66f) + (i.label() != null ? 3 + Fonts.width(i.label(), Font.BOLD, 0.66f) : 0);
+    }
+
     private static float infoW(Info i) {
         return (icons ? 11.5f : 0) + Fonts.width(i.value(), Font.BOLD, 0.6f) + (i.label() != null ? 3 + Fonts.width(i.label(), Font.SEMIBOLD, 0.54f) : 0);
     }
@@ -578,9 +608,14 @@ public final class Hud {
     }
 
     private static float[] watermarkSize(Module m) {
-        String style = mode(m, "Styl", "Stats"), name = text(m, "Tekst", "WithClient");
+        String style = mode(m, "Styl", "Capsule"), name = text(m, "Tekst", "WithClient");
         List<Info> l = infos(m);
         switch (style) {
+            case "Capsule" -> {
+                float w = 10 + (bo(m, "Logo") ? 17 : 0);
+                for (Info i : l) w += capInfoW(i) + 11;
+                return new float[]{Math.max(40, w - 11 + 10), 19};
+            }
             case "Logo" -> { return new float[]{Math.max(nameW(name, 0.8f), Fonts.width(infoLine(l), Font.SEMIBOLD, 0.52f)) + 40, 30}; }
             case "Text" -> { return new float[]{nameW(name, 0.9f) + (l.isEmpty() ? 0 : 6 + Fonts.width(infoLine(l), Font.SEMIBOLD, 0.56f)) + 2, 12}; }
             case "Pill" -> {
@@ -602,10 +637,22 @@ public final class Hud {
     }
 
     private static void watermark(DrawContext ctx, Module m, float w, float h) {
-        String style = mode(m, "Styl", "Stats"), name = text(m, "Tekst", "WithClient");
+        String style = mode(m, "Styl", "Capsule"), name = text(m, "Tekst", "WithClient");
         boolean back = bo(m, "Tło");
         List<Info> l = infos(m);
         switch (style) {
+            case "Capsule" -> {
+                if (back) capsule(ctx, 0, 0, w, h, h / 2f);
+                float x = 10;
+                if (bo(m, "Logo")) { R2D.icon(ctx, "with_logo", x, h / 2f - 6, 12, 0xFFFFFFFF); x += 17; }
+                for (Info i : l) {
+                    if (icons) { R2D.icon(ctx, i.icon(), x, h / 2f - 4.5f, 9, accent); x += 12.5f; }
+                    Fonts.drawV(ctx, i.value(), x, h / 2f + 0.5f, TEXT, Font.BOLD, 0.66f);
+                    x += Fonts.width(i.value(), Font.BOLD, 0.66f);
+                    if (i.label() != null) { Fonts.drawV(ctx, i.label(), x + 3, h / 2f + 0.5f, TEXT, Font.BOLD, 0.66f); x += 3 + Fonts.width(i.label(), Font.BOLD, 0.66f); }
+                    x += 11;
+                }
+            }
             case "Logo" -> {
                 if (back) panel(ctx, 0, 0, w, h);
                 R2D.roundRectV(ctx, 5, 4, 22, 22, 6, 0xFF26262C, 0xFF0E0E11);
@@ -830,13 +877,13 @@ public final class Hud {
     }
 
     private static float[] keybinds(DrawContext ctx, Module kb) {
-        boolean onlyOn = bo(kb, "Tylko włączone"), head = bo(kb, "Nagłówek"), pills = mode(kb, "Styl", "Embed").equals("Pills");
+        boolean onlyOn = bo(kb, "Tylko włączone"), head = bo(kb, "Nagłówek"), pills = mode(kb, "Styl", "Pills").equals("Pills");
         int max = (int) num(kb, "Max", 10);
         List<Module> l = new ArrayList<>();
         for (Module m : Modules.all()) if (m.key >= 0 && (!onlyOn || m.isEnabled())) l.add(m);
         l.sort(Comparator.comparing((Module m) -> !m.isEnabled()).thenComparing(m -> m.name));
         if (l.size() > max) l = l.subList(0, max);
-        if (mode(kb, "Styl", "Embed").equals("Embed")) {
+        if (mode(kb, "Styl", "Pills").equals("Embed")) {
             float rowH = 13;
             String title = "Keybinds", badge = String.valueOf(l.size());
             float w = head ? embedHeadW(title, badge) : 80;
@@ -861,36 +908,35 @@ public final class Hud {
             return null;
         }
         if (pills) {
-            float rowH = 13, gap = 3, headH = head ? 15 + gap : 0;
-            float hw = 6 + (icons ? 11 : 0) + Fonts.width("Keybinds", Font.BOLD, 0.6f) + 7;
+            float rowH = 15, gap = 3, headH = head ? 16 + gap : 0, fs = 0.62f;
+            float hw = 9 + Fonts.width("Keybinds", Font.BOLD, 0.66f) + (icons ? 18 : 0) + 7;
             float w = head ? hw : 40;
-            for (Module m : l) w = Math.max(w, 12 + Fonts.width(m.name, Font.SEMIBOLD, 0.58f) + gap + Math.max(13, Fonts.width(keyName(m.key), Font.BOLD, 0.5f) + 8));
-            if (l.isEmpty()) w = Math.max(w, 12 + Fonts.width(t("Brak klawiszy", "No keybinds"), Font.SEMIBOLD, 0.56f));
+            for (Module m : l) w = Math.max(w, 16 + Fonts.width(m.name, Font.SEMIBOLD, fs) + gap + Math.max(rowH, Fonts.width(keyName(m.key), Font.BOLD, 0.56f) + 10));
+            if (l.isEmpty()) w = Math.max(w, 16 + Fonts.width(t("Brak klawiszy", "No keybinds"), Font.SEMIBOLD, 0.58f));
             float h = headH + Math.max(1, l.size()) * (rowH + gap) - gap;
             if (ctx == null) return new float[]{w, h};
             if (head) {
                 float hx = curRight ? w - hw : 0;
-                panel(ctx, hx, 0, hw, 15);
-                float x = hx + 6;
-                if (icons) { R2D.icon(ctx, "l_keyboard", x, 3.5f, 8, accent); x += 11; }
-                Fonts.drawV(ctx, "Keybinds", x, 8, TEXT, Font.BOLD, 0.6f);
+                capsule(ctx, hx, 0, hw, 16, 8);
+                Fonts.drawV(ctx, "Keybinds", hx + 9, 8.5f, TEXT, Font.BOLD, 0.66f);
+                if (icons) R2D.icon(ctx, "l_keyboard", hx + hw - 7 - 11, 3, 10, accent);
             }
             float y = headH;
             if (l.isEmpty()) {
-                float ew = 12 + Fonts.width(t("Brak klawiszy", "No keybinds"), Font.SEMIBOLD, 0.56f);
-                panel(ctx, curRight ? w - ew : 0, y, ew, rowH);
-                Fonts.drawV(ctx, t("Brak klawiszy", "No keybinds"), (curRight ? w - ew : 0) + 6, y + rowH / 2f + 0.5f, FAINT, Font.SEMIBOLD, 0.56f);
+                float ew = 16 + Fonts.width(t("Brak klawiszy", "No keybinds"), Font.SEMIBOLD, 0.58f);
+                capsule(ctx, curRight ? w - ew : 0, y, ew, rowH, rowH / 2f);
+                Fonts.drawV(ctx, t("Brak klawiszy", "No keybinds"), (curRight ? w - ew : 0) + 8, y + rowH / 2f + 0.5f, FAINT, Font.SEMIBOLD, 0.58f);
             }
             for (Module m : l) {
                 float on = KEYS.computeIfAbsent(m.name, k -> new Anim(m.isEnabled() ? 1 : 0, 12)).animate(m.isEnabled() ? 1 : 0);
                 String k = keyName(m.key);
-                float nw = 12 + Fonts.width(m.name, Font.SEMIBOLD, 0.58f), kw = Math.max(13, Fonts.width(k, Font.BOLD, 0.5f) + 8);
+                float nw = 16 + Fonts.width(m.name, Font.SEMIBOLD, fs), kw = Math.max(rowH, Fonts.width(k, Font.BOLD, 0.56f) + 10);
                 float x = curRight ? w - nw - gap - kw : 0;
-                panel(ctx, x, y, nw, rowH);
-                Fonts.drawV(ctx, m.name, x + 6, y + rowH / 2f + 0.5f, R2D.blend(FAINT, TEXT, on), Font.SEMIBOLD, 0.58f);
-                panel(ctx, x + nw + gap, y, kw, rowH);
-                if (on > 0.01f) R2D.roundRect(ctx, x + nw + gap, y, kw, rowH, Math.min(radius, rowH / 2f), R2D.withAlpha(accent, 0.14f * on));
-                Fonts.drawV(ctx, k, x + nw + gap + (kw - Fonts.width(k, Font.BOLD, 0.5f)) / 2f, y + rowH / 2f + 0.5f, R2D.blend(FAINT, TEXT, on), Font.BOLD, 0.5f);
+                capsule(ctx, x, y, nw, rowH, rowH / 2f);
+                Fonts.drawV(ctx, m.name, x + 8, y + rowH / 2f + 0.5f, R2D.blend(0xFF8E8E98, TEXT, on), Font.SEMIBOLD, fs);
+                capsule(ctx, x + nw + gap, y, kw, rowH, rowH / 2f);
+                if (on > 0.01f) R2D.roundOutline(ctx, x + nw + gap, y, kw, rowH, rowH / 2f, 0.6f, R2D.withAlpha(accent, 0.55f * on));
+                Fonts.drawV(ctx, k, x + nw + gap + (kw - Fonts.width(k, Font.BOLD, 0.56f)) / 2f, y + rowH / 2f + 0.5f, R2D.blend(0xFF8E8E98, TEXT, on), Font.BOLD, 0.56f);
                 y += rowH + gap;
             }
             return null;
@@ -1237,25 +1283,25 @@ public final class Hud {
             for (int i = 3; i >= 0; i--) st.add(mc.player.getInventory().getArmorStack(i));
         }
         int n = st.size();
-        float cell = 18, extra = pct ? 7 : 3;
-        float w = vert ? (pct ? 44 : 26) : n * cell + 6, h = vert ? n * cell + 6 : cell + extra + 6;
-        if (ctx == null) return new float[]{Math.max(w, 20), Math.max(h, 20)};
-        panel(ctx, 0, 0, w, h);
+        float cell = 20;
+        float w = vert ? (pct ? 46 : 24) : n * cell + 4, h = vert ? n * cell + 4 : 22 + (pct ? 6 : 0);
+        if (ctx == null) return new float[]{Math.max(w, 22), Math.max(h, 22)};
+        capsule(ctx, 0, 0, w, h, Math.min(radius + 2, 8));
         for (int i = 0; i < n; i++) {
             ItemStack s = st.get(i);
-            float x = vert ? 4 : 3 + i * cell, y = vert ? 3 + i * cell : 3;
-            R2D.roundRect(ctx, x + 1, y + 1, 16, 16, 3, 0x0EFFFFFF);
-            if (s.isEmpty()) continue;
-            item(ctx, s, x + 1, y + 1, 16, s.getCount() > 1);
+            float x = vert ? 4 : 4 + i * cell, y = vert ? 3 + i * cell : 2;
+            if (s.isEmpty()) { R2D.roundRect(ctx, x + 2, y + 2, 12, 12, 3, 0x0CFFFFFF); continue; }
+            item(ctx, s, x, y, 16, s.getCount() > 1, true);
             if (s.isDamageable()) {
                 float f = 1 - (float) s.getDamage() / Math.max(1, s.getMaxDamage());
                 int c = f > 0.5f ? accent : f > 0.2f ? 0xFFF2C94C : 0xFFFF5C7A;
                 if (vert) {
+                    durability(ctx, s, x + 2, y + 17, 12);
                     if (pct) Fonts.drawV(ctx, Math.round(f * 100) + "%", x + 20, y + 9.5f, c, Font.BOLD, 0.5f);
                 } else {
-                    R2D.roundRect(ctx, x + 2, y + 17.5f, 14, 1.5f, 0.75f, 0x24FFFFFF);
-                    R2D.roundRect(ctx, x + 2, y + 17.5f, Math.max(1.5f, 14 * f), 1.5f, 0.75f, c);
-                    if (pct) { String p = String.valueOf(Math.round(f * 100)); Fonts.drawCentered(ctx, p, x + 9, y + 19.8f, DIM, Font.BOLD, 0.42f); }
+                    R2D.roundRect(ctx, x + 2, y + 17.5f, 12, 1.6f, 0.8f, 0x30FFFFFF);
+                    R2D.roundRect(ctx, x + 2, y + 17.5f, Math.max(1.6f, 12 * f), 1.6f, 0.8f, c);
+                    if (pct) Fonts.drawCentered(ctx, String.valueOf(Math.round(f * 100)), x + 8, y + 19.8f, DIM, Font.BOLD, 0.42f);
                 }
             }
         }
@@ -1435,13 +1481,38 @@ public final class Hud {
 
     // ================================================================== pasek zdrowia
 
+    /** moduł HealthBar zastępuje serca, zbroję i głód Minecrafta */
+    public static boolean hideStatusBars() {
+        Module m = mod("HealthBar");
+        return m != null && m.isEnabled() && bo(m, "Ukryj serca Minecrafta");
+    }
+
+    private static final Anim foodA = new Anim(1, 9);
+
     private static void healthBar(DrawContext ctx, Module m, float w, float h) {
         if (mc.player == null) return;
         var p = mc.player;
         float hp = p.getHealth(), max = p.getMaxHealth(), abs = bo(m, "Absorpcja") ? p.getAbsorptionAmount() : 0;
         float total = max + abs;
+        if (mode(m, "Styl", "Split").equals("Split")) {
+            float gap = 4, bw = (w - gap) / 2f, bh = 7.5f;
+            float hf = barA.animate(hp / Math.max(1, max)), ff = foodA.animate(p.getHungerManager().getFoodLevel() / 20f);
+            // zdrowie (czerwone) + absorpcja
+            R2D.roundRect(ctx, 0, 0, bw, bh, 2.5f, R2D.withAlpha(0xFF000000, 0.55f * opacity));
+            R2D.roundRectH(ctx, 0, 0, Math.max(bh, bw * hf), bh, 2.5f, 0xFFE23A52, 0xFFFF5C6E);
+            if (abs > 0) R2D.roundRect(ctx, 0, 0, Math.max(bh, bw * Math.min(1, abs / Math.max(1, max))), 2, 1, 0xFFF2C94C);
+            String hv = String.valueOf(Math.round(hp + abs));
+            Fonts.drawCentered(ctx, hv, bw / 2f, bh / 2f - Fonts.height(0.46f) / 2f + 0.5f, 0xFFFFFFFF, Font.BOLD, 0.46f);
+            // głód (pomarańczowy)
+            float fx = bw + gap;
+            R2D.roundRect(ctx, fx, 0, bw, bh, 2.5f, R2D.withAlpha(0xFF000000, 0.55f * opacity));
+            R2D.roundRectH(ctx, fx, 0, Math.max(bh, bw * ff), bh, 2.5f, 0xFFF08A2C, 0xFFFFAE4A);
+            String fv = String.valueOf(p.getHungerManager().getFoodLevel());
+            Fonts.drawCentered(ctx, fv, fx + bw / 2f, bh / 2f - Fonts.height(0.46f) / 2f + 0.5f, 0xFFFFFFFF, Font.BOLD, 0.46f);
+            return;
+        }
         float f = barA.animate(hp / Math.max(1, total));
-        boolean minimal = mode(m, "Styl", "Bar").equals("Minimal"), food = bo(m, "Głód"), txt = bo(m, "Tekst");
+        boolean minimal = mode(m, "Styl", "Split").equals("Minimal"), food = bo(m, "Głód"), txt = bo(m, "Tekst");
         if (minimal) {
             if (txt) {
                 String v = String.format(Locale.ROOT, "%.0f", hp + abs);
@@ -1607,65 +1678,149 @@ public final class Hud {
     private static String mArtist() { return Media.active ? Media.artist : preview ? "M83" : "Spotify"; }
     private static String time(double s) { int x = (int) Math.max(0, s); return x / 60 + ":" + String.format("%02d", x % 60); }
 
+    private static float vinylAngle;
+    private static long vinylLast = System.currentTimeMillis();
+
+    /** płyta winylowa z okładką w środku – kręci się, gdy gra muzyka */
+    private static void vinyl(DrawContext ctx, float cx, float cy, float r, boolean spin) {
+        long now = System.currentTimeMillis();
+        if (spin) vinylAngle = (vinylAngle + (now - vinylLast) / 1000f * 80f) % 360f;
+        vinylLast = now;
+        R2D.circle(ctx, cx, cy, r + 0.6f, 0x33FFFFFF);
+        R2D.circle(ctx, cx, cy, r, 0xFF0A0A0C);
+        for (float rr = r - 1.6f; rr > r * 0.5f; rr -= 1.9f)
+            R2D.roundOutline(ctx, cx - rr, cy - rr, rr * 2, rr * 2, rr, 0.35f, 0x16FFFFFF);
+        // odblask (nie kręci się – jak światło na prawdziwej płycie)
+        int n = 10; float[] seg = new float[n * 8]; int[] cols = new int[n * 2]; int k = 0;
+        for (int i = 0; i < n; i++) {
+            for (int side = 0; side < 2; side++) {
+                double a0 = Math.toRadians((side == 0 ? -150 : 30) + i * 6), a1 = a0 + Math.toRadians(6);
+                float rr = r * 0.78f;
+                seg[k * 4] = cx + (float) Math.cos(a0) * rr; seg[k * 4 + 1] = cy + (float) Math.sin(a0) * rr;
+                seg[k * 4 + 2] = cx + (float) Math.cos(a1) * rr; seg[k * 4 + 3] = cy + (float) Math.sin(a1) * rr;
+                cols[k++] = R2D.withAlpha(0xFFFFFFFF, 0.22f * (float) Math.sin(Math.PI * (i + 0.5) / n));
+            }
+        }
+        R2D.lines(ctx, seg, cols, k, r * 0.28f);
+        float lr = r * 0.42f;
+        ctx.getMatrices().push();
+        ctx.getMatrices().translate(cx, cy, 0);
+        ctx.getMatrices().multiply(net.minecraft.util.math.RotationAxis.POSITIVE_Z.rotationDegrees(vinylAngle));
+        ctx.getMatrices().translate(-cx, -cy, 0);
+        if (Media.hasArt && Media.active) R2D.roundTexture(ctx, Media.ART, cx - lr, cy - lr, lr * 2, lr * 2, lr, 0, 0, 1, 1, 0xFFFFFFFF);
+        else {
+            R2D.circle(ctx, cx, cy, lr, R2D.blend(accent, 0xFF000000, 0.15f));
+            R2D.circle(ctx, cx + lr * 0.35f, cy, lr * 0.18f, R2D.withAlpha(0xFFFFFFFF, 0.5f));
+        }
+        ctx.getMatrices().pop();
+        R2D.circle(ctx, cx, cy, 1.5f, 0xFF0A0A0C);
+    }
+
     private static float[] spotify(DrawContext ctx, Module m) {
         if (!mediaShown(m)) return null;
-        boolean compact = mode(m, "Styl", "Card").equals("Compact");
+        String style = mode(m, "Styl", "Vinyl");
+        boolean compact = style.equals("Compact"), vinyl = style.equals("Vinyl");
         boolean art = bo(m, "Okładka"), btn = bo(m, "Przyciski"), prog = bo(m, "Pasek postępu");
         String lyric = bo(m, "Tekst piosenki") ? (Media.active ? Media.lyric() : preview ? "Waiting in a car, waiting for a ride in the dark" : "") : "";
         boolean lyr = !lyric.isEmpty();
+        boolean playing = Media.playing || (preview && !Media.active);
         if (compact) {
             String txt = mTitle() + "  ·  " + mArtist();
-            float w = 6 + 12 + Fonts.width(txt, Font.SEMIBOLD, 0.58f) + 6 + (btn ? 14 : 0);
-            w = Math.min(w, 220);
+            float w = Math.min(6 + 12 + Fonts.width(txt, Font.SEMIBOLD, 0.58f) + 6 + (btn ? 14 : 0), 220);
             if (ctx == null) return new float[]{w, 16};
-            panel(ctx, 0, 0, w, 16);
-            eq(ctx, 6, 8, Media.playing || preview);
-            Fonts.drawV(ctx, Fonts.trim(txt, Font.SEMIBOLD, 0.58f, w - 24 - (btn ? 14 : 0)), 18, 8.5f, TEXT, Font.SEMIBOLD, 0.58f);
-            if (btn) { R2D.icon(ctx, Media.playing ? "l_pause" : "l_play", w - 14, 4.5f, 7, accent); clickable(w - 16, 0, 16, 16, Media::playPause); }
+            capsule(ctx, 0, 0, w, 16, 8);
+            eq(ctx, 7, 8, playing);
+            Fonts.drawV(ctx, Fonts.trim(txt, Font.SEMIBOLD, 0.58f, w - 24 - (btn ? 14 : 0)), 19, 8.5f, TEXT, Font.SEMIBOLD, 0.58f);
+            if (btn) { R2D.icon(ctx, playing ? "l_pause" : "l_play", w - 15, 4.5f, 7, accent); clickable(w - 17, 0, 17, 16, Media::playPause); }
             return null;
         }
-        float w = 176, cardH = 40, h = cardH + (lyr ? 18 : 0);
+        float cw = 188, ch = 48, lyrH = 17, lyrGap = 5;
+        float lw = lyr ? Math.min(cw + 60, 26 + Fonts.width(lyric, Font.BOLD, 0.62f) + 12) : 0;
+        float w = Math.max(cw, lw), h = ch + (lyr ? lyrH + lyrGap : 0);
         if (ctx == null) return new float[]{w, h};
-        panel(ctx, 0, 0, w, cardH);
-        float tx = 7;
-        if (art) {
-            float s = 28;
-            if (Media.hasArt && Media.active) R2D.roundTexture(ctx, Media.ART, 6, 6, s, s, Math.min(radius, 6), 0, 0, 1, 1, 0xFFFFFFFF);
-            else {
-                R2D.roundRectV(ctx, 6, 6, s, s, Math.min(radius, 6), 0xFF2A2A31, 0xFF141418);
-                R2D.icon(ctx, "l_music", 6 + s / 2f - 6, 6 + s / 2f - 6, 12, accent);
-            }
-            tx = 6 + s + 7;
+        float cy0 = 0;
+        if (lyr) {
+            // tekst piosenki w kapsule nad kartą
+            float lx = (w - lw) / 2f;
+            capsule(ctx, lx, 0, lw, lyrH, lyrH / 2f);
+            eq(ctx, lx + 9, lyrH / 2f, playing);
+            Fonts.drawV(ctx, Fonts.trim(lyric, Font.BOLD, 0.62f, lw - 30), lx + 22, lyrH / 2f + 0.5f, TEXT, Font.BOLD, 0.62f);
+            cy0 = lyrH + lyrGap;
         }
-        float ctlW = btn ? 50 : 0;
-        Fonts.drawV(ctx, Fonts.trim(mTitle(), Font.BOLD, 0.62f, w - tx - ctlW - 6), tx, 12, TEXT, Font.BOLD, 0.62f);
-        Fonts.drawV(ctx, Fonts.trim(mArtist(), Font.SEMIBOLD, 0.5f, w - tx - ctlW - 6), tx, 21.5f, DIM, Font.SEMIBOLD, 0.5f);
+        float cx0 = (w - cw) / 2f;
+        ctx.getMatrices().push();
+        ctx.getMatrices().translate(cx0, cy0, 0);
+        curX += cx0 * curS; curY += cy0 * curS;
+        capsule(ctx, 0, 0, cw, ch, Math.min(radius + 1, 7));
+        R2D.gradientV(ctx, 1, 1, cw - 2, ch * 0.45f, 0x0CFFFFFF, 0x00FFFFFF);
+        float tx = 8;
+        if (art || vinyl) {
+            float d = 38;
+            if (vinyl) vinyl(ctx, 5 + d / 2f, ch / 2f, d / 2f, playing);
+            else if (Media.hasArt && Media.active) R2D.roundTexture(ctx, Media.ART, 5, 5, d, d, Math.min(radius, 6), 0, 0, 1, 1, 0xFFFFFFFF);
+            else { R2D.roundRectV(ctx, 5, 5, d, d, Math.min(radius, 6), 0xFF2A2A31, 0xFF141418); R2D.icon(ctx, "l_music", 5 + d / 2f - 7, 5 + d / 2f - 7, 14, accent); }
+            tx = 5 + d + 8;
+        }
+        float textW = cw - tx - 8;
+        Fonts.drawV(ctx, Fonts.trim(mTitle(), Font.BOLD, 0.64f, textW), tx, 10, TEXT, Font.BOLD, 0.64f);
+        Fonts.drawV(ctx, Fonts.trim(mArtist(), Font.SEMIBOLD, 0.52f, textW), tx, 19.5f, DIM, Font.SEMIBOLD, 0.52f);
         if (btn) {
-            float cx = w - 8 - 14, cy = 6;
-            R2D.icon(ctx, "l_skip_forward", cx + 15 - 2, cy + 3.5f, 7, DIM);
-            clickable(cx + 12, cy, 12, 14, Media::next);
-            R2D.roundRect(ctx, cx - 3, cy, 14, 14, 4, R2D.withAlpha(accent, 0.92f));
-            R2D.icon(ctx, Media.playing || (preview && !Media.active) ? "l_pause" : "l_play", cx + 0.5f, cy + 3.5f, 7, onAccent());
-            clickable(cx - 3, cy, 14, 14, Media::playPause);
-            R2D.icon(ctx, "l_skip_back", cx - 16, cy + 3.5f, 7, DIM);
-            clickable(cx - 19, cy, 12, 14, Media::previous);
+            float mid = tx + textW / 2f, by = 24;
+            R2D.icon(ctx, "l_chevron_left", mid - 23, by + 3, 8, DIM);
+            clickable(mid - 27, by, 14, 14, Media::previous);
+            R2D.roundRect(ctx, mid - 7, by, 14, 14, 4, R2D.withAlpha(accent, 0.9f));
+            R2D.icon(ctx, playing ? "l_pause" : "l_play", mid - 3.5f, by + 3.5f, 7, onAccent());
+            clickable(mid - 7, by, 14, 14, Media::playPause);
+            R2D.icon(ctx, "l_chevron_right", mid + 15, by + 3, 8, DIM);
+            clickable(mid + 13, by, 14, 14, Media::next);
         }
         if (prog) {
-            double dur = Media.active ? Media.duration : preview ? 241 : 0, p = Media.active ? Media.pos() : preview ? 8 : 0;
+            double dur = Media.active ? Media.duration : preview ? 172 : 0, p = Media.active ? Media.pos() : preview ? 73 : 0;
             float f = dur > 0 ? (float) Math.min(1, p / dur) : 0;
-            String tt = time(p);
-            float bx = tx, bw = w - tx - 8 - Fonts.width(tt, Font.SEMIBOLD, 0.46f) - 5, by = 31;
-            R2D.roundRect(ctx, bx, by, bw, 2.5f, 1.25f, 0x26FFFFFF);
-            R2D.roundRect(ctx, bx, by, Math.max(2.5f, bw * f), 2.5f, 1.25f, accent);
-            Fonts.drawV(ctx, tt, w - 8 - Fonts.width(tt, Font.SEMIBOLD, 0.46f), by + 1.5f, FAINT, Font.SEMIBOLD, 0.46f);
+            String t0 = time(p), t1 = time(dur);
+            float by = ch - 6;
+            float w0 = Fonts.width(t0, Font.SEMIBOLD, 0.44f), w1 = Fonts.width(t1, Font.SEMIBOLD, 0.44f);
+            Fonts.drawV(ctx, t0, tx, by + 0.5f, FAINT, Font.SEMIBOLD, 0.44f);
+            Fonts.drawV(ctx, t1, cw - 8 - w1, by + 0.5f, FAINT, Font.SEMIBOLD, 0.44f);
+            float bx = tx + w0 + 5, bw = cw - 8 - w1 - 5 - bx;
+            R2D.roundRect(ctx, bx, by - 1, bw, 2.2f, 1.1f, 0x26FFFFFF);
+            R2D.roundRect(ctx, bx, by - 1, Math.max(2.2f, bw * f), 2.2f, 1.1f, accent);
+            R2D.glow(ctx, bx + bw * f - 5, by - 5, 10, 10, R2D.withAlpha(accent, 0.35f));
         }
-        if (lyr) {
-            float ly = cardH + 3, lw = Math.min(w, 22 + Fonts.width(lyric, Font.SEMIBOLD, 0.56f) + 8), lx = (w - lw) / 2f;
-            panel(ctx, lx, ly, lw, 15);
-            eq(ctx, lx + 7, ly + 7.5f, Media.playing || preview);
-            Fonts.drawV(ctx, Fonts.trim(lyric, Font.SEMIBOLD, 0.56f, lw - 26), lx + 19, ly + 8, TEXT, Font.SEMIBOLD, 0.56f);
-        }
+        curX -= cx0 * curS; curY -= cy0 * curS;
+        ctx.getMatrices().pop();
         return null;
+    }
+
+    // ------------------------------------------------------------------ duży tekst piosenki na ekranie
+
+    private static String kLine = "";
+    private static long kSince;
+
+    private static void drawKaraoke(DrawContext ctx) {
+        Module m = mod("Spotify");
+        if (m == null || !m.isEnabled() || !bo(m, "Napisy na ekranie") || !Media.active) return;
+        String line = Media.lyric();
+        if (line.isEmpty()) { kLine = ""; return; }
+        long now = System.currentTimeMillis();
+        if (!line.equals(kLine)) { kLine = line; kSince = now; }
+        float in = Anim.easeOutCubic((now - kSince) / 350f);
+        float sw = ctx.getScaledWindowWidth(), sh = ctx.getScaledWindowHeight();
+        float sc = 1.45f * base();
+        float tw = Fonts.width(line, Font.BOLD, sc);
+        if (tw > sw * 0.9f) { sc *= sw * 0.9f / tw; tw = Fonts.width(line, Font.BOLD, sc); }
+        float x = (sw - tw) / 2f, y = sh * 0.38f + (1 - in) * 6;
+        float prevA = R2D.alpha;
+        R2D.alpha = in;
+        Fonts.draw(ctx, line, x + 1.2f, y + 1.2f, 0x66000000, Font.BOLD, sc);
+        Fonts.draw(ctx, line, x, y, 0x66FFFFFF, Font.BOLD, sc);
+        float pr = Media.lyricProgress();
+        if (pr > 0) {
+            R2D.scissor(ctx, x - 2, y - 4, (tw + 4) * pr, Fonts.height(sc) + 8);
+            Fonts.draw(ctx, line, x, y, accent, Font.BOLD, sc);
+            R2D.endScissor(ctx);
+        }
+        R2D.alpha = prevA;
     }
 
     /** animowany "equalizer" (3 słupki) */
@@ -1693,8 +1848,9 @@ public final class Hud {
         ITEMS.clear();
         float sw = ctx.getScaledWindowWidth(), sh = ctx.getScaledWindowHeight();
         float x0 = sw / 2f - 91, y0 = sh - 22;
-        String style = mode(m, "Styl", "Clean");
-        if (style.equals("Panel")) panel(ctx, x0, y0, 182, 22, Math.min(radius + 2, 9));
+        String style = mode(m, "Styl", "Panel");
+        boolean dura = bo(m, "Paski wytrzymałości");
+        if (style.equals("Panel")) capsule(ctx, x0 - 2, y0 - 1, 186, 23, Math.min(radius + 2, 8));
         int sel = p.getInventory().selectedSlot;
         float target = x0 + 1 + sel * 20;
         if (Math.abs(hotSel.raw() - target) > 200) hotSel.snap(target);
@@ -1703,9 +1859,9 @@ public final class Hud {
             float x = x0 + 1 + i * 20;
             if (!style.equals("Panel")) R2D.roundRect(ctx, x + 1, y0 + 1, 18, 18, 5, R2D.withAlpha(0xFF000000, 0.32f * opacity));
         }
-        R2D.glow(ctx, sx - 6, y0 - 6, 32, 32, R2D.withAlpha(accent, 0.18f));
-        R2D.roundRect(ctx, sx, y0, 20, 20, 6, R2D.withAlpha(accent, 0.14f));
-        R2D.roundOutline(ctx, sx, y0, 20, 20, 6, 0.9f, R2D.withAlpha(accent, 0.95f));
+        R2D.glow(ctx, sx - 6, y0 - 6, 32, 32, R2D.withAlpha(accent, 0.14f));
+        R2D.roundRect(ctx, sx + 0.5f, y0 + 0.5f, 19, 20, 5.5f, R2D.withAlpha(accent, 0.08f));
+        R2D.roundOutline(ctx, sx + 0.5f, y0 + 0.5f, 19, 20, 5.5f, 1.1f, R2D.withAlpha(accent, 0.95f));
         float tick = tc.getTickDelta(true);
         for (int i = 0; i < 9; i++) {
             ItemStack st = p.getInventory().main.get(i);
@@ -1719,16 +1875,18 @@ public final class Hud {
                 ctx.getMatrices().scale(1 / g, (g + 1) / 2f, 1);
                 ctx.getMatrices().translate(-(x + 8), -(y + 12), 0);
             }
-            item(ctx, st, x, y, 16, true);
+            item(ctx, st, x, y, 16, true, dura);
             ctx.getMatrices().pop();
+            if (dura) durability(ctx, st, x + 2, y + 17.5f, 12);
             if (bo(m, "Numery slotów")) Fonts.drawV(ctx, String.valueOf(i + 1), x - 1, y + 1, FAINT, Font.BOLD, 0.4f);
         }
         ItemStack off = p.getOffHandStack();
         if (!off.isEmpty()) {
             boolean left = p.getMainArm().getOpposite() == net.minecraft.util.Arm.LEFT;
             float ox = left ? x0 - 26 : x0 + 182 + 4;
-            panel(ctx, ox, y0, 22, 22, Math.min(radius + 2, 8));
-            item(ctx, off, ox + 3, y0 + 3, 16, true);
+            capsule(ctx, ox, y0 - 1, 23, 23, Math.min(radius + 2, 8));
+            item(ctx, off, ox + 3.5f, y0 + 2, 16, true, dura);
+            if (dura) durability(ctx, off, ox + 5.5f, y0 + 19.5f, 12);
         }
         flushItems(ctx);
         R2D.alpha = prevA; R2D.radiusMul = prevR;

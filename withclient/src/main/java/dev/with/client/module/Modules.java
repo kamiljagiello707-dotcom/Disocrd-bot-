@@ -25,7 +25,7 @@ public final class Modules {
     private static final Path FILE = FabricLoader.getInstance().getConfigDir().resolve("withclient").resolve("modules.json");
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
     private static final Set<Integer> held = new HashSet<>();
-    private static final int CONFIG_VERSION = 5;
+    private static final int CONFIG_VERSION = 6;
 
     public static List<Module> all() { return ALL; }
     public static Module get(String name) { for (Module m : ALL) if (m.name.equals(name)) return m; return null; }
@@ -179,18 +179,18 @@ public final class Modules {
         m("LiquidInteract", WORLD, "droplets", "Klikanie w ciecze", "Interact with liquids", b("Woda", true), b("Lawa", true));
         m("ChestESP", WORLD, "package-open", "Podświetla skrzynie", "Highlights chests", mu("Bloki", a("Skrzynie", "Ender", "Shulkery", "Beczki", "Spawnery"), "Skrzynie", "Ender", "Shulkery"), cl("Kolor", WHITE), n("Zasięg", 32, 8, 96, 4, "bl"));
         // ================= HUD =================
-        m("Watermark", HUD, "badge", "Pasek ze statystykami (FPS, ping, serwer, TPS, nick)", "Stats bar (FPS, ping, server, TPS, name)", o("Styl", "Stats", "Bar", "Pill", "Logo", "Text"),
-                mu("Info", a("FPS", "Ping", "Serwer", "TPS", "Nick", "Czas"), "FPS", "Ping", "Serwer", "TPS", "Nick"), b("Logo", false), tx("Tekst", "WithClient", 20), b("Tło", true)).on();
+        m("Watermark", HUD, "badge", "Pasek ze statystykami (FPS, ping, serwer, TPS, nick)", "Stats bar (FPS, ping, server, TPS, name)", o("Styl", "Capsule", "Stats", "Bar", "Pill", "Logo", "Text"),
+                mu("Info", a("FPS", "Ping", "Serwer", "TPS", "Nick", "Czas"), "Ping", "Serwer", "TPS", "Nick", "Czas"), b("Logo", true), tx("Tekst", "WithClient", 20), b("Tło", true)).on();
         m("ArrayList", HUD, "list", "Lista włączonych modułów", "Enabled module list", o("Styl", "Embed", "Pills", "Classic", "Text"), o("Sortowanie", "Length", "Alphabet"),
                 o("Animacja", "Slide", "Fade", "None"), b("Grupuj kategorie", true), b("Nagłówek", true), b("Ikony", true), b("Sufiks trybu", true), b("Tło", true), b("Pasek boczny", true), b("Ukryj wizualne", false), cl("Kolor", WHITE)).on();
-        m("Keybinds", HUD, "keyboard", "Lista przypisanych klawiszy", "Bound keys list", o("Styl", "Embed", "Pills"), b("Tylko włączone", false), b("Nagłówek", true), n("Max", 10, 3, 20, 1, "")).on();
+        m("Keybinds", HUD, "keyboard", "Lista przypisanych klawiszy", "Bound keys list", o("Styl", "Pills", "Embed"), b("Tylko włączone", false), b("Nagłówek", true), n("Max", 10, 3, 20, 1, "")).on();
         m("TargetHUD", HUD, "contact", "Info o przeciwniku, którego bijesz", "Info about the enemy you hit", o("Styl", "Modern", "Model", "Compact", "Minimal"),
                 b("Głowa", true), b("Zbroja", true), b("Animacja zdrowia", true), b("Cząsteczki", true), n("Zasięg", 8, 3, 20, 1, "m")).on();
         m("Coordinates", HUD, "map-pin", "Współrzędne", "Coordinates", o("Styl", "Pill", "Panel"), b("Nether", false), b("Kierunek", true), b("Biom", false));
         m("FPS", HUD, "activity", "Licznik FPS", "FPS counter", b("Wykres", false), b("Min/max", false));
         m("Ping", HUD, "signal", "Opóźnienie do serwera", "Server latency", b("Paski", true), b("Kolor wg wartości", false));
         m("TPS", HUD, "hourglass", "Wydajność serwera (szacowana)", "Server TPS (estimated)", b("Wykres", false));
-        m("ArmorHUD", HUD, "shield-half", "Stan zbroi i przedmiotu w ręce", "Armor and held item status", o("Układ", "Horizontal", "Vertical"), b("Procenty", true), b("Przedmiot w ręce", true));
+        m("ArmorHUD", HUD, "shield-half", "Stan zbroi i przedmiotu w ręce", "Armor and held item status", o("Układ", "Horizontal", "Vertical"), b("Procenty", false), b("Przedmiot w ręce", false));
         m("Potions", HUD, "flask-round", "Aktywne efekty", "Active effects", b("Ikony", true), b("Pasek czasu", true), o("Sortowanie", "Time", "Name"));
         m("InventoryHUD", HUD, "grid-3x3", "Podgląd ekwipunku", "Inventory preview", b("Tło", true));
         m("Notifications", HUD, "bell", "Powiadomienia o przełączeniu modułów", "Module toggle notifications", o("Styl", "Pill", "Card"), n("Czas", 2, 1, 6, 0.5, "s"),
@@ -200,13 +200,14 @@ public final class Modules {
         m("ServerInfo", HUD, "server", "Adres serwera i gracze online", "Server address and players online", b("Gracze online", true));
         m("CPS", HUD, "mouse-pointer-click", "Kliknięcia na sekundę", "Clicks per second");
         m("Keystrokes", HUD, "keyboard-music", "Podgląd wciskanych klawiszy", "Pressed keys overlay", n("Rozmiar", 18, 12, 28, 1, "px"), b("Mysz", true), b("Spacja", true), b("CPS", true));
-        m("HealthBar", HUD, "heart", "Pasek zdrowia nad paskiem przedmiotów", "Health bar above the hotbar", o("Styl", "Bar", "Minimal"), b("Tekst", true), b("Absorpcja", true), b("Głód", false));
+        m("HealthBar", HUD, "heart", "Pasek zdrowia nad paskiem przedmiotów", "Health bar above the hotbar", o("Styl", "Split", "Bar", "Minimal"), b("Ukryj serca Minecrafta", true), b("Tekst", true), b("Absorpcja", true), b("Głód", false));
         m("Session", HUD, "timer", "Czas gry, dystans, śmierci", "Playtime, distance, deaths", b("Czas gry", true), b("Dystans", true), b("Śmierci", true));
         m("Memory", HUD, "memory-stick", "Użycie pamięci RAM", "RAM usage");
         m("TotemCounter", HUD, "shield-plus", "Liczba totemów", "Totem count", b("Ukryj przy 0", false));
         m("Spotify", HUD, "music", "Co teraz gra: okładka, tytuł, sterowanie, tekst (przyciski działają przy otwartym czacie)", "Now playing: cover, title, controls, lyrics (buttons work with chat open)",
-                o("Styl", "Card", "Compact"), b("Okładka", true), b("Przyciski", true), b("Pasek postępu", true), b("Tekst piosenki", true), b("Ukryj gdy nic nie gra", true));
-        m("Hotbar", HUD, "panel-bottom", "Własny pasek przedmiotów", "Custom hotbar", o("Styl", "Clean", "Panel"), b("Animacja", true), b("Numery slotów", false));
+                o("Styl", "Vinyl", "Card", "Compact"), b("Okładka", true), b("Przyciski", true), b("Pasek postępu", true), b("Tekst piosenki", true),
+                b("Napisy na ekranie", false), b("Ukryj gdy nic nie gra", true));
+        m("Hotbar", HUD, "panel-bottom", "Własny pasek przedmiotów", "Custom hotbar", o("Styl", "Panel", "Clean"), b("Animacja", true), b("Paski wytrzymałości", true), b("Numery slotów", false));
         m("Compass", HUD, "compass", "Kompas", "Compass", o("Styl", "Bar", "Circle"), b("Stopnie", true));
         // ================= Kosmetyki =================
         m("Cape", COSMETICS, "flag", "Własna peleryna", "Custom cape", o("Peleryna", "WithClient", "Mono", "Stripes", "Minimal"), b("Fizyka", true), b("Widoczna dla innych", true));
@@ -335,6 +336,17 @@ public final class Modules {
                 if (w != null && w.setting("Info") != null) w.setting("Info").reset();
             }
             // 1.3: stary domyślny opis zasłaniał miejsce gry w statusie Discorda
+            // 1.5: wygląd z nagrania (kapsuła, pigułki, winyl, paski zdrowia i głodu, panel hotbara)
+            if (v < 6) {
+                for (String n : new String[]{"Watermark", "Keybinds", "Spotify", "HealthBar", "Hotbar"}) {
+                    Module m = get(n);
+                    if (m != null && m.setting("Styl") != null) m.setting("Styl").reset();
+                }
+                Module w = get("Watermark");
+                if (w != null) { if (w.setting("Info") != null) w.setting("Info").reset(); if (w.setting("Logo") != null) w.setting("Logo").reset(); }
+                Module ar = get("ArmorHUD");
+                if (ar != null) for (String n : new String[]{"Procenty", "Przedmiot w ręce"}) if (ar.setting(n) != null) ar.setting(n).reset();
+            }
             // 1.4: karty (embed) dla listy modułów i klawiszy
             if (v < 5) {
                 for (String n : new String[]{"ArrayList", "Keybinds"}) {

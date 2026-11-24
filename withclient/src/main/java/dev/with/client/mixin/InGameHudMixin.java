@@ -17,6 +17,11 @@ public class InGameHudMixin {
         if (Hud.hideVanillaEffects()) ci.cancel();
     }
 
+    @Inject(method = "renderStatusBars", at = @At("HEAD"), cancellable = true)
+    private void withclient$bars(DrawContext ctx, CallbackInfo ci) {
+        if (Hud.hideStatusBars()) ci.cancel();
+    }
+
     @Inject(method = "renderHotbar", at = @At("HEAD"), cancellable = true)
     private void withclient$hotbar(DrawContext ctx, RenderTickCounter tc, CallbackInfo ci) {
         if (Hud.hotbarEnabled()) { Hud.drawHotbar(ctx, tc); ci.cancel(); }

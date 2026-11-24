@@ -32,7 +32,7 @@ WithClient zastępuje ekrany Minecrafta własnymi:
 ## Status w Discordzie (DiscordRPC)
 
 Gdy grasz, Discord pokazuje **„Gra w WithClient”** z logo. Niżej widać
-„WithClient 1.4.0 · Minecraft 1.21.1”, miejsce gry (menu, tryb jednoosobowy, adres serwera) i czas gry.
+„WithClient 1.5.0 · Minecraft 1.21.1”, miejsce gry (menu, tryb jednoosobowy, adres serwera) i czas gry.
 
 Discord pokazuje nazwę i logo z **aplikacji Discord**, więc trzeba ją raz założyć (2 minuty):
 1. Wejdź na https://discord.com/developers/applications → **New Application**, nazwij ją `WithClient`.
@@ -117,19 +117,19 @@ a jego opcje zmieniają wygląd. Wszystko jest w stylu biało-czarnym.
 
 | Element | Co pokazuje | Opcje |
 |---|---|---|
-| **Watermark** | pasek: ikona + FPS, ping, serwer, TPS, nick (opcjonalnie logo i czas) | styl Stats / Bar / Pill / Logo / Text, własny tekst, tło |
+| **Watermark** | czarna kapsuła na środku u góry: logo + ping, serwer, TPS, nick, godzina (opcjonalnie FPS) | styl Capsule / Stats / Bar / Pill / Logo / Text, własny tekst, tło |
 | **ArrayList** | **karta „Moduły” (embed)**: pasek akcentu, nagłówek z liczbą aktywnych, moduły pogrupowane po kategoriach z ikoną i trybem; moduły wjeżdżają i wyjeżdżają | styl Embed / Pills / Classic / Text, grupowanie, nagłówek, sortowanie, animacja, ikony, kolor, ukrywanie wizualnych |
-| **Keybinds** | karta (embed) z nagłówkiem i licznikiem: kropka stanu, moduł i klawisz (włączone podświetlone) | styl Embed / Pills, tylko włączone, limit |
+| **Keybinds** | po lewej: nagłówek „Keybinds” z ikoną klawiatury, pod nim pigułki z modułem i kółko z klawiszem (włączone jaśniejsze) | styl Pills / Embed, tylko włączone, limit |
 | **TargetHUD** | przeciwnik, którego bijesz: zaokrąglona głowa (albo **obracający się model 3D**), przedmiot w ręce, HP z sercem, pasek z podziałką, śladem obrażeń i absorpcją, odległość, PRZEWAGA / SŁABIEJ, zbroja, trzęsienie i czerwony błysk przy trafieniu, cząsteczki | styl Modern / Model / Compact / Minimal, zasięg |
 | **Coordinates** | pigułka z pinezką: „1632, 68, 934” + kierunek; opcjonalnie Nether ↔ świat i biom | styl Pill / Panel |
 | **Potions** | efekty z ikoną, poziomem, czasem i paskiem (chowa ikony z Minecrafta) | sortowanie |
-| **ArmorHUD** | zbroja + przedmiot w ręce z paskiem wytrzymałości | poziomo / pionowo, procenty |
-| **HealthBar** | pasek zdrowia nad paskiem przedmiotów (absorpcja, głód) | Bar / Minimal |
+| **ArmorHUD** | ciemny panel obok hotbara: zbroja z kreskami wytrzymałości (opcjonalnie przedmiot w ręce) | poziomo / pionowo, procenty |
+| **HealthBar** | dwa paski nad hotbarem: zdrowie (czerwony) i głód (pomarańczowy) z liczbą w środku, absorpcja; chowa serca, zbroję i głód Minecrafta | styl Split / Bar / Minimal, ukrywanie serc |
 | **Keystrokes** | W A S D, LPM / PPM z CPS, spacja – podświetlają się po wciśnięciu | rozmiar |
 | **Compass** | kompas paskowy albo okrągły ze stopniami | |
 | **Notifications** | pigułka „Włączono KillAura” z małym przełącznikiem i licznikiem czasu w kółku | styl Pill / Card, czas, pozycja, dźwięk |
-| **Spotify** | co teraz gra: okładka, tytuł, wykonawca, poprzedni / pauza / następny, pasek postępu i zsynchronizowany tekst piosenki | styl Card / Compact; przyciski klikasz przy otwartym czacie |
-| **Hotbar** | własny pasek przedmiotów z przesuwanym podświetleniem slotu i drugą ręką | styl Clean / Panel, animacja, numery |
+| **Spotify** | tekst piosenki w kapsule, karta z **kręcącą się płytą winylową** (okładka w środku), tytuł, wykonawca, poprzedni / pauza / następny, postęp z czasem po obu stronach; opcjonalnie **duży tekst na ekranie** podświetlany w trakcie śpiewania | styl Vinyl / Card / Compact; przyciski klikasz przy otwartym czacie |
+| **Hotbar** | własny pasek przedmiotów w ciemnym panelu, obrys wybranego slotu (przesuwany), cienkie kreski wytrzymałości pod przedmiotami, druga ręka obok | styl Panel / Clean, animacja, kreski wytrzymałości, numery |
 | **Session** | czas gry, przebyty dystans, śmierci | |
 
 Mniejsze elementy: **FPS** (z wykresem i min/max), **Ping** (paski sygnału), **TPS** (liczone z pakietów
@@ -171,7 +171,7 @@ Exploity i Klient. Każdy ma własną ikonę i zestaw opcji. Stan modułów zapi
 ./gradlew build
 ```
 
-Gotowy plik: `build/libs/withclient-1.4.0.jar`. Wrzuć go do `.minecraft/mods` razem z Fabric API.
+Gotowy plik: `build/libs/withclient-1.5.0.jar`. Wrzuć go do `.minecraft/mods` razem z Fabric API.
 Klawisz otwierania zmienisz w Opcje → Sterowanie → WithClient.
 
 ## Struktura

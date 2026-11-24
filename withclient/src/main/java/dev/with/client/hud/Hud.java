@@ -129,6 +129,7 @@ public final class Hud {
             if (mc.options.hudHidden || mc.player == null || mc.currentScreen instanceof HudEditor) return;
             renderAll(ctx, false);
             drawKaraoke(ctx);
+            Crosshair.zoom(ctx);
             drawNotifications(ctx);
         });
         ClientTickEvents.END_CLIENT_TICK.register(Hud::tick);
@@ -1837,6 +1838,12 @@ public final class Hud {
     private static final Anim hotSel = new Anim(0, 18).springy();
 
     /** zastępuje pasek przedmiotów Minecrafta (moduł Hotbar) */
+    /** własny celownik (moduł Crosshair); true = nie rysuj celownika z gry */
+    public static boolean drawCrosshair(DrawContext ctx, net.minecraft.client.render.RenderTickCounter tc) {
+        readStyle();
+        return Crosshair.draw(ctx, tc);
+    }
+
     public static boolean hotbarEnabled() { Module m = mod("Hotbar"); return m != null && m.isEnabled(); }
 
     public static void drawHotbar(DrawContext ctx, net.minecraft.client.render.RenderTickCounter tc) {

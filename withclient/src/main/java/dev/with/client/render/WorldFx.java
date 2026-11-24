@@ -194,7 +194,7 @@ public final class WorldFx {
     }
 
     /** kwadrat -s..s w płaszczyźnie XY bieżącej macierzy, mieszanie addytywne (jasność tekstury × kolor × alfa) */
-    private static void quad(MatrixStack ms, Identifier tex, float s, int col, float alpha) {
+    public static void quad(MatrixStack ms, Identifier tex, float s, int col, float alpha) {
         if (alpha <= 0.003f) return;
         bind(tex);
         float r = ((col >> 16) & 0xFF) / 255f * alpha, g = ((col >> 8) & 0xFF) / 255f * alpha, b = (col & 0xFF) / 255f * alpha;
@@ -210,7 +210,7 @@ public final class WorldFx {
     }
 
     /** wiąże teksturę; za pierwszym razem dorabia mipmapy (gładkie z daleka) */
-    private static void bind(Identifier id) {
+    public static void bind(Identifier id) {
         RenderSystem.setShaderTexture(0, id);
         if (!MIPPED.add(id)) return;
         try {

@@ -22,13 +22,14 @@ public final class Modules {
     private Modules() {}
 
     private static final List<Module> ALL = new ArrayList<>();
+    private static final Map<String, Module> BY_NAME = new HashMap<>();
     private static final Path FILE = FabricLoader.getInstance().getConfigDir().resolve("withclient").resolve("modules.json");
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
     private static final Set<Integer> held = new HashSet<>();
-    private static final int CONFIG_VERSION = 6;
+    private static final int CONFIG_VERSION = 7;
 
     public static List<Module> all() { return ALL; }
-    public static Module get(String name) { for (Module m : ALL) if (m.name.equals(name)) return m; return null; }
+    public static Module get(String name) { return BY_NAME.get(name); }
     public static Path configDir() { return FILE.getParent().resolve("configs"); }
     public static List<Module> of(Category c) { return ALL.stream().filter(m -> m.category == c).toList(); }
     public static long enabledIn(Category c) { return ALL.stream().filter(m -> m.category == c && m.isEnabled()).count(); }
@@ -36,6 +37,7 @@ public final class Modules {
     private static Module m(String name, Category c, String icon, String pl, String en, Setting<?>... s) {
         Module mod = new Module(name, c, "l_" + icon.replace('-', '_'), pl, en).add(s);
         ALL.add(mod);
+        BY_NAME.put(name, mod);
         return mod;
     }
 
@@ -132,7 +134,7 @@ public final class Modules {
                 g("Cele"), mu("Byty", a("Gracze", "Moby", "Zwierzęta", "Przedmioty", "Kryształy"), "Gracze"), b("Przez ściany", true), n("Zasięg", 128, 16, 512, 16, "bl"),
                 g("Styl"), espMode, n("Grubość", 1.5, 0.5, 4, 0.5, "px").vis(() -> !espMode.is("Glow")), n("Wypełnienie", 20, 0, 100, 5, "%").vis(() -> espMode.is("Box") || espMode.is("2D")), b("Health bar", true), b("Zbroja", false),
                 g("Kolory"), cl("Kolor", WHITE), cl("Kolor znajomych", GREEN), b("Kolor wg zdrowia", false), b("Tęcza", false));
-        m("Fullbright", VISUALS, "sun", "Pełna jasność", "Full brightness", o("Tryb", "Gamma", "Night vision"), n("Gamma", 100, 10, 100, 5, "%"), b("Płynne przejście", true));
+        m("Fullbright", VISUALS, "sun", "Pełna jasność (tylko obraz)", "Full brightness (visual only)", o("Tryb", "Gamma", "Night vision"), n("Gamma", 100, 10, 100, 5, "%"), b("Płynne przejście", true));
         m("Nametags", VISUALS, "tag", "Lepsze nicki", "Better nametags",
                 g("Info"), b("Zdrowie", true), b("Zbroja", true), b("Ping", false), b("Odległość", false), b("Przedmiot w ręce", true),
                 g("Styl"), n("Skala", 1, 0.5, 2, 0.1, "×"), b("Skaluj z odległością", true), cl("Tło", 0xAA000000), cl("Tekst", WHITE), b("Obrys", false));
@@ -144,23 +146,44 @@ public final class Modules {
                 g("Kolor"), teCol, cl("Kolor", WHITE).vis(() -> teCol.is("Static")), b("Czerwony przy trafieniu", true),
                 g("Cel"), b("Też celowany", false), b("Tylko gracze", false), n("Zasięg", 12, 4, 32, 1, "m")).on();
         m("Chams", VISUALS, "ghost", "Prześwitujące modele", "See-through models", o("Styl", "Flat", "Shiny", "Texture", "Wireframe"), cl("Widoczne", WHITE), cl("Za ścianą", 0x88FFFFFF), b("Ręce", false));
-        m("Zoom", VISUALS, "zoom-in", "Przybliżenie", "Zoom", n("Siła", 4, 2, 10, 0.5, "×"), b("Płynnie", true), b("Scroll", true), b("Kinowa kamera", false), b("Ukryj rękę", true));
-        m("NoHurtCam", VISUALS, "vibrate-off", "Brak trzęsienia", "No hurt cam", n("Siła", 0, 0, 100, 5, "%"));
+        m("Zoom", VISUALS, "zoom-in", "Płynne przybliżenie pod klawiszem C (zmienisz w Sterowaniu)", "Smooth zoom on the C key (change it in Controls)",
+                n("Siła", 4, 1.5, 15, 0.5, "×"), b("Płynnie", true), b("Scroll", true), b("Przełączanie", false), b("Niższa czułość", true), b("Kinowa kamera", false), b("Ukryj rękę", true), b("Wskaźnik", true)).on();
+        m("NoHurtCam", VISUALS, "vibrate-off", "Kamera nie trzęsie się przy obrażeniach", "No camera shake when hurt", n("Siła", 0, 0, 100, 5, "%"));
         m("Freecam", VISUALS, "camera", "Swobodna kamera", "Free camera", n("Prędkość", 1, 0.1, 5, 0.1, ""), b("Przez bloki", true), b("Pokaż ciało", true));
         m("Trajectories", VISUALS, "spline", "Tor pocisków", "Projectile paths", mu("Pociski", a("Łuk", "Perła", "Trójząb", "Mikstury"), "Łuk", "Perła"), cl("Kolor", WHITE), b("Punkt trafienia", true));
-        m("BlockOutline", VISUALS, "box", "Lepszy obrys bloków", "Better block outline", o("Styl", "Outline", "Fill", "Both"), n("Grubość", 2, 0.5, 5, 0.5, "px"), cl("Kolor", WHITE), cl("Wypełnienie", 0x22FFFFFF), b("Tęcza", false));
-        m("Breadcrumbs", VISUALS, "waypoints", "Ślad za graczem", "Trail behind you", cl("Kolor", WHITE), n("Długość", 200, 20, 500, 10, ""), n("Grubość", 1.5, 0.5, 4, 0.5, "px"), b("Zanikanie", true));
-        m("ItemPhysics", VISUALS, "atom", "Fizyka upuszczonych przedmiotów", "Dropped item physics", n("Obrót", 1, 0, 3, 0.1, "×"), b("Leżą płasko", true));
-        m("CustomFOV", VISUALS, "scan-eye", "Własne pole widzenia", "Custom field of view", n("FOV", 100, 30, 140, 1, "°"), b("Stałe przy sprincie", true), b("Bez efektów", false));
-        m("Crosshair", VISUALS, "circle-dot", "Własny celownik", "Custom crosshair", o("Styl", "Cross", "Dot", "Circle", "T"), n("Rozmiar", 4, 1, 12, 0.5, "px"), n("Przerwa", 2, 0, 8, 0.5, "px"), cl("Kolor", WHITE), b("Dynamiczny", true), b("Obrys", true));
-        m("NoRender", VISUALS, "eye-off", "Ukrywa efekty", "Hides effects", mu("Ukryj", a("Ogień", "Woda", "Mgła", "Bossbar", "Totem", "Pumpkin"), "Ogień", "Pumpkin"));
-        m("Ambience", VISUALS, "cloud-sun", "Kolor nieba i mgły", "Sky and fog color", cl("Niebo", 0xFF9AA4B8), cl("Mgła", 0xFFB8BEC8), b("Gwiazdy", true));
-        m("TimeChanger", VISUALS, "clock", "Własna pora dnia", "Custom time of day", n("Godzina", 12, 0, 24, 0.5, "h"), b("Cykl", false));
-        m("HitColor", VISUALS, "droplet", "Kolor obrażeń", "Hurt color", cl("Kolor", 0x66FFFFFF), b("Tylko gracze", false));
+        Mode boStyle = o("Styl", "Both", "Outline", "Fill");
+        m("BlockOutline", VISUALS, "box", "Ładniejszy, płynny obrys bloku", "Nicer, smooth block outline", boStyle, n("Grubość", 2, 0.5, 5, 0.5, "px").vis(() -> !boStyle.is("Fill")),
+                cl("Kolor", WHITE).vis(() -> !boStyle.is("Fill")), cl("Wypełnienie", 0x22FFFFFF).vis(() -> !boStyle.is("Outline")), b("Animacja", true), b("Tęcza", false));
+        Mode bcCol = o("Kolor tryb", "Static", "Rainbow");
+        m("Breadcrumbs", VISUALS, "waypoints", "Wstęga za Tobą (widać w F5)", "Ribbon trail behind you (see it in F5)", bcCol, cl("Kolor", WHITE).vis(() -> bcCol.is("Static")),
+                n("Długość", 200, 20, 500, 10, ""), n("Grubość", 1.5, 0.5, 4, 0.5, "px"), b("Zanikanie", true));
+        m("ItemPhysics", VISUALS, "atom", "Upuszczone przedmioty leżą płasko i kręcą się w locie", "Dropped items lie flat and spin in the air", n("Obrót", 1, 0, 3, 0.1, "×"), b("Leżą płasko", true));
+        m("CustomFOV", VISUALS, "scan-eye", "Własne pole widzenia, bez skakania przy sprincie", "Custom field of view without sprint jumps", n("FOV", 100, 30, 140, 1, "°"), b("Stałe przy sprincie", true), b("Bez efektów", false));
+        Bool chTarget = b("Kolor na celu", false);
+        m("Crosshair", VISUALS, "circle-dot", "Własny celownik z hitmarkerem", "Custom crosshair with hitmarker",
+                g("Kształt"), o("Styl", "Cross", "Dot", "Circle", "T", "Square", "Chevron"), n("Rozmiar", 4, 1, 12, 0.5, "px"), n("Przerwa", 2, 0, 8, 0.5, "px"), n("Grubość", 1, 0.5, 4, 0.25, "px"), b("Kropka", false),
+                g("Wygląd"), cl("Kolor", WHITE), b("Obrys", true), b("Dynamiczny", true), chTarget, cl("Kolor celu", RED).vis(chTarget::get),
+                g("Dodatki"), b("Hitmarker", true), b("Wskaźnik ataku", true));
+        m("NoRender", VISUALS, "eye-off", "Ukrywa nakładki na ekranie", "Hides screen overlays", mu("Ukryj", a("Ogień", "Woda", "Mgła", "Bossbar", "Totem", "Pumpkin", "Winieta", "Portal", "Scoreboard", "Śnieg"), "Ogień", "Pumpkin", "Winieta"));
+        m("Ambience", VISUALS, "cloud-sun", "Kolor nieba, mgły i chmur", "Sky, fog and cloud color",
+                g("Niebo"), b("Kolor nieba", true), cl("Niebo", 0xFF9D8CFF), g("Mgła"), b("Kolor mgły", true), cl("Mgła", 0xFFE0C8FF),
+                g("Chmury"), b("Kolor chmur", true), cl("Chmury", 0xFFF3E8FF), g("Inne"), b("Tęcza", false));
+        Bool tcCycle = b("Cykl", false);
+        m("TimeChanger", VISUALS, "clock", "Własna pora dnia (tylko u Ciebie)", "Custom time of day (only for you)", n("Godzina", 18, 0, 24, 0.5, "h"), tcCycle, n("Prędkość", 1, 0.1, 10, 0.1, "×").vis(tcCycle::get));
+        Mode hcMode = o("Tryb", "Static", "Rainbow");
+        m("HitColor", VISUALS, "droplet", "Kolor błysku przy obrażeniach", "Hurt flash color", hcMode, cl("Kolor", 0x66B4A0FF));
         m("ViewModel", VISUALS, "hand", "Pozycja rąk", "Hand position",
                 g("Prawa"), n("X", 0, -1, 1, 0.05, ""), n("Y", 0, -1, 1, 0.05, ""), n("Z", 0, -1, 1, 0.05, ""),
                 g("Lewa"), n("X lewa", 0, -1, 1, 0.05, ""), n("Y lewa", 0, -1, 1, 0.05, ""), n("Z lewa", 0, -1, 1, 0.05, ""),
                 g("Inne"), n("Skala", 1, 0.3, 2, 0.05, "×"), b("Bez bujania", false));
+        Mode dnStyle = o("Styl", "Pop", "Float", "Minimal");
+        Bool dnAuto = b("Kolor wg obrażeń", true);
+        m("DamageNumbers", VISUALS, "badge-minus", "Liczby obrażeń nad przeciwnikiem", "Damage numbers above enemies", dnStyle, n("Skala", 1, 0.5, 2, 0.05, "×"), dnAuto,
+                cl("Kolor", WHITE).vis(() -> !dnAuto.get()), b("Tylko moje uderzenia", true), b("Cień", true));
+        Mode atCol = o("Kolor tryb", "Styl", "Static", "Rainbow");
+        m("Atmosphere", VISUALS, "snowflake", "Klimat wokół Ciebie: świetliki, śnieg, gwiazdy, sakura, iskry", "Ambient particles: fireflies, snow, stars, sakura, embers",
+                o("Styl", "Fireflies", "Snow", "Stars", "Sakura", "Embers"), n("Ilość", 120, 10, 300, 10, ""), n("Zasięg", 16, 6, 40, 1, "bl"), n("Rozmiar", 1, 0.4, 3, 0.1, "×"),
+                atCol, cl("Kolor", WHITE).vis(() -> atCol.is("Static")));
         // ================= Świat =================
         Mode scMode = o("Tryb", "Normal", "Telly", "Expand", "Godbridge", "Breezily");
         m("Scaffold", WORLD, "brick-wall", "Stawia bloki pod nogami", "Places blocks under you",
@@ -170,7 +193,7 @@ public final class Modules {
         m("Nuker", WORLD, "bomb", "Niszczy bloki wokół", "Breaks nearby blocks", n("Promień", 4, 1, 6, 1, "bl"), o("Tryb", "Flat", "Sphere", "Cube"), b("Tylko wybrany blok", false), b("Rotacje", true));
         m("FastBreak", WORLD, "hammer", "Szybsze kopanie", "Mine faster", o("Tryb", "Damage", "Instant", "Haste"), n("Prędkość", 30, 0, 100, 5, "%"));
         m("Timer", WORLD, "timer", "Tempo gry", "Game speed", n("Prędkość", 1, 0.1, 5, 0.05, "×"), b("Tylko w ruchu", false));
-        m("Weather", WORLD, "cloud-rain", "Własna pogoda", "Custom weather", o("Tryb", "Clear", "Rain", "Thunder", "Snow"), n("Intensywność", 100, 0, 100, 5, "%"));
+        m("Weather", WORLD, "cloud-rain", "Własna pogoda (tylko u Ciebie)", "Custom weather (only for you)", o("Tryb", "Clear", "Rain", "Thunder", "Snow"), n("Intensywność", 100, 0, 100, 5, "%"));
         m("XRay", WORLD, "gem", "Rudy przez bloki", "See ores", mu("Rudy", a("Diamenty", "Złoto", "Żelazo", "Netheryt", "Szmaragdy", "Redstone"), "Diamenty", "Złoto", "Netheryt"), n("Przezroczystość", 0, 0, 100, 5, "%"), b("Tylko odsłonięte", false));
         m("AutoFarm", WORLD, "wheat", "Automatyczna farma", "Auto farm", o("Tryb", "Crops", "Trees", "Sugar cane"), n("Zasięg", 4, 2, 6, 0.5, "m"), b("Sadź ponownie", true), b("Mączka kostna", false));
         m("AutoMine", WORLD, "shovel", "Kopie przed siebie", "Mines forward", o("Kierunek", "Forward", "Down", "Tunnel"), b("Zatrzymaj przy lawie", true));
@@ -210,22 +233,35 @@ public final class Modules {
         m("Hotbar", HUD, "panel-bottom", "Własny pasek przedmiotów", "Custom hotbar", o("Styl", "Panel", "Clean"), b("Animacja", true), b("Paski wytrzymałości", true), b("Numery slotów", false));
         m("Compass", HUD, "compass", "Kompas", "Compass", o("Styl", "Bar", "Circle"), b("Stopnie", true));
         // ================= Kosmetyki =================
-        m("Cape", COSMETICS, "flag", "Własna peleryna", "Custom cape", o("Peleryna", "WithClient", "Mono", "Stripes", "Minimal"), b("Fizyka", true), b("Widoczna dla innych", true));
-        m("Wings", COSMETICS, "bird", "Skrzydła", "Wings", o("Styl", "Dragon", "Angel", "Mono"), cl("Kolor", WHITE), n("Skala", 1, 0.5, 1.5, 0.05, "×"), b("Animacja", true));
-        m("Halo", COSMETICS, "circle-dashed", "Aureola", "Halo", cl("Kolor", WHITE), n("Wysokość", 0.3, 0, 1, 0.05, "bl"), b("Poświata", true));
-        m("Hat", COSMETICS, "crown", "Czapka", "Hat", o("Styl", "Crown", "China hat", "Top hat"), cl("Kolor", WHITE), b("Obrót", true));
-        m("Trails", COSMETICS, "sparkles", "Ślad cząsteczek", "Particle trail", o("Cząsteczki", "Sparkle", "Snow", "Hearts", "Dust"), n("Ilość", 3, 1, 10, 1, ""), cl("Kolor", WHITE));
+        m("Cape", COSMETICS, "flag", "Peleryna WithClient (też na elytrze)", "WithClient cape (also on elytra)", o("Peleryna", "WithClient", "Mono", "Stripes", "Minimal", "Aurora", "Galaxy")).on();
+        m("Wings", COSMETICS, "bird", "Skrzydła na plecach (F5)", "Wings on your back (F5)", o("Styl", "Angel", "Dragon", "Mono"), cl("Kolor", WHITE), b("Tęcza", false), n("Skala", 1, 0.5, 1.5, 0.05, "×"), b("Animacja", true));
+        m("Halo", COSMETICS, "circle-dashed", "Świecąca aureola nad głową (F5)", "Glowing halo above your head (F5)", cl("Kolor", WHITE), b("Tęcza", false), n("Wysokość", 0.3, 0, 1, 0.05, "bl"), n("Rozmiar", 1, 0.5, 2, 0.05, "×"), b("Poświata", true));
+        m("Hat", COSMETICS, "crown", "Czapka: China hat, korona, cylinder (F5)", "Hat: China hat, crown, top hat (F5)", o("Styl", "China hat", "Crown", "Top hat"), cl("Kolor", WHITE), b("Tęcza", true), n("Rozmiar", 1, 0.6, 1.6, 0.05, "×"), b("Obrót", true));
+        Mode trCol = o("Kolor tryb", "Static", "Rainbow");
+        Mode trType = o("Cząsteczki", "Sparkle", "Snow", "Hearts", "Dust", "Flame", "Soul", "Totem", "Cherry", "Glow", "Notes");
+        m("Trails", COSMETICS, "sparkles", "Cząsteczki za Tobą", "Particle trail behind you", trType, n("Ilość", 3, 1, 10, 1, ""),
+                trCol.vis(() -> trType.is("Dust")), cl("Kolor", WHITE).vis(() -> trType.is("Dust") && trCol.is("Static")), b("Tylko w ruchu", true));
         Mode jcCol = o("Kolor tryb", "Static", "Rainbow");
         m("JumpCircles", COSMETICS, "orbit", "Kręgi pod nogami przy skoku", "Circles under your feet when jumping", o("Styl", "Ring", "Glow", "Soft", "Swirl"),
                 n("Rozmiar", 1, 0.5, 2.5, 0.05, "×"), n("Czas", 1, 0.4, 3, 0.1, "s"), jcCol, cl("Kolor", WHITE).vis(() -> jcCol.is("Static")), b("Obrót", false)).on();
         Mode swMode = o("Tryb", "Static", "Gradient", "Rainbow");
         m("SwordColor", COSMETICS, "paintbrush", "Własny kolor mieczy", "Custom sword color", swMode, cl("Kolor", 0xFF7DA7FF).vis(() -> !swMode.is("Rainbow")),
                 cl("Kolor 2", WHITE).vis(() -> swMode.is("Gradient")), b("W ręce", true), b("Na pasku", true), b("Upuszczone", true), b("Topory", false));
-        m("HitParticles", COSMETICS, "party-popper", "Cząsteczki przy uderzeniu", "Particles on hit", o("Typ", "Stars", "Hearts", "Crits", "Blood"), n("Ilość", 6, 1, 30, 1, ""), b("Fizyka", true));
-        m("CustomSky", COSMETICS, "moon-star", "Własne niebo", "Custom sky", o("Niebo", "Night", "Aurora", "Galaxy", "Mono"), b("Animacja", true));
-        m("SwingAnimation", COSMETICS, "sword", "Animacja miecza", "Sword animation", o("Styl", "1.7", "Smooth", "Spin", "Slide", "Push"), n("Prędkość", 1, 0.2, 3, 0.1, "×"), b("Zawsze", false));
-        m("ItemGlint", COSMETICS, "sparkle", "Kolor zaklęć", "Enchant glint color", cl("Kolor", WHITE), n("Prędkość", 1, 0.1, 5, 0.1, "×"));
-        m("NameColor", COSMETICS, "brush", "Kolor Twojego nicku", "Your name color", cl("Kolor", WHITE), b("Gradient", false), cl("Kolor 2", SILVER));
+        Mode hpCol = o("Kolor tryb", "Static", "Rainbow");
+        Mode hpType = o("Typ", "Stars", "Hearts", "Crits", "Magic", "Blood", "Flame", "Soul", "Totem", "Glow", "Snow", "Cherry", "Notes", "Dust");
+        m("HitParticles", COSMETICS, "party-popper", "Cząsteczki przy uderzeniu", "Particles on hit", hpType, n("Ilość", 6, 1, 30, 1, ""), b("Fizyka", true),
+                hpCol.vis(() -> hpType.is("Dust")), cl("Kolor", WHITE).vis(() -> hpType.is("Dust") && hpCol.is("Static")));
+        m("CustomSky", COSMETICS, "moon-star", "Własne niebo: galaktyka, zorza, zachód słońca", "Custom sky: galaxy, aurora, sunset", o("Niebo", "Galaxy", "Aurora", "Night", "Sunset", "Mono"), b("Animacja", true), b("Chmury", false));
+        m("SwingAnimation", COSMETICS, "sword", "Animacja machnięcia mieczem", "Sword swing animation", o("Styl", "1.7", "Smooth", "Spin", "Slide", "Push", "Chop"), n("Prędkość", 1, 0.2, 3, 0.1, "×"), b("Zawsze", false));
+        Mode igMode = o("Tryb", "Static", "Rainbow");
+        m("ItemGlint", COSMETICS, "sparkle", "Kolor i prędkość połysku zaklęć", "Enchant glint color and speed", igMode, cl("Kolor", WHITE), n("Prędkość", 1, 0.1, 5, 0.1, "×"));
+        Mode ncMode = o("Tryb", "Gradient", "Static", "Rainbow");
+        m("NameColor", COSMETICS, "brush", "Kolor Twojego nicku na liście graczy (TAB)", "Your name color in the player list (TAB)", ncMode,
+                cl("Kolor", WHITE).vis(() -> !ncMode.is("Rainbow")), cl("Kolor 2", SILVER).vis(() -> ncMode.is("Gradient")), b("Animacja", true), b("Pogrubienie", false));
+        m("KillEffect", COSMETICS, "cloud-lightning", "Efekt przy zabiciu: piorun, dusze, wybuch, fajerwerki", "Kill effect: lightning, souls, explosion, fireworks",
+                o("Efekt", "Lightning", "Souls", "Explosion", "Blood", "Firework", "Totem"), b("Dźwięk", true), b("Tylko gracze", false));
+        m("HitSound", COSMETICS, "bell-ring", "Dźwięk przy uderzeniu", "Sound on hit", o("Dźwięk", "Ding", "Pop", "Crit", "Bell", "Click", "Bass", "Chime", "Pling"),
+                n("Głośność", 80, 0, 100, 5, "%"), n("Wysokość", 1, 0.5, 2, 0.05, ""), b("Losowa wysokość", true));
         // ================= Narzędzia =================
         m("AutoGG", UTILITY, "message-circle", "Pisze GG po grze", "Says GG after a game", tx("Wiadomość", "gg", 32), n("Opóźnienie", 1, 0, 5, 0.5, "s"), b("Tylko wygrana", false));
         m("NameProtect", UTILITY, "venetian-mask", "Ukrywa nick", "Hides your name", tx("Nazwa", "You", 16), b("Znajomi", false), b("Tab", true));
@@ -353,6 +389,10 @@ public final class Modules {
                     Module m = get(n);
                     if (m != null && m.setting("Styl") != null) m.setting("Styl").reset();
                 }
+            }
+            // 1.6: zoom pod C i peleryna działają od razu
+            if (v < 7) {
+                for (String n : new String[]{"Zoom", "Cape"}) { Module m = get(n); if (m != null) m.setEnabled(true); }
             }
             if (v < 4) {
                 Module d = get("DiscordRPC");

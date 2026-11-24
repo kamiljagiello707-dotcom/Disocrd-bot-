@@ -13,7 +13,7 @@ import org.lwjgl.glfw.GLFW;
 
 /** WithClient – punkt startowy. */
 public class WithClient implements ClientModInitializer {
-    public static final String VERSION = "1.5.0";
+    public static final String VERSION = "1.6.0";
     public static KeyBinding OPEN_GUI;
 
     @Override
@@ -23,6 +23,10 @@ public class WithClient implements ClientModInitializer {
         Modules.init();
         dev.with.client.hud.Hud.init();
         dev.with.client.render.WorldFx.init();
+        dev.with.client.visual.View.init();
+        dev.with.client.visual.Effects.init();
+        dev.with.client.visual.Tints.init();
+        dev.with.client.visual.CosmeticFeature.register();
         dev.with.client.discord.DiscordRpc.init();
         OPEN_GUI = KeyBindingHelper.registerKeyBinding(new KeyBinding("key.withclient.clickgui", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_RIGHT_SHIFT, "category.withclient"));
         ClientTickEvents.END_CLIENT_TICK.register(mc -> {

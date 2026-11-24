@@ -32,7 +32,7 @@ WithClient zastępuje ekrany Minecrafta własnymi:
 ## Status w Discordzie (DiscordRPC)
 
 Gdy grasz, Discord pokazuje **„Gra w WithClient”** z logo. Niżej widać
-„WithClient 1.5.0 · Minecraft 1.21.1”, miejsce gry (menu, tryb jednoosobowy, adres serwera) i czas gry.
+„WithClient 1.6.0 · Minecraft 1.21.1”, miejsce gry (menu, tryb jednoosobowy, adres serwera) i czas gry.
 
 Discord pokazuje nazwę i logo z **aplikacji Discord**, więc trzeba ją raz założyć (2 minuty):
 1. Wejdź na https://discord.com/developers/applications → **New Application**, nazwij ją `WithClient`.
@@ -57,6 +57,58 @@ pokazywanie serwera, nicku i czasu oraz własny opis.
 - **SwordColor** (Kosmetyki): własny kolor mieczy (opcjonalnie też toporów).
   - Tryby: stały kolor, gradient między dwoma kolorami albo tęcza.
   - Osobno w ręce, na pasku i na ziemi.
+
+## Wizualia i kosmetyka (1.6)
+
+Wszystko działa tylko u Ciebie i zmienia wyłącznie wygląd. Nic nie jest widoczne przez ściany
+i nic nie daje przewagi w walce.
+
+**Kamera i widok** (Wizualne)
+- **Zoom**: płynne przybliżenie pod klawiszem **C** (zmienisz w Sterowaniu).
+  - Kółko myszy zmienia przybliżenie, a czułość myszy spada razem z nim.
+  - Możesz włączyć kinową kamerę, ukrywanie ręki, tryb przełączania i pigułkę z wartością (np. „4.0x”).
+- **CustomFOV**: własne pole widzenia. FOV nie skacze przy sprincie, opcjonalnie bez efektów mikstur.
+- **NoHurtCam**: kamera nie trzęsie się przy obrażeniach (siła 0–100%).
+- **Fullbright**: gamma albo noktowizja, z płynnym przejściem.
+- **ViewModel**: pozycja (X/Y/Z) i skala przedmiotu w każdej ręce, bez bujania ręki.
+- **SwingAnimation** (Kosmetyki): style 1.7, Smooth, Spin, Slide, Push i Chop oraz prędkość machnięcia.
+
+**Świat** (Wizualne / Świat)
+- **TimeChanger**: własna godzina, opcjonalnie z cyklem dnia.
+- **Weather**: czyste niebo, deszcz, burza albo śnieg, z intensywnością.
+- **Ambience**: kolor nieba, mgły i chmur, także w trybie tęczy.
+- **CustomSky** (Kosmetyki): własne niebo zamiast nieba z gry:
+  - Galaxy: pasmo gwiazd i mgławice,
+  - Aurora: falująca zorza,
+  - Night, Sunset i Mono,
+  - mgła dopasowuje się kolorem, chmury można ukryć.
+- **Atmosphere**: świetliki, śnieg, gwiazdy, sakura albo iskry unoszące się wokół Ciebie.
+- **BlockOutline**: obrys i wypełnienie bloku z płynnym przesuwaniem między blokami, grubością i tęczą.
+- **ItemPhysics**: upuszczone przedmioty leżą płasko na ziemi i kręcą się w locie.
+- **Breadcrumbs**: wstęga za Tobą (kolor albo tęcza, zanikanie).
+
+**Walka (tylko efekty)**
+- **Crosshair**: własny celownik w 6 stylach (Cross, Dot, Circle, T, Square, Chevron).
+  - Obrys, kropka, rozszerzanie w ruchu i kolor po najechaniu na cel.
+  - Hitmarker po uderzeniu i cienki wskaźnik ładowania ataku.
+- **DamageNumbers**: liczby obrażeń nad przeciwnikiem (Pop, Float, Minimal), kolor zależny od obrażeń.
+- **HitParticles** (Kosmetyki): 14 rodzajów cząsteczek przy uderzeniu.
+- **HitSound** (Kosmetyki): 8 dźwięków przy uderzeniu, z głośnością i wysokością.
+- **KillEffect** (Kosmetyki): efekt przy zabiciu celu:
+  - piorun (tylko u Ciebie, bez ognia i obrażeń),
+  - dusze, wybuch, krew, fajerwerki albo totem.
+- **HitColor**: własny kolor błysku obrażeń (albo tęcza).
+- **NoRender**: chowa ogień, wodę, mgłę terenu, paski bossów, animację totemu, dynię, winietę,
+  portal, scoreboard i szron.
+
+**Kosmetyki na postaci** (widać je w F5 i w ekwipunku)
+- **Cape**: 6 peleryn (WithClient, Mono, Stripes, Minimal, Aurora, Galaxy). Ten sam wzór jest na elytrze.
+- **Hat**: China hat (tęczowy, obracany), korona z klejnotami albo cylinder.
+- **Halo**: świecąca aureola nad głową.
+- **Wings**: skrzydła Angel, Dragon albo Mono, z machaniem.
+- **Trails**: 10 rodzajów cząsteczek za Tobą.
+- **ItemGlint**: kolor i prędkość połysku zaklęć.
+- **NameColor**: kolor, gradient albo tęcza Twojego nicku w TAB.
 
 ## ClickGUI (w grze, **prawy Shift**)
 
@@ -158,12 +210,13 @@ zaokrąglenie, obrys, cień, ikony i kolor akcentu. Pozycje zapisują się w `co
 
 ## Moduły
 
-145 modułów w 10 kategoriach: Walka, Ruch, Gracz, Wizualne, Świat, HUD, Kosmetyki, Narzędzia,
+149 modułów w 10 kategoriach: Walka, Ruch, Gracz, Wizualne, Świat, HUD, Kosmetyki, Narzędzia,
 Exploity i Klient. Każdy ma własną ikonę i zestaw opcji. Stan modułów zapisuje się w
 `config/withclient/modules.json`, a wygląd w `gui.json`.
 
-> Działają: HUD, TargetESP, JumpCircles, SwordColor, DiscordRPC i menu. Pozostałe moduły to na razie
-> przełączniki z ustawieniami w GUI, bez działania w grze.
+> Działają: HUD, wszystkie wizualia i kosmetyka opisane wyżej, TargetESP, JumpCircles, SwordColor,
+> DiscordRPC i menu. Moduły dające przewagę (walka, ruch, ESP przez ściany, XRay itp.) to tylko
+> przełączniki w GUI i nic nie robią w grze.
 
 ## Budowanie
 
@@ -171,7 +224,7 @@ Exploity i Klient. Każdy ma własną ikonę i zestaw opcji. Stan modułów zapi
 ./gradlew build
 ```
 
-Gotowy plik: `build/libs/withclient-1.5.0.jar`. Wrzuć go do `.minecraft/mods` razem z Fabric API.
+Gotowy plik: `build/libs/withclient-1.6.0.jar`. Wrzuć go do `.minecraft/mods` razem z Fabric API.
 Klawisz otwierania zmienisz w Opcje → Sterowanie → WithClient.
 
 ## Struktura
@@ -188,6 +241,12 @@ src/main/java/dev/with/client/
   hud/HudEditor.java         – edytor HUD (przeciąganie, przyciąganie, skala, panel)
   hud/Media.java             – co teraz gra (Windows / macOS / Linux), okładka, tekst piosenki
   render/WorldFx.java        – Target ESP i Jump Circles
+  visual/View.java           – zoom, FOV, fullbright, czas, pogoda, kolory nieba, ViewModel, animacje machnięcia
+  visual/Effects.java        – cząsteczki, dźwięk i efekt zabicia, liczby obrażeń, ślad, atmosfera, obrys bloku
+  visual/CosmeticFeature.java – czapki, aureola i skrzydła na modelu gracza
+  visual/Sky.java            – własne niebo (Galaxy, Aurora, Night, Sunset, Mono)
+  visual/Tints.java          – peleryny, kolor połysku zaklęć, kolor obrażeń, kolor nicku
+  hud/Crosshair.java         – celownik, hitmarker, pigułka zoomu
   discord/DiscordRpc.java    – status w Discordzie przez IPC
   ui/WithMenu.java, MenuBg.java, ListScreen.java, WorldsScreen.java, ServersScreen.java, Loading.java, Recent.java
                              – menu główne, tło, listy światów i serwerów, wczytywanie, szybki start
@@ -197,7 +256,8 @@ src/main/java/dev/with/client/
   mixin/TextRenderLayerSetMixin.java
   mixin/MouseMixin.java      – CPS (kliknięcia)
   mixin/WorldTimeMixin.java  – TPS (czas świata z serwera)
-  mixin/InGameHudMixin.java  – własny hotbar, chowanie ikon efektów
+  mixin/InGameHudMixin.java  – własny hotbar, chowanie ikon efektów, celownik, NoRender
+  mixin/GameRenderer/Lightmap/ClientWorld/BackgroundRenderer/WorldRenderer/HeldItemRenderer… – wizualia 1.6
   mixin/ItemRendererMixin.java – kolor mieczy
   mixin/ChatScreenMixin.java – klikanie w HUD przy otwartym czacie
   mixin/MinecraftClientMixin, ScreenMixin, *Accessor – podmiana menu i ekranów wczytywania

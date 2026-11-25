@@ -11,6 +11,9 @@
       },
       "Mentor": {
         "$path": "src/ReplicatedStorage/Mentor"
+      },
+      "TabletPSP": {
+        "$path": "src/ReplicatedStorage/TabletPSP"
       }
     },
     "ServerScriptService": {
@@ -22,6 +25,9 @@
       },
       "MentorSerwer": {
         "$path": "src/ServerScriptService/MentorSerwer.server.lua"
+      },
+      "TabletPSPSerwer": {
+        "$path": "src/ServerScriptService/TabletPSPSerwer.server.lua"
       }
     },
     "StarterPlayer": {
@@ -34,6 +40,9 @@
         },
         "MentorKlient": {
           "$path": "src/StarterPlayerScripts/MentorKlient"
+        },
+        "TabletPSPKlient": {
+          "$path": "src/StarterPlayerScripts/TabletPSPKlient"
         }
       }
     },

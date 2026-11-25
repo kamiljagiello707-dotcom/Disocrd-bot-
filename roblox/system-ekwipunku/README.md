@@ -10,6 +10,7 @@ Ekwipunek otwierany klawiszem **X**, z rangami. Każdy gracz startuje jako **Oby
 | `build/EkranWczytywania.rbxm` | Ekran wczytywania (LocalScript do ReplicatedFirst) |
 | `build/SystemAlarmowyOSP.rbxm` | System alarmowania OSP z przykładową remizą |
 | `build/SystemMentora.rbxm` | Mentor dla nowych graczy |
+| `build/TabletKierownikaPSP.rbxm` | Tablet kierownika PSP z przykładową remizą |
 | `build/TestEkwipunku.rbxl` | Gotowe miejsce testowe ze wszystkim: otwórz i kliknij Play |
 | `przedmioty/OSP.rbxm` | Przedmioty OSP klienta (oczyszczone) |
 | `src/` | Kod źródłowy (Luau) |
@@ -118,6 +119,23 @@ Wstaw `SystemMentora.rbxm` i rozłóż foldery (`Mentor` do ReplicatedStorage, `
 - **Nowi gracze** (DataStore) widzą „!” nad mentorem, podpowiedź i słup światła prowadzący do niego.
 
 Wszystkie teksty są w `ReplicatedStorage → Mentor → Ustawienia`. Rozdział to `Ikona`, `Tytul`, `Tekst` (dymek), `Kroki` (lista) i opcjonalny `Przycisk`. W tekstach działają `{nick}` i `{serwer}`.
+
+## Tablet kierownika PSP
+
+Wstaw `TabletKierownikaPSP.rbxm` i rozłóż foldery (`TabletPSP` do ReplicatedStorage, `TabletPSPSerwer` do ServerScriptService, `TabletPSPKlient` do StarterPlayerScripts). Folder `Kierownik PSP` (z narzędziem „Tablet PSP”) wrzuć do `ServerStorage → EkwipunekPrzedmioty`, a `PojazdyPSP` do ServerStorage. Bez systemu ekwipunku tablet wrzuca się do StarterPack.
+
+Tablet otwiera się po wzięciu go do ręki: wysuwa się z dołu ekranu, ma pasek statusu (godzina, zasięg, bateria), a na Stronie Głównej logo, czerwony napis **ZARZĄDZAJ SWOJĄ PSP** i 6 aplikacji z informacją na żywo:
+
+| Aplikacja | Co robi | Na mapie (Tag) |
+|---|---|---|
+| Bramy | Otwiera i zamyka bramy (płynnie do góry), pojedynczo albo wszystkie naraz | `BramaPSP` |
+| Syrena | Duży przycisk syreny i lamp ostrzegawczych, odliczanie | `AlarmSyrena`, `AlarmSwiatlo` |
+| Załoga | Lista strażaków w służbie, przyjmowanie graczy z pobliża, zwalnianie | ranga z EQ albo drużyna |
+| Pojazdy | Wóz z `ServerStorage → PojazdyPSP` wyjeżdża na wolne miejsce przed garażem | `MiejscePojazduPSP` |
+| Komunikaty | Wiadomość do całej załogi (przez filtr tekstu Roblox) | — |
+| Oświetlenie | Światła w strefach remizy (atrybut `Strefa`) | `SwiatloPSP` |
+
+Ustawienia (`ReplicatedStorage → TabletPSP → Ustawienia`): nazwa jednostki, napis, **logo** (`rbxassetid://...`; bez niego jest wbudowany znak „PSP”), kolor, kto jest kierownikiem, rangi załogi, kolejność i nazwy aplikacji, dźwięki i czasy. Do EQ doszły rangi `PSP` i `Kierownik PSP`.
 
 ## Budowanie ze źródeł
 

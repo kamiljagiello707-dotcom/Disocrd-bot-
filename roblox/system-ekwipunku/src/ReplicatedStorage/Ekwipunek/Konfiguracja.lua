@@ -72,6 +72,14 @@ Konfiguracja.Rangi = {
 		Nazwa = "Ochotnicza Straż Pożarna",
 		Kolor = Color3.fromRGB(235, 75, 65),
 	},
+	["PSP"] = {
+		Nazwa = "Państwowa Straż Pożarna",
+		Kolor = Color3.fromRGB(225, 38, 45),
+	},
+	["Kierownik PSP"] = {
+		Nazwa = "Kierownik PSP",
+		Kolor = Color3.fromRGB(245, 200, 75),
+	},
 }
 
 -- ============================================================
@@ -230,6 +238,12 @@ Konfiguracja.Przedmioty = {
 	["Szczotka"] = {
 		Kategoria = "Różne", Rzadkosc = "Zwykły", Waga = 1.5,
 		Opis = "Do sprzątania jezdni po zdarzeniu.",
+	},
+
+	-- PSP
+	["Tablet PSP"] = {
+		Kategoria = "Sprzęt", Rzadkosc = "Epicki", Waga = 0.8,
+		Opis = "Tablet kierownika: bramy, syrena, załoga, pojazdy i komunikaty.",
 	},
 }
 

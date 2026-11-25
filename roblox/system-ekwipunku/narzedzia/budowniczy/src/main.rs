@@ -3,7 +3,8 @@
 //!   budowniczy zbuduj <Items.rbxm> <katalog projektu>
 //!       -> przedmioty/OSP.rbxm, build/SystemEkwipunku.rbxm,
 //!          build/EkranWczytywania.rbxm, build/SystemAlarmowyOSP.rbxm,
-//!          build/SystemMentora.rbxm, build/TestEkwipunku.rbxl
+//!          build/SystemMentora.rbxm, build/TabletKierownikaPSP.rbxm,
+//!          build/TestEkwipunku.rbxl
 //!   budowniczy czytaj <plik.rbxm|.rbxl>     (wypisuje drzewo, do sprawdzania)
 //!   budowniczy sprawdz <Klasa>...           (klasy bazowe i właściwości z bazy API)
 
@@ -12,8 +13,8 @@ use std::io::{BufReader, BufWriter};
 use std::path::Path;
 
 use rbx_dom_weak::types::{
-    BrickColor, CFrame, Color3, Color3uint8, Enum, Matrix3, Ref, Tags, UDim, UDim2, Variant,
-    Vector3,
+    Attributes, BrickColor, CFrame, Color3, Color3uint8, Enum, Matrix3, Ref, Tags, UDim, UDim2,
+    Variant, Vector3,
 };
 use rbx_dom_weak::{ustr, InstanceBuilder, WeakDom};
 
@@ -334,6 +335,190 @@ impl Zrodla<'_> {
         folder("Mentor (miejsca)").with_child(punkt).with_child(cel)
     }
 
+    fn tablet_wspolne(&self) -> Wynik<InstanceBuilder> {
+        let k = self.src.join("ReplicatedStorage/TabletPSP");
+        Ok(folder("TabletPSP").with_child(skrypt("ModuleScript", "Ustawienia", &k.join("Ustawienia.lua"))?))
+    }
+
+    fn tablet_serwer(&self) -> Wynik<InstanceBuilder> {
+        skrypt(
+            "Script",
+            "TabletPSPSerwer",
+            &self.src.join("ServerScriptService/TabletPSPSerwer.server.lua"),
+        )
+    }
+
+    fn tablet_klient(&self) -> Wynik<InstanceBuilder> {
+        let k = self.src.join("StarterPlayerScripts/TabletPSPKlient");
+        Ok(skrypt("LocalScript", "TabletPSPKlient", &k.join("init.client.lua"))?
+            .with_child(skrypt("ModuleScript", "Wyglad", &k.join("Wyglad.lua"))?)
+            .with_child(skrypt("ModuleScript", "Ikony", &k.join("Ikony.lua"))?)
+            .with_child(skrypt("ModuleScript", "Tablet", &k.join("Tablet.lua"))?))
+    }
+
+    /// Tool "Tablet PSP": czarna płytka z ekranem z napisem PSP
+    fn tablet_narzedzie(&self) -> InstanceBuilder {
+        let ekran = |nazwa: &str, sciana: u32| {
+            InstanceBuilder::new("SurfaceGui")
+                .with_name(nazwa)
+                .with_property("Face", Enum::from_u32(sciana))
+                .with_property("SizingMode", Enum::from_u32(1))
+                .with_property("PixelsPerStud", 100.0f32)
+                .with_property("LightInfluence", 0.0f32)
+                .with_child(
+                    InstanceBuilder::new("TextLabel")
+                        .with_name("Logo")
+                        .with_property("Size", UDim2::new(UDim::new(1.0, 0), UDim::new(1.0, 0)))
+                        .with_property("BackgroundColor3", Color3::new(0.06, 0.06, 0.07))
+                        .with_property("Text", "PSP")
+                        .with_property("TextScaled", true)
+                        .with_property("TextColor3", Color3::new(0.88, 0.15, 0.18)),
+                )
+        };
+        InstanceBuilder::new("Tool")
+            .with_name("Tablet PSP")
+            .with_property("CanBeDropped", false)
+            .with_property("RequiresHandle", true)
+            .with_property("ToolTip", "Tablet kierownika PSP")
+            .with_child(
+                InstanceBuilder::new("Part")
+                    .with_name("Handle")
+                    .with_property("Size", Vector3::new(1.6, 1.1, 0.12))
+                    .with_property("Color", kolor(22, 22, 25))
+                    .with_property("Material", material(272))
+                    .with_property("CanCollide", false)
+                    .with_child(ekran("EkranPrzod", 5))
+                    .with_child(ekran("EkranTyl", 2)),
+            )
+    }
+
+    /// Przykładowa remiza PSP: 2 bramy chowane do góry za nadprożem,
+    /// oświetlenie w strefach i miejsce na wóz przed bramą
+    fn remiza_psp(&self, ox: f32, oz: f32) -> InstanceBuilder {
+        let sciana = || kolor(205, 200, 190);
+        let brama = |nazwa: &str, x: f32| {
+            z_tagiem(
+                czesc(nazwa, Vector3::new(14.0, 12.0, 0.6), pozycja(ox + x, 6.0, oz - 1.2), kolor(200, 40, 42))
+                    .with_property("Material", material(1056)),
+                "BramaPSP",
+            )
+        };
+        let lampa = |nazwa: &str, x: f32, z: f32, strefa: &str| {
+            z_tagiem(
+                czesc(nazwa, Vector3::new(3.0, 0.3, 3.0), pozycja(ox + x, 25.8, oz + z), kolor(250, 250, 245))
+                    .with_property("Material", material(288))
+                    .with_property("Attributes", Attributes::new().with("Strefa", strefa))
+                    .with_child(
+                        InstanceBuilder::new("PointLight")
+                            .with_name("Swiatlo")
+                            .with_property("Range", 28.0f32)
+                            .with_property("Brightness", 1.5f32),
+                    ),
+                "SwiatloPSP",
+            )
+        };
+        let napis = InstanceBuilder::new("SurfaceGui")
+            .with_name("Napis")
+            .with_property("Face", Enum::from_u32(5))
+            .with_property("SizingMode", Enum::from_u32(1))
+            .with_property("PixelsPerStud", 20.0f32)
+            .with_child(
+                InstanceBuilder::new("TextLabel")
+                    .with_name("Tekst")
+                    .with_property("Size", UDim2::new(UDim::new(1.0, 0), UDim::new(0.6, 0)))
+                    .with_property("Position", UDim2::new(UDim::new(0.0, 0), UDim::new(0.2, 0)))
+                    .with_property("BackgroundTransparency", 1.0f32)
+                    .with_property("Text", "PAŃSTWOWA STRAŻ POŻARNA")
+                    .with_property("TextScaled", true)
+                    .with_property("TextColor3", Color3::new(0.85, 0.12, 0.15)),
+            );
+        let obrot = Matrix3::new(
+            Vector3::new(-1.0, 0.0, 0.0),
+            Vector3::new(0.0, 1.0, 0.0),
+            Vector3::new(0.0, 0.0, -1.0),
+        );
+        let miejsce = z_tagiem(
+            czesc("MiejscePojazdu", Vector3::new(12.0, 0.2, 24.0), pozycja(ox - 11.0, 0.1, oz + 16.0), kolor(120, 120, 128))
+                .with_property(
+                    "CFrame",
+                    Variant::CFrame(CFrame::new(Vector3::new(ox - 11.0, 0.1, oz + 16.0), obrot)),
+                ),
+            "MiejscePojazduPSP",
+        );
+        InstanceBuilder::new("Model")
+            .with_name("RemizaPSP")
+            .with_child(czesc("TylnaSciana", Vector3::new(40.0, 26.0, 1.0), pozycja(ox, 13.0, oz - 14.0), sciana()))
+            .with_child(czesc("LewaSciana", Vector3::new(1.0, 26.0, 14.0), pozycja(ox - 20.0, 13.0, oz - 7.0), sciana()))
+            .with_child(czesc("PrawaSciana", Vector3::new(1.0, 26.0, 14.0), pozycja(ox + 20.0, 13.0, oz - 7.0), sciana()))
+            .with_child(
+                czesc("Nadproze", Vector3::new(40.0, 14.0, 1.0), pozycja(ox, 19.0, oz), sciana()).with_child(napis),
+            )
+            .with_child(czesc("FilarLewy", Vector3::new(2.0, 12.0, 1.0), pozycja(ox - 19.0, 6.0, oz), sciana()))
+            .with_child(czesc("FilarSrodek", Vector3::new(8.0, 12.0, 1.0), pozycja(ox, 6.0, oz), sciana()))
+            .with_child(czesc("FilarPrawy", Vector3::new(2.0, 12.0, 1.0), pozycja(ox + 19.0, 6.0, oz), sciana()))
+            .with_child(czesc("Dach", Vector3::new(42.0, 1.0, 16.0), pozycja(ox, 26.5, oz - 7.0), kolor(60, 60, 66)))
+            .with_child(brama("Brama 1", -11.0))
+            .with_child(brama("Brama 2", 11.0))
+            .with_child(lampa("LampaGaraz1", -11.0, -7.0, "Garaż"))
+            .with_child(lampa("LampaGaraz2", 11.0, -7.0, "Garaż"))
+            .with_child(lampa("LampaPlac", 0.0, 3.0, "Plac"))
+            .with_child(miejsce)
+    }
+
+    /// Przykładowy wóz (nieruchomy model do pokazania wyjazdu; podmień na swój)
+    fn pojazdy_psp(&self) -> InstanceBuilder {
+        let czerwony = || kolor(200, 30, 35);
+        let kolo = |x: f32, z: f32| {
+            InstanceBuilder::new("Part")
+                .with_name("Kolo")
+                .with_property("Shape", Enum::from_u32(2))
+                .with_property("Size", Vector3::new(1.2, 3.0, 3.0))
+                .with_property("CFrame", pozycja(x, 1.5, z))
+                .with_property("Color", kolor(25, 25, 28))
+                .with_property("Anchored", true)
+        };
+        folder("PojazdyPSP").with_child(
+            InstanceBuilder::new("Model")
+                .with_name("GBA (przyklad)")
+                .with_child(czesc("Skrzynia", Vector3::new(7.0, 6.0, 14.0), pozycja(0.0, 5.0, 3.0), czerwony()))
+                .with_child(czesc("Kabina", Vector3::new(7.0, 5.0, 5.0), pozycja(0.0, 4.5, -7.0), czerwony()))
+                .with_child(
+                    czesc("Szyba", Vector3::new(6.4, 2.0, 0.2), pozycja(0.0, 5.5, -9.55), kolor(30, 34, 40))
+                        .with_property("Material", material(1568)),
+                )
+                .with_child(
+                    czesc("Belka", Vector3::new(5.0, 0.6, 1.2), pozycja(0.0, 7.3, -7.5), kolor(40, 90, 255))
+                        .with_property("Material", material(288)),
+                )
+                .with_child(czesc("Pas", Vector3::new(7.1, 0.6, 19.0), pozycja(0.0, 3.2, 0.5), kolor(240, 240, 240)))
+                .with_child(kolo(-3.6, -6.5))
+                .with_child(kolo(3.6, -6.5))
+                .with_child(kolo(-3.6, 6.5))
+                .with_child(kolo(3.6, 6.5)),
+        )
+    }
+
+    fn stanowisko_kierownika(&self) -> Wynik<InstanceBuilder> {
+        let prompt = InstanceBuilder::new("ProximityPrompt")
+            .with_name("ProximityPrompt")
+            .with_property("ActionText", "Zostań kierownikiem PSP (test)")
+            .with_property("ObjectText", "Komenda PSP")
+            .with_property("HoldDuration", 0.5f32)
+            .with_property("RequiresLineOfSight", false);
+        Ok(czesc(
+            "StanowiskoKierownika",
+            Vector3::new(4.0, 4.0, 1.0),
+            pozycja(-46.0, 2.0, -24.0),
+            kolor(245, 200, 75),
+        )
+        .with_child(prompt)
+        .with_child(skrypt(
+            "Script",
+            "StanowiskoKierownika",
+            &self.src.join("Przyklady/StanowiskoKierownika.server.lua"),
+        )?))
+    }
+
     fn stanowisko(&self) -> Wynik<InstanceBuilder> {
         let napis = InstanceBuilder::new("TextLabel")
             .with_name("Napis")
@@ -369,6 +554,22 @@ impl Zrodla<'_> {
         )?);
         Ok(tablica)
     }
+}
+
+fn instrukcja_tabletu() -> InstanceBuilder {
+    let tekst = "TABLET KIEROWNIKA PSP - INSTALACJA\n\
+        Przeciągnij ZAWARTOŚĆ każdego folderu do usługi o tej samej nazwie:\n\
+        - Do ReplicatedStorage  -> TabletPSP  do  ReplicatedStorage\n\
+        - Do ServerScriptService -> TabletPSPSerwer  do  ServerScriptService\n\
+        - Do StarterPlayerScripts -> TabletPSPKlient  do  StarterPlayer > StarterPlayerScripts\n\
+        - Do ServerStorage -> folder 'Kierownik PSP' (z tabletem) do EkwipunekPrzedmioty, PojazdyPSP do ServerStorage\n\
+        - Do Workspace (przyklad) -> RemizaPSP  do  Workspace\n\
+        Bez systemu ekwipunku: wrzuć Tool 'Tablet PSP' do StarterPack.\n\
+        Tagi: BramaPSP, SwiatloPSP (atrybut Strefa), AlarmSyrena, AlarmSwiatlo, MiejscePojazduPSP.\n\
+        Ustawienia: ReplicatedStorage > TabletPSP > Ustawienia.";
+    InstanceBuilder::new("StringValue")
+        .with_name("CZYTAJ_MNIE")
+        .with_property("Value", tekst)
 }
 
 fn instrukcja_mentora() -> InstanceBuilder {
@@ -484,6 +685,27 @@ fn zbuduj(plik_przedmiotow: &Path, projekt: &Path) -> Wynik<()> {
     );
     zapisz(&build.join("SystemMentora.rbxm"), &mentor, &[mentor_ref])?;
 
+    // 3d. Tablet kierownika PSP
+    let mut tablet = WeakDom::new(folder("Korzen"));
+    let tablet_ref = tablet.insert(
+        tablet.root_ref(),
+        folder("TabletKierownikaPSP")
+            .with_child(instrukcja_tabletu())
+            .with_child(folder("Do ReplicatedStorage").with_child(zrodla.tablet_wspolne()?))
+            .with_child(folder("Do ServerScriptService").with_child(zrodla.tablet_serwer()?))
+            .with_child(folder("Do StarterPlayerScripts").with_child(zrodla.tablet_klient()?))
+            .with_child(
+                folder("Do ServerStorage")
+                    .with_child(
+                        folder("EkwipunekPrzedmioty")
+                            .with_child(folder("Kierownik PSP").with_child(zrodla.tablet_narzedzie())),
+                    )
+                    .with_child(zrodla.pojazdy_psp()),
+            )
+            .with_child(folder("Do Workspace (przyklad)").with_child(zrodla.remiza_psp(-70.0, -40.0))),
+    );
+    zapisz(&build.join("TabletKierownikaPSP.rbxm"), &tablet, &[tablet_ref])?;
+
     // 4. Gotowe miejsce testowe: wszystko na swoich miejscach
     let mut miejsce = WeakDom::new(InstanceBuilder::new("DataModel"));
     let dm = miejsce.root_ref();
@@ -512,7 +734,9 @@ fn zbuduj(plik_przedmiotow: &Path, projekt: &Path) -> Wynik<()> {
             .with_child(zrodla.stanowisko()?)
             .with_child(zrodla.remiza(30.0, -10.0))
             .with_child(zrodla.miejsca_zdarzen(true))
-            .with_child(zrodla.mentor_punkty(-12.0, 6.0, 12.0, -6.0)),
+            .with_child(zrodla.mentor_punkty(-12.0, 6.0, 12.0, -6.0))
+            .with_child(zrodla.remiza_psp(-70.0, -40.0))
+            .with_child(zrodla.stanowisko_kierownika()?),
     );
     let _ = workspace;
     miejsce.insert(dm, InstanceBuilder::new("Lighting").with_name("Lighting"));
@@ -528,7 +752,8 @@ fn zbuduj(plik_przedmiotow: &Path, projekt: &Path) -> Wynik<()> {
             .with_name("ReplicatedStorage")
             .with_child(zrodla.wspolne()?)
             .with_child(zrodla.alarm_wspolne()?)
-            .with_child(zrodla.mentor_wspolne()?),
+            .with_child(zrodla.mentor_wspolne()?)
+            .with_child(zrodla.tablet_wspolne()?),
     );
     miejsce.insert(
         dm,
@@ -536,13 +761,19 @@ fn zbuduj(plik_przedmiotow: &Path, projekt: &Path) -> Wynik<()> {
             .with_name("ServerScriptService")
             .with_child(zrodla.serwer()?)
             .with_child(zrodla.alarm_serwer()?)
-            .with_child(zrodla.mentor_serwer()?),
+            .with_child(zrodla.mentor_serwer()?)
+            .with_child(zrodla.tablet_serwer()?),
     );
     let magazyn_miejsca = miejsce.insert(
         dm,
         InstanceBuilder::new("ServerStorage")
             .with_name("ServerStorage")
-            .with_child(folder("EkwipunekPrzedmioty").with_child(folder("Obywatel"))),
+            .with_child(
+                folder("EkwipunekPrzedmioty")
+                    .with_child(folder("Obywatel"))
+                    .with_child(folder("Kierownik PSP").with_child(zrodla.tablet_narzedzie())),
+            )
+            .with_child(zrodla.pojazdy_psp()),
     );
     let magazyn_przedmiotow = miejsce.get_by_ref(magazyn_miejsca).unwrap().children()[0];
     let kopia = osp.clone_into_external(osp_ref, &mut miejsce);
@@ -557,7 +788,8 @@ fn zbuduj(plik_przedmiotow: &Path, projekt: &Path) -> Wynik<()> {
                 .with_name("StarterPlayerScripts")
                 .with_child(zrodla.klient()?)
                 .with_child(zrodla.alarm_klient()?)
-                .with_child(zrodla.mentor_klient()?),
+                .with_child(zrodla.mentor_klient()?)
+                .with_child(zrodla.tablet_klient()?),
         ),
     );
     miejsce.insert(

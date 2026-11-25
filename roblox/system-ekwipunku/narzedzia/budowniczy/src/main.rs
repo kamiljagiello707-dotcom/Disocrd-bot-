@@ -4,7 +4,7 @@
 //!       -> przedmioty/OSP.rbxm, build/SystemEkwipunku.rbxm,
 //!          build/EkranWczytywania.rbxm, build/SystemAlarmowyOSP.rbxm,
 //!          build/SystemMentora.rbxm, build/TabletKierownikaPSP.rbxm,
-//!          build/TestEkwipunku.rbxl
+//!          build/SystemWezwan112.rbxm, build/TestEkwipunku.rbxl
 //!   budowniczy czytaj <plik.rbxm|.rbxl>     (wypisuje drzewo, do sprawdzania)
 //!   budowniczy sprawdz <Klasa>...           (klasy bazowe i właściwości z bazy API)
 
@@ -100,6 +100,17 @@ fn z_tagiem(budowa: InstanceBuilder, tag: &str) -> InstanceBuilder {
 fn material(numer: u32) -> Enum {
     // Enum.Material: Plastic 256, SmoothPlastic 272, Wood 512, Metal 1088, Neon 288
     Enum::from_u32(numer)
+}
+
+/// Obrót wokół osi Y tak, żeby przód (LookVector) patrzył w stronę (dx, dz)
+fn obrot_w_strone(dx: f32, dz: f32) -> Matrix3 {
+    let dlugosc = (dx * dx + dz * dz).sqrt().max(0.001);
+    let (sin, cos) = (-dx / dlugosc, -dz / dlugosc);
+    Matrix3::new(
+        Vector3::new(cos, 0.0, sin),
+        Vector3::new(0.0, 1.0, 0.0),
+        Vector3::new(-sin, 0.0, cos),
+    )
 }
 
 fn znajdz_po_nazwie(dom: &WeakDom, nazwa: &str) -> Vec<Ref> {
@@ -519,6 +530,92 @@ impl Zrodla<'_> {
         )?))
     }
 
+    fn wezwania_wspolne(&self) -> Wynik<InstanceBuilder> {
+        let k = self.src.join("ReplicatedStorage/Wezwania112");
+        Ok(folder("Wezwania112").with_child(skrypt("ModuleScript", "Ustawienia", &k.join("Ustawienia.lua"))?))
+    }
+
+    fn wezwania_serwer(&self) -> Wynik<InstanceBuilder> {
+        let k = self.src.join("ServerScriptService/Wezwania112Serwer");
+        Ok(skrypt("Script", "Wezwania112Serwer", &k.join("init.server.lua"))?
+            .with_child(skrypt("ModuleScript", "Wezwania", &k.join("Wezwania.lua"))?)
+            .with_child(skrypt("ModuleScript", "Rekwizyty", &k.join("Rekwizyty.lua"))?)
+            .with_child(skrypt("ModuleScript", "Rodzaje", &k.join("Rodzaje.lua"))?))
+    }
+
+    fn wezwania_klient(&self) -> Wynik<InstanceBuilder> {
+        let k = self.src.join("StarterPlayerScripts/Wezwania112Klient");
+        Ok(skrypt("LocalScript", "Wezwania112Klient", &k.join("init.client.lua"))?
+            .with_child(skrypt("ModuleScript", "Wyglad", &k.join("Wyglad.lua"))?))
+    }
+
+    /// Miejsca wezwań (Tag MiejsceWezwania, atrybut Rodzaje); nazwa = adres
+    fn miejsca_wezwan(&self, widoczne: bool) -> InstanceBuilder {
+        let punkt = |nazwa: &str, x: f32, z: f32, dx: f32, dz: f32, rodzaje: &str| {
+            z_tagiem(
+                czesc(nazwa, Vector3::new(4.0, 1.0, 4.0), pozycja(x, 0.5, z), kolor(60, 130, 230))
+                    .with_property("CFrame", Variant::CFrame(CFrame::new(Vector3::new(x, 0.5, z), obrot_w_strone(dx, dz))))
+                    .with_property("Transparency", if widoczne { 0.7f32 } else { 1.0f32 })
+                    .with_property("CanCollide", false)
+                    .with_property("Attributes", Attributes::new().with("Rodzaje", rodzaje)),
+                "MiejsceWezwania",
+            )
+        };
+        let drogowe = "Drzewo, Olej, Wypadek, PozarAuta, Poszkodowany";
+        folder("MiejscaWezwan")
+            .with_child(punkt("ul. Strażacka 4", -90.0, 70.0, 1.0, 0.0, drogowe))
+            .with_child(punkt("ul. Polna", 0.0, 70.0, 1.0, 0.0, drogowe))
+            .with_child(punkt("Trasa DK7", 90.0, 70.0, 1.0, 0.0, drogowe))
+            .with_child(punkt("Las Miejski", 130.0, -90.0, 0.0, 1.0, "PozarLasu"))
+            .with_child(punkt("ul. Leśna 7", -130.0, -60.0, 0.0, 1.0, "PozarBudynku"))
+            .with_child(punkt("Osiedle Słoneczne", -150.0, 140.0, 0.0, -1.0, "Podtopienie"))
+            .with_child(punkt("Park Miejski", 80.0, 160.0, 0.0, -1.0, "Kot, Szerszenie"))
+    }
+
+    /// Scena do testów: droga, dom do pożaru budynku i kilka drzew w lesie
+    fn scena_wezwan(&self) -> InstanceBuilder {
+        let sciana = || kolor(220, 210, 190);
+        let (hx, hz) = (-130.0f32, -60.0f32);
+        let drzewo = |nazwa: &str, x: f32, z: f32| {
+            InstanceBuilder::new("Model")
+                .with_name(nazwa)
+                .with_child(
+                    // Walec ma oś wzdłuż X, więc obracamy go do pionu
+                    czesc("Pien", Vector3::new(14.0, 2.0, 2.0), pozycja(x, 7.0, z), kolor(96, 68, 45))
+                        .with_property("Shape", Enum::from_u32(2))
+                        .with_property("CFrame", Variant::CFrame(CFrame::new(
+                            Vector3::new(x, 7.0, z),
+                            Matrix3::new(
+                                Vector3::new(0.0, -1.0, 0.0),
+                                Vector3::new(1.0, 0.0, 0.0),
+                                Vector3::new(0.0, 0.0, 1.0),
+                            ),
+                        ))),
+                )
+                .with_child(
+                    czesc("Korona", Vector3::new(9.0, 9.0, 9.0), pozycja(x, 16.0, z), kolor(62, 112, 52))
+                        .with_property("Shape", Enum::from_u32(0))
+                        .with_property("Material", material(1280)),
+                )
+        };
+        folder("ScenaWezwan")
+            .with_child(czesc("Droga", Vector3::new(320.0, 0.2, 26.0), pozycja(0.0, 0.1, 70.0), kolor(55, 55, 60)).with_property("Material", material(816)))
+            .with_child(czesc("Pas", Vector3::new(320.0, 0.22, 0.6), pozycja(0.0, 0.11, 70.0), kolor(235, 235, 235)))
+            .with_child(czesc("Podloga", Vector3::new(22.0, 0.4, 18.0), pozycja(hx, 0.2, hz), kolor(150, 140, 130)))
+            .with_child(czesc("ScianaTyl", Vector3::new(22.0, 12.0, 1.0), pozycja(hx, 6.0, hz + 9.0), sciana()))
+            .with_child(czesc("ScianaL", Vector3::new(1.0, 12.0, 18.0), pozycja(hx - 11.0, 6.0, hz), sciana()))
+            .with_child(czesc("ScianaP", Vector3::new(1.0, 12.0, 18.0), pozycja(hx + 11.0, 6.0, hz), sciana()))
+            .with_child(czesc("ScianaPrzodL", Vector3::new(8.0, 12.0, 1.0), pozycja(hx - 7.0, 6.0, hz - 9.0), sciana()))
+            .with_child(czesc("ScianaPrzodP", Vector3::new(8.0, 12.0, 1.0), pozycja(hx + 7.0, 6.0, hz - 9.0), sciana()))
+            .with_child(czesc("NadDrzwiami", Vector3::new(6.0, 4.0, 1.0), pozycja(hx, 10.0, hz - 9.0), sciana()))
+            .with_child(czesc("Dach", Vector3::new(24.0, 1.0, 20.0), pozycja(hx, 12.5, hz), kolor(140, 60, 45)))
+            .with_child(drzewo("Drzewo1", 115.0, -100.0))
+            .with_child(drzewo("Drzewo2", 145.0, -78.0))
+            .with_child(drzewo("Drzewo3", 120.0, -70.0))
+            .with_child(drzewo("Drzewo4", 150.0, -105.0))
+            .with_child(drzewo("Drzewo5", 135.0, -115.0))
+    }
+
     fn stanowisko(&self) -> Wynik<InstanceBuilder> {
         let napis = InstanceBuilder::new("TextLabel")
             .with_name("Napis")
@@ -554,6 +651,20 @@ impl Zrodla<'_> {
         )?);
         Ok(tablica)
     }
+}
+
+fn instrukcja_wezwan() -> InstanceBuilder {
+    let tekst = "SYSTEM WEZWAŃ 112 - INSTALACJA\n\
+        Przeciągnij ZAWARTOŚĆ każdego folderu do usługi o tej samej nazwie:\n\
+        - Do ReplicatedStorage  -> Wezwania112  do  ReplicatedStorage\n\
+        - Do ServerScriptService -> Wezwania112Serwer  do  ServerScriptService\n\
+        - Do StarterPlayerScripts -> Wezwania112Klient  do  StarterPlayer > StarterPlayerScripts\n\
+        - Do Workspace (przyklad) -> MiejscaWezwan  do  Workspace i ustaw punkty na swojej mapie\n\
+        Punkt = część z Tagiem MiejsceWezwania; nazwa = adres; atrybut Rodzaje = jakie wezwania tu wypadają.\n\
+        Komenda: /wezwanie [rodzaj | lista | stop]. Ustawienia: ReplicatedStorage > Wezwania112 > Ustawienia.";
+    InstanceBuilder::new("StringValue")
+        .with_name("CZYTAJ_MNIE")
+        .with_property("Value", tekst)
 }
 
 fn instrukcja_tabletu() -> InstanceBuilder {
@@ -706,6 +817,19 @@ fn zbuduj(plik_przedmiotow: &Path, projekt: &Path) -> Wynik<()> {
     );
     zapisz(&build.join("TabletKierownikaPSP.rbxm"), &tablet, &[tablet_ref])?;
 
+    // 3e. System wezwań 112
+    let mut wezwania = WeakDom::new(folder("Korzen"));
+    let wezwania_ref = wezwania.insert(
+        wezwania.root_ref(),
+        folder("SystemWezwan112")
+            .with_child(instrukcja_wezwan())
+            .with_child(folder("Do ReplicatedStorage").with_child(zrodla.wezwania_wspolne()?))
+            .with_child(folder("Do ServerScriptService").with_child(zrodla.wezwania_serwer()?))
+            .with_child(folder("Do StarterPlayerScripts").with_child(zrodla.wezwania_klient()?))
+            .with_child(folder("Do Workspace (przyklad)").with_child(zrodla.miejsca_wezwan(false))),
+    );
+    zapisz(&build.join("SystemWezwan112.rbxm"), &wezwania, &[wezwania_ref])?;
+
     // 4. Gotowe miejsce testowe: wszystko na swoich miejscach
     let mut miejsce = WeakDom::new(InstanceBuilder::new("DataModel"));
     let dm = miejsce.root_ref();
@@ -736,7 +860,9 @@ fn zbuduj(plik_przedmiotow: &Path, projekt: &Path) -> Wynik<()> {
             .with_child(zrodla.miejsca_zdarzen(true))
             .with_child(zrodla.mentor_punkty(-12.0, 6.0, 12.0, -6.0))
             .with_child(zrodla.remiza_psp(-70.0, -40.0))
-            .with_child(zrodla.stanowisko_kierownika()?),
+            .with_child(zrodla.stanowisko_kierownika()?)
+            .with_child(zrodla.scena_wezwan())
+            .with_child(zrodla.miejsca_wezwan(true)),
     );
     let _ = workspace;
     miejsce.insert(dm, InstanceBuilder::new("Lighting").with_name("Lighting"));
@@ -753,7 +879,8 @@ fn zbuduj(plik_przedmiotow: &Path, projekt: &Path) -> Wynik<()> {
             .with_child(zrodla.wspolne()?)
             .with_child(zrodla.alarm_wspolne()?)
             .with_child(zrodla.mentor_wspolne()?)
-            .with_child(zrodla.tablet_wspolne()?),
+            .with_child(zrodla.tablet_wspolne()?)
+            .with_child(zrodla.wezwania_wspolne()?),
     );
     miejsce.insert(
         dm,
@@ -762,7 +889,8 @@ fn zbuduj(plik_przedmiotow: &Path, projekt: &Path) -> Wynik<()> {
             .with_child(zrodla.serwer()?)
             .with_child(zrodla.alarm_serwer()?)
             .with_child(zrodla.mentor_serwer()?)
-            .with_child(zrodla.tablet_serwer()?),
+            .with_child(zrodla.tablet_serwer()?)
+            .with_child(zrodla.wezwania_serwer()?),
     );
     let magazyn_miejsca = miejsce.insert(
         dm,
@@ -789,7 +917,8 @@ fn zbuduj(plik_przedmiotow: &Path, projekt: &Path) -> Wynik<()> {
                 .with_child(zrodla.klient()?)
                 .with_child(zrodla.alarm_klient()?)
                 .with_child(zrodla.mentor_klient()?)
-                .with_child(zrodla.tablet_klient()?),
+                .with_child(zrodla.tablet_klient()?)
+                .with_child(zrodla.wezwania_klient()?),
         ),
     );
     miejsce.insert(

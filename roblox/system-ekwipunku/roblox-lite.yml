@@ -48,3 +48,9 @@ globals:
     any: true
   ColorSequenceKeypoint:
     any: true
+  NumberRange:
+    any: true
+  RaycastParams:
+    any: true
+  utf8:
+    any: true

@@ -346,7 +346,7 @@ local function zakoncz(id, kto)
 end
 
 -- Wysyła alarm. autor: gracz (z panelu) albo nil / tekst (z innego skryptu).
--- Zwraca true/false i komunikat.
+-- Zwraca true/false, komunikat i (gdy się udało) numer alarmu.
 function Alarmy.Wyslij(dane, autor)
 	local odGracza = typeof(autor) == "Instance" and autor:IsA("Player")
 
@@ -433,9 +433,9 @@ function Alarmy.Wyslij(dane, autor)
 	end)
 
 	if alarm.LiczbaOdbiorcow == 0 then
-		return true, "Alarm wysłany, ale nikogo z tych jednostek nie ma teraz w grze."
+		return true, "Alarm wysłany, ale nikogo z tych jednostek nie ma teraz w grze.", alarm.Id
 	end
-	return true, ("Zaalarmowano strażaków: %d."):format(alarm.LiczbaOdbiorcow)
+	return true, ("Zaalarmowano strażaków: %d."):format(alarm.LiczbaOdbiorcow), alarm.Id
 end
 
 function Alarmy.Zakoncz(id)

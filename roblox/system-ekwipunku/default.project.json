@@ -14,6 +14,9 @@
       },
       "TabletPSP": {
         "$path": "src/ReplicatedStorage/TabletPSP"
+      },
+      "Wezwania112": {
+        "$path": "src/ReplicatedStorage/Wezwania112"
       }
     },
     "ServerScriptService": {
@@ -28,6 +31,9 @@
       },
       "TabletPSPSerwer": {
         "$path": "src/ServerScriptService/TabletPSPSerwer.server.lua"
+      },
+      "Wezwania112Serwer": {
+        "$path": "src/ServerScriptService/Wezwania112Serwer"
       }
     },
     "StarterPlayer": {
@@ -43,6 +49,9 @@
         },
         "TabletPSPKlient": {
           "$path": "src/StarterPlayerScripts/TabletPSPKlient"
+        },
+        "Wezwania112Klient": {
+          "$path": "src/StarterPlayerScripts/Wezwania112Klient"
         }
       }
     },

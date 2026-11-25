@@ -11,6 +11,7 @@ Ekwipunek otwierany klawiszem **X**, z rangami. Każdy gracz startuje jako **Oby
 | `build/SystemAlarmowyOSP.rbxm` | System alarmowania OSP z przykładową remizą |
 | `build/SystemMentora.rbxm` | Mentor dla nowych graczy |
 | `build/TabletKierownikaPSP.rbxm` | Tablet kierownika PSP z przykładową remizą |
+| `build/SystemWezwan112.rbxm` | System wezwań 112 (10 rodzajów zdarzeń) |
 | `build/TestEkwipunku.rbxl` | Gotowe miejsce testowe ze wszystkim: otwórz i kliknij Play |
 | `przedmioty/OSP.rbxm` | Przedmioty OSP klienta (oczyszczone) |
 | `src/` | Kod źródłowy (Luau) |
@@ -136,6 +137,32 @@ Tablet otwiera się po wzięciu go do ręki: wysuwa się z dołu ekranu, ma pase
 | Oświetlenie | Światła w strefach remizy (atrybut `Strefa`) | `SwiatloPSP` |
 
 Ustawienia (`ReplicatedStorage → TabletPSP → Ustawienia`): nazwa jednostki, napis, **logo** (`rbxassetid://...`; bez niego jest wbudowany znak „PSP”), kolor, kto jest kierownikiem, rangi załogi, kolejność i nazwy aplikacji, dźwięki i czasy. Do EQ doszły rangi `PSP` i `Kierownik PSP`.
+
+## System wezwań 112
+
+Wstaw `SystemWezwan112.rbxm` i rozłóż foldery (`Wezwania112` do ReplicatedStorage, `Wezwania112Serwer` do ServerScriptService, `Wezwania112Klient` do StarterPlayerScripts). `MiejscaWezwan` to przykładowe punkty: ustaw je na swojej mapie.
+
+**Miejsca:** część z Tagiem `MiejsceWezwania`. Nazwa części to adres, przód części to kierunek drogi, a atrybut `Rodzaje` mówi, co może tu wypaść (np. `Drzewo, Olej, Wypadek`).
+
+| Id | Wezwanie | Zadania |
+|---|---|---|
+| `Drzewo` | Powalone drzewo | przetnij 3 części pnia piłą (animacja cięcia), usuń gałęzie |
+| `PozarLasu` | Pożar lasu | ugaś ogień (rozprzestrzenia się co 25 s, do 14 ognisk), dogaś pogorzelisko |
+| `PozarBudynku` | Pożar budynku | ugaś ogień, wynieś poszkodowanego, pierwsza pomoc |
+| `Wypadek` | Wypadek drogowy | odłącz akumulator, wytnij drzwi Szczękami Życia, pomoc kierowcy, sorbent na wyciek |
+| `PozarAuta` | Pożar samochodu | ugaś auto (zwęgla się), sprawdź kamerą termowizyjną |
+| `Olej` | Plama oleju | posyp sorbentem, zamieć szczotką |
+| `Poszkodowany` | Osoba poszkodowana | pierwsza pomoc, szyny Kramera |
+| `Kot` | Kot na drzewie | zdejmij kota, oddaj właścicielce |
+| `Podtopienie` | Podtopienie | odłącz prąd, uruchom pompę, woda opada sama |
+| `Szerszenie` | Gniazdo szerszeni | odgrodź taśmą, zdejmij gniazdo bosakiem |
+
+- **Gaszenie:** prądownice klienta naprawdę gaszą ogień (ich woda zmniejsza i niszczy `Fire`). Można też przytrzymać E z gaśniczym narzędziem w ręce.
+- **Ikona 112** nad miejscem zdarzenia jest widoczna z daleka (tylko dla strażaków) i pokazuje odległość. W lewym dolnym rogu jest lista wezwań: kliknięcie włącza słup światła (nawigację), a przy najbliższym wezwaniu widać listę zadań z postępem i potrzebnym narzędziem.
+- **Koniec:** po wszystkich zadaniach strażacy dostają powiadomienie „Pomyślnie zakończono wezwanie”, a uczestnicy +1 do licznika `Wezwania` w tabeli graczy.
+- **Wezwania** pojawiają się same (co 4–8 min, gdy jest strażak w grze) albo z komendy `/wezwanie [rodzaj | lista | stop]`. Jeśli jest system alarmowania OSP, przychodzi też pager.
+
+Ustawienia (`ReplicatedStorage → Wezwania112 → Ustawienia`): kto jest strażakiem, nazwy narzędzi dla każdej grupy (albo `WymagajNarzedzi = false`), automatyczne wezwania i czasy, nazwy, opisy i włączanie rodzajów, dźwięki i animacje.
 
 ## Budowanie ze źródeł
 

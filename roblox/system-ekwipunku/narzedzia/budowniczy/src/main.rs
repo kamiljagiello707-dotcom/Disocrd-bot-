@@ -3,7 +3,7 @@
 //!   budowniczy zbuduj <Items.rbxm> <katalog projektu>
 //!       -> przedmioty/OSP.rbxm, build/SystemEkwipunku.rbxm,
 //!          build/EkranWczytywania.rbxm, build/SystemAlarmowyOSP.rbxm,
-//!          build/TestEkwipunku.rbxl
+//!          build/SystemMentora.rbxm, build/TestEkwipunku.rbxl
 //!   budowniczy czytaj <plik.rbxm|.rbxl>     (wypisuje drzewo, do sprawdzania)
 //!   budowniczy sprawdz <Klasa>...           (klasy bazowe i właściwości z bazy API)
 
@@ -290,6 +290,50 @@ impl Zrodla<'_> {
             .with_child(punkt("Skrzyżowanie DK7", -60.0, 200.0))
     }
 
+    fn mentor_wspolne(&self) -> Wynik<InstanceBuilder> {
+        let k = self.src.join("ReplicatedStorage/Mentor");
+        Ok(folder("Mentor").with_child(skrypt("ModuleScript", "Ustawienia", &k.join("Ustawienia.lua"))?))
+    }
+
+    fn mentor_serwer(&self) -> Wynik<InstanceBuilder> {
+        skrypt(
+            "Script",
+            "MentorSerwer",
+            &self.src.join("ServerScriptService/MentorSerwer.server.lua"),
+        )
+    }
+
+    fn mentor_klient(&self) -> Wynik<InstanceBuilder> {
+        let k = self.src.join("StarterPlayerScripts/MentorKlient");
+        Ok(skrypt("LocalScript", "MentorKlient", &k.join("init.client.lua"))?
+            .with_child(skrypt("ModuleScript", "Wyglad", &k.join("Wyglad.lua"))?)
+            .with_child(skrypt("ModuleScript", "Menu", &k.join("Menu.lua"))?))
+    }
+
+    /// Miejsce mentora (Tag "Mentor") zwrócone przodem w stronę (dx, dz)
+    /// i cel "Remiza OSP" (Tag "MentorCel") przed tablicą OSP
+    fn mentor_punkty(&self, x: f32, z: f32, dx: f32, dz: f32) -> InstanceBuilder {
+        let dlugosc = (dx * dx + dz * dz).sqrt().max(0.001);
+        let (sin, cos) = (-dx / dlugosc, -dz / dlugosc);
+        let obrot = Matrix3::new(
+            Vector3::new(cos, 0.0, sin),
+            Vector3::new(0.0, 1.0, 0.0),
+            Vector3::new(-sin, 0.0, cos),
+        );
+        let punkt = z_tagiem(
+            czesc("MentorPunkt", Vector3::new(2.0, 1.0, 2.0), pozycja(x, 0.5, z), kolor(245, 245, 247))
+                .with_property("CFrame", Variant::CFrame(CFrame::new(Vector3::new(x, 0.5, z), obrot))),
+            "Mentor",
+        );
+        let cel = z_tagiem(
+            czesc("Remiza OSP", Vector3::new(4.0, 1.0, 4.0), pozycja(0.0, 0.5, -10.0), kolor(235, 75, 65))
+                .with_property("Transparency", 1.0f32)
+                .with_property("CanCollide", false),
+            "MentorCel",
+        );
+        folder("Mentor (miejsca)").with_child(punkt).with_child(cel)
+    }
+
     fn stanowisko(&self) -> Wynik<InstanceBuilder> {
         let napis = InstanceBuilder::new("TextLabel")
             .with_name("Napis")
@@ -325,6 +369,20 @@ impl Zrodla<'_> {
         )?);
         Ok(tablica)
     }
+}
+
+fn instrukcja_mentora() -> InstanceBuilder {
+    let tekst = "MENTOR - INSTALACJA\n\
+        Przeciągnij ZAWARTOŚĆ każdego folderu do usługi o tej samej nazwie:\n\
+        - Do ReplicatedStorage  -> Mentor  do  ReplicatedStorage\n\
+        - Do ServerScriptService -> MentorSerwer  do  ServerScriptService\n\
+        - Do StarterPlayerScripts -> MentorKlient  do  StarterPlayer > StarterPlayerScripts\n\
+        - Do Workspace (przyklad) -> MentorPunkt (Tag Mentor) i Remiza OSP (Tag MentorCel)  do  Workspace\n\
+        Mentor stanie na MentorPunkt przodem tam, gdzie przód części.\n\
+        Teksty i rozdziały: ReplicatedStorage > Mentor > Ustawienia.";
+    InstanceBuilder::new("StringValue")
+        .with_name("CZYTAJ_MNIE")
+        .with_property("Value", tekst)
 }
 
 fn instrukcja_alarmu() -> InstanceBuilder {
@@ -413,6 +471,19 @@ fn zbuduj(plik_przedmiotow: &Path, projekt: &Path) -> Wynik<()> {
     );
     zapisz(&build.join("SystemAlarmowyOSP.rbxm"), &alarm, &[alarm_ref])?;
 
+    // 3c. Mentor
+    let mut mentor = WeakDom::new(folder("Korzen"));
+    let mentor_ref = mentor.insert(
+        mentor.root_ref(),
+        folder("SystemMentora")
+            .with_child(instrukcja_mentora())
+            .with_child(folder("Do ReplicatedStorage").with_child(zrodla.mentor_wspolne()?))
+            .with_child(folder("Do ServerScriptService").with_child(zrodla.mentor_serwer()?))
+            .with_child(folder("Do StarterPlayerScripts").with_child(zrodla.mentor_klient()?))
+            .with_child(folder("Do Workspace (przyklad)").with_child(zrodla.mentor_punkty(-12.0, 6.0, 12.0, -6.0))),
+    );
+    zapisz(&build.join("SystemMentora.rbxm"), &mentor, &[mentor_ref])?;
+
     // 4. Gotowe miejsce testowe: wszystko na swoich miejscach
     let mut miejsce = WeakDom::new(InstanceBuilder::new("DataModel"));
     let dm = miejsce.root_ref();
@@ -440,7 +511,8 @@ fn zbuduj(plik_przedmiotow: &Path, projekt: &Path) -> Wynik<()> {
             )
             .with_child(zrodla.stanowisko()?)
             .with_child(zrodla.remiza(30.0, -10.0))
-            .with_child(zrodla.miejsca_zdarzen(true)),
+            .with_child(zrodla.miejsca_zdarzen(true))
+            .with_child(zrodla.mentor_punkty(-12.0, 6.0, 12.0, -6.0)),
     );
     let _ = workspace;
     miejsce.insert(dm, InstanceBuilder::new("Lighting").with_name("Lighting"));
@@ -455,14 +527,16 @@ fn zbuduj(plik_przedmiotow: &Path, projekt: &Path) -> Wynik<()> {
         InstanceBuilder::new("ReplicatedStorage")
             .with_name("ReplicatedStorage")
             .with_child(zrodla.wspolne()?)
-            .with_child(zrodla.alarm_wspolne()?),
+            .with_child(zrodla.alarm_wspolne()?)
+            .with_child(zrodla.mentor_wspolne()?),
     );
     miejsce.insert(
         dm,
         InstanceBuilder::new("ServerScriptService")
             .with_name("ServerScriptService")
             .with_child(zrodla.serwer()?)
-            .with_child(zrodla.alarm_serwer()?),
+            .with_child(zrodla.alarm_serwer()?)
+            .with_child(zrodla.mentor_serwer()?),
     );
     let magazyn_miejsca = miejsce.insert(
         dm,
@@ -482,7 +556,8 @@ fn zbuduj(plik_przedmiotow: &Path, projekt: &Path) -> Wynik<()> {
             InstanceBuilder::new("StarterPlayerScripts")
                 .with_name("StarterPlayerScripts")
                 .with_child(zrodla.klient()?)
-                .with_child(zrodla.alarm_klient()?),
+                .with_child(zrodla.alarm_klient()?)
+                .with_child(zrodla.mentor_klient()?),
         ),
     );
     miejsce.insert(

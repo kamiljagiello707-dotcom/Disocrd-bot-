@@ -9,6 +9,7 @@ Ekwipunek otwierany klawiszem **X**, z rangami. Każdy gracz startuje jako **Oby
 | `build/SystemEkwipunku.rbxm` | Paczka do wstawienia do gry klienta |
 | `build/EkranWczytywania.rbxm` | Ekran wczytywania (LocalScript do ReplicatedFirst) |
 | `build/SystemAlarmowyOSP.rbxm` | System alarmowania OSP z przykładową remizą |
+| `build/SystemMentora.rbxm` | Mentor dla nowych graczy |
 | `build/TestEkwipunku.rbxl` | Gotowe miejsce testowe ze wszystkim: otwórz i kliknij Play |
 | `przedmioty/OSP.rbxm` | Przedmioty OSP klienta (oczyszczone) |
 | `src/` | Kod źródłowy (Luau) |
@@ -105,6 +106,18 @@ Alarm z innego skryptu:
 local Alarmy = require(game.ServerScriptService.AlarmSerwer.Alarmy)
 Alarmy.Wyslij({ Jednostki = { "OSP" }, Rodzaj = "Pożar", Miejsce = workspace.Dom, Opis = "Pali się dom" })
 ```
+
+## Mentor (pomoc dla nowych graczy)
+
+Wstaw `SystemMentora.rbxm` i rozłóż foldery (`Mentor` do ReplicatedStorage, `MentorSerwer` do ServerScriptService, `MentorKlient` do StarterPlayerScripts). Z folderu `Do Workspace (przyklad)` weź `MentorPunkt` (tu stanie mentor) i `Remiza OSP` (cel przycisku drogi).
+
+- Mentor (awatar R6) staje na części z Tagiem `Mentor`, przodem tam, gdzie przód części. Ma plakietkę z imieniem i animację stania.
+- Wygląd: `WygladZGracza = UserId` (domyślnie 0 = właściciel gry).
+- **E** otwiera rozmowę: kamera najeżdża na mentora, mentor macha, a obok jest menu z dymkiem (tekst pisze się na żywo), listą rozdziałów (✓ przy przeczytanych), krokami i przyciskami Wstecz / Dalej (albo strzałki na klawiaturze).
+- **Pokaż drogę**: słup światła prowadzi do części z Tagiem `MentorCel` (nazwa części = `Cel` w rozdziale). Opcjonalnie `PozwolNaTeleport = true` dodaje „Zabierz mnie tam”.
+- **Nowi gracze** (DataStore) widzą „!” nad mentorem, podpowiedź i słup światła prowadzący do niego.
+
+Wszystkie teksty są w `ReplicatedStorage → Mentor → Ustawienia`. Rozdział to `Ikona`, `Tytul`, `Tekst` (dymek), `Kroki` (lista) i opcjonalny `Przycisk`. W tekstach działają `{nick}` i `{serwer}`.
 
 ## Budowanie ze źródeł
 

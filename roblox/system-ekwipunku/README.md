@@ -12,6 +12,7 @@ Ekwipunek otwierany klawiszem **X**, z rangami. Każdy gracz startuje jako **Oby
 | `build/SystemMentora.rbxm` | Mentor dla nowych graczy |
 | `build/TabletKierownikaPSP.rbxm` | Tablet kierownika PSP z przykładową remizą |
 | `build/SystemWezwan112.rbxm` | System wezwań 112 (10 rodzajów zdarzeń) |
+| `build/SystemPowiadomien.rbxm` | Powiadomienia w prawym górnym rogu |
 | `build/TestEkwipunku.rbxl` | Gotowe miejsce testowe ze wszystkim: otwórz i kliknij Play |
 | `przedmioty/OSP.rbxm` | Przedmioty OSP klienta (oczyszczone) |
 | `src/` | Kod źródłowy (Luau) |
@@ -163,6 +164,31 @@ Wstaw `SystemWezwan112.rbxm` i rozłóż foldery (`Wezwania112` do ReplicatedSto
 - **Wezwania** pojawiają się same (co 4–8 min, gdy jest strażak w grze) albo z komendy `/wezwanie [rodzaj | lista | stop]`. Jeśli jest system alarmowania OSP, przychodzi też pager.
 
 Ustawienia (`ReplicatedStorage → Wezwania112 → Ustawienia`): kto jest strażakiem, nazwy narzędzi dla każdej grupy (albo `WymagajNarzedzi = false`), automatyczne wezwania i czasy, nazwy, opisy i włączanie rodzajów, dźwięki i animacje.
+
+## System powiadomień
+
+Wstaw `SystemPowiadomien.rbxm` i rozłóż foldery (`Powiadomienia` do ReplicatedStorage, `PowiadomieniaSerwer` do ServerScriptService, `PowiadomieniaKlient` do StarterPlayerScripts).
+
+Karty pojawiają się w prawym górnym rogu: wsuwają się z prawej, mają ikonę w kolorze typu (info, sukces, ostrzeżenie, błąd, akcja), tytuł, tekst, godzinę i pasek czasu. Naraz widać najwyżej 4 karty, a kliknięcie zamyka kartę.
+
+**Z kodu (serwer):**
+
+```lua
+local Powiadomienia = require(game.ReplicatedStorage.Powiadomienia)
+Powiadomienia.Wyslij(gracz, { Tytul = "Drzwi otwarte", Tekst = "Pojazd: Sedan", Typ = "akcja", Ikona = "auto" })
+Powiadomienia.WyslijWPoblizu(pozycja, 40, { Tekst = "Ktoś otworzył drzwi pojazdu" }, gracz)
+Powiadomienia.WyslijWszystkim({ Tytul = "Serwer", Tekst = "Restart za 5 minut", Typ = "ostrzezenie" })
+```
+
+U gracza (`LocalScript`): `Powiadomienia.Pokaz({...})` zwraca kartę z `:Aktualizuj({...})` i `:Zamknij()`. Pole `Postep = 3` robi pasek ładowania, a `Id` podmienia istniejącą kartę.
+
+**Bez kodu (atrybuty na ProximityPrompt):**
+- `Powiadomienie`: tekst dla gracza, który użył (np. „Otworzyłeś szafkę”)
+- `PowiadomienieWPoblizu`: tekst dla innych w pobliżu (np. „{gracz} otwiera szafkę”)
+- `PowiadomienieTrwa`: karta z paskiem w trakcie przytrzymywania E (np. „Przeszukujesz…”)
+- opcjonalnie `PowiadomienieTytul`, `PowiadomienieTyp`, `PowiadomienieIkona`, `PowiadomienieZasieg`
+
+Do tego automatyczne „Wsiadasz do pojazdu” i „Wysiadasz z pojazdu” (VehicleSeat). Ikony: `info`, `ok`, `uwaga`, `blad`, `drzwi`, `auto`, `szukaj`, `klucz`, `skrzynka`, `osoba`, `telefon`.
 
 ## Budowanie ze źródeł
 

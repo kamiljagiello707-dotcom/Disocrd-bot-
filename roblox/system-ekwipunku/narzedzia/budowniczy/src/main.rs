@@ -4,7 +4,8 @@
 //!       -> przedmioty/OSP.rbxm, build/SystemEkwipunku.rbxm,
 //!          build/EkranWczytywania.rbxm, build/SystemAlarmowyOSP.rbxm,
 //!          build/SystemMentora.rbxm, build/TabletKierownikaPSP.rbxm,
-//!          build/SystemWezwan112.rbxm, build/TestEkwipunku.rbxl
+//!          build/SystemWezwan112.rbxm, build/SystemPowiadomien.rbxm,
+//!          build/TestEkwipunku.rbxl
 //!   budowniczy czytaj <plik.rbxm|.rbxl>     (wypisuje drzewo, do sprawdzania)
 //!   budowniczy sprawdz <Klasa>...           (klasy bazowe i właściwości z bazy API)
 
@@ -616,6 +617,98 @@ impl Zrodla<'_> {
             .with_child(drzewo("Drzewo5", 135.0, -115.0))
     }
 
+    fn powiadomienia_wspolne(&self) -> Wynik<InstanceBuilder> {
+        let k = self.src.join("ReplicatedStorage/Powiadomienia");
+        Ok(skrypt("ModuleScript", "Powiadomienia", &k.join("init.lua"))?
+            .with_child(skrypt("ModuleScript", "Ustawienia", &k.join("Ustawienia.lua"))?)
+            .with_child(skrypt("ModuleScript", "Ikony", &k.join("Ikony.lua"))?))
+    }
+
+    fn powiadomienia_serwer(&self) -> Wynik<InstanceBuilder> {
+        skrypt(
+            "Script",
+            "PowiadomieniaSerwer",
+            &self.src.join("ServerScriptService/PowiadomieniaSerwer.server.lua"),
+        )
+    }
+
+    fn powiadomienia_klient(&self) -> Wynik<InstanceBuilder> {
+        skrypt(
+            "LocalScript",
+            "PowiadomieniaKlient",
+            &self.src.join("StarterPlayerScripts/PowiadomieniaKlient.client.lua"),
+        )
+    }
+
+    /// Przykłady: sedan z drzwiami (API), śmietnik (pasek + wynik), szafka (same atrybuty)
+    fn przyklady_powiadomien(&self) -> Wynik<InstanceBuilder> {
+        let (x, z) = (24.0f32, 32.0f32);
+        let lakier = || kolor(40, 60, 110);
+        let szklo = || kolor(35, 40, 48);
+        let drzwi = |nazwa: &str, dx: f32, kat: f64| -> Wynik<InstanceBuilder> {
+            Ok(czesc(nazwa, Vector3::new(0.3, 1.9, 3.2), pozycja(x + dx, 2.4, z - 0.4), kolor(34, 52, 96))
+                .with_property("Attributes", Attributes::new().with("KatOtwarcia", kat))
+                .with_child(
+                    InstanceBuilder::new("ProximityPrompt")
+                        .with_name("ProximityPrompt")
+                        .with_property("ActionText", "Otwórz drzwi")
+                        .with_property("ObjectText", "Sedan")
+                        .with_property("HoldDuration", 0.0f32)
+                        .with_property("MaxActivationDistance", 8.0f32)
+                        .with_property("RequiresLineOfSight", false),
+                )
+                .with_child(skrypt("Script", "Drzwi", &self.src.join("Przyklady/PrzykladDrzwi.server.lua"))?))
+        };
+        let mut sedan = InstanceBuilder::new("Model")
+            .with_name("Sedan")
+            .with_child(czesc("Nadwozie", Vector3::new(6.0, 2.0, 12.0), pozycja(x, 1.9, z), lakier()))
+            .with_child(czesc("Kabina", Vector3::new(5.6, 1.9, 6.0), pozycja(x, 3.85, z + 0.6), lakier()))
+            .with_child(czesc("SzybaPrzod", Vector3::new(5.2, 1.6, 0.2), pozycja(x, 3.85, z - 2.45), szklo()).with_property("Material", material(1568)))
+            .with_child(czesc("SzybaTyl", Vector3::new(5.2, 1.6, 0.2), pozycja(x, 3.85, z + 3.65), szklo()).with_property("Material", material(1568)))
+            .with_child(drzwi("DrzwiLewe", -3.15, -70.0)?)
+            .with_child(drzwi("DrzwiPrawe", 3.15, 70.0)?);
+        for (dx, dz) in [(-3.0f32, -4.0f32), (3.0, -4.0), (-3.0, 4.0), (3.0, 4.0)] {
+            sedan = sedan.with_child(
+                czesc("Kolo", Vector3::new(1.0, 2.4, 2.4), pozycja(x + dx, 1.2, z + dz), kolor(25, 25, 28))
+                    .with_property("Shape", Enum::from_u32(2)),
+            );
+        }
+        let smietnik = czesc("Smietnik", Vector3::new(2.4, 3.2, 2.4), pozycja(12.0, 1.6, 28.0), kolor(40, 90, 50))
+            .with_child(
+                InstanceBuilder::new("ProximityPrompt")
+                    .with_name("ProximityPrompt")
+                    .with_property("ActionText", "Przeszukaj")
+                    .with_property("ObjectText", "Śmietnik")
+                    .with_property("HoldDuration", 3.0f32)
+                    .with_property("RequiresLineOfSight", false)
+                    .with_property(
+                        "Attributes",
+                        Attributes::new()
+                            .with("PowiadomienieTrwa", "Przeszukujesz śmietnik...")
+                            .with("PowiadomienieIkona", "szukaj"),
+                    ),
+            )
+            .with_child(skrypt("Script", "Przeszukiwanie", &self.src.join("Przyklady/PrzykladSmietnik.server.lua"))?);
+        let szafka = czesc("Szafka", Vector3::new(3.0, 6.0, 1.6), pozycja(6.0, 3.0, 28.0), kolor(120, 125, 135))
+            .with_property("Material", material(1088))
+            .with_child(
+                InstanceBuilder::new("ProximityPrompt")
+                    .with_name("ProximityPrompt")
+                    .with_property("ActionText", "Otwórz szafkę")
+                    .with_property("ObjectText", "Szafka")
+                    .with_property("HoldDuration", 0.3f32)
+                    .with_property("RequiresLineOfSight", false)
+                    .with_property(
+                        "Attributes",
+                        Attributes::new()
+                            .with("Powiadomienie", "Otworzyłeś szafkę. W środku wisi mundur.")
+                            .with("PowiadomienieWPoblizu", "{gracz} otwiera szafkę.")
+                            .with("PowiadomienieIkona", "skrzynka"),
+                    ),
+            );
+        Ok(folder("PrzykladyPowiadomien").with_child(sedan).with_child(smietnik).with_child(szafka))
+    }
+
     fn stanowisko(&self) -> Wynik<InstanceBuilder> {
         let napis = InstanceBuilder::new("TextLabel")
             .with_name("Napis")
@@ -651,6 +744,20 @@ impl Zrodla<'_> {
         )?);
         Ok(tablica)
     }
+}
+
+fn instrukcja_powiadomien() -> InstanceBuilder {
+    let tekst = "SYSTEM POWIADOMIEŃ - INSTALACJA\n\
+        Przeciągnij ZAWARTOŚĆ każdego folderu do usługi o tej samej nazwie:\n\
+        - Do ReplicatedStorage  -> Powiadomienia  do  ReplicatedStorage\n\
+        - Do ServerScriptService -> PowiadomieniaSerwer  do  ServerScriptService\n\
+        - Do StarterPlayerScripts -> PowiadomieniaKlient  do  StarterPlayer > StarterPlayerScripts\n\
+        - Do Workspace (przyklad) -> PrzykladyPowiadomien (opcjonalnie)\n\
+        Z kodu: require(game.ReplicatedStorage.Powiadomienia).Wyslij(gracz, { Tytul, Tekst, Typ, Ikona }).\n\
+        Bez kodu: atrybuty Powiadomienie / PowiadomienieWPoblizu / PowiadomienieTrwa na ProximityPrompt.";
+    InstanceBuilder::new("StringValue")
+        .with_name("CZYTAJ_MNIE")
+        .with_property("Value", tekst)
 }
 
 fn instrukcja_wezwan() -> InstanceBuilder {
@@ -830,6 +937,19 @@ fn zbuduj(plik_przedmiotow: &Path, projekt: &Path) -> Wynik<()> {
     );
     zapisz(&build.join("SystemWezwan112.rbxm"), &wezwania, &[wezwania_ref])?;
 
+    // 3f. System powiadomień
+    let mut powiadomienia = WeakDom::new(folder("Korzen"));
+    let powiadomienia_ref = powiadomienia.insert(
+        powiadomienia.root_ref(),
+        folder("SystemPowiadomien")
+            .with_child(instrukcja_powiadomien())
+            .with_child(folder("Do ReplicatedStorage").with_child(zrodla.powiadomienia_wspolne()?))
+            .with_child(folder("Do ServerScriptService").with_child(zrodla.powiadomienia_serwer()?))
+            .with_child(folder("Do StarterPlayerScripts").with_child(zrodla.powiadomienia_klient()?))
+            .with_child(folder("Do Workspace (przyklad)").with_child(zrodla.przyklady_powiadomien()?)),
+    );
+    zapisz(&build.join("SystemPowiadomien.rbxm"), &powiadomienia, &[powiadomienia_ref])?;
+
     // 4. Gotowe miejsce testowe: wszystko na swoich miejscach
     let mut miejsce = WeakDom::new(InstanceBuilder::new("DataModel"));
     let dm = miejsce.root_ref();
@@ -862,7 +982,8 @@ fn zbuduj(plik_przedmiotow: &Path, projekt: &Path) -> Wynik<()> {
             .with_child(zrodla.remiza_psp(-70.0, -40.0))
             .with_child(zrodla.stanowisko_kierownika()?)
             .with_child(zrodla.scena_wezwan())
-            .with_child(zrodla.miejsca_wezwan(true)),
+            .with_child(zrodla.miejsca_wezwan(true))
+            .with_child(zrodla.przyklady_powiadomien()?),
     );
     let _ = workspace;
     miejsce.insert(dm, InstanceBuilder::new("Lighting").with_name("Lighting"));
@@ -880,7 +1001,8 @@ fn zbuduj(plik_przedmiotow: &Path, projekt: &Path) -> Wynik<()> {
             .with_child(zrodla.alarm_wspolne()?)
             .with_child(zrodla.mentor_wspolne()?)
             .with_child(zrodla.tablet_wspolne()?)
-            .with_child(zrodla.wezwania_wspolne()?),
+            .with_child(zrodla.wezwania_wspolne()?)
+            .with_child(zrodla.powiadomienia_wspolne()?),
     );
     miejsce.insert(
         dm,
@@ -890,7 +1012,8 @@ fn zbuduj(plik_przedmiotow: &Path, projekt: &Path) -> Wynik<()> {
             .with_child(zrodla.alarm_serwer()?)
             .with_child(zrodla.mentor_serwer()?)
             .with_child(zrodla.tablet_serwer()?)
-            .with_child(zrodla.wezwania_serwer()?),
+            .with_child(zrodla.wezwania_serwer()?)
+            .with_child(zrodla.powiadomienia_serwer()?),
     );
     let magazyn_miejsca = miejsce.insert(
         dm,
@@ -918,7 +1041,8 @@ fn zbuduj(plik_przedmiotow: &Path, projekt: &Path) -> Wynik<()> {
                 .with_child(zrodla.alarm_klient()?)
                 .with_child(zrodla.mentor_klient()?)
                 .with_child(zrodla.tablet_klient()?)
-                .with_child(zrodla.wezwania_klient()?),
+                .with_child(zrodla.wezwania_klient()?)
+                .with_child(zrodla.powiadomienia_klient()?),
         ),
     );
     miejsce.insert(

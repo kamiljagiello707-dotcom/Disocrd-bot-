@@ -17,6 +17,9 @@
       },
       "Wezwania112": {
         "$path": "src/ReplicatedStorage/Wezwania112"
+      },
+      "Powiadomienia": {
+        "$path": "src/ReplicatedStorage/Powiadomienia"
       }
     },
     "ServerScriptService": {
@@ -34,6 +37,9 @@
       },
       "Wezwania112Serwer": {
         "$path": "src/ServerScriptService/Wezwania112Serwer"
+      },
+      "PowiadomieniaSerwer": {
+        "$path": "src/ServerScriptService/PowiadomieniaSerwer.server.lua"
       }
     },
     "StarterPlayer": {
@@ -52,6 +58,9 @@
         },
         "Wezwania112Klient": {
           "$path": "src/StarterPlayerScripts/Wezwania112Klient"
+        },
+        "PowiadomieniaKlient": {
+          "$path": "src/StarterPlayerScripts/PowiadomieniaKlient.client.lua"
         }
       }
     },

@@ -247,9 +247,10 @@ client.on('guildCreate', registerCommands);
 client.on('interactionCreate', async (interaction) => {
   try {
     if (interaction.isChatInputCommand() && interaction.commandName === 'panel-zglos') {
+      await interaction.deferReply({ flags: MessageFlags.Ephemeral });
       await interaction.channel.send(buildPanel());
-      const reports = await getReportChannel(interaction.guild).catch(() => null);
-      return interaction.reply(
+      const reports = await getReportChannel(interaction.guild).catch((e) => console.error('Kanał zgłoszeń:', e.message));
+      return interaction.editReply(
         notice(`Panel wysłany! Zgłoszenia będą trafiać na ${reports ? `<#${reports.id}>` : 'kanał zgłoszeń (nie udało się go utworzyć – sprawdź uprawnienia bota)'}`, true),
       );
     }
@@ -261,16 +262,18 @@ client.on('interactionCreate', async (interaction) => {
     if (interaction.isModalSubmit() && interaction.customId.startsWith('zfm_')) {
       const typeId = interaction.customId.slice(4);
       if (!TYPES[typeId]) return;
-      const ch = await getReportChannel(interaction.guild).catch(() => null);
-      if (!ch) return interaction.reply(notice('Kanał zgłoszeń nie jest ustawiony - napisz do administracji.'));
+      await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+      const ch = await getReportChannel(interaction.guild).catch((e) => console.error('Kanał zgłoszeń:', e.message));
+      if (!ch) return interaction.editReply(notice('Nie udało się wysłać zgłoszenia - napisz do administracji.'));
       await ch.send(buildReport(interaction, typeId));
-      return interaction.reply(notice('Dzięki! Twoje zgłoszenie trafiło do administracji.', true));
+      return interaction.editReply(notice('Dzięki! Twoje zgłoszenie trafiło do administracji.', true));
     }
   } catch (e) {
     console.error(e);
-    if (interaction.isRepliable() && !interaction.replied && !interaction.deferred) {
-      interaction.reply(notice('Coś poszło nie tak, spróbuj ponownie.')).catch(() => {});
-    }
+    if (!interaction.isRepliable()) return;
+    const msg = notice('Coś poszło nie tak, spróbuj ponownie.');
+    if (interaction.deferred) interaction.editReply(msg).catch(() => {});
+    else if (!interaction.replied) interaction.reply(msg).catch(() => {});
   }
 });
 

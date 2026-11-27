@@ -237,5 +237,5 @@ function start() {
   return client.login(process.env.TOKEN);
 }
 
-module.exports = { buildPanel };
+module.exports = { buildPanel, start };
 if (require.main === module) start();

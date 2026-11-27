@@ -1,0 +1,16 @@
+{
+  "name": "zglos-frajera",
+  "version": "1.0.0",
+  "description": "Bot Discord ZgłośFrajera – panel zgłaszania oszustów (Components V2)",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js"
+  },
+  "dependencies": {
+    "discord.js": "^14.16.3",
+    "dotenv": "^16.4.5"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

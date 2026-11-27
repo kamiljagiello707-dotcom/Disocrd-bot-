@@ -1,16 +1,21 @@
 # 🔔︲ZgłośFrajera
 
-Bot Discord z panelem do zgłaszania oszustów / scammerów, zrobiony w **Components V2**.
+Bot Discord z panelem do zgłaszania oszustów / scammerów (Components V2).
 
-## Panel
-Nagłówek → separator → opis → separator → przyciski **Zgłoś Oszusta** / **Zgłoś Scammera** (szare) → separator → baner → separator → stopka.
+## Pliki
+```
+index.js        ← cały bot + konfiguracja na górze
+src/index.js    ← tylko przekierowanie (gdy hosting ma ustawione src/index.js)
+banner.png      ← baner panelu (podmień na swój)
+package.json
+.env.example    ← zmień nazwę na .env i wpisz TOKEN
+```
 
-Kliknięcie przycisku otwiera formularz (nick frajera, co się stało, strata, dowody), a zgłoszenie trafia na kanał `reportChannelId`.
+## Start
+1. W `.env` wpisz `TOKEN=...` (albo wklej token w `token: ''` na górze `index.js`).
+2. Na górze `index.js` wpisz `reportChannelId` – kanał na zgłoszenia.
+3. Plik startowy: `index.js` (działa też `src/index.js`).
+4. Na Discordzie: `/panel-zglos`.
 
-## Instalacja
-1. `cd zglos-frajera && npm install`
-2. Skopiuj `.env.example` → `.env` i uzupełnij `TOKEN`, `CLIENT_ID`, `GUILD_ID`.
-3. Na górze `index.js` wpisz `reportChannelId`. Baner podmień w `banner.png` albo podaj link w `bannerUrl`.
-4. Plik startowy: `index.js` (albo `npm start`), a potem na kanale wpisz `/panel-zglos`.
-
-> Emotki `emoji_4/9/11` są z Twojego serwera – bot musi na nim być, żeby je wyświetlał.
+CLIENT_ID i GUILD_ID nie są potrzebne – bot sam dodaje komendę na każdym serwerze, na którym jest.
+Emotki `emoji_4/9/11` są z Twojego serwera – bot musi na nim być, żeby je wyświetlał.

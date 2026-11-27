@@ -1,4 +1,9 @@
-require('dotenv').config({ path: require('path').join(__dirname, '.env') });
+console.log('▶ Start bota ZgłośFrajera...');
+try {
+  require('dotenv').config({ path: require('path').join(__dirname, '.env') });
+} catch {
+  /* brak dotenv – token można wpisać niżej w config */
+}
 const fs = require('fs');
 const path = require('path');
 const {
@@ -46,6 +51,10 @@ const config = {
 
   // Kanał, na który trafiają zgłoszenia (PPM na kanał → Kopiuj ID)
   reportChannelId: 'ID_KANALU_ZGLOSZEN',
+
+  // Token bota. Najlepiej w pliku .env (TOKEN=...), ale jak nie umiesz
+  // zrobić .env na hostingu, możesz go wkleić tutaj między ''.
+  token: '',
 };
 
 
@@ -193,14 +202,21 @@ const commands = [
     .setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
 ].map((c) => c.toJSON());
 
+// Rejestruje /panel-zglos na serwerze (od razu widoczne, bez czekania)
+async function registerCommands(guild) {
+  const rest = new REST({ version: '10' }).setToken(client.token);
+  await rest
+    .put(Routes.applicationGuildCommands(client.user.id, guild.id), { body: commands })
+    .then(() => console.log(`✅ Komenda /panel-zglos dodana na serwerze: ${guild.name}`))
+    .catch((e) => console.error(`❌ Komendy (${guild.name}):`, e.message));
+}
+
 client.once('clientReady', async () => {
   console.log(`✅ Zalogowano jako ${client.user.tag}`);
-  const rest = new REST({ version: '10' }).setToken(process.env.TOKEN);
-  await rest
-    .put(Routes.applicationGuildCommands(process.env.CLIENT_ID, process.env.GUILD_ID), { body: commands })
-    .then(() => console.log('✅ Komendy zarejestrowane'))
-    .catch((e) => console.error('Komendy:', e.message));
+  if (!client.guilds.cache.size) console.log('⚠️ Bot nie jest na żadnym serwerze – zaproś go.');
+  for (const guild of client.guilds.cache.values()) await registerCommands(guild);
 });
+client.on('guildCreate', registerCommands);
 
 client.on('interactionCreate', async (interaction) => {
   try {
@@ -216,7 +232,7 @@ client.on('interactionCreate', async (interaction) => {
     if (interaction.isModalSubmit() && interaction.customId.startsWith('zfm_')) {
       const typeId = interaction.customId.slice(4);
       if (!TYPES[typeId]) return;
-      const ch = interaction.guild.channels.cache.get(config.reportChannelId);
+      const ch = await interaction.guild.channels.fetch(config.reportChannelId).catch(() => null);
       if (!ch) return interaction.reply(notice('Kanał zgłoszeń nie jest ustawiony - napisz do administracji.'));
       await ch.send(buildReport(interaction, typeId));
       return interaction.reply(notice('Dzięki! Twoje zgłoszenie trafiło do administracji.', true));
@@ -230,11 +246,16 @@ client.on('interactionCreate', async (interaction) => {
 });
 
 function start() {
-  if (!process.env.TOKEN) {
-    console.error('❌ Brak TOKEN w pliku .env (musi leżeć obok index.js)');
+  const token = (process.env.TOKEN || config.token || '').trim();
+  if (!token) {
+    console.error('❌ Brak tokena! Wpisz TOKEN=... w pliku .env albo token: \'...\' na górze index.js');
     process.exit(1);
   }
-  return client.login(process.env.TOKEN);
+  return client.login(token).catch((e) => {
+    console.error('❌ Nie udało się zalogować:', e.message);
+    if (/token/i.test(e.message)) console.error('   → Token jest zły. Zresetuj go na discord.com/developers → Bot → Reset Token.');
+    process.exit(1);
+  });
 }
 
 module.exports = { buildPanel, start };

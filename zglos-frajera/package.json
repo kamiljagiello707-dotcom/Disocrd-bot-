@@ -4,7 +4,7 @@
   "description": "Bot Discord ZgłośFrajera – panel zgłaszania oszustów (Components V2)",
   "main": "src/index.js",
   "scripts": {
-    "start": "node src/index.js"
+    "start": "node --max-old-space-size=256 src/index.js"
   },
   "dependencies": {
     "discord.js": "^14.16.3",

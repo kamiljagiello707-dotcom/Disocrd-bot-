@@ -22,6 +22,7 @@ const {
   MediaGalleryBuilder,
   MediaGalleryItemBuilder,
   MessageFlags,
+  Options,
 } = require('discord.js');
 const config = require('./config');
 
@@ -30,7 +31,27 @@ const E = config.emojis;
 const V2 = MessageFlags.IsComponentsV2;
 const EPH = MessageFlags.Ephemeral | MessageFlags.IsComponentsV2;
 
-const client = new Client({ intents: [GatewayIntentBits.Guilds] });
+// Minimalny cache = minimalne zużycie RAM (bot potrzebuje tylko kanałów i serwera)
+const client = new Client({
+  intents: [GatewayIntentBits.Guilds],
+  makeCache: Options.cacheWithLimits({
+    ...Options.DefaultMakeCacheSettings,
+    MessageManager: 0,
+    GuildMemberManager: { maxSize: 0, keepOverLimit: (m) => m.id === m.client.user.id },
+    UserManager: { maxSize: 0, keepOverLimit: (u) => u.id === u.client.user.id },
+    PresenceManager: 0,
+    ReactionManager: 0,
+    GuildEmojiManager: 0,
+    GuildStickerManager: 0,
+    VoiceStateManager: 0,
+    ThreadManager: 0,
+    GuildScheduledEventManager: 0,
+    StageInstanceManager: 0,
+    AutoModerationRuleManager: 0,
+    GuildInviteManager: 0,
+    GuildBanManager: 0,
+  }),
+});
 
 // ───────────── pomocnicze ─────────────
 const text = (c) => new TextDisplayBuilder().setContent(c);

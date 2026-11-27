@@ -10,7 +10,7 @@ Kliknięcie przycisku otwiera formularz (nick frajera, co się stało, strata, d
 ## Instalacja
 1. `cd zglos-frajera && npm install`
 2. Skopiuj `.env.example` → `.env` i uzupełnij `TOKEN`, `CLIENT_ID`, `GUILD_ID`.
-3. W `src/config.js` wpisz `reportChannelId`. Baner podmień w `assets/banner.png` albo podaj link w `bannerUrl`.
+3. Na górze `index.js` wpisz `reportChannelId`. Baner podmień w `banner.png` albo podaj link w `bannerUrl`.
 4. Plik startowy: `index.js` (albo `npm start`), a potem na kanale wpisz `/panel-zglos`.
 
 > Emotki `emoji_4/9/11` są z Twojego serwera – bot musi na nim być, żeby je wyświetlał.

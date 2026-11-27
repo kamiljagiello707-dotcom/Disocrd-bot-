@@ -206,5 +206,13 @@ client.on('interactionCreate', async (interaction) => {
   }
 });
 
-module.exports = { buildPanel };
-if (require.main === module) client.login(process.env.TOKEN);
+function start() {
+  if (!process.env.TOKEN) {
+    console.error('❌ Brak TOKEN w pliku .env (musi leżeć obok index.js)');
+    process.exit(1);
+  }
+  return client.login(process.env.TOKEN);
+}
+
+module.exports = { buildPanel, start };
+if (require.main === module) start();

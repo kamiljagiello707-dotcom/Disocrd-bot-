@@ -44,6 +44,11 @@ const config = {
     opis: '<:emoji_9:1564588745863340173>',
     przycisk: { id: '1564588950415343736', name: 'emoji_11' },
     stopka: '<:emoji_4:1564588437397573694>',
+    // Panel Oszustów + Historia
+    panelOpis: '<:emoji_11:1564588865971556432>',
+    statystyki: { id: '1564588387355201546', name: 'emoji_3' },
+    historia: '<:emoji_11:1564588950415343736>',
+    wpis: '<:emoji_7:1564588614686482524>',
   },
 
   // Baner: link https://... albo '' żeby użyć pliku banner.png (obok index.js)
@@ -107,6 +112,29 @@ function newContainer() {
 function notice(msg, ok = false) {
   return { components: [newContainer().addTextDisplayComponents(text(`${ok ? '✅' : '❌'} ${S} ${msg}`))], flags: EPH };
 }
+
+// ───────────── zapis zgłoszeń (plik zgloszenia.json obok index.js) ─────────────
+const DB_FILE = path.join(__dirname, 'zgloszenia.json');
+function loadDb() {
+  try {
+    return JSON.parse(fs.readFileSync(DB_FILE, 'utf8'));
+  } catch {
+    return { counter: 0, reports: [] };
+  }
+}
+const db = loadDb();
+function saveReport(r) {
+  db.counter += 1;
+  const report = { number: db.counter, ...r };
+  db.reports.push(report);
+  try {
+    fs.writeFileSync(DB_FILE, JSON.stringify(db, null, 2));
+  } catch (e) {
+    console.error('❌ Nie udało się zapisać zgloszenia.json:', e.message);
+  }
+  return report;
+}
+const pad = (n) => String(n).padStart(4, '0');
 
 // ───────────── PANEL ─────────────
 //  Nagłówek → separator → opis → separator → 2 przyciski → separator → baner → separator → stopka
@@ -176,10 +204,10 @@ function buildModal(typeId) {
     );
 }
 
-function buildReport(interaction, typeId) {
+function buildReport(interaction, typeId, number) {
   const f = (id) => clean(interaction.fields.getTextInputValue(id)) || 'Brak';
   const c = newContainer();
-  c.addTextDisplayComponents(text(`\`\`\`\n🚨︲Nowe zgłoszenie × ${TYPES[typeId].label}\n\`\`\``));
+  c.addTextDisplayComponents(text(`\`\`\`\n🚨︲Zgłoszenie #${pad(number)} × ${TYPES[typeId].label}\n\`\`\``));
   c.addSeparatorComponents(sep());
   c.addTextDisplayComponents(
     text(
@@ -195,6 +223,74 @@ function buildReport(interaction, typeId) {
   c.addSeparatorComponents(sep());
   c.addTextDisplayComponents(text(`-# ${E.stopka}${S}Panel zgłoś oszusta`));
   return { components: [c], flags: V2, allowedMentions: { parse: [] } };
+}
+
+// ───────────── PANEL OSZUSTÓW ─────────────
+//  Nagłówek → separator → opis → separator → przycisk → separator → baner → separator → stopka
+function buildFraudPanel() {
+  const c = newContainer();
+  c.addTextDisplayComponents(text('```\n🖌️︲Panel × Oszustów\n```'));
+  c.addSeparatorComponents(sep());
+  c.addTextDisplayComponents(
+    text(`> ${E.panelOpis}${S}Witamy w Panelu Oszustów! Poniżej możesz sprawdzić, ilu oszustów już zgłosiłeś`),
+  );
+  c.addSeparatorComponents(sep());
+  c.addActionRowComponents(
+    new ActionRowBuilder().addComponents(
+      new ButtonBuilder()
+        .setCustomId('zf_stats')
+        .setStyle(ButtonStyle.Secondary)
+        .setEmoji(E.statystyki)
+        .setLabel(`${S}Sprawdź Statystyki`),
+    ),
+  );
+  const src = bannerSrc();
+  if (src) {
+    c.addSeparatorComponents(sep());
+    c.addMediaGalleryComponents(new MediaGalleryBuilder().addItems(new MediaGalleryItemBuilder().setURL(src)));
+  }
+  c.addSeparatorComponents(sep());
+  c.addTextDisplayComponents(text(`-# ${E.wpis}${S}Panel Oszustów`));
+  return { components: [c], files: bannerFiles(), flags: V2 };
+}
+
+// Historia zgłoszeń danej osoby (widzi tylko ona)
+const HISTORY_LIMIT = 10;
+function buildHistory(userId, guildId) {
+  const mine = db.reports.filter((r) => r.reporterId === userId && r.guildId === guildId);
+  const count = (t) => mine.filter((r) => r.type === t).length;
+
+  const c = newContainer();
+  c.addTextDisplayComponents(text('```\n✏️︲Zgłoś Oszusta × Historia\n```'));
+  c.addSeparatorComponents(sep());
+  c.addTextDisplayComponents(text(`> # ${E.historia}${S}__Historia poniżej__`));
+  c.addSeparatorComponents(sep());
+  c.addTextDisplayComponents(
+    text(
+      `> 📊${S}**Wszystkich zgłoszeń:** \`${mine.length}\`\n` +
+        `> 🎯${S}**Oszuści:** \`${count('zf_oszust')}\`\n` +
+        `> 💀${S}**Scammerzy:** \`${count('zf_scammer')}\``,
+    ),
+  );
+  c.addSeparatorComponents(sep());
+
+  if (!mine.length) {
+    c.addTextDisplayComponents(text(`> ${E.wpis}${S}Nie zgłosiłeś jeszcze nikogo.`));
+  } else {
+    const lines = mine
+      .slice(-HISTORY_LIMIT)
+      .reverse()
+      .map(
+        (r) =>
+          `> ${E.wpis}${S}**#${pad(r.number)}** \`${clean(r.nick).slice(0, 40)}\` • ${TYPES[r.type]?.label || 'Zgłoszenie'} • <t:${r.createdAt}:R>`,
+      );
+    if (mine.length > HISTORY_LIMIT) lines.push(`-# …i ${mine.length - HISTORY_LIMIT} starszych zgłoszeń`);
+    c.addTextDisplayComponents(text(lines.join('\n')));
+  }
+
+  c.addSeparatorComponents(sep());
+  c.addTextDisplayComponents(text(`-# ${E.wpis}${S}Panel Oszustów`));
+  return { components: [c], flags: EPH, allowedMentions: { parse: [] } };
 }
 
 // ───────────── kanał zgłoszeń ─────────────
@@ -226,6 +322,10 @@ const commands = [
     .setName('panel-zglos')
     .setDescription('Wysyła panel „Zgłoś Frajera” na ten kanał')
     .setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
+  new SlashCommandBuilder()
+    .setName('panel-oszustow')
+    .setDescription('Wysyła „Panel Oszustów” (statystyki zgłoszeń) na ten kanał')
+    .setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
 ].map((c) => c.toJSON());
 
 // Rejestruje /panel-zglos na serwerze (od razu widoczne, bez czekania)
@@ -233,7 +333,7 @@ async function registerCommands(guild) {
   const rest = new REST({ version: '10' }).setToken(client.token);
   await rest
     .put(Routes.applicationGuildCommands(client.user.id, guild.id), { body: commands })
-    .then(() => console.log(`✅ Komenda /panel-zglos dodana na serwerze: ${guild.name}`))
+    .then(() => console.log(`✅ Komendy /panel-zglos i /panel-oszustow dodane na serwerze: ${guild.name}`))
     .catch((e) => console.error(`❌ Komendy (${guild.name}):`, e.message));
 }
 
@@ -255,6 +355,16 @@ client.on('interactionCreate', async (interaction) => {
       );
     }
 
+    if (interaction.isChatInputCommand() && interaction.commandName === 'panel-oszustow') {
+      await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+      await interaction.channel.send(buildFraudPanel());
+      return interaction.editReply(notice('Panel Oszustów wysłany!', true));
+    }
+
+    if (interaction.isButton() && interaction.customId === 'zf_stats') {
+      return interaction.reply(buildHistory(interaction.user.id, interaction.guildId));
+    }
+
     if (interaction.isButton() && TYPES[interaction.customId]) {
       return interaction.showModal(buildModal(interaction.customId));
     }
@@ -265,7 +375,15 @@ client.on('interactionCreate', async (interaction) => {
       await interaction.deferReply({ flags: MessageFlags.Ephemeral });
       const ch = await getReportChannel(interaction.guild).catch((e) => console.error('Kanał zgłoszeń:', e.message));
       if (!ch) return interaction.editReply(notice('Nie udało się wysłać zgłoszenia - napisz do administracji.'));
-      await ch.send(buildReport(interaction, typeId));
+      const report = saveReport({
+        reporterId: interaction.user.id,
+        guildId: interaction.guildId,
+        type: typeId,
+        nick: interaction.fields.getTextInputValue('nick'),
+        strata: interaction.fields.getTextInputValue('strata') || '',
+        createdAt: Math.floor(Date.now() / 1000),
+      });
+      await ch.send(buildReport(interaction, typeId, report.number));
       return interaction.editReply(notice('Dzięki! Twoje zgłoszenie trafiło do administracji.', true));
     }
   } catch (e) {
@@ -290,5 +408,5 @@ function start() {
   });
 }
 
-module.exports = { buildPanel, start };
+module.exports = { buildPanel, buildFraudPanel, buildHistory, start };
 if (require.main === module) start();

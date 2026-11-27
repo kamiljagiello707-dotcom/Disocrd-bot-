@@ -28,6 +28,7 @@ const {
   MediaGalleryItemBuilder,
   MessageFlags,
   Options,
+  ChannelType,
 } = require('discord.js');
 // ╭──────────────────────────────────────────────╮
 // │        ZgłośFrajera ︲ konfiguracja            │
@@ -49,8 +50,10 @@ const config = {
   bannerUrl: '',
   bannerFile: 'banner.png',
 
-  // Kanał, na który trafiają zgłoszenia (PPM na kanał → Kopiuj ID)
-  reportChannelId: 'ID_KANALU_ZGLOSZEN',
+  // Kanał, na który trafiają zgłoszenia (PPM na kanał → Kopiuj ID).
+  // Zostaw puste '' – bot sam utworzy prywatny kanał (widoczny tylko dla administracji).
+  reportChannelId: '',
+  reportChannelName: '🚨︲zgłoszenia',
 
   // Token bota. Najlepiej w pliku .env (TOKEN=...), ale jak nie umiesz
   // zrobić .env na hostingu, możesz go wkleić tutaj między ''.
@@ -194,6 +197,29 @@ function buildReport(interaction, typeId) {
   return { components: [c], flags: V2, allowedMentions: { parse: [] } };
 }
 
+// ───────────── kanał zgłoszeń ─────────────
+// Ustawiony w config → ten. Jeśli nie ma, szuka po nazwie, a jak nie znajdzie – tworzy prywatny kanał.
+async function getReportChannel(guild) {
+  if (/^\d{17,20}$/.test(config.reportChannelId)) {
+    const ch = await guild.channels.fetch(config.reportChannelId).catch(() => null);
+    if (ch) return ch;
+  }
+  const channels = await guild.channels.fetch();
+  const found = channels.find((c) => c && c.type === ChannelType.GuildText && c.name === config.reportChannelName);
+  if (found) return found;
+  const created = await guild.channels.create({
+    name: config.reportChannelName,
+    type: ChannelType.GuildText,
+    topic: 'Zgłoszenia oszustów z panelu Zgłoś Frajera',
+    permissionOverwrites: [
+      { id: guild.roles.everyone.id, deny: [PermissionFlagsBits.ViewChannel] },
+      { id: guild.members.me.id, allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages, PermissionFlagsBits.AttachFiles] },
+    ],
+  });
+  console.log(`✅ Utworzono kanał zgłoszeń: #${created.name}`);
+  return created;
+}
+
 // ───────────── komendy ─────────────
 const commands = [
   new SlashCommandBuilder()
@@ -222,7 +248,10 @@ client.on('interactionCreate', async (interaction) => {
   try {
     if (interaction.isChatInputCommand() && interaction.commandName === 'panel-zglos') {
       await interaction.channel.send(buildPanel());
-      return interaction.reply(notice('Panel wysłany!', true));
+      const reports = await getReportChannel(interaction.guild).catch(() => null);
+      return interaction.reply(
+        notice(`Panel wysłany! Zgłoszenia będą trafiać na ${reports ? `<#${reports.id}>` : 'kanał zgłoszeń (nie udało się go utworzyć – sprawdź uprawnienia bota)'}`, true),
+      );
     }
 
     if (interaction.isButton() && TYPES[interaction.customId]) {
@@ -232,7 +261,7 @@ client.on('interactionCreate', async (interaction) => {
     if (interaction.isModalSubmit() && interaction.customId.startsWith('zfm_')) {
       const typeId = interaction.customId.slice(4);
       if (!TYPES[typeId]) return;
-      const ch = await interaction.guild.channels.fetch(config.reportChannelId).catch(() => null);
+      const ch = await getReportChannel(interaction.guild).catch(() => null);
       if (!ch) return interaction.reply(notice('Kanał zgłoszeń nie jest ustawiony - napisz do administracji.'));
       await ch.send(buildReport(interaction, typeId));
       return interaction.reply(notice('Dzięki! Twoje zgłoszenie trafiło do administracji.', true));

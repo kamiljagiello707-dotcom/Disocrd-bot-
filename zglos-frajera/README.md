@@ -13,7 +13,7 @@ package.json
 
 ## Start
 1. W `.env` wpisz `TOKEN=...` (albo wklej token w `token: ''` na górze `index.js`).
-2. Na górze `index.js` wpisz `reportChannelId` – kanał na zgłoszenia.
+2. Kanał zgłoszeń: zostaw `reportChannelId` puste – bot sam utworzy prywatny `🚨︲zgłoszenia` (albo wpisz ID swojego kanału).
 3. Plik startowy: `index.js` (działa też `src/index.js`).
 4. Na Discordzie: `/panel-zglos`.
 
